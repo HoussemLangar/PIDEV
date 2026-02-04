@@ -1,0 +1,113 @@
+{% extends 'front/base_auth.html.twig' %}
+
+{% block title %}Inscription - SANTÉA{% endblock %}
+
+{% block auth_content %}
+    <div class="auth-form" id="signUpForm">
+        <h1>Créer un compte</h1>
+        
+        <div class="social-buttons">
+            <button class="social-btn google-btn">
+                <i class="fab fa-google"></i>
+                S'inscrire avec Google
+            </button>
+            <button class="social-btn facebook-btn">
+                <i class="fab fa-facebook-f"></i>
+                S'inscrire avec Facebook
+            </button>
+        </div>
+
+        <div class="divider">
+            <span>OU</span>
+        </div>
+
+        {% for message in app.flashes('success') %}
+            <div class="alert alert-success">
+                {{ message }}
+            </div>
+        {% endfor %}
+
+        {% for message in app.flashes('error') %}
+            <div class="alert alert-danger">
+                {{ message }}
+            </div>
+        {% endfor %}
+
+        {{ form_start(registration_form) }}
+            
+            <div class="form-group">
+                {{ form_label(registration_form.username) }}
+                {{ form_widget(registration_form.username) }}
+                {{ form_errors(registration_form.username) }}
+            </div>
+
+            <div class="form-group">
+                {{ form_label(registration_form.email) }}
+                {{ form_widget(registration_form.email) }}
+                {{ form_errors(registration_form.email) }}
+            </div>
+
+            <div class="form-group">
+                {{ form_label(registration_form.plainPassword.first) }}
+                <div class="password-input">
+                    {{ form_widget(registration_form.plainPassword.first) }}
+                    <i class="fas fa-eye-slash toggle-password" onclick="togglePassword('users_plainPassword_first')"></i>
+                </div>
+                {{ form_errors(registration_form.plainPassword.first) }}
+            </div>
+
+            <div class="form-group">
+                {{ form_label(registration_form.plainPassword.second) }}
+                <div class="password-input">
+                    {{ form_widget(registration_form.plainPassword.second) }}
+                    <i class="fas fa-eye-slash toggle-password" onclick="togglePassword('users_plainPassword_second')"></i>
+                </div>
+                {{ form_errors(registration_form.plainPassword.second) }}
+            </div>
+
+            <div class="form-group">
+                {{ form_label(registration_form.nom) }}
+                {{ form_widget(registration_form.nom) }}
+                {{ form_errors(registration_form.nom) }}
+            </div>
+
+            <div class="form-group">
+                {{ form_label(registration_form.prenom) }}
+                {{ form_widget(registration_form.prenom) }}
+                {{ form_errors(registration_form.prenom) }}
+            </div>
+
+            <div class="form-group">
+                {{ form_label(registration_form.dateNaissance) }}
+                {{ form_widget(registration_form.dateNaissance) }}
+                {{ form_errors(registration_form.dateNaissance) }}
+            </div>
+
+            <div class="form-group">
+                {{ form_label(registration_form.adresse) }}
+                {{ form_widget(registration_form.adresse) }}
+                {{ form_errors(registration_form.adresse) }}
+            </div>
+
+            <div class="form-group">
+                {{ form_label(registration_form.telephone) }}
+                {{ form_widget(registration_form.telephone) }}
+                {{ form_errors(registration_form.telephone) }}
+            </div>
+
+            <button type="submit" class="auth-submit-btn">S'inscrire</button>
+
+        {{ form_end(registration_form) }}
+
+        <p class="auth-switch">
+            Vous avez déjà un compte ? <a href="{{ path('login') }}">Se connecter</a>
+        </p>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        // Script supplémentaire spécifique à l'inscription si nécessaire
+    </script>
+{% endblock %}

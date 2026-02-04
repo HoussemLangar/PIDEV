@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  # Service PHP/Apache avec Symfony
+  web:
+    build:
+      context: ./docker/php
+      dockerfile: Dockerfile
+    container_name: pidev-web
+    ports:
+      - "8000:80"
+    volumes:
+      - ./symfony-app:/var/www/html
+    environment:
+      - APP_ENV=dev
+      - DATABASE_URL=mysql://symfony:symfony@db:3306/pidev?serverVersion=8.0
+    depends_on:
+      - db
+    networks:
+      - pidev-network
+
+  # Service MySQL 8.0
+  db:
+    image: mysql:8.0
+    container_name: pidev-db
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: pidev
+      MYSQL_USER: symfony
+      MYSQL_PASSWORD: symfony
+    volumes:
+      - db-data:/var/lib/mysql
+    networks:
+      - pidev-network
+    command: --default-authentication-plugin=mysql_native_password
+
+  # Service phpMyAdmin
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: pidev-phpmyadmin
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: root
+      UPLOAD_LIMIT: 100M
+    depends_on:
+      - db
+    networks:
+      - pidev-network
+
+  # Service JavaFX (OpenJDK avec JavaFX)
+  javafx:
+    image: eclipse-temurin:17-jdk
+    container_name: pidev-javafx
+    volumes:
+      - ./javafx-app:/app
+    working_dir: /app
+    command: tail -f /dev/null
+    networks:
+      - pidev-network
+
+networks:
+  pidev-network:
+    driver: bridge
+
+volumes:
+  db-data:

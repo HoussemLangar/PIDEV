@@ -1,0 +1,333 @@
+{% extends 'front/base.html.twig' %}
+
+{% block title %}SANTÉA - Votre santé, en toute confiance{% endblock %}
+
+{% block body %}
+    <!-- Hero Section -->
+    <section class="hero">
+        <!-- Animated Background Elements -->
+        <div class="hero-animation">
+            <div class="floating-shape shape-1"></div>
+            <div class="floating-shape shape-3"></div>
+            <div class="floating-shape shape-4"></div>
+            <div class="floating-shape shape-5"></div>
+            <div class="floating-icon icon-1"><i class="fas fa-heartbeat"></i></div>
+            <div class="floating-icon icon-2"><i class="fas fa-stethoscope"></i></div>
+            <div class="floating-icon icon-3"><i class="fas fa-briefcase-medical"></i></div>
+            <div class="floating-icon icon-4"><i class="fas fa-user-md"></i></div>
+        </div>
+        
+        <div class="hero-content">
+            <div class="text-side">
+                <span class="badge">BIEN ÊTRE</span>
+                <h1>Votre SANTÉA, en toute confiance</h1>
+                <p>Suivez votre état de SANTÉA au quotidien, bénéficiez d'un accompagnement global et facilitez vos échanges avec les professionnels de SANTÉA.</p>
+                <a href="#doctors" class="btn-primary">Découvrir SANTÉA</a>
+            </div>
+            <div class="image-side">
+                <img src="{{ asset('img/heart.png') }}" alt="Doctor & Nurse" class="hero-img"/>
+            </div>
+        </div>
+
+        <!-- Statistiques intégrées dans le hero -->
+        <div class="hero-stats">
+            <div class="stat-card-hero">
+                <div class="stat-icon-hero"><i class="fas fa-calendar-check"></i></div>
+                <div class="stat-value-hero">+12 000</div>
+                <div class="stat-label-hero">Rendez-vous pris</div>
+            </div>
+            <div class="stat-card-hero">
+                <div class="stat-icon-hero"><i class="fas fa-heartbeat"></i></div>
+                <div class="stat-value-hero">+8 500</div>
+                <div class="stat-label-hero">Suivis quotidiens</div>
+            </div>
+            <div class="stat-card-hero">
+                <div class="stat-icon-hero"><i class="fas fa-share-alt"></i></div>
+                <div class="stat-value-hero">+2 300</div>
+                <div class="stat-label-hero">Partages médicaux</div>
+            </div>
+            <div class="stat-card-hero">
+                <div class="stat-icon-hero"><i class="fas fa-pills"></i></div>
+                <div class="stat-value-hero">+4 700</div>
+                <div class="stat-label-hero">Médicaments recherchés</div>
+            </div>
+            <div class="stat-card-hero">
+                <div class="stat-icon-hero"><i class="fas fa-dumbbell"></i></div>
+                <div class="stat-value-hero">+3 200</div>
+                <div class="stat-label-hero">Plans personnalisés</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Info Cards -->
+    <section class="quick-info" id="quick-info">
+        <div class="container">
+            <h2 class="section-title">Pourquoi choisir SANTÉA</h2>
+        </div>
+        <div class="container">
+            <div class="card">
+                <div class="icon"><i class="fas fa-stethoscope"></i></div>
+                <h3>Tout-en-un santé</h3>
+                <p>Consultations, analyses, suivi quotidien, nutrition et sport réunis sur une seule plateforme.</p>
+                <a href="#" class="btn-small">Découvrir</a>
+            </div>
+            
+            <div class="card">
+                <div class="icon"><i class="fas fa-heartbeat"></i></div>
+                <h3>Accompagnement personnalisé</h3>
+                <p>Médecin, coach et nutritionniste travaillent ensemble pour votre bien-être.</p>
+                <a href="#" class="btn-small">Découvrir</a>
+            </div>
+            
+            <div class="card">
+                <div class="icon"><i class="fas fa-clipboard-list"></i></div>
+                <h3>Suivi intelligent</h3>
+                <p>IMC, poids, sommeil, activité et symptômes suivis automatiquement au quotidien.</p>
+                <a href="#" class="btn-small">Découvrir</a>
+            </div>
+            
+            <div class="card">
+                <div class="icon"><i class="fas fa-share-alt"></i></div>
+                <h3>Sécurité & confidentialité</h3>
+                <p>Vos données médicales sont protégées et partagées uniquement avec les professionnels autorisés.</p>
+                <a href="#" class="btn-small">Découvrir</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section Prendre Rendez-vous -->
+    <section class="appointment-section" id="appointment-section">
+        <div class="container">
+            <h2 class="section-title">Nos services médicaux</h2>
+        </div>
+        
+        <!-- Première paire : Prendre rendez-vous + Trouver vos médicaments -->
+        <div class="appointment-pair">
+            <div class="container appointment-flex">
+                <div class="appointment-img-block">
+                    <div class="appointment-img-wrapper">
+                        <div class="appointment-img-circle">
+                            <img src="{{ asset('img/doctor.jpg') }}" alt="Docteur du mois" class="appointment-img" />
+                        </div>
+                        <div class="appointment-badge-customers">
+                            <i class="fas fa-star"></i>
+                            <span>+10k Consultations réservés</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="appointment-content">
+                    <span class="appointment-badge">Rendez-vous</span>
+                    <h2>Réservez une consultation aujourd'hui</h2>
+                    <p>Prenez rendez-vous facilement avec nos médecins certifiés. Profitez d'une prise en charge rapide pour tous vos besoins de SANTÉA.</p>
+                    <a href="#" class="btn-appointment-main">Prendre rendez-vous</a>
+                </div>
+            </div>
+            
+            <div class="container appointment-flex">
+                <div class="appointment-img-block">
+                    <div class="appointment-img-wrapper">
+                        <div class="appointment-img-circle">
+                            <img src="{{ asset('img/ph.jpg') }}" alt="Trouver vos médicaments facilement" class="appointment-img" />
+                        </div>
+                        <div class="appointment-badge-customers">
+                            <i class="fas fa-pills"></i>
+                            <span>+1000 Pharmacies</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="appointment-content">
+                    <span class="appointment-badge">Médicaments et Pharmacies</span>
+                    <h2>Trouvez vos médicaments facilement</h2>
+                    <p>Recherchez vos médicaments, comparez les prix et trouvez la pharmacie la plus avantageuse près de chez vous</p>
+                    <a href="#" class="btn-appointment-main">Découvrir</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Deuxième paire : Suivre votre SANTÉA + Partage médical -->
+        <div class="appointment-pair">
+            <div class="container appointment-flex">
+                <div class="appointment-img-block">
+                    <div class="appointment-img-wrapper">
+                        <div class="appointment-img-circle">
+                            <img src="{{ asset('img/track.jpg') }}" alt="Suivre votre SANTÉA" class="appointment-img" />
+                        </div>
+                        <div class="appointment-badge-customers">
+                            <i class="fas fa-heartbeat"></i>
+                            <span>+8 500 Suivis quotidiens</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="appointment-content">
+                    <span class="appointment-badge">Santé quotidienne</span>
+                    <h2>Suivrez votre santé</h2>
+                    <p>Suivez vos indicateurs de santé (poids, activité, alimentation, analyses) grâce à un tracker intelligent et centralisé.</p>
+                    <a href="#" class="btn-appointment-main">Continuer</a>
+                </div>
+            </div>
+            
+            <div class="container appointment-flex">
+                <div class="appointment-img-block">
+                    <div class="appointment-img-wrapper">
+                        <div class="appointment-img-circle">
+                            <img src="{{ asset('img/share.jpg') }}" alt="Partage médical sécurisé" class="appointment-img" />
+                        </div>
+                        <div class="appointment-badge-customers">
+                            <i class="fas fa-share-alt"></i>
+                            <span>+2 300 Partages</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="appointment-content">
+                    <span class="appointment-badge">Partage sécurisé</span>
+                    <h2>Partagez vos données médicales</h2>
+                    <p>Partagez vos analyses et dossier médical de manière sécurisée avec vos professionnels de santé.</p>
+                    <a href="#" class="btn-appointment-main">Partager</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Troisième paire : Coaching Sportif + Coaching Nutritionnistes -->
+        <div class="appointment-pair">
+            <div class="container appointment-flex">
+                <div class="appointment-img-block">
+                    <div class="appointment-img-wrapper">
+                        <div class="appointment-img-circle">
+                            <img src="{{ asset('img/sport.jpg') }}" alt="Coaching sportif personnalisé" class="appointment-img" />
+                        </div>
+                        <div class="appointment-badge-customers">
+                            <i class="fas fa-star"></i>
+                            <span>+100 Clients Satisfais</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="appointment-content">
+                    <span class="appointment-badge">Coaching personnalisé</span>
+                    <h2>Coaching sportif personnalisé</h2>
+                    <p>Un accompagnement adapté à vos objectifs, votre rythme et votre condition physique.</p>
+                    <a href="#" class="btn-appointment-main">Commencer</a>
+                </div>
+            </div>
+            
+            <div class="container appointment-flex">
+                <div class="appointment-img-block">
+                    <div class="appointment-img-wrapper">
+                        <div class="appointment-img-circle">
+                            <img src="{{ asset('img/bien.jpg') }}" alt="Coaching avec nutritionnistes personnalisé" class="appointment-img" />
+                        </div>
+                        <div class="appointment-badge-customers">
+                            <i class="fas fa-star"></i>
+                            <span>+100 Clients Satisfais</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="appointment-content">
+                    <span class="appointment-badge">Coaching personnalisé</span>
+                    <h2>Coaching avec nutritionnistes</h2>
+                    <p>Un suivi nutritionnel personnalisé pour un régime équilibré, adapté à vos besoins et à votre santé.</p>
+                    <a href="#" class="btn-appointment-main">Commencer</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Avis de nos clients et partenaires -->
+    <section class="testimonials-wrapper" id="testimonials">
+        <div class="container">
+            <h2 class="section-title">Avis de nos clients et partenaires</h2>
+            <p class="section-subtitle">Découvrez ce que disent les professionnels qui ont trouvé le succès grâce à notre plateforme</p>
+        </div>
+        
+        <div class="testimonials-section">
+            <div class="container">
+                <div class="testimonials-container">
+                    <!-- Avis 1 -->
+                    <div class="testimonial-card">
+                        <div class="testimonial-quote">
+                            <i class="fa-solid fa-stethoscope"></i>
+                        </div>
+                        <p class="testimonial-text">
+                            SANTÉA m'a aidé à trouver un service qui correspond parfaitement à mes besoins de santé et mes objectifs. La plateforme spécialisée pour les professionnels de santé fait toute la différence!
+                        </p>
+                        <div class="testimonial-author">
+                            <div class="author-avatar">
+                                <img src="{{ asset('img/doctor.jpg') }}" alt="Sarah Johnson" />
+                            </div>
+                            <div class="author-info">
+                                <h4>Sarah Johnson</h4>
+                                <p>Patiente</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Avis 2 -->
+                    <div class="testimonial-card">
+                        <div class="testimonial-quote">
+                            <i class="fa-solid fa-stethoscope"></i>
+                        </div>
+                        <p class="testimonial-text">
+                            Les services et accompagnements sur SANTÉA ont considérablement amélioré ma santé au quotidien. J'ai pu me connecter avec d'autres professionnels et prendre soin de ma santé.
+                        </p>
+                        <div class="testimonial-author">
+                            <div class="author-avatar">
+                                <img src="{{ asset('img/bien.jpg') }}" alt="Michael Chen" />
+                            </div>
+                            <div class="author-info">
+                                <h4>Michael Chen</h4>
+                                <p>Patient</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Avis 3 -->
+                    <div class="testimonial-card">
+                        <div class="testimonial-quote">
+                            <i class="fa-solid fa-stethoscope"></i>
+                        </div>
+                        <p class="testimonial-text">
+                            SANTÉA permet une meilleure coordination entre les professionnels de santé et un suivi plus efficace des patients. C'est une solution innovante pour améliorer la continuité des soins.
+                        </p>
+                        <div class="testimonial-author">
+                            <div class="author-avatar">
+                                <img src="{{ asset('img/sport.jpg') }}" alt="Emily Rodriguez" />
+                            </div>
+                            <div class="author-info">
+                                <h4>Emily Rodriguez</h4>
+                                <p>Médecin</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contactez-nous -->
+    <section class="contact-section" id="contact-section">
+        <div class="container">
+            <h2 class="section-title">Contactez-nous</h2>
+        </div>
+        <div class="container contact-container">
+            <div class="contact-info">
+                <p class="contact-desc">Des questions ou un retour ? Notre équipe est toujours prête à vous aider à profiter au mieux de SANTÉA.</p>
+                <div class="contact-details">
+                    <div class="contact-detail">
+                        <div class="contact-icon"><i class="fas fa-phone"></i></div>
+                        <div>
+                            <strong>Appelez-nous</strong><br>
+                            <span>+33 1 11 11 11 11</span>
+                        </div>
+                    </div>
+                    <div class="contact-detail">
+                        <div class="contact-icon"><i class="fas fa-envelope"></i></div>
+                        <div>
+                            <strong>Email</strong><br>
+                            <span>contact@santea.com</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </section>
+{% endblock %}
