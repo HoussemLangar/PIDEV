@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SANTÉA{% endblock %}</title>
+    
+    {% block stylesheets %}
+        <link rel="stylesheet" href="{{ asset('style.css') }}">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    {% endblock %}
+</head>
+<body>
+    <div class="auth-container">
+        <!-- Left Side - Info Panel -->
+        <div class="auth-left">
+            <!-- Animated Medical Icons -->
+            <div class="auth-floating-icons">
+                <i class="fas fa-heartbeat auth-float-icon icon-1"></i>
+                <i class="fas fa-user-md auth-float-icon icon-2"></i>
+                <i class="fas fa-pills auth-float-icon icon-3"></i>
+                <i class="fas fa-briefcase-medical auth-float-icon icon-4"></i>
+                <i class="fas fa-syringe auth-float-icon icon-5"></i>
+                <i class="fas fa-notes-medical auth-float-icon icon-6"></i>
+            </div>
+            
+            <div class="auth-logo">
+                <i class="fas fa-stethoscope"></i>
+            </div>
+            <div class="auth-text">
+                <h2>Chez SANTÉA, nous sommes toujours entièrement concentrés sur votre santé</h2>
+                <p>Votre bien-être est notre priorité</p>
+            </div>
+        </div>
+
+        <!-- Right Side - Auth Form -->
+        <div class="auth-right">
+            <div class="language-selector">
+                <select>
+                    <option>Français</option>
+                    <option>English/US</option>
+                </select>
+            </div>
+
+            {% block auth_content %}
+            {% endblock %}
+        </div>
+    </div>
+
+    {% block javascripts %}
+        <script>
+            function togglePassword(inputId) {
+                const input = document.getElementById(inputId);
+                const icon = input.nextElementSibling;
+                
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                } else {
+                    input.type = 'password';
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                }
+            }
+        </script>
+    {% endblock %}
+</body>
+</html>

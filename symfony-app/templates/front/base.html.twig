@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SANTÉA - Healthcare Solutions{% endblock %}</title>
+    
+    {% block stylesheets %}
+        <link rel="stylesheet" href="{{ asset('style.css') }}">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    {% endblock %}
+    
+    {% block head_scripts %}{% endblock %}
+</head>
+<body{% block body_class %}{% endblock %}>
+    
+    {% block header %}
+        <!-- Header / Navbar -->
+        <header>
+            <nav class="navbar">
+                <div class="logo">SANTÉA</div>
+                <ul class="nav-links">
+                    <li><a href="{{ path('app_home') }}">Accueil</a></li>
+                    <li><a href="#quick-info">À propos</a></li>
+                    <li><a href="#appointment-section">Services</a></li>
+                    <li><a href="#testimonials">Blog</a></li>
+                    <li><a href="#contact-section">Contact</a></li>
+                </ul>
+                {% if app.user %}
+                    <a href="{{ path('app_home') }}" class="btn-appointment">Mon compte</a>
+                    <a href="{{ path('app_logout') }}" class="btn-danger">Déconnexion</a>
+                {% else %}
+                    <a href="{{ path('login') }}" class="btn-appointment" id="btn-login">Se connecter</a>
+                {% endif %}
+                <div class="menu-toggle"><i class="fas fa-bars"></i></div>
+            </nav>
+        </header>
+    {% endblock %}
+    
+    {% block body %}{% endblock %}
+    
+    {% block footer %}
+        <!-- Footer -->
+        <footer>
+            <div class="container">
+                <p>{{ 'now'|date('Y') }} SANTÉA - All Rights Reserved</p>
+            </div>
+        </footer>
+    {% endblock %}
+    
+    {% block javascripts %}
+        <script src="{{ asset('js/script.js') }}"></script>
+    {% endblock %}
+</body>
+</html>
