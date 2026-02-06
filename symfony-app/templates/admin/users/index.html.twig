@@ -1,0 +1,171 @@
+{% extends 'back/base.html.twig' %}
+
+{% block title %}Gestion des utilisateurs{% endblock %}
+
+{% block admin_content %}
+<div class="admin-page-header">
+    <div class="admin-page-title">
+        <h1>Utilisateurs</h1>
+        <p>Gérez les comptes, rôles, statuts et sécurité.</p>
+    </div>
+    <div class="admin-actions-row">
+        <a class="btn btn-secondary" href="{{ path('admin_users_stats') }}">📊 Statistiques</a>
+        <a class="btn btn-primary" href="{{ path('admin_users_new') }}">➕ Nouvel utilisateur</a>
+    </div>
+</div>
+
+<div class="admin-card">
+    <form method="get" class="admin-form" id="usersFilterForm">
+        <div class="form-row">
+            <div>
+                <label>Recherche</label>
+                <input type="text" name="q" value="{{ filters.q }}" placeholder="Nom, prénom, email..." id="usersFilterSearch">
+            </div>
+            <div>
+                <label>Rôle</label>
+                <select name="role">
+                    <option value="">Tous</option>
+                    {% for value, label in {
+                        'ROLE_ADMIN':'Admin',
+                        'ROLE_USER':'Utilisateur',
+                        'ROLE_PATIENT':'Patient',
+                        'ROLE_MEDECIN':'Médecin',
+                        'ROLE_PHARMACIEN':'Pharmacien',
+                        'ROLE_COACH':'Coach',
+                        'ROLE_NUTRITIONNISTE':'Nutritionniste'
+                    } %}
+                        <option value="{{ value }}" {{ filters.role == value ? 'selected' : '' }}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label>Statut</label>
+                <select name="status">
+                    <option value="">Tous</option>
+                    <option value="active" {{ filters.status == 'active' ? 'selected' : '' }}>Actif</option>
+                    <option value="banned" {{ filters.status == 'banned' ? 'selected' : '' }}>Banni</option>
+                    <option value="deleted" {{ filters.status == 'deleted' ? 'selected' : '' }}>Supprimé</option>
+                </select>
+            </div>
+            <div>
+                <label>Créé du</label>
+                <input type="date" name="from" value="{{ filters.from }}">
+            </div>
+            <div>
+                <label>Au</label>
+                <input type="date" name="to" value="{{ filters.to }}">
+            </div>
+        </div>
+        <div class="admin-actions-row">
+            <a class="btn btn-secondary" href="{{ path('admin_users') }}">Réinitialiser</a>
+        </div>
+    </form>
+</div>
+
+<div class="admin-card">
+    <div class="admin-actions-row" style="justify-content: space-between; align-items: center;">
+        <div>Total: <strong>{{ total }}</strong> utilisateurs</div>
+    </div>
+
+    <div style="overflow-x: auto;">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Utilisateur</th>
+                    <th>Rôle</th>
+                    <th>Statut</th>
+                    <th>Créé le</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for user in users %}
+                <tr>
+                    <td>
+                        <div style="font-weight: 600;">{{ user.fullName }}</div>
+                        <div style="color: var(--admin-muted); font-size: 0.9rem;">{{ user.email }}</div>
+                    </td>
+                    <td>{{ user.role }}</td>
+                    <td>
+                        {% if user.deletedAt %}
+                            <span class="admin-badge danger">Supprimé</span>
+                        {% elseif user.isBannedEffective %}
+                            <span class="admin-badge warning">Banni</span>
+                        {% else %}
+                            <span class="admin-badge success">Actif</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ user.createdAt|date('d/m/Y') }}</td>
+                    <td>
+                        <div class="admin-actions-row">
+                            <a class="btn btn-secondary" href="{{ path('admin_users_edit', {id: user.id}) }}">Éditer</a>
+                            <a class="btn btn-secondary" href="{{ path('admin_users_reset_password', {id: user.id}) }}">Reset MDP</a>
+
+                            {% if not user.deletedAt %}
+                                <form method="post" action="{{ path('admin_users_delete', {id: user.id}) }}" onsubmit="return confirm('Supprimer cet utilisateur ?');">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete_user_' ~ user.id) }}">
+                                    <button class="btn btn-danger" type="submit">Supprimer</button>
+                                </form>
+                            {% endif %}
+
+                            <form method="post" action="{{ path('admin_users_ban', {id: user.id}) }}">
+                                <input type="hidden" name="_token" value="{{ csrf_token('ban_user_' ~ user.id) }}">
+                                {% if user.isBannedEffective %}
+                                    <input type="hidden" name="is_banned" value="0">
+                                    <button class="btn btn-success" type="submit">Débannir</button>
+                                {% else %}
+                                    <input type="hidden" name="is_banned" value="1">
+                                    <input type="hidden" name="ban_reason" value="Suspension admin">
+                                    <button class="btn btn-danger" type="submit">Bannir</button>
+                                {% endif %}
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="5" style="text-align: center; color: var(--admin-muted);">Aucun utilisateur trouvé.</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if pages > 1 %}
+        <div class="admin-pagination" style="margin-top: 16px;">
+            {% for p in 1..pages %}
+                {% if p == page %}
+                    <span class="active">{{ p }}</span>
+                {% else %}
+                    <a href="{{ path('admin_users', filters|merge({page: p})) }}">{{ p }}</a>
+                {% endif %}
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        (function () {
+            const form = document.getElementById('usersFilterForm');
+            if (!form) return;
+
+            const searchInput = document.getElementById('usersFilterSearch');
+            const autoInputs = form.querySelectorAll('select,input[type=\"date\"]');
+
+            autoInputs.forEach((el) => {
+                el.addEventListener('change', () => form.submit());
+            });
+
+            if (searchInput) {
+                let timer = null;
+                searchInput.addEventListener('input', () => {
+                    if (timer) clearTimeout(timer);
+                    timer = setTimeout(() => form.submit(), 400);
+                });
+            }
+        })();
+    </script>
+{% endblock %}

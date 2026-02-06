@@ -19,10 +19,15 @@ class LoginSuccessHandler implements AuthenticationSuccessHandlerInterface
     {
         // ✅ Récupérer l'utilisateur depuis le token
         $user = $token->getUser();
+
+        if (method_exists($user, 'isBannedEffective') && $user->isBannedEffective()) {
+            return new RedirectResponse($this->router->generate('app_banned'));
+        }
         
         // Vérifier si l'utilisateur a le role ADMIN
-        if (in_array('ROLE_ADMIN', $user->getRoles())) {
-            return new RedirectResponse($this->router->generate('admin_dashboard'));
+        if (in_array('ROLE_ADMIN', $user->getRoles(), true)) {
+            // Forcer la vérification faciale avant tout accès admin
+            return new RedirectResponse($this->router->generate('admin_face_verification'));
         }
 
         // Redirection par défaut pour les utilisateurs normaux

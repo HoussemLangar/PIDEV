@@ -1,0 +1,150 @@
+{% extends 'front/base.html.twig' %}
+
+{% block title %}Compte suspendu{% endblock %}
+
+{% block body %}
+<div class="meme-popup" id="memePopup" data-images="{{ asset('images/carton1.gif') }},{{ asset('images/carton2.gif') }},{{ asset('images/arja3.gif') }}">
+    <img id="memePopupImg" src="" alt="Meme bannissement">
+</div>
+<div class="banned-wrap">
+    <div class="banned-card">
+        <div class="banned-badge">Compte suspendu</div>
+        <h1>😄 Arja3 ghodwa</h1>
+        <p>Votre compte est temporairement suspendu. Veuillez réessayer plus tard.</p>
+
+        <div class="banned-details">
+            {% if user and user.banReason %}
+                <div class="banned-row">
+                    <span class="label">Raison</span>
+                    <span class="value">{{ user.banReason }}</span>
+                </div>
+            {% endif %}
+            {% if user and user.banUntil %}
+                <div class="banned-row">
+                    <span class="label">Fin de suspension</span>
+                    <span class="value">{{ user.banUntil|date('d/m/Y H:i') }}</span>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="banned-actions">
+            <a class="btn btn-primary" href="{{ path('app_logout') }}">Se déconnecter</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        nav, .navbar, footer {
+            display: none !important;
+        }
+        .banned-wrap {
+            min-height: calc(100vh - 120px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            background: radial-gradient(1000px 600px at 10% 10%, rgba(64, 196, 255, 0.15), transparent),
+                        radial-gradient(900px 500px at 90% 10%, rgba(2, 136, 209, 0.12), transparent);
+        }
+        .banned-card {
+            max-width: 520px;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+            padding: 32px;
+            text-align: center;
+        }
+        .meme-popup {
+            position: fixed;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            background: rgba(0, 0, 0, 0.35);
+            z-index: 9999;
+            animation: meme-fade-out 0.6s ease forwards;
+            animation-delay: 4s;
+        }
+        .meme-popup img {
+            width: min(520px, 90vw);
+            border-radius: 14px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+        }
+        @keyframes meme-fade-out {
+            to { opacity: 0; visibility: hidden; }
+        }
+        .banned-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: #ffecec;
+            color: #c62828;
+            font-weight: 600;
+            margin-bottom: 16px;
+            font-size: 0.85rem;
+        }
+        .banned-card h1 {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+        .banned-card p {
+            color: #5a6472;
+            margin-bottom: 24px;
+        }
+        .banned-details {
+            text-align: left;
+            border: 1px solid #eef2f6;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+            background: #fafbfd;
+        }
+        .banned-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+        }
+        .banned-row:last-child { margin-bottom: 0; }
+        .banned-row .label { color: #6b7280; }
+        .banned-row .value { font-weight: 600; color: #111827; }
+        .banned-actions .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 10px;
+            text-decoration: none;
+            color: white;
+            background: #0288D1;
+            font-weight: 600;
+        }
+        @media (max-width: 600px) {
+            .banned-card { padding: 24px; }
+            .banned-card h1 { font-size: 1.6rem; }
+        }
+    </style>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        (function () {
+            const popup = document.getElementById('memePopup');
+            const img = document.getElementById('memePopupImg');
+            if (!popup || !img) return;
+
+            const images = (popup.dataset.images || '')
+                .split(',')
+                .map((s) => s.trim())
+                .filter(Boolean);
+
+            if (images.length) {
+                const randomIndex = Math.floor(Math.random() * images.length);
+                img.src = images[randomIndex];
+            }
+        })();
+    </script>
+{% endblock %}

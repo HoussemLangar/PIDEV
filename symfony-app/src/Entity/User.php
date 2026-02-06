@@ -54,17 +54,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private string $email;
 
     #[ORM\Column(type: 'string', length: 255)]
-    #[Assert\NotBlank(message: 'Le mot de passe est obligatoire.')]
-    #[Assert\Length(
-        min: 8,
-        max: 255,
-        minMessage: 'Le mot de passe doit contenir au moins {{ limit }} caractères.',
-        maxMessage: 'Le mot de passe ne peut pas dépasser {{ limit }} caractères.'
-    )]
-    #[Assert\Regex(
-        pattern: '/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/',
-        message: 'Le mot de passe doit contenir au moins une lettre majuscule, une lettre minuscule et un chiffre.'
-    )]
     private string $password;
 
     #[ORM\Column(type: 'string', length: 100)]
@@ -142,6 +131,27 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         message: 'Le rôle "{{ value }}" n\'est pas valide. Rôles autorisés: {{ choices }}.'
     )]
     private string $role = 'ROLE_USER';
+
+    #[ORM\Column(type: 'string', length: 20, options: ['default' => 'PENDING'])]
+    private string $subscriptionStatus = 'PENDING';
+
+    #[ORM\Column(type: 'string', length: 50, nullable: true)]
+    private ?string $subscriptionType = null;
+
+    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $subscriptionEndAt = null;
+
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    private bool $isBanned = false;
+
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    private ?string $banReason = null;
+
+    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $banUntil = null;
+
+    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $deletedAt = null;
 
     #[ORM\Column(type: 'datetime_immutable', options: ['default' => 'CURRENT_TIMESTAMP'])]
     #[Assert\NotBlank(message: 'La date de création est obligatoire.')]
@@ -238,6 +248,72 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getRole(): string { return $this->role; }
     public function setRole(string $role): void { $this->role = $role; }
+
+    public function getSubscriptionStatus(): string { return $this->subscriptionStatus; }
+    public function setSubscriptionStatus(string $subscriptionStatus): void { $this->subscriptionStatus = $subscriptionStatus; }
+
+    public function getSubscriptionType(): ?string { return $this->subscriptionType; }
+    public function setSubscriptionType(?string $subscriptionType): void { $this->subscriptionType = $subscriptionType; }
+
+    public function getSubscriptionEndAt(): ?\DateTimeImmutable { return $this->subscriptionEndAt; }
+    public function setSubscriptionEndAt(?\DateTimeImmutable $subscriptionEndAt): void { $this->subscriptionEndAt = $subscriptionEndAt; }
+
+    public function isSubscriptionActive(): bool
+    {
+        if ($this->subscriptionStatus !== 'ACTIVE') {
+            return false;
+        }
+        if ($this->subscriptionEndAt === null) {
+            return true;
+        }
+        return $this->subscriptionEndAt > new \DateTimeImmutable();
+    }
+
+    public function isSubscriptionExpired(): bool
+    {
+        if ($this->subscriptionEndAt === null) {
+            return false;
+        }
+        return $this->subscriptionEndAt <= new \DateTimeImmutable();
+    }
+
+    public function isBanned(): bool { return $this->isBanned; }
+    public function setIsBanned(bool $isBanned): void { $this->isBanned = $isBanned; }
+
+    public function getBanReason(): ?string { return $this->banReason; }
+    public function setBanReason(?string $banReason): void { $this->banReason = $banReason; }
+
+    public function getBanUntil(): ?\DateTimeImmutable { return $this->banUntil; }
+    public function setBanUntil(?\DateTimeImmutable $banUntil): void { $this->banUntil = $banUntil; }
+
+    public function getDeletedAt(): ?\DateTimeImmutable { return $this->deletedAt; }
+    public function setDeletedAt(?\DateTimeImmutable $deletedAt): void { $this->deletedAt = $deletedAt; }
+
+    public function isDeleted(): bool { return $this->deletedAt !== null; }
+
+    public function isBannedEffective(): bool
+    {
+        if (!$this->isBanned) {
+            return false;
+        }
+
+        if ($this->banUntil === null) {
+            return true;
+        }
+
+        return $this->banUntil > new \DateTimeImmutable();
+    }
+
+    public function unbanIfExpired(): bool
+    {
+        if ($this->isBanned && $this->banUntil !== null && $this->banUntil <= new \DateTimeImmutable()) {
+            $this->isBanned = false;
+            $this->banReason = null;
+            $this->banUntil = null;
+            return true;
+        }
+        return false;
+    }
 
     public function getCreatedAt(): \DateTimeInterface { return $this->createdAt; }
     public function setCreatedAt(\DateTimeInterface $createdAt): void { $this->createdAt = $createdAt; }

@@ -1,10 +1,21 @@
 <?php
 namespace App\Controller;
 
+use App\Entity\User;
+use App\Form\AdminUserType;
+use App\Form\AdminUserResetPasswordType;
+use App\Repository\AbonnementRepository;
+use App\Repository\UserRepository;
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Tools\Pagination\Paginator;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\Form\FormError;
 
 #[IsGranted('ROLE_ADMIN')]
 class AdminController extends AbstractController
@@ -134,9 +145,183 @@ class AdminController extends AbstractController
     }
     // ========== GESTION UTILISATEURS ==========
     #[Route('/users', name: 'admin_users')]
-    public function users(): Response
+    public function users(Request $request, UserRepository $userRepository): Response
     {
-        return $this->render('admin/users/index.html.twig');
+        $page = max(1, (int) $request->query->get('page', 1));
+        $limit = 12;
+
+        $filters = [
+            'q' => trim((string) $request->query->get('q', '')),
+            'role' => (string) $request->query->get('role', ''),
+            'status' => (string) $request->query->get('status', ''),
+            'from' => (string) $request->query->get('from', ''),
+            'to' => (string) $request->query->get('to', ''),
+        ];
+
+        $qb = $userRepository->createFilteredQueryBuilder($filters);
+        $qb->setFirstResult(($page - 1) * $limit)
+            ->setMaxResults($limit);
+
+        $paginator = new Paginator($qb);
+        $total = count($paginator);
+        $pages = (int) max(1, ceil($total / $limit));
+
+        return $this->render('admin/users/index.html.twig', [
+            'users' => $paginator,
+            'page' => $page,
+            'pages' => $pages,
+            'total' => $total,
+            'filters' => $filters,
+        ]);
+    }
+
+    #[Route('/users/new', name: 'admin_users_new')]
+    public function createUser(
+        Request $request,
+        EntityManagerInterface $em,
+        UserPasswordHasherInterface $passwordHasher
+    ): Response {
+        $user = new User();
+        $form = $this->createForm(AdminUserType::class, $user, [
+            'require_password' => true,
+        ]);
+
+        $form->handleRequest($request);
+        if ($form->isSubmitted() && $form->isValid()) {
+            $plainPassword = (string) $form->get('plainPassword')->getData();
+            if ($plainPassword === '') {
+                $form->addError(new FormError('Le mot de passe est obligatoire.'));
+            } else {
+                $user->setPassword($passwordHasher->hashPassword($user, $plainPassword));
+                $em->persist($user);
+                $em->flush();
+                $this->addFlash('success', 'Utilisateur créé avec succès.');
+                return $this->redirectToRoute('admin_users');
+            }
+        }
+
+        return $this->render('admin/users/form.html.twig', [
+            'form' => $form->createView(),
+            'mode' => 'create',
+        ]);
+    }
+
+    #[Route('/users/{id}/edit', name: 'admin_users_edit')]
+    public function editUser(
+        User $user,
+        Request $request,
+        EntityManagerInterface $em,
+        UserPasswordHasherInterface $passwordHasher
+    ): Response {
+        $form = $this->createForm(AdminUserType::class, $user, [
+            'require_password' => false,
+        ]);
+
+        $form->handleRequest($request);
+        if ($form->isSubmitted() && $form->isValid()) {
+            $plainPassword = (string) $form->get('plainPassword')->getData();
+            if ($plainPassword !== '') {
+                $user->setPassword($passwordHasher->hashPassword($user, $plainPassword));
+            }
+            $user->setUpdatedAt(new \DateTimeImmutable());
+            $em->flush();
+            $this->addFlash('success', 'Utilisateur mis à jour.');
+            return $this->redirectToRoute('admin_users');
+        }
+
+        return $this->render('admin/users/form.html.twig', [
+            'form' => $form->createView(),
+            'mode' => 'edit',
+            'user' => $user,
+        ]);
+    }
+
+    #[Route('/users/{id}/reset-password', name: 'admin_users_reset_password')]
+    public function resetPassword(
+        User $user,
+        Request $request,
+        EntityManagerInterface $em,
+        UserPasswordHasherInterface $passwordHasher
+    ): Response {
+        $form = $this->createForm(AdminUserResetPasswordType::class);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $plainPassword = (string) $form->get('plainPassword')->getData();
+            $user->setPassword($passwordHasher->hashPassword($user, $plainPassword));
+            $user->setUpdatedAt(new \DateTimeImmutable());
+            $em->flush();
+            $this->addFlash('success', 'Mot de passe réinitialisé.');
+            return $this->redirectToRoute('admin_users_edit', ['id' => $user->getId()]);
+        }
+
+        return $this->render('admin/users/reset_password.html.twig', [
+            'form' => $form->createView(),
+            'user' => $user,
+        ]);
+    }
+
+    #[Route('/users/{id}/ban', name: 'admin_users_ban', methods: ['POST'])]
+    public function banUser(User $user, Request $request, EntityManagerInterface $em): RedirectResponse
+    {
+        if (!$this->isCsrfTokenValid('ban_user_' . $user->getId(), (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('CSRF token invalide.');
+        }
+
+        $isBanned = (bool) $request->request->get('is_banned', false);
+        $banReason = trim((string) $request->request->get('ban_reason', ''));
+        $banUntilRaw = trim((string) $request->request->get('ban_until', ''));
+
+        $banUntil = null;
+        if ($banUntilRaw !== '') {
+            try {
+                $banUntil = new \DateTimeImmutable($banUntilRaw);
+            } catch (\Throwable) {
+                $banUntil = null;
+            }
+        }
+
+        $user->setIsBanned($isBanned);
+        $user->setBanReason($isBanned ? ($banReason !== '' ? $banReason : null) : null);
+        $user->setBanUntil($isBanned ? $banUntil : null);
+        $user->setUpdatedAt(new \DateTimeImmutable());
+
+        $em->flush();
+        $this->addFlash('success', $isBanned ? 'Utilisateur banni.' : 'Utilisateur débanni.');
+
+        return $this->redirectToRoute('admin_users');
+    }
+
+    #[Route('/users/{id}/delete', name: 'admin_users_delete', methods: ['POST'])]
+    public function deleteUser(User $user, Request $request, EntityManagerInterface $em): RedirectResponse
+    {
+        if (!$this->isCsrfTokenValid('delete_user_' . $user->getId(), (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('CSRF token invalide.');
+        }
+
+        if ($user->isDeleted()) {
+            $this->addFlash('info', 'Utilisateur déjà supprimé.');
+            return $this->redirectToRoute('admin_users');
+        }
+
+        $user->setDeletedAt(new \DateTimeImmutable());
+        $user->setUpdatedAt(new \DateTimeImmutable());
+        $em->flush();
+
+        $this->addFlash('success', 'Utilisateur supprimé (soft delete).');
+        return $this->redirectToRoute('admin_users');
+    }
+
+    #[Route('/users/stats', name: 'admin_users_stats')]
+    public function usersStats(UserRepository $userRepository): Response
+    {
+        $stats = $userRepository->getUserStats();
+        $chart = $userRepository->getRegistrationsChart(30);
+
+        return $this->render('admin/users/stats.html.twig', [
+            'stats' => $stats,
+            'chart' => $chart,
+        ]);
     }
 
     #[Route('/validation', name: 'admin_validation')]
@@ -153,9 +338,202 @@ class AdminController extends AbstractController
 
     // ========== ABONNEMENTS ==========
     #[Route('/subscriptions', name: 'admin_subscriptions')]
-    public function subscriptions(): Response
+    public function subscriptions(Request $request, AbonnementRepository $abonnementRepository): Response
     {
-        return $this->render('admin/subscriptions/index.html.twig');
+        $page = max(1, (int) $request->query->get('page', 1));
+        $limit = 12;
+
+        $filters = [
+            'q' => trim((string) $request->query->get('q', '')),
+            'status' => (string) $request->query->get('status', ''),
+            'type' => (string) $request->query->get('type', ''),
+            'from' => (string) $request->query->get('from', ''),
+            'to' => (string) $request->query->get('to', ''),
+        ];
+
+        $qb = $abonnementRepository->createFilteredQueryBuilder($filters);
+        $qb->setFirstResult(($page - 1) * $limit)
+            ->setMaxResults($limit);
+
+        $paginator = new Paginator($qb);
+        $total = count($paginator);
+        $pages = (int) max(1, ceil($total / $limit));
+
+        $stats = $abonnementRepository->getSubscriptionStats();
+
+        return $this->render('admin/subscriptions/index.html.twig', [
+            'abonnements' => $paginator,
+            'page' => $page,
+            'pages' => $pages,
+            'total' => $total,
+            'filters' => $filters,
+            'stats' => $stats,
+        ]);
+    }
+
+    #[Route('/subscriptions/{id}/update', name: 'admin_subscriptions_update', methods: ['POST'])]
+    public function updateSubscription(
+        int $id,
+        Request $request,
+        AbonnementRepository $abonnementRepository,
+        EntityManagerInterface $em
+    ): RedirectResponse {
+        $abonnement = $abonnementRepository->find($id);
+        if (!$abonnement) {
+            throw $this->createNotFoundException('Abonnement introuvable.');
+        }
+
+        if (!$this->isCsrfTokenValid('sub_update_' . $abonnement->getId(), (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('CSRF token invalide.');
+        }
+
+        $type = (string) $request->request->get('type', $abonnement->getTypeAbonnement());
+        $status = (string) $request->request->get('status', $abonnement->getStatut());
+        $dateFinRaw = (string) $request->request->get('date_fin', '');
+
+        if ($type !== '') {
+            $abonnement->setTypeAbonnement($type);
+            $abonnement->setNom($this->labelFromRole($type));
+        }
+        if ($status !== '') {
+            $abonnement->setStatut($status);
+        }
+        if ($dateFinRaw !== '') {
+            try {
+                $abonnement->setDateFin(new \DateTime($dateFinRaw));
+            } catch (\Throwable) {
+            }
+        }
+
+        $user = $abonnement->getUser();
+        if ($user) {
+            $user->setSubscriptionType($abonnement->getTypeAbonnement());
+            $user->setSubscriptionEndAt(\DateTimeImmutable::createFromMutable($abonnement->getDateFin()));
+            $user->setSubscriptionStatus($abonnement->getStatut() === 'actif' ? 'ACTIVE' : 'EXPIRED');
+            $user->setRole($abonnement->getTypeAbonnement());
+            $user->setUpdatedAt(new \DateTimeImmutable());
+            $this->ensureRoleEntity($user, $abonnement->getTypeAbonnement(), $em);
+        }
+
+        $em->flush();
+        $this->addFlash('success', 'Abonnement mis à jour.');
+        return $this->redirectToRoute('admin_subscriptions');
+    }
+
+    #[Route('/subscriptions/{id}/cancel', name: 'admin_subscriptions_cancel', methods: ['POST'])]
+    public function cancelSubscription(
+        int $id,
+        Request $request,
+        AbonnementRepository $abonnementRepository,
+        EntityManagerInterface $em
+    ): RedirectResponse {
+        $abonnement = $abonnementRepository->find($id);
+        if (!$abonnement) {
+            throw $this->createNotFoundException('Abonnement introuvable.');
+        }
+
+        if (!$this->isCsrfTokenValid('sub_cancel_' . $abonnement->getId(), (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('CSRF token invalide.');
+        }
+
+        $abonnement->setStatut('annule');
+        $abonnement->setDateFin(new \DateTime());
+
+        $user = $abonnement->getUser();
+        if ($user) {
+            $this->removeRoleEntity($user, $em);
+            $user->setRole('ROLE_USER');
+            $user->setSubscriptionStatus('EXPIRED');
+            $user->setSubscriptionType(null);
+            $user->setSubscriptionEndAt(null);
+            $user->setUpdatedAt(new \DateTimeImmutable());
+        }
+
+        $em->flush();
+        $this->addFlash('success', 'Abonnement annulé.');
+        return $this->redirectToRoute('admin_subscriptions');
+    }
+
+    private function labelFromRole(string $role): string
+    {
+        return match ($role) {
+            'ROLE_MEDECIN' => 'Médecin',
+            'ROLE_PHARMACIEN' => 'Pharmacien',
+            'ROLE_COACH' => 'Coach sportif',
+            'ROLE_NUTRITIONNISTE' => 'Nutritionniste',
+            'ROLE_PATIENT' => 'Patient',
+            default => 'Abonnement',
+        };
+    }
+
+    private function ensureRoleEntity(User $user, string $role, EntityManagerInterface $em): void
+    {
+        $this->removeRoleEntity($user, $em);
+
+        switch ($role) {
+            case 'ROLE_PATIENT':
+                if (!$user->getPatient()) {
+                    $patient = new \App\Entity\Patient();
+                    $patient->setUser($user);
+                    $em->persist($patient);
+                }
+                break;
+            case 'ROLE_MEDECIN':
+                if (!$user->getMedecin()) {
+                    $medecin = new \App\Entity\Medecin();
+                    $medecin->setUser($user);
+                    $medecin->setSpecialite('Non défini');
+                    $em->persist($medecin);
+                }
+                break;
+            case 'ROLE_PHARMACIEN':
+                if (!$user->getPharmacien()) {
+                    $pharmacien = new \App\Entity\Pharmacien();
+                    $pharmacien->setUser($user);
+                    $em->persist($pharmacien);
+                }
+                break;
+            case 'ROLE_COACH':
+                if (!$user->getCoachSportif()) {
+                    $coach = new \App\Entity\CoachSportif();
+                    $coach->setUser($user);
+                    $coach->setSpecialite('Non défini');
+                    $em->persist($coach);
+                }
+                break;
+            case 'ROLE_NUTRITIONNISTE':
+                if (!$user->getNutritionniste()) {
+                    $nutritionniste = new \App\Entity\Nutritionniste();
+                    $nutritionniste->setUser($user);
+                    $nutritionniste->setSpecialite('Non défini');
+                    $em->persist($nutritionniste);
+                }
+                break;
+        }
+    }
+
+    private function removeRoleEntity(User $user, EntityManagerInterface $em): void
+    {
+        if ($user->getPatient()) {
+            $em->remove($user->getPatient());
+            $user->setPatient(null);
+        }
+        if ($user->getMedecin()) {
+            $em->remove($user->getMedecin());
+            $user->setMedecin(null);
+        }
+        if ($user->getPharmacien()) {
+            $em->remove($user->getPharmacien());
+            $user->setPharmacien(null);
+        }
+        if ($user->getCoachSportif()) {
+            $em->remove($user->getCoachSportif());
+            $user->setCoachSportif(null);
+        }
+        if ($user->getNutritionniste()) {
+            $em->remove($user->getNutritionniste());
+            $user->setNutritionniste(null);
+        }
     }
 
     #[Route('/payments', name: 'admin_payments')]

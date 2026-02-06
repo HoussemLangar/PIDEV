@@ -52,10 +52,14 @@ class Abonnement
     #[ORM\OneToMany(mappedBy: 'abonnement', targetEntity: Accompagnement::class, cascade: ['persist', 'remove'])]
     private Collection $accompagnements;
 
+    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
+    private ?User $user = null;
+
     public function __construct()
     {
-        $this->createdAt = new \DateTimeImmutable();
-        $this->updatedAt = new \DateTimeImmutable();
+        $this->createdAt = new \DateTime();
+        $this->updatedAt = new \DateTime();
         $this->accompagnements = new ArrayCollection();
     }
 
@@ -83,4 +87,7 @@ class Abonnement
     public function getUpdatedAt(): \DateTimeInterface { return $this->updatedAt; }
     public function setUpdatedAt(\DateTimeInterface $updatedAt): void { $this->updatedAt = $updatedAt; }
     public function getAccompagnements(): Collection { return $this->accompagnements; }
+
+    public function getUser(): ?User { return $this->user; }
+    public function setUser(?User $user): void { $this->user = $user; }
 }

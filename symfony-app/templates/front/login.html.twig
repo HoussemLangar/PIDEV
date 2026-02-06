@@ -6,15 +6,15 @@
     <div class="auth-form" id="signInForm">
         <h1>Se Connecter</h1>
         
-        <div class="social-buttons">
-            <button class="social-btn google-btn">
+       <div class="social-buttons">
+            <a href="{{ path('connect_google_start') }}" class="social-btn google-btn">
                 <i class="fab fa-google"></i>
                 Se connecter avec Google
-            </button>
-            <button class="social-btn facebook-btn">
+            </a>
+            <a href="{{ path('connect_facebook_start') }}" class="social-btn facebook-btn">
                 <i class="fab fa-facebook-f"></i>
                 Se connecter avec Facebook
-            </button>
+            </a>
         </div>
 
         <div class="divider">
@@ -73,4 +73,80 @@
             Vous n'avez pas de compte? <a href="{{ path('app_register') }}">Créer un compte</a>
         </p>
     </div>
+{% endblock %}
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        /**
+         * Fonction pour basculer la visibilité du mot de passe
+         */
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            const icon = event.target;
+            
+            if (input) {
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                } else {
+                    input.type = 'password';
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                }
+            }
+        }
+
+        // Amélioration des alertes
+        document.addEventListener('DOMContentLoaded', function() {
+            const alerts = document.querySelectorAll('.alert');
+            
+            alerts.forEach(function(alert) {
+                // Ajouter un bouton de fermeture
+                if (!alert.querySelector('.close-alert')) {
+                    const closeBtn = document.createElement('button');
+                    closeBtn.className = 'close-alert';
+                    closeBtn.innerHTML = '×';
+                    closeBtn.setAttribute('aria-label', 'Fermer');
+                    
+                    closeBtn.addEventListener('click', function() {
+                        alert.style.animation = 'fadeOut 0.3s ease';
+                        setTimeout(() => {
+                            alert.remove();
+                        }, 300);
+                    });
+                    
+                    alert.appendChild(closeBtn);
+                }
+                
+                // Auto-fermeture après 5 secondes pour les alertes de succès
+                if (alert.classList.contains('alert-success')) {
+                    setTimeout(() => {
+                        if (alert.parentElement) {
+                            alert.style.animation = 'fadeOut 0.3s ease';
+                            setTimeout(() => {
+                                alert.remove();
+                            }, 300);
+                        }
+                    }, 5000);
+                }
+            });
+
+            // Animation de sortie
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes fadeOut {
+                    from {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                    to {
+                        opacity: 0;
+                        transform: translateY(-20px);
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        });
+    </script>
 {% endblock %}

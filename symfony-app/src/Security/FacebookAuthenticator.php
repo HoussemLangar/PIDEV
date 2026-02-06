@@ -15,7 +15,7 @@ use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
 use Symfony\Component\Security\Http\Authenticator\Passport\Passport;
 use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPassport;
-use Symfony\Component\Security\Http\EntryPoint\AuthenticationEntrypointInterface;
+use Symfony\Component\Security\Http\EntryPoint\AuthenticationEntryPointInterface;  // ✅ CORRECTION ICI
 
 class FacebookAuthenticator extends OAuth2Authenticator implements AuthenticationEntryPointInterface
 {
@@ -41,6 +41,10 @@ class FacebookAuthenticator extends OAuth2Authenticator implements Authenticatio
                 $facebookUser = $client->fetchUserFromToken($accessToken);
 
                 $email = $facebookUser->getEmail();
+                
+                if (!$email) {
+                    throw new AuthenticationException('Email non fourni par Facebook');
+                }
 
                 // Chercher l'utilisateur existant
                 $existingUser = $this->entityManager->getRepository(User::class)
@@ -53,13 +57,16 @@ class FacebookAuthenticator extends OAuth2Authenticator implements Authenticatio
                 // Créer un nouveau utilisateur
                 $user = new User();
                 $user->setEmail($email);
-                $user->setUsername($facebookUser->getName() ?? explode('@', $email)[0]);
                 
-                // Extraire prénom et nom
+                // Username
+                $username = $facebookUser->getName() ?? explode('@', $email)[0];
+                $user->setUsername($this->generateUniqueUsername($username));
+                
+                // Prénom et nom
                 $user->setPrenom($facebookUser->getFirstName() ?? 'Utilisateur');
                 $user->setNom($facebookUser->getLastName() ?? 'Facebook');
                 
-                // Générer un mot de passe aléatoire
+                // Mot de passe aléatoire (non utilisé pour OAuth)
                 $user->setPassword(bin2hex(random_bytes(32)));
                 $user->setRole('ROLE_USER');
 
@@ -73,13 +80,20 @@ class FacebookAuthenticator extends OAuth2Authenticator implements Authenticatio
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
     {
+        // Rediriger vers la page d'accueil après connexion
         return new RedirectResponse($this->router->generate('app_home'));
     }
 
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
-    {
-        return new RedirectResponse($this->router->generate('login'));
-    }
+{
+    // Ajouter un message d'erreur dans la session
+    $request->getSession()->getFlashBag()->add(
+        'error', 
+        'Impossible de se connecter avec Facebook. Veuillez réessayer ou utiliser une autre méthode.'
+    );
+    
+    return new RedirectResponse($this->router->generate('login'));
+}
 
     public function start(Request $request, AuthenticationException $authException = null): Response
     {
@@ -87,5 +101,21 @@ class FacebookAuthenticator extends OAuth2Authenticator implements Authenticatio
             $this->router->generate('login'),
             Response::HTTP_TEMPORARY_REDIRECT
         );
+    }
+
+    /**
+     * Génère un username unique en ajoutant un suffixe si nécessaire
+     */
+    private function generateUniqueUsername(string $baseUsername): string
+    {
+        $username = $baseUsername;
+        $counter = 1;
+
+        while ($this->entityManager->getRepository(User::class)->findOneBy(['username' => $username])) {
+            $username = $baseUsername . $counter;
+            $counter++;
+        }
+
+        return $username;
     }
 }

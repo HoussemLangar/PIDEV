@@ -9,6 +9,7 @@ services:
     container_name: pidev-web
     ports:
       - "8000:80"
+      - "8443:443"
     volumes:
       - ./symfony-app:/var/www/html
     environment:
@@ -42,7 +43,6 @@ services:
     container_name: pidev-phpmyadmin
     ports:
       - "8080:80"
-      - "8443:443"
     environment:
       PMA_HOST: db
       PMA_PORT: 3306

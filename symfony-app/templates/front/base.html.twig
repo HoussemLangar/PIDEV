@@ -41,7 +41,6 @@
                                         alt="Avatar" class="account-avatar">     
                             <strong>{{ app.user.nom }} {{ app.user.prenom }}</strong>
                             <p>{{ app.user.email }}</p>
-                            <span class="role">{{ app.user.role }}</span>
                         </div>
 
                         <hr>
@@ -50,7 +49,7 @@
                             <i class="fas fa-cog"></i> Paramètres
                         </a>
 
-                        <a href="{{ path('abonnement_app_subscription') }}" class="dropdown-item">
+                        <a href="{{ path('app_subscription_overview') }}" class="dropdown-item">
                             <i class="fas fa-star"></i> Abonnement
                         </a>
                         <a href="{{ path('app_logout') }}" class="dropdown-item danger">
@@ -72,6 +71,13 @@
     {% endblock %}
     
     {% block body %}{% endblock %}
+
+    {% if app.user and app.user.subscriptionStatus == 'SKIPPED' %}
+        <div class="subscription-banner">
+            <span>Mode découverte actif. Certaines fonctionnalités nécessitent un abonnement.</span>
+            <a href="{{ path('app_subscription') }}" class="subscription-banner-btn">S'abonner</a>
+        </div>
+    {% endif %}
     
     {% block footer %}
         <!-- Footer -->
@@ -106,6 +112,7 @@
         });
         
         const form = document.getElementById("registerForm");
+        if (form) {
         form.addEventListener("submit", async function(e) {
             e.preventDefault();
 
@@ -125,7 +132,7 @@
 
                 if (data.success) {
                     alert(data.message);
-                    window.location.href = "/login";
+                    window.location.href = data.redirect || "/";
                 }
 
             } catch (error) {
@@ -142,6 +149,7 @@
                 }
             }
         });
+        }
         </script>
 
     {% endblock %}

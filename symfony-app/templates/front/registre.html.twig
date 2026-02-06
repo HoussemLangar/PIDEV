@@ -40,7 +40,7 @@
             </div>
         {% endfor %}
 
-        {{ form_start(registration_form, { attr: { novalidate: 'novalidate' } }) }}
+        {{ form_start(registration_form, { action: path('app_register'), attr: { id: 'registerForm', novalidate: 'novalidate', 'data-skip-client-validation': '1' } }) }}
 
             {# USERNAME #}
             <div class="form-group">
@@ -471,6 +471,9 @@
             const forms = document.querySelectorAll('form');
             forms.forEach(function(form) {
                 form.addEventListener('submit', function(e) {
+                    if (this.dataset.skipClientValidation === '1') {
+                        return;
+                    }
                     if (!validateFormBeforeSubmit(this)) {
                         e.preventDefault();
                         scrollToFirstError();

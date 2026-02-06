@@ -3,28 +3,175 @@
 {% block title %}Mon profil - SANTÉA{% endblock %}
 
 {% block body %}
-<div class="profile-container">
-    <h1>Mon profil</h1>
+<section class="profile-page">
+    <div class="profile-shell">
+        <div class="profile-hero">
+            <div>
+                <div class="profile-badge">Paramètres</div>
+                <h1>Votre compte, maîtrisé</h1>
+                <p>Gérez vos informations, votre sécurité et vos préférences en un seul endroit.</p>
+            </div>
+            <div class="profile-hero-card">
+                <div class="profile-hero-label">Compte</div>
+                <div class="profile-hero-name">{{ app.user.fullName ?? app.user.email }}</div>
+                <div class="profile-hero-meta">{{ app.user.email }}</div>
+            </div>
+        </div>
 
-    {{ form_start(form) }}
+        <div class="profile-card">
+            {{ form_start(form, { attr: { class: 'profile-form', id: 'profileForm' } }) }}
+                <div class="profile-grid">
+                    <div>
+                        {{ form_label(form.nom) }}
+                        {{ form_widget(form.nom) }}
+                        {{ form_errors(form.nom) }}
+                    </div>
+                    <div>
+                        {{ form_label(form.prenom) }}
+                        {{ form_widget(form.prenom) }}
+                        {{ form_errors(form.prenom) }}
+                    </div>
+                    <div>
+                        {{ form_label(form.email) }}
+                        {{ form_widget(form.email) }}
+                        {{ form_errors(form.email) }}
+                    </div>
+                    <div>
+                        {{ form_label(form.telephone) }}
+                        {{ form_widget(form.telephone) }}
+                        {{ form_errors(form.telephone) }}
+                    </div>
+                    <div>
+                        {{ form_label(form.adresse) }}
+                        {{ form_widget(form.adresse) }}
+                        {{ form_errors(form.adresse) }}
+                    </div>
+                    <div>
+                        {{ form_label(form.dateNaissance) }}
+                        {{ form_widget(form.dateNaissance) }}
+                        {{ form_errors(form.dateNaissance) }}
+                    </div>
+                </div>
 
-        {{ form_row(form.nom) }}
-        {{ form_row(form.prenom) }}
-        {{ form_row(form.email) }}
-        {{ form_row(form.telephone) }}
-        {{ form_row(form.adresse) }}
-        {{ form_row(form.dateNaissance) }}
-        {{ form_row(form.password) }}
+                <div class="profile-actions">
+                    <button type="button" class="btn btn-secondary" data-modal-open="passwordModal">Modifier mot de passe</button>
+                    <button type="submit" class="btn btn-primary">Enregistrer</button>
+                </div>
 
-        <button type="submit" class="btn btn-primary">Enregistrer</button>
+                <div class="profile-modal" id="passwordModal" aria-hidden="true">
+                    <div class="modal-card">
+                        <div class="modal-header">
+                            <h3>Changer le mot de passe</h3>
+                            <button type="button" class="modal-close" data-modal-close>×</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="profile-grid">
+                                <div class="full">
+                                    {{ form_label(form.plainPassword.first) }}
+                                    <div class="password-field">
+                                        {{ form_widget(form.plainPassword.first) }}
+                                        <button type="button" class="toggle-visibility" data-toggle-password="{{ form.plainPassword.first.vars.id }}">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                    {{ form_errors(form.plainPassword.first) }}
+                                </div>
+                                <div class="full">
+                                    {{ form_label(form.plainPassword.second) }}
+                                    <div class="password-field">
+                                        {{ form_widget(form.plainPassword.second) }}
+                                        <button type="button" class="toggle-visibility" data-toggle-password="{{ form.plainPassword.second.vars.id }}">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                    {{ form_errors(form.plainPassword.second) }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-actions">
+                            <button type="button" class="btn btn-secondary" data-modal-close>Annuler</button>
+                            <button type="submit" class="btn btn-primary">Mettre à jour</button>
+                        </div>
+                    </div>
+                </div>
+            {{ form_end(form) }}
+        </div>
 
-    {{ form_end(form) }}
+        <div class="profile-card danger-zone">
+            <h3>Zone dangereuse</h3>
+            <p>Vous pouvez supprimer définitivement votre compte.</p>
+            <button type="button" class="btn btn-danger" data-modal-open="deleteModal">Supprimer mon compte</button>
+        </div>
+    </div>
 
-    <hr>
+    <div class="profile-modal" id="deleteModal" aria-hidden="true">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Confirmer la suppression</h3>
+                <button type="button" class="modal-close" data-modal-close>×</button>
+            </div>
+            <div class="modal-body">
+                <p>Cette action est définitive. Souhaitez-vous continuer ?</p>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" data-modal-close>Annuler</button>
+                <form action="{{ path('profile_delete') }}" method="POST">
+                    <input type="hidden" name="_token" value="{{ csrf_token('delete-account') }}">
+                    <button type="submit" class="btn btn-danger">Oui, supprimer</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
 
-    <form action="{{ path('profile_delete') }}" method="POST" onsubmit="return confirm('Voulez-vous vraiment supprimer votre compte ?');">
-        <input type="hidden" name="_token" value="{{ csrf_token('delete-account') }}">
-        <button type="submit" class="btn btn-danger">Supprimer mon compte</button>
-    </form>
-</div>
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        (function () {
+            const openers = document.querySelectorAll('[data-modal-open]');
+            const closers = document.querySelectorAll('[data-modal-close]');
+            const toggles = document.querySelectorAll('[data-toggle-password]');
+
+            openers.forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    const id = btn.getAttribute('data-modal-open');
+                    const modal = document.getElementById(id);
+                    if (modal) {
+                        modal.classList.add('open');
+                        modal.setAttribute('aria-hidden', 'false');
+                    }
+                });
+            });
+
+            closers.forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    const modal = btn.closest('.profile-modal');
+                    if (modal) {
+                        modal.classList.remove('open');
+                        modal.setAttribute('aria-hidden', 'true');
+                    }
+                });
+            });
+
+            document.addEventListener('click', (e) => {
+                const modal = e.target.classList.contains('profile-modal') ? e.target : null;
+                if (modal) {
+                    modal.classList.remove('open');
+                    modal.setAttribute('aria-hidden', 'true');
+                }
+            });
+
+            toggles.forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    const targetId = btn.getAttribute('data-toggle-password');
+                    const input = document.getElementById(targetId);
+                    if (!input) return;
+                    const isPassword = input.type === 'password';
+                    input.type = isPassword ? 'text' : 'password';
+                    btn.innerHTML = isPassword ? '<i class="fas fa-eye-slash"></i>' : '<i class="fas fa-eye"></i>';
+                });
+            });
+        })();
+    </script>
 {% endblock %}

@@ -12,6 +12,8 @@ use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\TelType;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Validator\Constraints\NotBlank;
+use Symfony\Component\Validator\Constraints\Length;
 
 class UsersType extends AbstractType
 {
@@ -36,18 +38,25 @@ class UsersType extends AbstractType
                 'type' => PasswordType::class,
                 'mapped' => false,
                 'invalid_message' => 'Les mots de passe ne correspondent pas',
+                'required' => true,
+                'constraints' => [
+                    new NotBlank(['message' => 'Le mot de passe est obligatoire.']),
+                    new Length(['min' => 8, 'minMessage' => 'Le mot de passe doit contenir au moins {{ limit }} caractères.']),
+                ],
                 'first_options' => [
                     'label' => 'Mot de passe',
                     'attr' => [
                         'placeholder' => '••••••••',
-                        'class' => 'form-control'
+                        'class' => 'form-control',
+                        'required' => 'required'
                     ]
                 ],
                 'second_options' => [
                     'label' => 'Confirmer le mot de passe',
                     'attr' => [
                         'placeholder' => '••••••••',
-                        'class' => 'form-control'
+                        'class' => 'form-control',
+                        'required' => 'required'
                     ]
                 ],
             ])

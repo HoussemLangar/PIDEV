@@ -15,7 +15,7 @@ use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
 use Symfony\Component\Security\Http\Authenticator\Passport\Passport;
 use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPassport;
-use Symfony\Component\Security\Http\EntryPoint\AuthenticationEntryPointInterface;
+use Symfony\Component\Security\Http\EntryPoint\AuthenticationEntryPointInterface;  // ✅ CORRECTION ICI
 
 class GoogleAuthenticator extends OAuth2Authenticator implements AuthenticationEntryPointInterface
 {
@@ -41,6 +41,10 @@ class GoogleAuthenticator extends OAuth2Authenticator implements AuthenticationE
                 $googleUser = $client->fetchUserFromToken($accessToken);
 
                 $email = $googleUser->getEmail();
+                
+                if (!$email) {
+                    throw new AuthenticationException('Email non fourni par Google');
+                }
 
                 // Chercher l'utilisateur existant
                 $existingUser = $this->entityManager->getRepository(User::class)
@@ -53,14 +57,17 @@ class GoogleAuthenticator extends OAuth2Authenticator implements AuthenticationE
                 // Créer un nouveau utilisateur
                 $user = new User();
                 $user->setEmail($email);
-                $user->setUsername($googleUser->getName() ?? explode('@', $email)[0]);
+                
+                // Username
+                $username = $googleUser->getName() ?? explode('@', $email)[0];
+                $user->setUsername($this->generateUniqueUsername($username));
                 
                 // Extraire prénom et nom
-                $names = explode(' ', $googleUser->getName() ?? 'Utilisateur Google');
+                $names = explode(' ', $googleUser->getName() ?? 'Utilisateur Google', 2);
                 $user->setPrenom($names[0] ?? 'Utilisateur');
                 $user->setNom($names[1] ?? 'Google');
                 
-                // Générer un mot de passe aléatoire (non utilisé pour OAuth)
+                // Mot de passe aléatoire (non utilisé pour OAuth)
                 $user->setPassword(bin2hex(random_bytes(32)));
                 $user->setRole('ROLE_USER');
 
@@ -78,11 +85,15 @@ class GoogleAuthenticator extends OAuth2Authenticator implements AuthenticationE
     }
 
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
-    {
-        $message = strtr($exception->getMessageKey(), $exception->getMessageData());
-
-        return new RedirectResponse($this->router->generate('login'));
-    }
+{
+    // Ajouter un message d'erreur dans la session
+    $request->getSession()->getFlashBag()->add(
+        'error', 
+        'Impossible de se connecter avec Google. Veuillez réessayer ou utiliser une autre méthode.'
+    );
+    
+    return new RedirectResponse($this->router->generate('login'));
+}
 
     public function start(Request $request, AuthenticationException $authException = null): Response
     {
@@ -90,5 +101,21 @@ class GoogleAuthenticator extends OAuth2Authenticator implements AuthenticationE
             $this->router->generate('login'),
             Response::HTTP_TEMPORARY_REDIRECT
         );
+    }
+
+    /**
+     * Génère un username unique en ajoutant un suffixe si nécessaire
+     */
+    private function generateUniqueUsername(string $baseUsername): string
+    {
+        $username = $baseUsername;
+        $counter = 1;
+
+        while ($this->entityManager->getRepository(User::class)->findOneBy(['username' => $username])) {
+            $username = $baseUsername . $counter;
+            $counter++;
+        }
+
+        return $username;
     }
 }

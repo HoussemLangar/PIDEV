@@ -1,0 +1,547 @@
+{# templates/security/face_verification.html.twig #}
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vérification Faciale - SANTÉA</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            max-width: 800px;
+            width: 100%;
+            overflow: hidden;
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+
+        .card-header h3 {
+            margin: 0;
+            font-size: 24px;
+        }
+        
+        .card-body {
+            padding: 30px;
+            text-align: center;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+            margin: 5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-outline {
+            background: white;
+            color: #6c757d;
+            border: 2px solid #6c757d;
+        }
+
+        #videoContainer {
+            margin: 20px 0;
+            position: relative;
+            display: inline-block;
+        }
+
+        #video {
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            max-width: 100%;
+            transform: scaleX(-1);
+        }
+
+        #canvas {
+            display: none;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        #loading p {
+            margin-top: 15px;
+            color: #666;
+        }
+
+        .countdown {
+            font-size: 48px;
+            font-weight: bold;
+            color: #667eea;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="card-header">
+            <h3>🛡️ Reconnaissance Faciale - Administrateur</h3>
+        </div>
+        <div class="card-body">
+            {% for message in app.flashes('success') %}
+                <div class="alert alert-success">✅ {{ message }}</div>
+            {% endfor %}
+            
+            {% for message in app.flashes('error') %}
+                <div class="alert alert-danger">❌ {{ message }}</div>
+            {% endfor %}
+
+            {% if not hasRegisteredFace %}
+                <div class="alert alert-info">
+                    ℹ️ Vous devez d'abord enregistrer votre visage pour activer la reconnaissance faciale.
+                </div>
+                <button id="registerBtn" class="btn btn-primary">
+                    📷 Enregistrer mon visage
+                </button>
+            {% else %}
+                <div class="alert alert-success">
+                    ✅ Visage déjà enregistré. Vérifiez votre identité pour accéder au dashboard.
+                </div>
+                <button id="verifyBtn" class="btn btn-success">
+                    🔐 Vérifier mon visage
+                </button>
+            {% endif %}
+
+            <div id="videoContainer" style="display: none;">
+                <video id="video" width="640" height="480" autoplay muted playsinline></video>
+                <canvas id="canvas" width="640" height="480"></canvas>
+                <div id="countdown" class="countdown"></div>
+            </div>
+
+            <div id="status"></div>
+            
+            <div id="loading" style="display: none;">
+                <div class="spinner"></div>
+                <p>Chargement...</p>
+            </div>
+
+            <div style="margin-top: 30px;">
+                <a href="{{ path('app_logout') }}" class="btn btn-outline">
+                    🚪 Se déconnecter
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const registerBtn = document.getElementById('registerBtn');
+        const verifyBtn = document.getElementById('verifyBtn');
+        const videoContainer = document.getElementById('videoContainer');
+        const statusDiv = document.getElementById('status');
+        const loadingDiv = document.getElementById('loading');
+        const countdownDiv = document.getElementById('countdown');
+        
+        let stream = null;
+
+        // Vérifier la compatibilité du navigateur
+        function checkBrowserSupport() {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                showStatus('❌ Votre navigateur ne supporte pas l\'accès à la caméra. Utilisez Chrome, Firefox ou Edge en HTTPS.', 'danger');
+                return false;
+            }
+            
+            // Vérifier HTTPS (sauf localhost)
+            if (location.protocol !== 'https:' && !location.hostname.match(/^(localhost|127\.0\.0\.1)$/)) {
+                showStatus('⚠️ L\'accès à la caméra nécessite HTTPS. Veuillez accéder au site via https://', 'warning');
+                return false;
+            }
+            
+            return true;
+        }
+
+        // Démarrer la caméra
+        async function startVideo() {
+            if (!checkBrowserSupport()) {
+                throw new Error('Navigateur non compatible');
+            }
+
+            try {
+                // Essayer d'abord avec les contraintes modernes
+                const constraints = {
+                    video: {
+                        width: { ideal: 640 },
+                        height: { ideal: 480 },
+                        facingMode: 'user'
+                    },
+                    audio: false
+                };
+
+                stream = await navigator.mediaDevices.getUserMedia(constraints);
+                
+                video.srcObject = stream;
+                videoContainer.style.display = 'block';
+                
+                return new Promise((resolve, reject) => {
+                    video.onloadedmetadata = () => {
+                        video.play()
+                            .then(() => resolve())
+                            .catch(err => reject(err));
+                    };
+                    
+                    video.onerror = () => {
+                        reject(new Error('Erreur lors du chargement de la vidéo'));
+                    };
+                });
+            } catch (error) {
+                // Essayer avec des contraintes simplifiées
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                    video.srcObject = stream;
+                    videoContainer.style.display = 'block';
+                    
+                    return new Promise((resolve) => {
+                        video.onloadedmetadata = () => {
+                            video.play();
+                            resolve();
+                        };
+                    });
+                } catch (fallbackError) {
+                    let errorMessage = 'Impossible d\'accéder à la caméra. ';
+                    
+                    if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+                        errorMessage += 'Veuillez autoriser l\'accès à la caméra dans les paramètres du navigateur.';
+                    } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+                        errorMessage += 'Aucune caméra détectée sur cet appareil.';
+                    } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+                        errorMessage += 'La caméra est déjà utilisée par une autre application.';
+                    } else {
+                        errorMessage += error.message;
+                    }
+                    
+                    showStatus('❌ ' + errorMessage, 'danger');
+                    throw new Error(errorMessage);
+                }
+            }
+        }
+
+        // Arrêter la vidéo
+        function stopVideo() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            if (video.srcObject) {
+                video.srcObject = null;
+            }
+            videoContainer.style.display = 'none';
+            countdownDiv.textContent = '';
+        }
+
+        // Compte à rebours
+        async function countdown(seconds) {
+            for (let i = seconds; i > 0; i--) {
+                countdownDiv.textContent = i;
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+            countdownDiv.textContent = '📸';
+            await new Promise(resolve => setTimeout(resolve, 500));
+            countdownDiv.textContent = '';
+        }
+
+        // Capturer l'image et extraire les caractéristiques
+        function captureImage() {
+            try {
+                // Vérifier que la vidéo est prête
+                if (video.readyState !== video.HAVE_ENOUGH_DATA) {
+                    throw new Error('La vidéo n\'est pas encore prête');
+                }
+
+                // Dessiner l'image inversée pour corriger l'effet miroir
+                ctx.save();
+                ctx.scale(-1, 1);
+                ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
+                ctx.restore();
+                
+                // Obtenir les données de l'image
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                
+                // Extraire les caractéristiques (histogramme RGB simple)
+                const features = extractFeatures(imageData);
+                
+                // Obtenir l'image en base64
+                const imageBase64 = canvas.toDataURL('image/jpeg', 0.8);
+                
+                return {
+                    features: features,
+                    image: imageBase64
+                };
+            } catch (error) {
+                console.error('Erreur lors de la capture:', error);
+                throw error;
+            }
+        }
+
+        // Extraire les caractéristiques de l'image (histogramme RGB)
+        function extractFeatures(imageData) {
+            const data = imageData.data;
+            const features = [];
+            
+            // Diviser l'image en grille 8x8 et calculer la moyenne RGB pour chaque cellule
+            const gridSize = 8;
+            const cellWidth = canvas.width / gridSize;
+            const cellHeight = canvas.height / gridSize;
+            
+            for (let y = 0; y < gridSize; y++) {
+                for (let x = 0; x < gridSize; x++) {
+                    let r = 0, g = 0, b = 0, count = 0;
+                    
+                    // Calculer la moyenne pour cette cellule
+                    for (let py = Math.floor(y * cellHeight); py < Math.floor((y + 1) * cellHeight); py++) {
+                        for (let px = Math.floor(x * cellWidth); px < Math.floor((x + 1) * cellWidth); px++) {
+                            const i = (py * canvas.width + px) * 4;
+                            r += data[i];
+                            g += data[i + 1];
+                            b += data[i + 2];
+                            count++;
+                        }
+                    }
+                    
+                    if (count > 0) {
+                        features.push(r / count, g / count, b / count);
+                    }
+                }
+            }
+            
+            return features;
+        }
+
+        // Enregistrer le visage
+        async function registerFace() {
+            try {
+                showStatus('📷 Démarrage de la caméra...', 'info');
+                await startVideo();
+                
+                showStatus('👤 Positionnez votre visage face à la caméra...', 'info');
+                await countdown(3);
+                
+                showStatus('📸 Capture en cours...', 'info');
+                const faceData = captureImage();
+                
+                showStatus('💾 Enregistrement...', 'info');
+                loadingDiv.style.display = 'block';
+                
+                const response = await fetch('{{ path('admin_register_face') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        faceDescriptor: faceData.features
+                    })
+                });
+
+                loadingDiv.style.display = 'none';
+                
+                if (!response.ok) {
+                    throw new Error('Erreur serveur: ' + response.status);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showStatus('✅ ' + data.message, 'success');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
+                } else {
+                    showStatus('❌ ' + data.message, 'danger');
+                }
+                
+                stopVideo();
+            } catch (error) {
+                loadingDiv.style.display = 'none';
+                showStatus('❌ Erreur: ' + error.message, 'danger');
+                console.error('Erreur complète:', error);
+                stopVideo();
+            }
+        }
+
+        // Vérifier le visage
+        async function verifyFace() {
+            try {
+                showStatus('📷 Démarrage de la caméra...', 'info');
+                await startVideo();
+                
+                showStatus('👤 Positionnez votre visage face à la caméra...', 'info');
+                await countdown(3);
+                
+                showStatus('📸 Capture en cours...', 'info');
+                const faceData = captureImage();
+                
+                showStatus('🔐 Vérification...', 'info');
+                loadingDiv.style.display = 'block';
+                
+                const response = await fetch('{{ path('admin_verify_face') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        faceDescriptor: faceData.features
+                    })
+                });
+
+                loadingDiv.style.display = 'none';
+                
+                if (!response.ok) {
+                    throw new Error('Erreur serveur: ' + response.status);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showStatus('✅ ' + data.message + ' Redirection...', 'success');
+                    setTimeout(() => {
+                        window.location.href = '{{ path('admin_dashboard') }}';
+                    }, 1500);
+                } else {
+                    showStatus('❌ ' + data.message, 'danger');
+                }
+                
+                stopVideo();
+            } catch (error) {
+                loadingDiv.style.display = 'none';
+                showStatus('❌ Erreur: ' + error.message, 'danger');
+                console.error('Erreur complète:', error);
+                stopVideo();
+            }
+        }
+
+        function showStatus(message, type) {
+            statusDiv.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+        }
+
+        // Event listeners
+        if (registerBtn) {
+            registerBtn.addEventListener('click', registerFace);
+        }
+        if (verifyBtn) {
+            verifyBtn.addEventListener('click', verifyFace);
+        }
+
+        // Auto-enregistrer le visage lors de la première connexion (aucun visage enregistré)
+        {% if not hasRegisteredFace %}
+        window.addEventListener('load', () => {
+            if (registerBtn) {
+                registerBtn.disabled = true;
+            }
+            if (verifyBtn) {
+                verifyBtn.disabled = true;
+            }
+            registerFace();
+        });
+        {% endif %}
+        if (reRegisterBtn) {
+        }
+
+        // Vérifier la compatibilité au chargement
+        window.addEventListener('load', () => {
+            console.log('Vérification de la compatibilité...');
+            
+            if (checkBrowserSupport()) {
+                console.log('✅ Système de reconnaissance faciale prêt (mode local)');
+                console.log('Protocol:', location.protocol);
+                console.log('Hostname:', location.hostname);
+            } else {
+                console.error('❌ Navigateur non compatible');
+            }
+        });
+    </script>
+</body>
+</html>

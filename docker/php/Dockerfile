@@ -1,6 +1,6 @@
 FROM php:8.1-apache
 
-# Installation des extensions PHP nécessaires
+# Installation dépendances système + ssl-cert
 RUN apt-get update && apt-get install -y \
     git \
     unzip \
@@ -9,6 +9,7 @@ RUN apt-get update && apt-get install -y \
     libpng-dev \
     libjpeg-dev \
     libfreetype6-dev \
+    ssl-cert \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) \
     pdo \
@@ -18,14 +19,21 @@ RUN apt-get update && apt-get install -y \
     gd \
     opcache
 
-# Installation de Composer
+# Générer certificat SSL local
+RUN make-ssl-cert generate-default-snakeoil --force-overwrite
+
+# Activer modules Apache
+RUN a2enmod rewrite \
+ && a2enmod ssl \
+ && a2ensite default-ssl
+
+# Installation Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Configuration Apache
-RUN a2enmod rewrite
+# Config Apache Symfony
 RUN sed -i 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf
 
-# Configuration pour le développement
+# ServerName pour éviter warning
 RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
 # Permissions
@@ -33,5 +41,5 @@ RUN chown -R www-data:www-data /var/www
 
 WORKDIR /var/www/html
 
-# Exposition du port
 EXPOSE 80
+EXPOSE 443

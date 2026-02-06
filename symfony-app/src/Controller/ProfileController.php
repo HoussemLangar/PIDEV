@@ -3,7 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\User;
-use App\Form\UsersType;
+use App\Form\ProfileType;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -22,14 +22,12 @@ class ProfileController extends AbstractController
     {
         $user = $this->getUser();
 
-        $form = $this->createForm(UsersType::class, $user, [
-            'validation_groups' => ['profile'],
-        ]);
+        $form = $this->createForm(ProfileType::class, $user);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            if ($form->get('password')->getData()) {
-                $hashedPassword = $passwordHasher->hashPassword($user, $form->get('password')->getData());
+            if ($form->get('plainPassword')->getData()) {
+                $hashedPassword = $passwordHasher->hashPassword($user, $form->get('plainPassword')->getData());
                 $user->setPassword($hashedPassword);
             }
 
