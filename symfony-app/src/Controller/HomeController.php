@@ -18,4 +18,14 @@ class HomeController extends AbstractController
             // 'contact_form' => $contactForm->createView(),
         ]);
     }
+
+    #[Route('/settings', name: 'app_settings')]
+    public function settings(): Response
+    {
+        return $this->render('user/settings.html.twig');
+    }
+
+    
+
+
 }

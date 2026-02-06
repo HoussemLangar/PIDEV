@@ -8,9 +8,19 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: 'users')]
+#[UniqueEntity(
+    fields: ['username'],
+    message: 'Ce nom d\'utilisateur est déjà utilisé. Veuillez en choisir un autre.'
+)]
+#[UniqueEntity(
+    fields: ['email'],
+    message: 'Cette adresse email est déjà associée à un compte existant.'
+)]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
@@ -19,36 +29,138 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?int $id = null;
 
     #[ORM\Column(type: 'string', length: 180, unique: true)]
+    #[Assert\NotBlank(message: 'Le nom d\'utilisateur est obligatoire.')]
+    #[Assert\Length(
+        min: 3,
+        max: 180,
+        minMessage: 'Le nom d\'utilisateur doit contenir au moins {{ limit }} caractères.',
+        maxMessage: 'Le nom d\'utilisateur ne peut pas dépasser {{ limit }} caractères.'
+    )]
+    #[Assert\Regex(
+        pattern: '/^[a-zA-Z0-9_.-]+$/',
+        message: 'Le nom d\'utilisateur ne peut contenir que des lettres, chiffres, tirets, underscores et points.'
+    )]
     private string $username;
 
     #[ORM\Column(type: 'string', length: 255, unique: true)]
+    #[Assert\NotBlank(message: 'L\'adresse email est obligatoire.')]
+    #[Assert\Email(
+        message: 'L\'adresse email "{{ value }}" n\'est pas valide.'
+    )]
+    #[Assert\Length(
+        max: 255,
+        maxMessage: 'L\'adresse email ne peut pas dépasser {{ limit }} caractères.'
+    )]
     private string $email;
 
     #[ORM\Column(type: 'string', length: 255)]
+    #[Assert\NotBlank(message: 'Le mot de passe est obligatoire.')]
+    #[Assert\Length(
+        min: 8,
+        max: 255,
+        minMessage: 'Le mot de passe doit contenir au moins {{ limit }} caractères.',
+        maxMessage: 'Le mot de passe ne peut pas dépasser {{ limit }} caractères.'
+    )]
+    #[Assert\Regex(
+        pattern: '/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/',
+        message: 'Le mot de passe doit contenir au moins une lettre majuscule, une lettre minuscule et un chiffre.'
+    )]
     private string $password;
 
     #[ORM\Column(type: 'string', length: 100)]
+    #[Assert\NotBlank(message: 'Le nom est obligatoire.')]
+    #[Assert\Length(
+        min: 2,
+        max: 100,
+        minMessage: 'Le nom doit contenir au moins {{ limit }} caractères.',
+        maxMessage: 'Le nom ne peut pas dépasser {{ limit }} caractères.'
+    )]
+    #[Assert\Regex(
+        pattern: '/^[a-zA-ZÀ-ÿ\s\'-]+$/u',
+        message: 'Le nom ne peut contenir que des lettres, espaces, apostrophes et tirets.'
+    )]
     private string $nom;
 
     #[ORM\Column(type: 'string', length: 100)]
+    #[Assert\NotBlank(message: 'Le prénom est obligatoire.')]
+    #[Assert\Length(
+        min: 2,
+        max: 100,
+        minMessage: 'Le prénom doit contenir au moins {{ limit }} caractères.',
+        maxMessage: 'Le prénom ne peut pas dépasser {{ limit }} caractères.'
+    )]
+    #[Assert\Regex(
+        pattern: '/^[a-zA-ZÀ-ÿ\s\'-]+$/u',
+        message: 'Le prénom ne peut contenir que des lettres, espaces, apostrophes et tirets.'
+    )]
     private string $prenom;
 
-    #[ORM\Column(type: 'date')]
-    private \DateTimeInterface $dateNaissance;
+    #[ORM\Column(type: 'date', nullable: true)]
+    #[Assert\NotBlank(message: 'La date de naissance est obligatoire.')]
+    #[Assert\Type(
+        type: \DateTimeInterface::class,
+        message: 'La date de naissance doit être une date valide.'
+    )]
+    #[Assert\LessThan(
+        value: 'today',
+        message: 'La date de naissance doit être antérieure à aujourd\'hui.'
+    )]
+    #[Assert\GreaterThan(
+        value: '-120 years',
+        message: 'La date de naissance ne peut pas être antérieure à 120 ans.'
+    )]
+    #[Assert\Expression(
+        expression: 'this.getDateNaissance() === null or this.getAge() >= 13',
+        message: 'Vous devez avoir au moins 13 ans pour vous inscrire.'
+    )]
+    private ?\DateTimeInterface $dateNaissance = null;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[Assert\Length(
+        max: 255,
+        maxMessage: 'L\'adresse ne peut pas dépasser {{ limit }} caractères.'
+    )]
     private ?string $adresse = null;
 
     #[ORM\Column(type: 'string', length: 20, nullable: true)]
+    #[Assert\Length(
+        min: 8,
+        max: 20,
+        minMessage: 'Le numéro de téléphone doit contenir au moins {{ limit }} caractères.',
+        maxMessage: 'Le numéro de téléphone ne peut pas dépasser {{ limit }} caractères.'
+    )]
+    #[Assert\Regex(
+        pattern: '/^[\d\s\+\-\(\)]+$/',
+        message: 'Le numéro de téléphone n\'est pas valide. Utilisez uniquement des chiffres, espaces et symboles (+, -, parenthèses).'
+    )]
     private ?string $telephone = null;
 
     #[ORM\Column(type: 'string', length: 50)]
-    private string $role;
+    #[Assert\NotBlank(message: 'Le rôle est obligatoire.')]
+    #[Assert\Choice(
+        choices: ['ROLE_USER', 'ROLE_PATIENT', 'ROLE_MEDECIN', 'ROLE_PHARMACIEN', 'ROLE_COACH', 'ROLE_NUTRITIONNISTE', 'ROLE_ADMIN'],
+        message: 'Le rôle "{{ value }}" n\'est pas valide. Rôles autorisés: {{ choices }}.'
+    )]
+    private string $role = 'ROLE_USER';
 
     #[ORM\Column(type: 'datetime_immutable', options: ['default' => 'CURRENT_TIMESTAMP'])]
+    #[Assert\NotBlank(message: 'La date de création est obligatoire.')]
+    #[Assert\Type(
+        type: \DateTimeImmutable::class,
+        message: 'La date de création doit être une date valide.'
+    )]
     private \DateTimeInterface $createdAt;
 
     #[ORM\Column(type: 'datetime_immutable', options: ['default' => 'CURRENT_TIMESTAMP'])]
+    #[Assert\NotBlank(message: 'La date de mise à jour est obligatoire.')]
+    #[Assert\Type(
+        type: \DateTimeImmutable::class,
+        message: 'La date de mise à jour doit être une date valide.'
+    )]
+    #[Assert\GreaterThanOrEqual(
+        propertyPath: 'createdAt',
+        message: 'La date de mise à jour ne peut pas être antérieure à la date de création.'
+    )]
     private \DateTimeInterface $updatedAt;
 
     // Relations
@@ -68,18 +180,23 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?Nutritionniste $nutritionniste = null;
 
     #[ORM\OneToMany(mappedBy: 'auteur', targetEntity: Contenu::class)]
+    #[Assert\Valid]
     private Collection $contenus;
 
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: Like::class, cascade: ['persist', 'remove'])]
+    #[Assert\Valid]
     private Collection $likes;
 
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: Commentaire::class, cascade: ['persist', 'remove'])]
+    #[Assert\Valid]
     private Collection $commentaires;
 
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: ReponseMedicament::class)]
+    #[Assert\Valid]
     private Collection $reponsesMedicaments;
 
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: Notification::class, cascade: ['persist', 'remove'])]
+    #[Assert\Valid]
     private Collection $notifications;
 
     public function __construct()
@@ -110,8 +227,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getPrenom(): string { return $this->prenom; }
     public function setPrenom(string $prenom): void { $this->prenom = $prenom; }
 
-    public function getDateNaissance(): \DateTimeInterface { return $this->dateNaissance; }
-    public function setDateNaissance(\DateTimeInterface $dateNaissance): void { $this->dateNaissance = $dateNaissance; }
+    public function getDateNaissance(): ?\DateTimeInterface { return $this->dateNaissance; }
+    public function setDateNaissance(?\DateTimeInterface $dateNaissance): void { $this->dateNaissance = $dateNaissance; }
 
     public function getAdresse(): ?string { return $this->adresse; }
     public function setAdresse(?string $adresse): void { $this->adresse = $adresse; }
@@ -154,4 +271,26 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getRoles(): array { return [$this->role]; }
     public function eraseCredentials(): void {}
     public function getUserIdentifier(): string { return $this->email; }
+
+    /**
+     * Calcule l'âge de l'utilisateur à partir de sa date de naissance
+     */
+    public function getAge(): ?int
+    {
+        if ($this->dateNaissance === null) {
+            return null;
+        }
+        
+        $now = new \DateTime();
+        $interval = $this->dateNaissance->diff($now);
+        return $interval->y;
+    }
+
+    /**
+     * Retourne le nom complet de l'utilisateur
+     */
+    public function getFullName(): string
+    {
+        return $this->prenom . ' ' . $this->nom;
+    }
 }

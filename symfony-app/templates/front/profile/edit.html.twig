@@ -1,0 +1,30 @@
+{% extends 'front/base.html.twig' %}
+
+{% block title %}Mon profil - SANTÉA{% endblock %}
+
+{% block body %}
+<div class="profile-container">
+    <h1>Mon profil</h1>
+
+    {{ form_start(form) }}
+
+        {{ form_row(form.nom) }}
+        {{ form_row(form.prenom) }}
+        {{ form_row(form.email) }}
+        {{ form_row(form.telephone) }}
+        {{ form_row(form.adresse) }}
+        {{ form_row(form.dateNaissance) }}
+        {{ form_row(form.password) }}
+
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
+
+    {{ form_end(form) }}
+
+    <hr>
+
+    <form action="{{ path('profile_delete') }}" method="POST" onsubmit="return confirm('Voulez-vous vraiment supprimer votre compte ?');">
+        <input type="hidden" name="_token" value="{{ csrf_token('delete-account') }}">
+        <button type="submit" class="btn btn-danger">Supprimer mon compte</button>
+    </form>
+</div>
+{% endblock %}

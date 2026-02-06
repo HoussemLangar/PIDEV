@@ -26,9 +26,15 @@ security:
                 login_path: login
                 check_path: login
                 enable_csrf: true
+                success_handler: App\Security\LoginSuccessHandler  
                 default_target_path: app_home
                 username_parameter: _username  # correspond au champ email
                 password_parameter: _password
+
+            # Authentification OAuth
+            custom_authenticators:
+                - App\Security\GoogleAuthenticator
+                - App\Security\FacebookAuthenticator
             
             # Configuration du logout
             logout:

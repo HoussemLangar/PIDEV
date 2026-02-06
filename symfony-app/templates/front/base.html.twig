@@ -6,7 +6,8 @@
     <title>{% block title %}SANTÉA - Healthcare Solutions{% endblock %}</title>
     
     {% block stylesheets %}
-        <link rel="stylesheet" href="{{ asset('style.css') }}">
+        <link rel="stylesheet" href="{{ asset('style.css') }}?v=9999">
+        <link rel="SHORTCUT ICON" type="image/x-icon" href="{{ asset('logo.png') }}">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     {% endblock %}
     
@@ -19,6 +20,7 @@
         <header>
             <nav class="navbar">
                 <div class="logo">SANTÉA</div>
+
                 <ul class="nav-links">
                     <li><a href="{{ path('app_home') }}">Accueil</a></li>
                     <li><a href="#quick-info">À propos</a></li>
@@ -26,15 +28,47 @@
                     <li><a href="#testimonials">Blog</a></li>
                     <li><a href="#contact-section">Contact</a></li>
                 </ul>
+
                 {% if app.user %}
-                    <a href="{{ path('app_home') }}" class="btn-appointment">Mon compte</a>
-                    <a href="{{ path('app_logout') }}" class="btn-danger">Déconnexion</a>
+                <div class="account-menu">
+                    <button class="btn-appointment account-toggle" id="accountBtn">                   
+                        Mon compte <i class="fas fa-chevron-down"></i>
+                    </button>
+
+                    <div class="account-dropdown" id="accountDropdown">
+                        <div class="account-info">
+                            <img src="https://ui-avatars.com/api/?name={{ app.user.nom|url_encode }}+{{ app.user.prenom|url_encode }}&background=0D8ABC&color=fff&size=30" 
+                                        alt="Avatar" class="account-avatar">     
+                            <strong>{{ app.user.nom }} {{ app.user.prenom }}</strong>
+                            <p>{{ app.user.email }}</p>
+                            <span class="role">{{ app.user.role }}</span>
+                        </div>
+
+                        <hr>
+
+                        <a href="{{ path('profile_edit') }}" class="dropdown-item">
+                            <i class="fas fa-cog"></i> Paramètres
+                        </a>
+
+                        <a href="{{ path('abonnement_app_subscription') }}" class="dropdown-item">
+                            <i class="fas fa-star"></i> Abonnement
+                        </a>
+                        <a href="{{ path('app_logout') }}" class="dropdown-item danger">
+                            <i class="fas fa-sign-out-alt"></i> Déconnexion
+                        </a>
+                    </div>
+                </div>
+                
                 {% else %}
-                    <a href="{{ path('login') }}" class="btn-appointment" id="btn-login">Se connecter</a>
+                    <a href="{{ path('login') }}" class="btn-appointment">Se connecter</a>
                 {% endif %}
-                <div class="menu-toggle"><i class="fas fa-bars"></i></div>
+
+                <div class="menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </div>
             </nav>
         </header>
+
     {% endblock %}
     
     {% block body %}{% endblock %}
@@ -50,6 +84,67 @@
     
     {% block javascripts %}
         <script src="{{ asset('js/script.js') }}"></script>
+        <script>
+        document.addEventListener("DOMContentLoaded", () => {
+
+            const btn = document.getElementById("accountBtn");
+            const dropdown = document.getElementById("accountDropdown");
+
+            if(!btn || !dropdown) return;
+
+            btn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                dropdown.classList.toggle("show");
+            });
+
+            document.addEventListener("click", (e) => {
+                if(!dropdown.contains(e.target) && !btn.contains(e.target)){
+                    dropdown.classList.remove("show");
+                }
+            });
+
+        });
+        
+        const form = document.getElementById("registerForm");
+        form.addEventListener("submit", async function(e) {
+            e.preventDefault();
+
+            // vider anciennes erreurs
+            document.querySelectorAll(".error-message").forEach(el => el.innerHTML = "");
+
+            const formData = new FormData(form);
+
+            try {
+                const response = await fetch(form.action, {
+                    method: "POST",
+                    headers: { "X-Requested-With": "XMLHttpRequest" },
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert(data.message);
+                    window.location.href = "/login";
+                }
+
+            } catch (error) {
+
+                const response = await error.response?.json?.();
+
+                if (response && response.errors) {
+                    for (const field in response.errors) {
+                        const div = document.getElementById("error-" + field);
+                        if (div) {
+                            div.innerHTML = response.errors[field].join("<br>");
+                        }
+                    }
+                }
+            }
+        });
+        </script>
+
     {% endblock %}
+
 </body>
 </html>

@@ -1081,7 +1081,6 @@ footer {
   content: '';
   position: absolute;
   top: 50%;
-  left: 50%;
   width: 0;
   height: 0;
   border-radius: 50%;
@@ -1372,7 +1371,28 @@ footer {
     padding: 0 20px;
   }
 }
+.account-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 8px;
+    vertical-align: middle;
+}
 
+.account-avatar-large {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
+    margin-bottom: 10px;
+}
+.error-message{
+    color:#e74c3c;
+    font-size:13px;
+    margin-top:5px;
+}
 
 
 
@@ -5740,4 +5760,521 @@ contact-section.section-title{
   .validation-actions {
     flex-direction: column;
   }
+}
+.account-menu {
+    position: relative;
+    display: inline-block;
+}
+
+.account-dropdown {
+    position: absolute;
+    top: 110%;
+    right: 0;
+    width: 260px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    display: none;
+    z-index: 999;
+    padding: 10px;
+}
+
+.account-dropdown.show {
+    display: block;
+}
+
+.account-info {
+    padding: 10px;
+    text-align: center;
+}
+
+.dropdown-item {
+    display: block;
+    padding: 10px;
+    text-decoration: none;
+    color: #333;
+    border-radius: 6px;
+}
+
+.dropdown-item:hover {
+    background: #f2f2f2;
+}
+
+.dropdown-item.danger {
+    color: red;
+}
+.account-menu{
+    position: relative;
+}
+
+.account-dropdown{
+    position: absolute;
+    right: 0;
+    top: 120%;
+    width: 260px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    padding: 10px;
+
+    opacity: 0;
+    transform: translateY(10px);
+    pointer-events: none;
+    transition: 0.25s;
+}
+
+.account-dropdown.show{
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.account-info{
+    text-align: center;
+    padding: 10px;
+}
+
+.dropdown-item{
+    display: block;
+    padding: 10px;
+    text-decoration: none;
+    color: #333;
+    border-radius: 8px;
+}
+
+.dropdown-item:hover{
+    background:#f2f2f2;
+}
+
+.dropdown-item.danger{
+    color:red;
+}
+/* ============================================
+   STYLES DE VALIDATION DE FORMULAIRE
+   ============================================ */
+
+/* --- ÉTATS DES INPUTS --- */
+
+/* Input normal */
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e0e6ed;
+    border-radius: 8px;
+    font-size: 15px;
+    transition: all 0.3s ease;
+    background-color: #f8f9fa;
+    outline: none;
+}
+
+/* Input au focus (normal) */
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    border-color: #3498db;
+    background-color: #ffffff;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+/* --- INPUT AVEC ERREUR --- */
+
+/* Input invalide - bordure rouge */
+.form-group.has-error input,
+.form-group.has-error select,
+.form-group.has-error textarea,
+.form-group input.is-invalid,
+.form-group select.is-invalid,
+.form-group textarea.is-invalid {
+    border-color: #e74c3c !important;
+    background-color: #fef5f5 !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23e74c3c' stroke-width='2'%3E%3Ccircle cx='12' cy='12' r='10'%3E%3C/circle%3E%3Cline x1='15' y1='9' x2='9' y2='15'%3E%3C/line%3E%3Cline x1='9' y1='9' x2='15' y2='15'%3E%3C/line%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 20px;
+    padding-right: 45px;
+}
+
+/* Input invalide au focus */
+.form-group.has-error input:focus,
+.form-group.has-error select:focus,
+.form-group.has-error textarea:focus,
+.form-group input.is-invalid:focus,
+.form-group select.is-invalid:focus,
+.form-group textarea.is-invalid:focus {
+    border-color: #c0392b !important;
+    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.15) !important;
+}
+
+/* Label avec erreur */
+.form-group.has-error label,
+.form-group label.error-label {
+    color: #e74c3c;
+    font-weight: 600;
+}
+
+/* Icône d'erreur dans le label */
+.form-group.has-error label::before {
+    content: "⚠ ";
+    margin-right: 4px;
+}
+
+/* --- MESSAGES D'ERREUR --- */
+
+/* Message d'erreur du formulaire */
+.form-group .form-error,
+.form-group .invalid-feedback,
+.form-group ul.form-errors {
+    display: block;
+    margin-top: 8px;
+    padding: 10px 12px;
+    background-color: #fef5f5;
+    border-left: 4px solid #e74c3c;
+    border-radius: 4px;
+    color: #c0392b;
+    font-size: 13px;
+    font-weight: 500;
+    animation: slideDown 0.3s ease;
+}
+
+.form-group ul.form-errors {
+    list-style: none;
+    padding-left: 12px;
+    margin: 8px 0 0 0;
+}
+
+.form-group ul.form-errors li {
+    padding: 8px 0;
+    position: relative;
+    padding-left: 24px;
+}
+
+.form-group ul.form-errors li::before {
+    content: "✕";
+    position: absolute;
+    left: 0;
+    color: #e74c3c;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+/* Animation d'apparition */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* --- ALERTES --- */
+
+/* Alerte de base */
+.alert {
+    padding: 16px 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    animation: slideInDown 0.4s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes slideInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Alerte d'erreur - ROUGE */
+.alert-danger,
+.alert-error {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    color: #ffffff;
+    border: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.alert-danger::before,
+.alert-error::before {
+    content: "⚠";
+    font-size: 24px;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+/* Effet de brillance sur l'alerte d'erreur */
+.alert-danger::after,
+.alert-error::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    animation: shine 3s infinite;
+}
+
+@keyframes shine {
+    to {
+        left: 100%;
+    }
+}
+
+/* Alerte de succès - VERT */
+.alert-success {
+    background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+    color: #ffffff;
+    border: none;
+}
+
+.alert-success::before {
+    content: "✓";
+    font-size: 24px;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+/* Alerte d'avertissement - ORANGE */
+.alert-warning {
+    background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+    color: #ffffff;
+    border: none;
+}
+
+.alert-warning::before {
+    content: "⚡";
+    font-size: 24px;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+/* Alerte d'information - BLEU */
+.alert-info {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    color: #ffffff;
+    border: none;
+}
+
+.alert-info::before {
+    content: "ℹ";
+    font-size: 24px;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+/* Bouton de fermeture d'alerte */
+.alert .close-alert {
+    margin-left: auto;
+    background: transparent;
+    border: none;
+    color: inherit;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.2s ease;
+}
+
+.alert .close-alert:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* --- INPUT DE MOT DE PASSE AVEC ERREUR --- */
+
+.password-input.has-error input {
+    border-color: #e74c3c !important;
+    background-color: #fef5f5 !important;
+    padding-right: 80px; /* Espace pour l'icône œil ET l'icône d'erreur */
+}
+
+.password-input.has-error .toggle-password {
+    right: 45px; /* Décale l'icône œil vers la gauche */
+}
+
+/* Icône d'erreur pour le mot de passe */
+.password-input.has-error::after {
+    content: "✕";
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #e74c3c;
+    font-size: 18px;
+    font-weight: bold;
+    pointer-events: none;
+}
+
+/* --- INPUT VALIDE (Vert) --- */
+
+.form-group.is-valid input,
+.form-group.is-valid select,
+.form-group.is-valid textarea,
+.form-group input.is-valid,
+.form-group select.is-valid,
+.form-group textarea.is-valid {
+    border-color: #27ae60 !important;
+    background-color: #f0fdf4 !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%2327ae60' stroke-width='2'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 20px;
+    padding-right: 45px;
+}
+
+/* Message de succès */
+.form-group .valid-feedback {
+    display: block;
+    margin-top: 8px;
+    padding: 8px 12px;
+    background-color: #f0fdf4;
+    border-left: 4px solid #27ae60;
+    border-radius: 4px;
+    color: #229954;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+/* --- ANIMATION DE SHAKE POUR LES ERREURS --- */
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+.form-group.has-error input,
+.form-group.has-error select,
+.form-group.has-error textarea {
+    animation: shake 0.5s ease;
+}
+
+.alert-danger,
+.alert-error {
+    animation: slideInDown 0.4s ease, shake 0.5s ease;
+}
+
+/* --- STYLES POUR LE CHAMP DATE AVEC ERREUR --- */
+
+.form-group.has-error input[type="date"],
+.form-group input[type="date"].is-invalid {
+    background-position: right 45px center, right 12px center;
+    background-size: 20px, 20px;
+    padding-right: 80px;
+}
+
+/* --- RESPONSIVE --- */
+
+@media (max-width: 768px) {
+    .alert {
+        padding: 12px 16px;
+        font-size: 13px;
+    }
+    
+    .form-group .form-error,
+    .form-group .invalid-feedback {
+        font-size: 12px;
+        padding: 8px 10px;
+    }
+}
+
+/* --- ÉTAT DE CHARGEMENT --- */
+
+.form-group.loading input,
+.form-group.loading select,
+.form-group.loading textarea {
+    border-color: #95a5a6;
+    background-color: #ecf0f1;
+    cursor: wait;
+    opacity: 0.6;
+}
+
+/* --- COMPTEUR DE CARACTÈRES AVEC ERREUR --- */
+
+.form-group .char-counter {
+    font-size: 12px;
+    color: #7f8c8d;
+    margin-top: 4px;
+    text-align: right;
+}
+
+.form-group.has-error .char-counter {
+    color: #e74c3c;
+    font-weight: 600;
+}
+
+/* --- GROUPE DE FORMULAIRE --- */
+
+.form-group {
+    margin-bottom: 20px;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+/* --- LABEL REQUIS --- */
+
+.form-group label.required::after {
+    content: " *";
+    color: #e74c3c;
+    font-weight: bold;
+}
+
+/* --- TOOLTIP D'ERREUR --- */
+
+.error-tooltip {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 4px;
+    padding: 8px 12px;
+    background-color: #e74c3c;
+    color: white;
+    border-radius: 6px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 1000;
+    box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3);
+    animation: fadeIn 0.3s ease;
+}
+
+.error-tooltip::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    left: 20px;
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-bottom: 6px solid #e74c3c;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
