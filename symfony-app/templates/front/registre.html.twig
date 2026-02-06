@@ -33,7 +33,8 @@
             </div>
         {% endfor %}
 
-        {{ form_start(registration_form) }}
+        {{ form_start(registration_form, { attr: { novalidate: 'novalidate' } }) }}
+
             
             <div class="form-group">
                 {{ form_label(registration_form.username) }}

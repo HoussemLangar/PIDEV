@@ -95,6 +95,12 @@ class AbonnementController extends AbstractController
         return new JsonResponse($this->serializeEntity($entity));
     }
 
+    #[Route('/subscription', name: 'app_subscription')]
+    public function showAbonnement(): Response
+    {
+        return $this->render('user/subscription.html.twig');
+    }
+
     /**
      * PATCH /api/abonnement/{id}
      * Mise à jour partielle d'une entité Abonnement
@@ -210,4 +216,6 @@ class AbonnementController extends AbstractController
             }
         }
     }
+
+    
 }

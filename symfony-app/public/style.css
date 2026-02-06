@@ -1081,7 +1081,6 @@ footer {
   content: '';
   position: absolute;
   top: 50%;
-  left: 50%;
   width: 0;
   height: 0;
   border-radius: 50%;
@@ -1372,7 +1371,28 @@ footer {
     padding: 0 20px;
   }
 }
+.account-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 8px;
+    vertical-align: middle;
+}
 
+.account-avatar-large {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
+    margin-bottom: 10px;
+}
+.error-message{
+    color:#e74c3c;
+    font-size:13px;
+    margin-top:5px;
+}
 
 
 
@@ -5740,4 +5760,92 @@ contact-section.section-title{
   .validation-actions {
     flex-direction: column;
   }
+}
+.account-menu {
+    position: relative;
+    display: inline-block;
+}
+
+.account-dropdown {
+    position: absolute;
+    top: 110%;
+    right: 0;
+    width: 260px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    display: none;
+    z-index: 999;
+    padding: 10px;
+}
+
+.account-dropdown.show {
+    display: block;
+}
+
+.account-info {
+    padding: 10px;
+    text-align: center;
+}
+
+.dropdown-item {
+    display: block;
+    padding: 10px;
+    text-decoration: none;
+    color: #333;
+    border-radius: 6px;
+}
+
+.dropdown-item:hover {
+    background: #f2f2f2;
+}
+
+.dropdown-item.danger {
+    color: red;
+}
+.account-menu{
+    position: relative;
+}
+
+.account-dropdown{
+    position: absolute;
+    right: 0;
+    top: 120%;
+    width: 260px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    padding: 10px;
+
+    opacity: 0;
+    transform: translateY(10px);
+    pointer-events: none;
+    transition: 0.25s;
+}
+
+.account-dropdown.show{
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.account-info{
+    text-align: center;
+    padding: 10px;
+}
+
+.dropdown-item{
+    display: block;
+    padding: 10px;
+    text-decoration: none;
+    color: #333;
+    border-radius: 8px;
+}
+
+.dropdown-item:hover{
+    background:#f2f2f2;
+}
+
+.dropdown-item.danger{
+    color:red;
 }

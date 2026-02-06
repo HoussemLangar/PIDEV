@@ -3,11 +3,10 @@
 namespace App\Entity;
 
 use App\Repository\UserRepository;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: 'users')]
@@ -15,143 +14,92 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(type: 'string', length: 180, unique: true)]
+    #[ORM\Column(length: 180, unique: true)]
+    #[Assert\NotBlank(message: "Nom d'utilisateur obligatoire")]
+    #[Assert\Length(min: 3)]
     private string $username;
 
-    #[ORM\Column(type: 'string', length: 255, unique: true)]
+    #[ORM\Column(length: 255, unique: true)]
+    #[Assert\NotBlank(message: "Email obligatoire")]
+    #[Assert\Email(message: "Email invalide")]
     private string $email;
 
-    #[ORM\Column(type: 'string', length: 255)]
+    #[ORM\Column(length: 255)]
     private string $password;
 
-    #[ORM\Column(type: 'string', length: 100)]
+    // 🔹 Mot de passe NON persisté
+    #[Assert\NotBlank(message: "Mot de passe obligatoire")]
+    #[Assert\Length(min: 8, minMessage: "Au moins 8 caractères")]
+    private ?string $plainPassword = null;
+
+    #[ORM\Column(length: 100)]
+    #[Assert\NotBlank]
     private string $nom;
 
-    #[ORM\Column(type: 'string', length: 100)]
+    #[ORM\Column(length: 100)]
+    #[Assert\NotBlank]
     private string $prenom;
 
     #[ORM\Column(type: 'date')]
+    #[Assert\NotNull]
+    #[Assert\LessThan("today")]
     private \DateTimeInterface $dateNaissance;
 
-    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[ORM\Column(length: 255, nullable: true)]
     private ?string $adresse = null;
 
-    #[ORM\Column(type: 'string', length: 20, nullable: true)]
+    #[ORM\Column(length: 20, nullable: true)]
+    #[Assert\Regex("/^[0-9+\s]+$/")]
     private ?string $telephone = null;
 
-    #[ORM\Column(type: 'string', length: 50)]
-    private string $role;
+    #[ORM\Column(length: 50)]
+    public string $role = 'ROLE_USER';
 
-    #[ORM\Column(type: 'datetime_immutable', options: ['default' => 'CURRENT_TIMESTAMP'])]
-    private \DateTimeInterface $createdAt;
+    #[ORM\Column]
+    private \DateTimeImmutable $createdAt;
 
-    #[ORM\Column(type: 'datetime_immutable', options: ['default' => 'CURRENT_TIMESTAMP'])]
-    private \DateTimeInterface $updatedAt;
-
-    // Relations
-    #[ORM\OneToOne(mappedBy: 'user', targetEntity: Patient::class, cascade: ['persist', 'remove'])]
-    private ?Patient $patient = null;
-
-    #[ORM\OneToOne(mappedBy: 'user', targetEntity: Medecin::class, cascade: ['persist', 'remove'])]
-    private ?Medecin $medecin = null;
-
-    #[ORM\OneToOne(mappedBy: 'user', targetEntity: Pharmacien::class, cascade: ['persist', 'remove'])]
-    private ?Pharmacien $pharmacien = null;
-
-    #[ORM\OneToOne(mappedBy: 'user', targetEntity: CoachSportif::class, cascade: ['persist', 'remove'])]
-    private ?CoachSportif $coachSportif = null;
-
-    #[ORM\OneToOne(mappedBy: 'user', targetEntity: Nutritionniste::class, cascade: ['persist', 'remove'])]
-    private ?Nutritionniste $nutritionniste = null;
-
-    #[ORM\OneToMany(mappedBy: 'auteur', targetEntity: Contenu::class)]
-    private Collection $contenus;
-
-    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Like::class, cascade: ['persist', 'remove'])]
-    private Collection $likes;
-
-    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Commentaire::class, cascade: ['persist', 'remove'])]
-    private Collection $commentaires;
-
-    #[ORM\OneToMany(mappedBy: 'user', targetEntity: ReponseMedicament::class)]
-    private Collection $reponsesMedicaments;
-
-    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Notification::class, cascade: ['persist', 'remove'])]
-    private Collection $notifications;
+    #[ORM\Column]
+    private \DateTimeImmutable $updatedAt;
 
     public function __construct()
     {
         $this->createdAt = new \DateTimeImmutable();
         $this->updatedAt = new \DateTimeImmutable();
-        $this->contenus = new ArrayCollection();
-        $this->likes = new ArrayCollection();
-        $this->commentaires = new ArrayCollection();
-        $this->reponsesMedicaments = new ArrayCollection();
-        $this->notifications = new ArrayCollection();
     }
 
     public function getId(): ?int { return $this->id; }
 
     public function getUsername(): string { return $this->username; }
-    public function setUsername(string $username): void { $this->username = $username; }
+    public function setUsername(string $username): self { $this->username = $username; return $this; }
 
     public function getEmail(): string { return $this->email; }
-    public function setEmail(string $email): void { $this->email = $email; }
+    public function setEmail(string $email): self { $this->email = $email; return $this; }
 
     public function getPassword(): string { return $this->password; }
-    public function setPassword(string $password): void { $this->password = $password; }
+    public function setPassword(string $password): self { $this->password = $password; return $this; }
+
+    public function getPlainPassword(): ?string { return $this->plainPassword; }
+    public function setPlainPassword(?string $plainPassword): self { $this->plainPassword = $plainPassword; return $this; }
 
     public function getNom(): string { return $this->nom; }
-    public function setNom(string $nom): void { $this->nom = $nom; }
+    public function setNom(string $nom): self { $this->nom = $nom; return $this; }
 
     public function getPrenom(): string { return $this->prenom; }
-    public function setPrenom(string $prenom): void { $this->prenom = $prenom; }
+    public function setPrenom(string $prenom): self { $this->prenom = $prenom; return $this; }
 
     public function getDateNaissance(): \DateTimeInterface { return $this->dateNaissance; }
-    public function setDateNaissance(\DateTimeInterface $dateNaissance): void { $this->dateNaissance = $dateNaissance; }
+    public function setDateNaissance(\DateTimeInterface $d): self { $this->dateNaissance = $d; return $this; }
 
     public function getAdresse(): ?string { return $this->adresse; }
-    public function setAdresse(?string $adresse): void { $this->adresse = $adresse; }
+    public function setAdresse(?string $a): self { $this->adresse = $a; return $this; }
 
     public function getTelephone(): ?string { return $this->telephone; }
-    public function setTelephone(?string $telephone): void { $this->telephone = $telephone; }
+    public function setTelephone(?string $t): self { $this->telephone = $t; return $this; }
 
-    public function getRole(): string { return $this->role; }
-    public function setRole(string $role): void { $this->role = $role; }
-
-    public function getCreatedAt(): \DateTimeInterface { return $this->createdAt; }
-    public function setCreatedAt(\DateTimeInterface $createdAt): void { $this->createdAt = $createdAt; }
-
-    public function getUpdatedAt(): \DateTimeInterface { return $this->updatedAt; }
-    public function setUpdatedAt(\DateTimeInterface $updatedAt): void { $this->updatedAt = $updatedAt; }
-
-    // Relation getters/setters
-    public function getPatient(): ?Patient { return $this->patient; }
-    public function setPatient(?Patient $patient): void { $this->patient = $patient; }
-
-    public function getMedecin(): ?Medecin { return $this->medecin; }
-    public function setMedecin(?Medecin $medecin): void { $this->medecin = $medecin; }
-
-    public function getPharmacien(): ?Pharmacien { return $this->pharmacien; }
-    public function setPharmacien(?Pharmacien $pharmacien): void { $this->pharmacien = $pharmacien; }
-
-    public function getCoachSportif(): ?CoachSportif { return $this->coachSportif; }
-    public function setCoachSportif(?CoachSportif $coachSportif): void { $this->coachSportif = $coachSportif; }
-
-    public function getNutritionniste(): ?Nutritionniste { return $this->nutritionniste; }
-    public function setNutritionniste(?Nutritionniste $nutritionniste): void { $this->nutritionniste = $nutritionniste; }
-
-    public function getContenus(): Collection { return $this->contenus; }
-    public function getLikes(): Collection { return $this->likes; }
-    public function getCommentaires(): Collection { return $this->commentaires; }
-    public function getReponsesMedicaments(): Collection { return $this->reponsesMedicaments; }
-    public function getNotifications(): Collection { return $this->notifications; }
-
-    // UserInterface
     public function getRoles(): array { return [$this->role]; }
-    public function eraseCredentials(): void {}
     public function getUserIdentifier(): string { return $this->email; }
+    public function eraseCredentials(): void {}
 }
