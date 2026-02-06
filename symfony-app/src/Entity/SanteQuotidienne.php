@@ -9,6 +9,7 @@ use App\Entity\User;
 use App\Repository\SanteQuotidienneRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: SanteQuotidienneRepository::class)]
 #[ORM\Table(name: 'sante_quotidienne')]
@@ -24,34 +25,50 @@ class SanteQuotidienne
     private ?User $user = null;
 
     #[ORM\Column(type: Types::FLOAT)]
+    #[Assert\NotBlank(message: "Le poids est obligatoire")]
+    #[Assert\GreaterThan(value: 0, message: "Le poids doit être supérieur à 0 kg")]
     private ?float $poids = null;
 
     #[ORM\Column(type: Types::FLOAT)]
+    #[Assert\NotBlank(message: "La taille est obligatoire")]
+    #[Assert\GreaterThan(value: 0, message: "La taille doit être supérieure à 0 cm")]
     private ?float $taille = null;
 
     #[ORM\Column(type: Types::FLOAT)]
+    #[Assert\GreaterThan(value: 0, message: "L'IMC doit être positif")]
     private ?float $imc = null;
 
     #[ORM\Column(type: Types::FLOAT, nullable: true)]
+    #[Assert\GreaterThanOrEqual(value: 0, message: "La tension artérielle ne peut pas être négative")]
     private ?float $tensionArterielle = null;
 
     #[ORM\Column(type: Types::FLOAT, nullable: true)]
+    #[Assert\GreaterThanOrEqual(value: 0, message: "Le sommeil ne peut pas être négatif")]
     private ?float $sommeil = null;
 
     #[ORM\Column(type: Types::STRING, length: 20, enumType: NiveauActivite::class, nullable: true)]
     private ?NiveauActivite $activitePhysique = null;
 
     #[ORM\Column(type: Types::SIMPLE_ARRAY, enumType: Humeur::class)]
+    #[Assert\Count(min: 1, minMessage: "Veuillez choisir au moins une humeur")]
     private array $humeur = [];
 
     #[ORM\Column(type: Types::STRING, length: 20, enumType: Alimentation::class, nullable: true)]
     private ?Alimentation $alimentation = null;
 
     #[ORM\Column(type: Types::FLOAT, nullable: true)]
+    #[Assert\GreaterThanOrEqual(value: 0, message: "La quantité d'eau bue ne peut pas être négative")]
     private ?float $eauBue = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    #[Assert\NotBlank(message: "La date est obligatoire")]
     private ?\DateTimeInterface $date = null;
+
+    public function __construct()
+    {
+        $this->date = new \DateTime();  // Date du jour par défaut
+        $this->humeur = [];             // Tableau vide par défaut
+    }
 
     public function getId(): ?int
     {
@@ -77,6 +94,7 @@ class SanteQuotidienne
     public function setPoids(float $poids): static
     {
         $this->poids = $poids;
+        $this->calculateImc();  // recalcule automatiquement l'IMC
         return $this;
     }
 
@@ -88,6 +106,7 @@ class SanteQuotidienne
     public function setTaille(float $taille): static
     {
         $this->taille = $taille;
+        $this->calculateImc();  // recalcule automatiquement l'IMC
         return $this;
     }
 
@@ -180,5 +199,18 @@ class SanteQuotidienne
     {
         $this->date = $date;
         return $this;
+    }
+
+    /**
+     * Calcule automatiquement l'IMC (poids / taille²) avec arrondi à 2 décimales
+     */
+    private function calculateImc(): void
+    {
+        if ($this->poids > 0 && $this->taille > 0) {
+            $tailleEnMetres = $this->taille / 100;
+            $this->imc = round($this->poids / ($tailleEnMetres * $tailleEnMetres), 2);
+        } else {
+            $this->imc = null;  // ou 0 si tu préfères
+        }
     }
 }
