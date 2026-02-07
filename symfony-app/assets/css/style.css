@@ -5741,3 +5741,98 @@ contact-section.section-title{
     flex-direction: column;
   }
 }
+
+/* Styles pour les boîtes de recommandations */
+.recommendations-section {
+  margin-top: 30px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 15px;
+}
+
+.recommendation-box {
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.recommendation-box:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.recommendation-box::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255,255,255,0.1);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.recommendation-box:hover::before {
+  opacity: 1;
+}
+
+.box-header h3 {
+  font-weight: 600;
+  margin-bottom: 0;
+}
+
+.box-header p {
+  font-size: 0.85em;
+  margin: 0;
+}
+
+.recommendation-box button {
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.recommendation-box button:hover {
+  background: rgba(255,255,255,0.3) !important;
+  transform: scale(1.05);
+}
+
+.recommendation-box button:active {
+  transform: scale(0.95);
+}
+
+/* Style spécifique pour le bouton d'abonnement */
+.btn-subscribe {
+  width: 100% !important;
+  margin-top: 10px !important;
+}
+
+.btn-subscribe:hover {
+  background: rgba(255,255,255,1) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
+}
+
+/* Responsive pour les boîtes de recommandations */
+@media (max-width: 768px) {
+  .recommendations-section {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+  
+  .recommendation-box {
+    padding: 15px;
+  }
+  
+  .box-header {
+    margin-bottom: 10px;
+  }
+  
+  .box-header span {
+    font-size: 1.5em !important;
+  }
+  
+  .box-header h3 {
+    font-size: 1.1em;
+  }
+}

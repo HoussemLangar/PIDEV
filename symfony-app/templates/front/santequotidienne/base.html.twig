@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SANTÉA - Tracker Santé{% endblock %}</title>
+
+    {# CSS du template + Font Awesome + Chart.js #}
+    {% block stylesheets %}
+        <link rel="stylesheet" href="{{ asset('assets/css/santet.css') }}">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    {% endblock %}
+</head>
+<body>
+
+    {# Navbar / Header du template #}
+    <header>
+        <nav class="navbar">
+            <div class="logo">SANTÉA</div>
+            <ul class="nav-links">
+                <li><a href="{{ path('app_home') }}">Accueil</a></li>
+                <li><a href="#rendez-vous">Mes rendez-vous</a></li>
+                <li><a href="{{ path('app_pharmacies') }}">Pharmacies</a></li>
+                <li><a href="{{ path('app_sante_quotidienne_index') }}" class="active">Tracker Santé</a></li>
+                <li><a href="#profil">Mon profil</a></li>
+            </ul>
+            <div class="user-menu">
+                <i class="fas fa-user-circle"></i>
+                <span>Mon compte</span>
+            </div>
+            <div class="menu-toggle"><i class="fas fa-bars"></i></div>
+        </nav>
+    </header>
+
+    {# Contenu dynamique des pages (c'est ici que new, index, edit vont s'insérer) #}
+    {% block body %}{% endblock %}
+
+    {# Footer #}
+    <footer>
+        <div class="container">
+            <p>2026 SANTÉA - All Rights Reserved</p>
+        </div>
+    </footer>
+
+    {# Scripts JS du template #}
+    {% block javascripts %}
+        <script src="{{ asset('assets/js/sante-quotidienne.js') }}"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    {% endblock %}
+
+</body>
+</html>

@@ -1,0 +1,23 @@
+{% extends 'front/santequotidienne/base.html.twig' %}
+
+{% block title %}Pharmacies - SANTÉA{% endblock %}
+
+{% block body %}
+<section class="pharmacies-page">
+    <div class="container">
+        <h1>Pharmacies</h1>
+
+        <div class="pharmacies-grid">
+            {% for pharmacy in pharmacies %}
+                <div class="pharmacy-card">
+                    <h3>{{ pharmacy.nom }}</h3>
+                    <p>{{ pharmacy.adresse }}</p>
+                    {% if pharmacy.telephone %}<p>Tél: {{ pharmacy.telephone }}</p>{% endif %}
+                </div>
+            {% else %}
+                <p>Aucune pharmacie trouvée.</p>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

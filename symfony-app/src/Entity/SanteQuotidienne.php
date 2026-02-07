@@ -26,48 +26,76 @@ class SanteQuotidienne
 
     #[ORM\Column(type: Types::FLOAT)]
     #[Assert\NotBlank(message: "Le poids est obligatoire")]
-    #[Assert\GreaterThan(value: 0, message: "Le poids doit être supérieur à 0 kg")]
+    #[Assert\Range(
+        min: 0.1,
+        max: 300,
+        notInRangeMessage: "Le poids doit être compris entre 0.1 et 300 kg"
+    )]
     private ?float $poids = null;
 
     #[ORM\Column(type: Types::FLOAT)]
     #[Assert\NotBlank(message: "La taille est obligatoire")]
-    #[Assert\GreaterThan(value: 0, message: "La taille doit être supérieure à 0 cm")]
+    #[Assert\Range(
+        min: 0.1,
+        max: 250,
+        notInRangeMessage: "La taille doit être comprise entre 0.1 et 250 cm"
+    )]
     private ?float $taille = null;
 
-    #[ORM\Column(type: Types::FLOAT)]
-    #[Assert\GreaterThan(value: 0, message: "L'IMC doit être positif")]
+    #[ORM\Column(type: Types::FLOAT, nullable: true)]
+    #[Assert\Range(
+        min: 0.1,
+        max: 100,
+        notInRangeMessage: "L'IMC doit être compris entre 0.1 et 100"
+    )]
     private ?float $imc = null;
 
     #[ORM\Column(type: Types::FLOAT, nullable: true)]
-    #[Assert\GreaterThanOrEqual(value: 0, message: "La tension artérielle ne peut pas être négative")]
+    #[Assert\Range(
+        min: 0,
+        max: 300,
+        notInRangeMessage: "La tension artérielle doit être comprise entre 0 et 300"
+    )]
     private ?float $tensionArterielle = null;
 
     #[ORM\Column(type: Types::FLOAT, nullable: true)]
-    #[Assert\GreaterThanOrEqual(value: 0, message: "Le sommeil ne peut pas être négatif")]
+    #[Assert\Range(
+        min: 0,
+        max: 24,
+        notInRangeMessage: "Le sommeil doit être compris entre 0 et 24 heures"
+    )]
     private ?float $sommeil = null;
 
     #[ORM\Column(type: Types::STRING, length: 20, enumType: NiveauActivite::class, nullable: true)]
     private ?NiveauActivite $activitePhysique = null;
 
     #[ORM\Column(type: Types::SIMPLE_ARRAY, enumType: Humeur::class)]
-    #[Assert\Count(min: 1, minMessage: "Veuillez choisir au moins une humeur")]
+    #[Assert\Count(
+        min: 1,
+        minMessage: "Veuillez choisir au moins une humeur"
+    )]
     private array $humeur = [];
 
     #[ORM\Column(type: Types::STRING, length: 20, enumType: Alimentation::class, nullable: true)]
     private ?Alimentation $alimentation = null;
 
     #[ORM\Column(type: Types::FLOAT, nullable: true)]
-    #[Assert\GreaterThanOrEqual(value: 0, message: "La quantité d'eau bue ne peut pas être négative")]
+    #[Assert\Range(
+        min: 0,
+        max: 5,
+        notInRangeMessage: "La quantité d'eau bue doit être comprise entre 0 et 5 litres"
+    )]
     private ?float $eauBue = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     #[Assert\NotBlank(message: "La date est obligatoire")]
+    #[Assert\LessThanOrEqual('today', message: 'Veuillez choisir une date valide (aujourd\'hui ou avant).')]
     private ?\DateTimeInterface $date = null;
 
     public function __construct()
     {
-        $this->date = new \DateTime();  // Date du jour par défaut
-        $this->humeur = [];             // Tableau vide par défaut
+        $this->date = new \DateTime(); // Date du jour par défaut
+        $this->humeur = []; // Tableau vide par défaut
     }
 
     public function getId(): ?int
@@ -94,7 +122,7 @@ class SanteQuotidienne
     public function setPoids(float $poids): static
     {
         $this->poids = $poids;
-        $this->calculateImc();  // recalcule automatiquement l'IMC
+        $this->calculateImc();
         return $this;
     }
 
@@ -106,7 +134,7 @@ class SanteQuotidienne
     public function setTaille(float $taille): static
     {
         $this->taille = $taille;
-        $this->calculateImc();  // recalcule automatiquement l'IMC
+        $this->calculateImc();
         return $this;
     }
 
@@ -210,7 +238,7 @@ class SanteQuotidienne
             $tailleEnMetres = $this->taille / 100;
             $this->imc = round($this->poids / ($tailleEnMetres * $tailleEnMetres), 2);
         } else {
-            $this->imc = null;  // ou 0 si tu préfères
+            $this->imc = null;
         }
     }
 }
