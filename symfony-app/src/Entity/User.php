@@ -157,6 +157,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     #[ORM\Column(type: 'string', length: 50, nullable: true)]
     private ?string $avatarMime = null;
 
+    #[ORM\Column(type: 'boolean', options: ['default' => true])]
+    private bool $reminderEnabled = true;
+
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private ?string $emailVerificationToken = null;
 
@@ -332,6 +335,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
         }
         return 'data:' . $this->avatarMime . ';base64,' . base64_encode($data);
     }
+
+    public function isReminderEnabled(): bool { return $this->reminderEnabled; }
+    public function setReminderEnabled(bool $reminderEnabled): void { $this->reminderEnabled = $reminderEnabled; }
 
     public function getEmailVerificationToken(): ?string { return $this->emailVerificationToken; }
     public function setEmailVerificationToken(?string $token): void { $this->emailVerificationToken = $token; }

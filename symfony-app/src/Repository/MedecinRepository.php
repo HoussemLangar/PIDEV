@@ -64,4 +64,16 @@ class MedecinRepository extends ServiceEntityRepository
     {
         $this->getEntityManager()->flush();
     }
+
+    public function findByCity(?string $city): array
+    {
+        if (!$city) {
+            return $this->findAll();
+        }
+        return $this->createQueryBuilder('m')
+            ->andWhere('m.cabinetVille LIKE :city')
+            ->setParameter('city', '%' . $city . '%')
+            ->getQuery()
+            ->getResult();
+    }
 }

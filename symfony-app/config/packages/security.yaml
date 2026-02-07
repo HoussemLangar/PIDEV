@@ -60,11 +60,15 @@ security:
     access_control:
         # Routes publiques (accessibles sans connexion)
         - { path: ^/login, roles: PUBLIC_ACCESS }
+        - { path: ^/login/validate, roles: PUBLIC_ACCESS }
         - { path: ^/register, roles: PUBLIC_ACCESS }
         - { path: ^/connect, roles: PUBLIC_ACCESS }
         - { path: ^/theme, roles: PUBLIC_ACCESS }
         - { path: ^/locale, roles: PUBLIC_ACCESS }
         - { path: ^/2fa, roles: IS_AUTHENTICATED_2FA_IN_PROGRESS }
+        - { path: ^/appointments, roles: ROLE_USER }
+        - { path: ^/rendez-vous, roles: ROLE_USER }
+        - { path: ^/api/appointments, roles: ROLE_USER }
         
         # Routes protégées (décommentez selon vos besoins)
         # - { path: ^/admin, roles: ROLE_ADMIN }

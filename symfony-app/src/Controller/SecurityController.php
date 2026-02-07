@@ -21,6 +21,8 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class SecurityController extends AbstractController
 {
@@ -42,6 +44,40 @@ class SecurityController extends AbstractController
             'last_username' => $lastUsername,
             'error' => $error,
         ]);
+    }
+
+    #[Route('/login/validate', name: 'login_validate', methods: ['POST'])]
+    public function validateLogin(Request $request, ValidatorInterface $validator): JsonResponse
+    {
+        $data = $request->request->all();
+        $email = (string) ($data['_username'] ?? '');
+        $password = (string) ($data['_password'] ?? '');
+
+        $constraints = new Assert\Collection([
+            '_username' => [
+                new Assert\NotBlank(['message' => 'Email obligatoire.']),
+                new Assert\Email(['message' => 'Email invalide.']),
+            ],
+            '_password' => [
+                new Assert\NotBlank(['message' => 'Mot de passe obligatoire.']),
+            ],
+        ]);
+
+        $errors = $validator->validate([
+            '_username' => $email,
+            '_password' => $password,
+        ], $constraints);
+
+        if (count($errors) > 0) {
+            $mapped = [];
+            foreach ($errors as $error) {
+                $path = trim((string) $error->getPropertyPath(), '[]');
+                $mapped[$path][] = $error->getMessage();
+            }
+            return new JsonResponse(['success' => false, 'errors' => $mapped], 422);
+        }
+
+        return new JsonResponse(['success' => true]);
     }
 
     /**

@@ -1005,10 +1005,202 @@ class AdminController extends AbstractController
         return $this->render('admin/accompaniments/index.html.twig');
     }
 
-    #[Route('/appointments', name: 'admin_appointments')]
-    public function appointments(): Response
+    #[Route('/admin/appointments', name: 'admin_appointments')]
+    public function appointments(
+        \Symfony\Component\HttpFoundation\Request $request,
+        \Doctrine\ORM\EntityManagerInterface $em
+    ): Response
     {
-        return $this->render('admin/appointments/index.html.twig');
+        $status = (string) $request->query->get('status', '');
+        $medecinId = (int) $request->query->get('medecin', 0);
+        $patientId = (int) $request->query->get('patient', 0);
+        $date = (string) $request->query->get('date', '');
+        $search = trim((string) $request->query->get('q', ''));
+
+        $repo = $em->getRepository(\App\Entity\RendezVous::class);
+        $qb = $repo->createQueryBuilder('r')
+            ->leftJoin('r.patient', 'p')->addSelect('p')
+            ->leftJoin('p.user', 'pu')->addSelect('pu')
+            ->leftJoin('r.medecin', 'm')->addSelect('m')
+            ->leftJoin('m.user', 'mu')->addSelect('mu')
+            ->orderBy('r.dateRdv', 'DESC');
+
+        if ($status) {
+            $qb->andWhere('r.statut = :statut')->setParameter('statut', $status);
+        }
+        if ($medecinId) {
+            $qb->andWhere('m.id = :mid')->setParameter('mid', $medecinId);
+        }
+        if ($patientId) {
+            $qb->andWhere('p.id = :pid')->setParameter('pid', $patientId);
+        }
+        if ($date) {
+            $qb->andWhere('r.dateRdv = :d')->setParameter('d', new \DateTime($date));
+        }
+        if ($search) {
+            $qb->andWhere('pu.email LIKE :q OR pu.nom LIKE :q OR pu.prenom LIKE :q OR mu.email LIKE :q OR mu.nom LIKE :q OR mu.prenom LIKE :q')
+                ->setParameter('q', '%' . $search . '%');
+        }
+
+        $rdvs = $qb->setMaxResults(200)->getQuery()->getResult();
+
+        $stats = [
+            'total' => count($rdvs),
+            'confirmed' => 0,
+            'cancelled' => 0,
+        ];
+        foreach ($rdvs as $rdv) {
+            if ($rdv->getStatut() === 'confirme') {
+                $stats['confirmed']++;
+            }
+            if ($rdv->getStatut() === 'annule') {
+                $stats['cancelled']++;
+            }
+        }
+
+        $medecins = $em->getRepository(\App\Entity\Medecin::class)->findAll();
+        $patients = $em->getRepository(\App\Entity\Patient::class)->findAll();
+
+        return $this->render('admin/appointments/index.html.twig', [
+            'rdvs' => $rdvs,
+            'stats' => $stats,
+            'filters' => [
+                'status' => $status,
+                'medecin' => $medecinId,
+                'patient' => $patientId,
+                'date' => $date,
+                'q' => $search,
+            ],
+            'medecins' => $medecins,
+            'patients' => $patients,
+        ]);
+    }
+
+    #[Route('/admin/appointments/{id}/cancel', name: 'admin_appointments_cancel', methods: ['POST'])]
+    public function cancelAppointment(
+        int $id,
+        \Doctrine\ORM\EntityManagerInterface $em,
+        \App\Service\AppointmentService $appointmentService
+    ): \Symfony\Component\HttpFoundation\Response {
+        $rdv = $em->getRepository(\App\Entity\RendezVous::class)->find($id);
+        if (!$rdv) {
+            throw $this->createNotFoundException('Rendez-vous introuvable.');
+        }
+        $appointmentService->updateStatusByDoctor($rdv, 'annule');
+        $this->addFlash('success', 'Rendez-vous annulé.');
+        return $this->redirectToRoute('admin_appointments');
+    }
+
+    #[Route('/admin/appointments/{id}/reschedule', name: 'admin_appointments_reschedule', methods: ['POST'])]
+    public function rescheduleAppointment(
+        int $id,
+        \Symfony\Component\HttpFoundation\Request $request,
+        \Doctrine\ORM\EntityManagerInterface $em,
+        \App\Service\AppointmentService $appointmentService
+    ): \Symfony\Component\HttpFoundation\Response {
+        $rdv = $em->getRepository(\App\Entity\RendezVous::class)->find($id);
+        if (!$rdv) {
+            throw $this->createNotFoundException('Rendez-vous introuvable.');
+        }
+
+        $date = (string) $request->request->get('date', '');
+        $time = (string) $request->request->get('time', '');
+        if (!$date || !$time) {
+            $this->addFlash('error', 'Date et heure obligatoires.');
+            return $this->redirectToRoute('admin_appointments');
+        }
+
+        $medecin = $rdv->getMedecin();
+        $dispoRepo = $em->getRepository(\App\Entity\Disponibilite::class);
+        $dispo = $dispoRepo->createQueryBuilder('d')
+            ->andWhere('d.medecin = :m')->setParameter('m', $medecin)
+            ->andWhere('d.date = :d')->setParameter('d', new \DateTime($date))
+            ->andWhere('d.heureDebut = :h')->setParameter('h', new \DateTime($date . ' ' . $time))
+            ->getQuery()->getOneOrNullResult();
+
+        if (!$dispo) {
+            $dispo = new \App\Entity\Disponibilite();
+            $dispo->setMedecin($medecin);
+            $dispo->setDate(new \DateTime($date));
+            $dispo->setHeureDebut(new \DateTime($date . ' ' . $time));
+            $dispo->setHeureFin((new \DateTime($date . ' ' . $time))->modify('+30 minutes'));
+            $dispo->setStatut('disponible');
+            $em->persist($dispo);
+            $em->flush();
+        }
+
+        if ($dispo->getRendezvous()) {
+            $this->addFlash('error', 'Créneau déjà réservé.');
+            return $this->redirectToRoute('admin_appointments');
+        }
+
+        $appointmentService->reschedule($rdv, $dispo);
+        $this->addFlash('success', 'Rendez-vous replanifié.');
+        return $this->redirectToRoute('admin_appointments');
+    }
+
+    #[Route('/admin/appointments/create', name: 'admin_appointments_create', methods: ['POST'])]
+    public function createAppointment(
+        \Symfony\Component\HttpFoundation\Request $request,
+        \Doctrine\ORM\EntityManagerInterface $em,
+        \App\Service\AppointmentService $appointmentService,
+        \Symfony\Component\Mailer\MailerInterface $mailer
+    ): \Symfony\Component\HttpFoundation\Response {
+        $patientId = (int) $request->request->get('patient_id', 0);
+        $medecinId = (int) $request->request->get('medecin_id', 0);
+        $date = (string) $request->request->get('date', '');
+        $time = (string) $request->request->get('time', '');
+        $motif = (string) $request->request->get('motif', '');
+
+        if (!$patientId || !$medecinId || !$date || !$time) {
+            $this->addFlash('error', 'Patient, médecin, date et heure sont obligatoires.');
+            return $this->redirectToRoute('admin_appointments');
+        }
+
+        $patient = $em->getRepository(\App\Entity\Patient::class)->find($patientId);
+        $medecin = $em->getRepository(\App\Entity\Medecin::class)->find($medecinId);
+        if (!$patient || !$medecin) {
+            $this->addFlash('error', 'Patient ou médecin introuvable.');
+            return $this->redirectToRoute('admin_appointments');
+        }
+
+        $dispoRepo = $em->getRepository(\App\Entity\Disponibilite::class);
+        $dispo = $dispoRepo->createQueryBuilder('d')
+            ->andWhere('d.medecin = :m')->setParameter('m', $medecin)
+            ->andWhere('d.date = :d')->setParameter('d', new \DateTime($date))
+            ->andWhere('d.heureDebut = :h')->setParameter('h', new \DateTime($date . ' ' . $time))
+            ->getQuery()->getOneOrNullResult();
+
+        if (!$dispo) {
+            $dispo = new \App\Entity\Disponibilite();
+            $dispo->setMedecin($medecin);
+            $dispo->setDate(new \DateTime($date));
+            $dispo->setHeureDebut(new \DateTime($date . ' ' . $time));
+            $dispo->setHeureFin((new \DateTime($date . ' ' . $time))->modify('+30 minutes'));
+            $dispo->setStatut('disponible');
+            $em->persist($dispo);
+            $em->flush();
+        }
+
+        if ($dispo->getRendezvous()) {
+            $this->addFlash('error', 'Créneau déjà réservé.');
+            return $this->redirectToRoute('admin_appointments');
+        }
+
+        $rdv = $appointmentService->book($patient, $medecin, $dispo, $motif ?: null);
+        $rdv->setStatut('confirme');
+        $em->flush();
+
+        $email = (new \Symfony\Bridge\Twig\Mime\TemplatedEmail())
+            ->from(new \Symfony\Component\Mime\Address('houssemlangar17@gmail.com', 'SANTÉA'))
+            ->to($patient->getUser()->getEmail())
+            ->subject('Rendez-vous confirmé')
+            ->htmlTemplate('emails/appointment_accepted.html.twig')
+            ->context(['rdv' => $rdv, 'user' => $patient->getUser(), 'medecin' => $medecin]);
+        $mailer->send($email);
+
+        $this->addFlash('success', 'Rendez-vous créé.');
+        return $this->redirectToRoute('admin_appointments');
     }
 
     #[Route('/medical', name: 'admin_medical')]

@@ -3,3 +3,8 @@ controllers:
         path: ../src/Controller/
         namespace: App\Controller
     type: attribute
+
+api_appointments_doctor_status:
+    path: /api/appointments/{id}/doctor-status
+    controller: App\Controller\AppointmentController::doctorStatus
+    methods: [POST]

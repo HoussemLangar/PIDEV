@@ -1,0 +1,542 @@
+{% extends 'front/base.html.twig' %}
+
+{% block title %}Rendez-vous{% endblock %}
+
+{% set userRole = app.user ? (app.user.subscriptionType ?? app.user.role) : null %}
+{% set isPatient = app.user and app.user.subscriptionStatus == 'ACTIVE' and userRole == 'ROLE_PATIENT' %}
+{% set isMedecin = app.user and app.user.subscriptionStatus == 'ACTIVE' and userRole == 'ROLE_MEDECIN' %}
+
+{% block body %}
+
+<section class="appointment-page">
+    <div class="appointment-header">
+        <div>
+            <div class="profile-badge">Rendez-vous</div>
+            <h1>Réserver un rendez-vous</h1>
+            <p>Choisissez un médecin, une date et un créneau disponible.</p>
+        </div>
+        {% if isPatient %}
+            <div class="appointment-header-actions">
+                <button class="btn btn-secondary" type="button" id="locateBtn">Utiliser ma position</button>
+                <div class="appointment-city">
+                    <input type="text" id="cityInput" placeholder="Ville (ex: Tunis)">
+                    <button class="btn btn-primary" type="button" id="searchCity">Rechercher</button>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    {% if not isPatient and not isMedecin %}
+        <div class="appointment-card appointment-lock">
+            <h3>Accès réservé</h3>
+            <p>Ce module est réservé aux abonnés patient ou médecin.</p>
+            <p class="appointment-hint">Activez un abonnement pour débloquer la prise ou la gestion des rendez-vous.</p>
+            <a href="{{ path('app_subscription') }}" class="btn btn-primary">Choisir un abonnement</a>
+        </div>
+    {% endif %}
+
+    <div class="appointment-sections">
+        {% if isPatient %}
+        <div class="appointment-grid">
+            <div class="appointment-card">
+                <h3>1. Trouver un médecin</h3>
+                <div id="map" class="appointment-map"></div>
+                <p class="appointment-hint">Cliquez sur un médecin pour voir ses créneaux.</p>
+            </div>
+
+            <div class="appointment-card">
+                <h3>2. Prendre un créneau</h3>
+                <form id="appointmentForm" class="appointment-form" data-ajax="1">
+                    <label>Médecin</label>
+                    <select id="doctorSelect" name="medecin_id" required>
+                        <option value="">Choisir un médecin</option>
+                    </select>
+
+                    <label>Date</label>
+                    <input type="date" id="dateInput" name="date" required>
+
+                    <label>Créneau</label>
+                    <div id="slotsWrap" class="slots-wrap">
+                        <div class="slot-empty">Sélectionnez un médecin et une date.</div>
+                    </div>
+
+                    <label>Motif (optionnel)</label>
+                    <textarea name="motif" id="motifInput" rows="3" placeholder="Votre motif"></textarea>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Confirmer</button>
+                    </div>
+                    <div id="appointmentAlert" class="appointment-alert" hidden></div>
+                </form>
+            </div>
+        </div>
+
+        <div class="appointment-card">
+            <div class="appointment-card-header">
+                <div>
+                    <h3>3. Replanifier ou annuler</h3>
+                    <p class="appointment-hint">Gérez vos rendez-vous à venir.</p>
+                </div>
+                <div class="appointment-help-badge">Actions rapides</div>
+            </div>
+            <div class="appointment-filters" id="patientFilters">
+                <select id="patientStatusFilter">
+                    <option value="">Tous statuts</option>
+                    <option value="en_attente">En attente</option>
+                    <option value="confirme">Confirmé</option>
+                    <option value="refuse">Refusé</option>
+                    <option value="annule">Annulé</option>
+                </select>
+                <input type="date" id="patientDateFilter">
+                <input type="text" id="patientSearchFilter" placeholder="Médecin...">
+                <button type="button" class="btn btn-secondary btn-xs" id="patientFiltersReset">Réinitialiser</button>
+            </div>
+            <div id="myAppointments" class="appointment-list"></div>
+        </div>
+        {% endif %}
+
+        {% if isMedecin %}
+        <div class="appointment-card">
+            <div class="appointment-card-header">
+                <div>
+                    <h3>Rendez-vous du médecin</h3>
+                    <p class="appointment-hint">Vos consultations confirmées.</p>
+                </div>
+                <div class="appointment-help-badge">Lecture seule</div>
+            </div>
+            <div class="appointment-filters" id="doctorFilters">
+                <select id="doctorStatusFilter">
+                    <option value="">Tous les statuts</option>
+                    <option value="en_attente">En attente</option>
+                    <option value="confirme">Confirmé</option>
+                    <option value="refuse">Refusé</option>
+                    <option value="annule">Annulé</option>
+                </select>
+                <input type="date" id="doctorDateFilter">
+                <input type="text" id="doctorSearchFilter" placeholder="Patient...">
+                <button type="button" class="btn btn-secondary btn-xs" id="doctorFiltersReset">Réinitialiser</button>
+            </div>
+            <div id="doctorAppointments" class="appointment-list"></div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        (function () {
+            const canBook = {{ isPatient ? 'true' : 'false' }};
+            const canMedecin = {{ isMedecin ? 'true' : 'false' }};
+
+            if (!canBook && !canMedecin) {
+                return;
+            }
+
+            let map = null;
+            if (canBook) {
+                map = L.map('map').setView([36.8, 10.18], 10);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 18
+                }).addTo(map);
+            }
+
+            const doctorSelect = document.getElementById('doctorSelect');
+            const dateInput = document.getElementById('dateInput');
+            const slotsWrap = document.getElementById('slotsWrap');
+            const alertBox = document.getElementById('appointmentAlert');
+            const myAppointments = document.getElementById('myAppointments');
+            const doctorAppointments = document.getElementById('doctorAppointments');
+            const doctorStatusFilter = document.getElementById('doctorStatusFilter');
+            const doctorDateFilter = document.getElementById('doctorDateFilter');
+            const doctorSearchFilter = document.getElementById('doctorSearchFilter');
+            const doctorFiltersReset = document.getElementById('doctorFiltersReset');
+            const patientStatusFilter = document.getElementById('patientStatusFilter');
+            const patientDateFilter = document.getElementById('patientDateFilter');
+            const patientSearchFilter = document.getElementById('patientSearchFilter');
+            const patientFiltersReset = document.getElementById('patientFiltersReset');
+
+            let doctors = [];
+
+            const showLoader = () => {
+                const loader = document.getElementById('globalLoader');
+                if (!loader) return;
+                loader.classList.add('show');
+                loader.setAttribute('aria-hidden', 'false');
+            };
+
+            const hideLoader = () => {
+                const loader = document.getElementById('globalLoader');
+                if (!loader) return;
+                loader.classList.remove('show');
+                loader.setAttribute('aria-hidden', 'true');
+            };
+
+            const showAlert = (message, type = 'success') => {
+                if (!alertBox) return;
+                alertBox.hidden = false;
+                alertBox.className = 'appointment-alert ' + type;
+                alertBox.textContent = message;
+                setTimeout(() => { if (alertBox) alertBox.hidden = true; }, 4000);
+            };
+
+            const loadDoctors = async (params = '') => {
+                if (!canBook) return;
+                showLoader();
+                const res = await fetch(`/api/appointments/doctors${params}`);
+                const data = await res.json();
+                doctors = data || [];
+                doctorSelect.innerHTML = '<option value="">Choisir un médecin</option>';
+                doctors.forEach(doc => {
+                    const opt = document.createElement('option');
+                    opt.value = doc.id;
+                    opt.textContent = `${doc.nom} ${doc.prenom} · ${doc.specialite}`;
+                    doctorSelect.appendChild(opt);
+
+                    if (doc.lat && doc.lng) {
+                        const marker = L.marker([doc.lat, doc.lng]).addTo(map);
+                        marker.bindPopup(`<strong>${doc.nom} ${doc.prenom}</strong><br>${doc.specialite}<br>${doc.ville || ''}`);
+                        marker.on('click', () => {
+                            doctorSelect.value = doc.id;
+                            fetchSlots();
+                        });
+                    }
+                });
+                hideLoader();
+            };
+
+            const fetchSlots = async () => {
+                if (!canBook) return;
+                showLoader();
+                slotsWrap.innerHTML = '<div class="slot-empty">Chargement...</div>';
+                const medecinId = doctorSelect.value;
+                const date = dateInput.value;
+                if (!medecinId || !date) {
+                    slotsWrap.innerHTML = '<div class="slot-empty">Sélectionnez un médecin et une date.</div>';
+                    hideLoader();
+                    return;
+                }
+                const res = await fetch(`/api/appointments/slots?medecin=${medecinId}&date=${date}`);
+                const data = await res.json();
+                slotsWrap.innerHTML = '';
+                if (!data.slots || data.slots.length === 0) {
+                    slotsWrap.innerHTML = '<div class="slot-empty">Aucun créneau disponible.</div>';
+                    hideLoader();
+                    return;
+                }
+                data.slots.forEach(slot => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'slot-btn';
+                    btn.textContent = slot.label;
+                    btn.dataset.dispoId = slot.id;
+                    btn.addEventListener('click', () => {
+                        document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        slotsWrap.dataset.selected = slot.id;
+                    });
+                    slotsWrap.appendChild(btn);
+                });
+                hideLoader();
+            };
+
+            const loadMyAppointments = async () => {
+                if (!canBook) return;
+                showLoader();
+                const res = await fetch('/api/appointments/my');
+                const data = await res.json();
+                myAppointments.innerHTML = '';
+                if (!data.items || data.items.length === 0) {
+                    myAppointments.innerHTML = '<div class="slot-empty">Aucun rendez-vous.</div>';
+                    hideLoader();
+                    return;
+                }
+                data.items.forEach(item => {
+                    const status = item.statut || 'en_attente';
+                    const statusLabel = status === 'confirme' ? 'Confirmé' : (status === 'refuse' ? 'Refusé' : (status === 'annule' ? 'Annulé' : 'En attente'));
+                    const statusClass = status === 'confirme' ? 'status-confirmed' : (status === 'refuse' ? 'status-cancelled' : (status === 'annule' ? 'status-cancelled' : 'status-pending'));
+                    const row = document.createElement('div');
+                    row.className = 'appointment-row';
+                    row.innerHTML = `
+                        <div>
+                            <strong>${item.medecin}</strong><br>
+                            <span>${item.date} · ${item.heure}</span>
+                            <div class="status-line"><span class="status-pill ${statusClass}">${statusLabel}</span></div>
+                        </div>
+                        <div class="appointment-row-actions">
+                            <button class="btn btn-secondary" data-action="reschedule" data-id="${item.id}">Replanifier</button>
+                            <button class="btn btn-danger" data-action="cancel" data-id="${item.id}">Annuler</button>
+                        </div>
+                    `;
+                    row.dataset.status = status;
+                    row.dataset.date = item.date;
+                    row.dataset.medecin = (item.medecin || '').toLowerCase();
+                    myAppointments.appendChild(row);
+                });
+                hideLoader();
+            };
+
+            const loadDoctorAppointments = async () => {
+                if (!canMedecin || !doctorAppointments) return;
+                showLoader();
+                const res = await fetch('/api/appointments/doctor');
+                const data = await res.json();
+                doctorAppointments.innerHTML = '';
+                if (!data.items || data.items.length === 0) {
+                    doctorAppointments.innerHTML = '<div class="slot-empty">Aucun rendez-vous.</div>';
+                    hideLoader();
+                    return;
+                }
+                data.items.forEach(item => {
+                    const row = document.createElement('div');
+                    row.className = 'appointment-row';
+                    const status = item.statut || 'en_attente';
+                    const statusLabel = status === 'confirme' ? 'Confirmé' : (status === 'refuse' ? 'Refusé' : (status === 'annule' ? 'Annulé' : 'En attente'));
+                    const statusClass = status === 'confirme' ? 'status-confirmed' : (status === 'refuse' ? 'status-cancelled' : (status === 'annule' ? 'status-cancelled' : 'status-pending'));
+                    const actions = status === 'en_attente'
+                        ? `
+                            <button class="btn btn-primary btn-xs" data-action="confirm" data-id="${item.id}">Confirmer</button>
+                            <button class="btn btn-secondary btn-xs" data-action="refuse" data-id="${item.id}">Refuser</button>
+                            <button class="btn btn-danger btn-xs" data-action="cancel" data-id="${item.id}">Annuler</button>
+                          `
+                        : `
+                            <button class="btn btn-secondary btn-xs" data-action="reschedule" data-id="${item.id}">Replanifier</button>
+                            <span class="status-pill ${statusClass}">${statusLabel}</span>
+                          `;
+                    row.innerHTML = `
+                        <div>
+                            <strong>${item.patient}</strong><br>
+                            <span>${item.date} · ${item.heure}</span>
+                            ${item.motif ? `<div class="appointment-note">${item.motif}</div>` : ''}
+                        </div>
+                        <div class="appointment-row-actions">
+                            ${actions}
+                        </div>
+                    `;
+                    row.dataset.status = status;
+                    row.dataset.date = item.date;
+                    row.dataset.patient = (item.patient || '').toLowerCase();
+                doctorAppointments.appendChild(row);
+            });
+            hideLoader();
+        };
+
+        const rescheduleDoctor = async (id) => {
+            const date = prompt('Nouvelle date (YYYY-MM-DD) :');
+            if (!date) return;
+            const time = prompt('Nouvelle heure (HH:MM) :');
+            if (!time) return;
+            showLoader();
+            const res = await fetch(`/api/appointments/${id}/doctor-reschedule`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                body: JSON.stringify({ date, time })
+            });
+            let data = null;
+            try {
+                data = await res.json();
+            } catch (e) {
+                data = { success: false, message: 'Réponse serveur invalide.' };
+            }
+            if (!data.success) {
+                showAlert(data.message || 'Erreur', 'error');
+                hideLoader();
+                return;
+            }
+            showAlert('Rendez-vous replanifié.', 'success');
+            await loadDoctorAppointments();
+            hideLoader();
+        };
+
+            if (canBook) {
+                document.getElementById('locateBtn').addEventListener('click', () => {
+                    navigator.geolocation.getCurrentPosition((pos) => {
+                        const { latitude, longitude } = pos.coords;
+                        map.setView([latitude, longitude], 12);
+                        loadDoctors(`?lat=${latitude}&lng=${longitude}`);
+                    });
+                });
+            }
+
+            if (canBook) {
+                document.getElementById('searchCity').addEventListener('click', async () => {
+                    const city = document.getElementById('cityInput').value.trim();
+                    if (!city) return;
+                    loadDoctors(`?city=${encodeURIComponent(city)}`);
+                });
+            }
+
+            if (canBook) {
+                doctorSelect.addEventListener('change', fetchSlots);
+                dateInput.addEventListener('change', fetchSlots);
+            }
+
+            if (canBook) {
+                document.getElementById('appointmentForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const medecinId = doctorSelect.value;
+                const date = dateInput.value;
+                const dispoId = slotsWrap.dataset.selected;
+                const motif = document.getElementById('motifInput').value;
+                const rescheduleId = slotsWrap.dataset.reschedule;
+                if (!medecinId || !date || !dispoId) {
+                    showAlert('Veuillez sélectionner un créneau.', 'error');
+                    return;
+                }
+                showLoader();
+                const endpoint = rescheduleId ? `/api/appointments/${rescheduleId}/reschedule` : '/api/appointments/book';
+                const res = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                    body: JSON.stringify({ medecin_id: medecinId, date, dispo_id: dispoId, motif })
+                });
+                const data = await res.json();
+                if (!data.success) {
+                    showAlert(data.message || 'Erreur', 'error');
+                    hideLoader();
+                    return;
+                }
+                showAlert(rescheduleId ? 'Rendez-vous replanifié.' : 'Rendez-vous confirmé.', 'success');
+                delete slotsWrap.dataset.reschedule;
+                await fetchSlots();
+                await loadMyAppointments();
+                hideLoader();
+            });
+            }
+
+            if (canBook) {
+                const toDateInput = (frDate) => {
+                    const parts = (frDate || '').split('/');
+                    if (parts.length !== 3) return '';
+                    return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                };
+
+                const applyPatientFilters = () => {
+                    const status = (patientStatusFilter && patientStatusFilter.value) || '';
+                    const date = (patientDateFilter && patientDateFilter.value) || '';
+                    const search = (patientSearchFilter && patientSearchFilter.value || '').trim().toLowerCase();
+                    myAppointments.querySelectorAll('.appointment-row').forEach((row) => {
+                        const matchStatus = !status || row.dataset.status === status;
+                        const matchDate = !date || toDateInput(row.dataset.date || '') === date;
+                        const matchSearch = !search || (row.dataset.medecin || '').includes(search);
+                        row.style.display = matchStatus && matchDate && matchSearch ? '' : 'none';
+                    });
+                };
+
+                if (patientStatusFilter) patientStatusFilter.addEventListener('change', applyPatientFilters);
+                if (patientDateFilter) patientDateFilter.addEventListener('change', applyPatientFilters);
+                if (patientSearchFilter) patientSearchFilter.addEventListener('input', applyPatientFilters);
+                if (patientFiltersReset) {
+                    patientFiltersReset.addEventListener('click', () => {
+                        patientStatusFilter.value = '';
+                        patientDateFilter.value = '';
+                        patientSearchFilter.value = '';
+                        applyPatientFilters();
+                    });
+                }
+
+                myAppointments.addEventListener('click', async (e) => {
+                    const btn = e.target.closest('button');
+                    if (!btn) return;
+                    const id = btn.dataset.id;
+                    if (btn.dataset.action === 'cancel') {
+                        showLoader();
+                        const res = await fetch(`/api/appointments/${id}/cancel`, { method: 'POST' });
+                        const data = await res.json();
+                        showAlert(data.message || 'Annulé', 'success');
+                        await loadMyAppointments();
+                        await fetchSlots();
+                        applyPatientFilters();
+                        hideLoader();
+                    }
+                    if (btn.dataset.action === 'reschedule') {
+                        showAlert('Sélectionnez un nouveau créneau puis cliquez Confirmer.', 'success');
+                        slotsWrap.dataset.reschedule = id;
+                    }
+                });
+            }
+
+            if (canMedecin && doctorAppointments) {
+                    const toDateInput = (frDate) => {
+                        const parts = (frDate || '').split('/');
+                        if (parts.length !== 3) return '';
+                        return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                    };
+
+                    const applyDoctorFilters = () => {
+                        const status = (doctorStatusFilter && doctorStatusFilter.value) || '';
+                        const date = (doctorDateFilter && doctorDateFilter.value) || '';
+                        const search = (doctorSearchFilter && doctorSearchFilter.value || '').trim().toLowerCase();
+                        doctorAppointments.querySelectorAll('.appointment-row').forEach((row) => {
+                            const matchStatus = !status || row.dataset.status === status;
+                            const matchDate = !date || toDateInput(row.dataset.date || '') === date;
+                            const matchSearch = !search || (row.dataset.patient || '').includes(search);
+                            row.style.display = matchStatus && matchDate && matchSearch ? '' : 'none';
+                        });
+                    };
+
+                if (doctorStatusFilter) doctorStatusFilter.addEventListener('change', applyDoctorFilters);
+                if (doctorDateFilter) doctorDateFilter.addEventListener('change', applyDoctorFilters);
+                if (doctorSearchFilter) doctorSearchFilter.addEventListener('input', applyDoctorFilters);
+                if (doctorFiltersReset) {
+                    doctorFiltersReset.addEventListener('click', () => {
+                        doctorStatusFilter.value = '';
+                        doctorDateFilter.value = '';
+                        doctorSearchFilter.value = '';
+                        applyDoctorFilters();
+                    });
+                }
+
+                doctorAppointments.addEventListener('click', async (e) => {
+                    const btn = e.target.closest('button');
+                    if (!btn) return;
+                    const id = btn.dataset.id;
+                    const action = btn.dataset.action;
+                    if (!id || !action) return;
+                    if (action === 'reschedule') {
+                        await rescheduleDoctor(id);
+                        return;
+                    }
+                    showLoader();
+                    const status = action === 'confirm' ? 'confirme' : (action === 'refuse' ? 'refuse' : 'annule');
+                    const res = await fetch(`/api/appointments/${id}/doctor-status`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                        body: JSON.stringify({ status })
+                    });
+                    let data = null;
+                    try {
+                        data = await res.json();
+                    } catch (e) {
+                        data = { success: false, message: 'Réponse serveur invalide.' };
+                    }
+                    if (!data.success) {
+                        showAlert(data.message || 'Erreur', 'error');
+                        hideLoader();
+                        return;
+                    }
+                    showAlert('Statut mis à jour.', 'success');
+                    await loadDoctorAppointments();
+                    applyDoctorFilters();
+                    hideLoader();
+                });
+            }
+
+            if (canBook) {
+                loadDoctors();
+                loadMyAppointments();
+            }
+            loadDoctorAppointments();
+
+            const params = new URLSearchParams(window.location.search);
+            const resId = params.get('doctor_reschedule');
+            if (resId && canMedecin) {
+                showAlert('Veuillez replanifier ce rendez-vous.', 'success');
+                rescheduleDoctor(resId);
+            }
+        })();
+    </script>
+{% endblock %}

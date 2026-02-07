@@ -1,9 +1,36 @@
 <!DOCTYPE html>
 <html lang="{{ app.request.locale }}" dir="{{ app.request.locale == 'ar' ? 'rtl' : 'ltr' }}">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <meta charset="UTF-8">
+
+    <!-- Responsive & Mobile -->
+    <meta name="format-detection" content="telephone=no">
+
+    <!-- SEO -->
     <title>{% block title %}SANTÉA - Healthcare Solutions{% endblock %}</title>
+    <meta name="description" content="SANTÉA est une plateforme de santé moderne reliant médecins, pharmaciens, coachs sportifs, nutritionnistes et patients.">
+    <meta name="keywords" content="santé, médecin, nutrition, pharmacie, coaching sportif, rendez-vous médical, abonnement santé">
+    <meta name="author" content="SANTÉA">
+    <meta name="robots" content="index, follow">
+
+    <!-- Theme & Browser UI -->
+    <meta name="theme-color" content="#0D8ABC">
+    <meta name="color-scheme" content="light dark">
+
+    <!-- Open Graph (Facebook, LinkedIn, WhatsApp…) -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="SANTÉA - Healthcare Solutions">
+    <meta property="og:description" content="Une solution complète pour la gestion de la santé et du bien-être.">
+    <meta property="og:image" content="{{ asset('logo.png') }}">
+    <meta property="og:url" content="{{ app.request.uri }}">
+    <meta property="og:site_name" content="SANTÉA">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="SANTÉA - Healthcare Solutions">
+    <meta name="twitter:description" content="Plateforme santé intelligente et sécurisée.">
+    <meta name="twitter:image" content="{{ asset('logo.png') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     {% block stylesheets %}
         <link rel="stylesheet" href="{{ asset('style.css') }}?v=9999">
@@ -59,6 +86,9 @@
                         <a href="{{ path('app_subscription_overview') }}" class="dropdown-item">
                             <i class="fas fa-star"></i> {{ 'nav.subscription'|trans }}
                         </a>
+                        <a href="{{ path('app_appointments') }}" class="dropdown-item">
+                            <i class="fas fa-calendar-check"></i> Rendez-vous
+                        </a>
 
                         <div class="dropdown-divider"></div>
 
@@ -98,26 +128,57 @@
     
     {% block body %}{% endblock %}
 
+    <div class="global-loader" id="globalLoader" aria-hidden="true">
+        <div class="loader-card">
+            <div class="loader-spinner"></div>
+            <div class="loader-text">Chargement…</div>
+        </div>
+    </div>
+
     {% if app.user and app.user.subscriptionStatus == 'SKIPPED' %}
         <div class="subscription-banner">
             <span>Mode découverte actif. Certaines fonctionnalités nécessitent un abonnement.</span>
             <a href="{{ path('app_subscription') }}" class="subscription-banner-btn">S'abonner</a>
         </div>
     {% endif %}
-    
-    {% block footer %}
-        <!-- Footer -->
-        <footer>
-            <div class="container">
-                <p>{{ 'now'|date('Y') }} SANTÉA - All Rights Reserved</p>
-            </div>
-        </footer>
-    {% endblock %}
-    
+
     {% block javascripts %}
-        <script src="{{ asset('js/script.js') }}"></script>
         <script>
-        document.addEventListener("DOMContentLoaded", () => {
+            (function () {
+                const loader = document.getElementById('globalLoader');
+                if (!loader) return;
+                const show = () => {
+                    loader.classList.add('show');
+                    loader.setAttribute('aria-hidden', 'false');
+                };
+                const hide = () => {
+                    loader.classList.remove('show');
+                    loader.setAttribute('aria-hidden', 'true');
+                };
+
+                document.querySelectorAll('form').forEach((form) => {
+                    if (form.dataset.ajax === '1') return;
+                    form.addEventListener('submit', () => {
+                        show();
+                    });
+                });
+
+                document.querySelectorAll('a[href]').forEach((link) => {
+                    if (link.target === '_blank' || link.hasAttribute('download')) return;
+                    link.addEventListener('click', (e) => {
+                        const href = link.getAttribute('href');
+                        if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
+                        show();
+                    });
+                });
+
+                window.addEventListener('pageshow', (e) => {
+                    if (e.persisted) hide();
+                });
+
+                window.addEventListener('load', hide);
+            })();
+            document.addEventListener("DOMContentLoaded", () => {
 
             const btn = document.getElementById("accountBtn");
             const dropdown = document.getElementById("accountDropdown");
@@ -177,7 +238,15 @@
         });
         }
         </script>
-
+    {% endblock %}
+    
+    {% block footer %}
+        <!-- Footer -->
+        <footer>
+            <div class="container">
+                <p>{{ 'now'|date('Y') }} SANTÉA - All Rights Reserved</p>
+            </div>
+        </footer>
     {% endblock %}
 
 </body>
