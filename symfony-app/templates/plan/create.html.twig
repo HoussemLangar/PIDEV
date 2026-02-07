@@ -1,0 +1,90 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Créer un plan d'accompagnement{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0"><i class="bi bi-plus-circle"></i> Nouveau plan d'accompagnement</h4>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Créez un nouveau plan d'accompagnement personnalisé pour le patient.</p>
+                    
+                    {{ form_start(form) }}
+                    
+                    <div class="mb-3">
+                        {{ form_label(form.title) }}
+                        {{ form_widget(form.title, {'attr': {'class': 'form-control', 'placeholder': 'ex: Plan de remise en forme'}}) }}
+                        {{ form_errors(form.title) }}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form_label(form.objectives) }}
+                        {{ form_widget(form.objectives, {'attr': {'class': 'form-control', 'rows': '4', 'placeholder': 'Décrivez les objectifs du plan'}}) }}
+                        {{ form_errors(form.objectives) }}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form_label(form.description) }}
+                        {{ form_widget(form.description, {'attr': {'class': 'form-control', 'rows': '3', 'placeholder': 'Contexte médical ou notes additionnelles'}}) }}
+                        {{ form_errors(form.description) }}
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form_label(form.durationWeeks) }}
+                            {{ form_widget(form.durationWeeks, {'attr': {'class': 'form-control', 'value': '12'}}) }}
+                            {{ form_errors(form.durationWeeks) }}
+                            <small class="text-muted">Durée par défaut: 12 semaines</small>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            {{ form_label(form.status) }}
+                            {{ form_widget(form.status, {'attr': {'class': 'form-select'}}) }}
+                            {{ form_errors(form.status) }}
+                        </div>
+                    </div>
+
+                    <hr>
+                    <h5><i class="bi bi-person-badge"></i> Professionnels assignés</h5>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form_label(form.coach) }}
+                            {{ form_widget(form.coach, {'attr': {'class': 'form-select'}}) }}
+                            {{ form_errors(form.coach) }}
+                            <small class="text-muted">Optionnel</small>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            {{ form_label(form.nutritionist) }}
+                            {{ form_widget(form.nutritionist, {'attr': {'class': 'form-select'}}) }}
+                            {{ form_errors(form.nutritionist) }}
+                            <small class="text-muted">Optionnel</small>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info" role="alert">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Conseil:</strong> Vous pourrez ajouter des plans d'exercice et des plans nutritionnels après création.
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-circle"></i> Créer le plan
+                        </button>
+                        <a href="{{ path('app_plan_index') }}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> Annuler
+                        </a>
+                    </div>
+
+                    {{ form_end(form) }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

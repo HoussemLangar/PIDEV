@@ -1,0 +1,113 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Consultation avec {{ otherUser.username }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header {% if consultation.ongoing %}bg-danger{% elseif consultation.pending %}bg-warning{% else %}bg-secondary{% endif %} text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-camera-video"></i> Consultation
+                        <span class="float-end">
+                            {% if consultation.ongoing %}
+                                <span class="badge bg-light text-danger">EN COURS</span>
+                            {% elseif consultation.pending %}
+                                <span class="badge bg-light text-warning">EN ATTENTE</span>
+                            {% elseif consultation.completed %}
+                                <span class="badge bg-light text-success">COMPLÉTÉE</span>
+                            {% else %}
+                                <span class="badge bg-light text-dark">ANNULÉE</span>
+                            {% endif %}
+                        </span>
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Avec</h6>
+                            <h5>{{ otherUser.username }}</h5>
+                            <small class="text-muted">{{ otherUser.prenom }} {{ otherUser.nom }}</small>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Type</h6>
+                            <h5>
+                                {% if consultation.type == 'general' %}
+                                    Consultation générale
+                                {% elseif consultation.type == 'follow_up' %}
+                                    Suivi
+                                {% elseif consultation.type == 'emergency' %}
+                                    Urgence
+                                {% elseif consultation.type == 'diagnostic' %}
+                                    Diagnostic
+                                {% else %}
+                                    {{ consultation.type }}
+                                {% endif %}
+                            </h5>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Programmée pour</h6>
+                            <p>
+                                <i class="bi bi-calendar"></i>
+                                {{ consultation.scheduledAt|date('d/m/Y') }}
+                            </p>
+                            <p>
+                                <i class="bi bi-clock"></i>
+                                {{ consultation.scheduledAt|date('H:i') }}
+                            </p>
+                        </div>
+                        {% if consultation.startedAt %}
+                            <div class="col-md-6">
+                                <h6 class="text-muted">Durée</h6>
+                                <p>
+                                    <strong>{{ consultation.durationFormatted }}</strong>
+                                </p>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    {% if consultation.description %}
+                        <div class="alert alert-light">
+                            <strong>Description:</strong><br>
+                            {{ consultation.description }}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer d-flex gap-2">
+                    {% if canStart %}
+                        <a href="{{ path('app_teleconsultation_join', {id: consultation.id}) }}" class="btn btn-success">
+                            <i class="bi bi-camera-video"></i> Rejoindre
+                        </a>
+                    {% endif %}
+
+                    {% if consultation.pending and isInitiator %}
+                        <form action="{{ path('app_teleconsultation_cancel', {id: consultation.id}) }}" method="POST" style="display:inline;">
+                            <button type="submit" class="btn btn-danger" onclick="return confirm('Êtes-vous sûr?')">
+                                <i class="bi bi-x-circle"></i> Annuler
+                            </button>
+                        </form>
+                    {% endif %}
+
+                    {% if consultation.ongoing %}
+                        <form action="{{ path('app_teleconsultation_end', {id: consultation.id}) }}" method="POST" style="display:inline;">
+                            <button type="submit" class="btn btn-warning" onclick="return confirm('Terminer la consultation?')">
+                                <i class="bi bi-stop-circle"></i> Terminer
+                            </button>
+                        </form>
+                    {% endif %}
+
+                    <a href="{{ path('app_teleconsultation_index') }}" class="btn btn-secondary ms-auto">
+                        <i class="bi bi-arrow-left"></i> Retour
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

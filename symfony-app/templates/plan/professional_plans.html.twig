@@ -1,0 +1,107 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mes plans d'accompagnement{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-12">
+            <h2 class="mb-4"><i class="bi bi-person-badge"></i> Mes plans d'accompagnement</h2>
+
+            <!-- Statistics Cards -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card border-primary">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Plans actifs</h5>
+                            <h3 class="text-primary">0</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-success">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Patients</h5>
+                            <h3 class="text-success">0</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-info">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Plans complétés</h5>
+                            <h3 class="text-info">0</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Plans Table -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-list-ul"></i> Liste des plans</h5>
+                </div>
+                <div class="card-body">
+                    {% if plans is empty %}
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i>
+                            Vous n'avez pas encore créé de plans d'accompagnement.
+                        </div>
+                    {% else %}
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Patient</th>
+                                    <th>Plan</th>
+                                    <th>Statut</th>
+                                    <th>Progression</th>
+                                    <th>Fin prévue</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for plan in plans %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ plan.patient.user.username }}</strong><br>
+                                            <small class="text-muted">{{ plan.patient.user.email }}</small>
+                                        </td>
+                                        <td>{{ plan.title }}</td>
+                                        <td>
+                                            <span class="badge bg-{{ plan.status == 'active' ? 'success' : (plan.status == 'completed' ? 'info' : 'warning') }}">
+                                                {{ plan.status }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="progress" style="height: 20px;">
+                                                <div class="progress-bar" style="width: {{ plan.progressPercentage }}%">
+                                                    {{ plan.progressPercentage }}%
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% if plan.endDate %}
+                                                {{ plan.endDate|date('d/m/Y') }}
+                                            {% else %}
+                                                <em class="text-muted">Non définie</em>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <a href="{{ path('app_plan_show', {id: plan.id}) }}" class="btn btn-sm btn-info">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a href="{{ path('app_plan_edit', {id: plan.id}) }}" class="btn btn-sm btn-warning">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

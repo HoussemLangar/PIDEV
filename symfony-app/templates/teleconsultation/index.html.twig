@@ -1,0 +1,225 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Téléconsultations{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1><i class="bi bi-camera-video"></i> Téléconsultations</h1>
+                <a href="{{ path('app_teleconsultation_schedule') }}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Planifier une consultation
+                </a>
+            </div>
+
+            <!-- Statistics -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h4>{{ stats.completed }}</h4>
+                            <small class="text-muted">Consultations complétées</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h4>{{ stats.pending }}</h4>
+                            <small class="text-muted">En attente</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h4>{{ (stats.totalDuration / 3600)|round }}</h4>
+                            <small class="text-muted">Heures totales</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h4>{{ (stats.avgDuration / 60)|round }}</h4>
+                            <small class="text-muted">Minutes en moyenne</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <ul class="nav nav-tabs mb-4" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="ongoing-tab" data-bs-toggle="tab" data-bs-target="#ongoing" 
+                            type="button" role="tab" aria-controls="ongoing" aria-selected="true">
+                        <i class="bi bi-play-circle"></i> En cours ({{ ongoing|length }})
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="upcoming-tab" data-bs-toggle="tab" data-bs-target="#upcoming" 
+                            type="button" role="tab" aria-controls="upcoming" aria-selected="false">
+                        <i class="bi bi-calendar"></i> À venir ({{ upcoming|length }})
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="past-tab" data-bs-toggle="tab" data-bs-target="#past" 
+                            type="button" role="tab" aria-controls="past" aria-selected="false">
+                        <i class="bi bi-clock-history"></i> Historique ({{ past|length }})
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+                <!-- Ongoing -->
+                <div class="tab-pane fade show active" id="ongoing" role="tabpanel">
+                    {% if ongoing is empty %}
+                        <div class="alert alert-info">
+                            Aucune consultation en cours.
+                        </div>
+                    {% else %}
+                        <div class="row">
+                            {% for consultation in ongoing %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="card border-danger">
+                                        <div class="card-header bg-danger text-white">
+                                            <h5 class="mb-0">
+                                                <span class="badge bg-light text-danger float-end">EN COURS</span>
+                                                {{ consultation.type }}
+                                            </h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <p class="mb-2">
+                                                <strong>Avec:</strong>
+                                                {{ (consultation.initiator == app.user ? consultation.recipient.username : consultation.initiator.username) }}
+                                            </p>
+                                            <p class="mb-2 text-muted">
+                                                <i class="bi bi-clock"></i>
+                                                Démarrée: {{ consultation.startedAt|date('d/m/Y H:i') }}
+                                            </p>
+                                            {% if consultation.description %}
+                                                <p class="text-muted small">{{ consultation.description }}</p>
+                                            {% endif %}
+                                        </div>
+                                        <div class="card-footer">
+                                            <a href="{{ path('app_teleconsultation_join', {id: consultation.id}) }}" class="btn btn-sm btn-success">
+                                                <i class="bi bi-camera-video"></i> Rejoindre
+                                            </a>
+                                            <a href="{{ path('app_teleconsultation_show', {id: consultation.id}) }}" class="btn btn-sm btn-info">
+                                                <i class="bi bi-eye"></i> Détails
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Upcoming -->
+                <div class="tab-pane fade" id="upcoming" role="tabpanel">
+                    {% if upcoming is empty %}
+                        <div class="alert alert-info">
+                            Aucune consultation programmée.
+                            <a href="{{ path('app_teleconsultation_schedule') }}">Planifier une maintenant</a>
+                        </div>
+                    {% else %}
+                        <div class="row">
+                            {% for consultation in upcoming %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="card border-warning">
+                                        <div class="card-header bg-warning">
+                                            <h5 class="mb-0">
+                                                <span class="badge bg-light text-warning float-end">PENDING</span>
+                                                {{ consultation.type }}
+                                            </h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <p class="mb-2">
+                                                <strong>Avec:</strong>
+                                                {{ consultation.recipient == app.user ? consultation.initiator.username : consultation.recipient.username }}
+                                            </p>
+                                            <p class="mb-2 text-muted">
+                                                <i class="bi bi-calendar-event"></i>
+                                                {{ consultation.scheduledAt|date('d/m/Y H:i') }}
+                                            </p>
+                                            {% if consultation.description %}
+                                                <p class="text-muted small">{{ consultation.description }}</p>
+                                            {% endif %}
+                                        </div>
+                                        <div class="card-footer">
+                                            <a href="{{ path('app_teleconsultation_show', {id: consultation.id}) }}" class="btn btn-sm btn-info">
+                                                <i class="bi bi-eye"></i> Voir
+                                            </a>
+                                            {% if consultation.initiator == app.user %}
+                                                <form action="{{ path('app_teleconsultation_cancel', {id: consultation.id}) }}" 
+                                                      method="POST" style="display:inline;">
+                                                    <button type="submit" class="btn btn-sm btn-danger" 
+                                                            onclick="return confirm('Annuler cette consultation?')">
+                                                        <i class="bi bi-x-circle"></i> Annuler
+                                                    </button>
+                                                </form>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Past -->
+                <div class="tab-pane fade" id="past" role="tabpanel">
+                    {% if past is empty %}
+                        <div class="alert alert-info">
+                            Aucune consultation passée.
+                        </div>
+                    {% else %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Type</th>
+                                        <th>Avec</th>
+                                        <th>Statut</th>
+                                        <th>Durée</th>
+                                        <th>Date</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for consultation in past %}
+                                        <tr>
+                                            <td>{{ consultation.type }}</td>
+                                            <td>
+                                                {{ consultation.recipient == app.user ? consultation.initiator.username : consultation.recipient.username }}
+                                            </td>
+                                            <td>
+                                                {% if consultation.completed %}
+                                                    <span class="badge bg-success">Complétée</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">Annulée</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {{ consultation.durationFormatted }}
+                                            </td>
+                                            <td>{{ consultation.endedAt|date('d/m/Y H:i') }}</td>
+                                            <td>
+                                                <a href="{{ path('app_teleconsultation_show', {id: consultation.id}) }}" class="btn btn-sm btn-info">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

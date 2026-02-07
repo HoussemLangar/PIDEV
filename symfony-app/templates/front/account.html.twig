@@ -1,0 +1,98 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mon espace{% endblock %}
+
+{% block body %}
+    <section class="quick-info" id="account-overview">
+        <div class="container">
+            <h2 class="section-title">Mon espace</h2>
+            <p class="section-subtitle">Retrouvez ici l'accès à toutes les fonctionnalités déjà implémentées.</p>
+        </div>
+        <div class="container">
+            <div class="card">
+                <div class="icon"><i class="fas fa-comments"></i></div>
+                <h3>Messagerie</h3>
+                <p>{{ conversationCount }} conversation(s) · {{ unreadCount }} non lu(s)</p>
+                <a href="{{ path('app_message_index') }}" class="btn-small">Ouvrir le chat</a>
+            </div>
+            <div class="card">
+                <div class="icon"><i class="fas fa-video"></i></div>
+                <h3>Téléconsultations</h3>
+                <p>{{ upcomingConsultationCount }} à venir · {{ ongoingConsultationCount }} en cours</p>
+                <a href="{{ path('app_teleconsultation_index') }}" class="btn-small">Voir les consultations</a>
+            </div>
+            <div class="card">
+                <div class="icon"><i class="fas fa-file-medical"></i></div>
+                <h3>Documents</h3>
+                <p>{{ ownDocumentCount }} document(s) · {{ sharedDocumentCount }} partagé(s)</p>
+                <a href="{{ path('app_document_index') }}" class="btn-small">Gérer les documents</a>
+            </div>
+            <div class="card">
+                <div class="icon"><i class="fas fa-clipboard-list"></i></div>
+                <h3>Plans d'accompagnement</h3>
+                {% if isPatient %}
+                    <p>{{ patientPlanCount }} plan(s) côté patient</p>
+                    <a href="{{ path('app_plan_index') }}" class="btn-small">Voir mes plans</a>
+                {% elseif isCoach or isNutritionist %}
+                    <p>{{ coachPlanCount + nutritionistPlanCount }} plan(s) à suivre</p>
+                    <a href="{{ path('app_plan_professional_plans') }}" class="btn-small">Voir mes plans pro</a>
+                {% else %}
+                    <p>Accès via votre rôle professionnel</p>
+                    <a href="{{ path('app_plan_index') }}" class="btn-small">Accéder</a>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    <section class="quick-info" id="account-features">
+        <div class="container">
+            <h2 class="section-title">Fonctionnalités livrées</h2>
+            <p class="section-subtitle">Les user stories sont visibles ici pour prouver l'implémentation.</p>
+        </div>
+        <div class="container">
+            {% if isPatient %}
+                <div class="card">
+                    <div class="icon"><i class="fas fa-user"></i></div>
+                    <h3>Patient</h3>
+                    <p><i class="fas fa-check"></i> Chat sécurisé avec un professionnel</p>
+                    <p><i class="fas fa-check"></i> Téléconsultation audio/vidéo</p>
+                    <p><i class="fas fa-check"></i> Partage sécurisé de documents</p>
+                    <p><i class="fas fa-check"></i> Accompagnement personnalisé</p>
+                    <p><i class="fas fa-check"></i> Plans de régime & d'exercices</p>
+                    <a href="{{ path('app_message_index') }}" class="btn-small">Messagerie</a>
+                </div>
+            {% endif %}
+
+            {% if isMedecin %}
+                <div class="card">
+                    <div class="icon"><i class="fas fa-user-md"></i></div>
+                    <h3>Médecin</h3>
+                    <p><i class="fas fa-check"></i> Répondre aux messages des patients</p>
+                    <p><i class="fas fa-check"></i> Organiser une téléconsultation</p>
+                    <p><i class="fas fa-check"></i> Consulter/télécharger les documents</p>
+                    <p><i class="fas fa-check"></i> Historique complet des échanges</p>
+                    <a href="{{ path('app_teleconsultation_schedule') }}" class="btn-small">Programmer</a>
+                </div>
+            {% endif %}
+
+            {% if isCoach or isNutritionist %}
+                <div class="card">
+                    <div class="icon"><i class="fas fa-dumbbell"></i></div>
+                    <h3>Coach / Nutritionniste</h3>
+                    <p><i class="fas fa-check"></i> Proposer des plans de suivi</p>
+                    <p><i class="fas fa-check"></i> Suivi personnalisé des patients</p>
+                    <a href="{{ path('app_plan_professional_plans') }}" class="btn-small">Mes plans</a>
+                </div>
+            {% endif %}
+
+            {% if not isPatient and not isMedecin and not isCoach and not isNutritionist %}
+                <div class="card">
+                    <div class="icon"><i class="fas fa-shield-alt"></i></div>
+                    <h3>Accès général</h3>
+                    <p>Votre rôle ne donne pas accès aux fonctionnalités médicales.</p>
+                    <a href="{{ path('app_home') }}" class="btn-small">Retour</a>
+                </div>
+            {% endif %}
+        </div>
+    </section>
+{% endblock %}

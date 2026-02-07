@@ -1,0 +1,152 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mes documents{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>Mes documents</h1>
+                <div>
+                    <span class="badge bg-info">{{ totalStorage }} utilisés</span>
+                    <a href="{{ path('app_document_upload') }}" class="btn btn-primary">
+                        <i class="bi bi-cloud-arrow-up"></i> Uploader un document
+                    </a>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <ul class="nav nav-tabs mb-4" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="own-tab" data-bs-toggle="tab" data-bs-target="#own" 
+                            type="button" role="tab" aria-controls="own" aria-selected="true">
+                        Mes documents ({{ ownDocuments|length }})
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="shared-tab" data-bs-toggle="tab" data-bs-target="#shared" 
+                            type="button" role="tab" aria-controls="shared" aria-selected="false">
+                        Partagés avec moi ({{ sharedDocuments|length }})
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Tab Content -->
+            <div class="tab-content">
+                <!-- Own Documents Tab -->
+                <div class="tab-pane fade show active" id="own" role="tabpanel" aria-labelledby="own-tab">
+                    {% if ownDocuments is empty %}
+                        <div class="alert alert-info">
+                            Vous n'avez pas encore uploadé de document.
+                            <a href="{{ path('app_document_upload') }}">Commencer maintenant</a>
+                        </div>
+                    {% else %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Nom</th>
+                                        <th>Type</th>
+                                        <th>Taille</th>
+                                        <th>Uploadé le</th>
+                                        <th>Partagé</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for document in ownDocuments %}
+                                        <tr>
+                                            <td>
+                                                <i class="bi {{ document.mimeType|mime_icon }}"></i>
+                                                {{ document.fileName }}
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-secondary">{{ document.documentType }}</span>
+                                            </td>
+                                            <td>{{ document.getFileSizeFormatted() }}</td>
+                                            <td>{{ document.uploadedAt|date('d/m/Y H:i') }}</td>
+                                            <td>
+                                                {% if document.isPublic %}
+                                                    <span class="badge bg-success">Public</span>
+                                                {% else %}
+                                                    <span class="badge bg-warning">Privé</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <a href="{{ path('app_document_show', {id: document.id}) }}" class="btn btn-sm btn-info">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                <a href="{{ path('app_document_download', {id: document.id}) }}" class="btn btn-sm btn-success">
+                                                    <i class="bi bi-download"></i>
+                                                </a>
+                                                <a href="{{ path('app_document_share', {id: document.id}) }}" class="btn btn-sm btn-warning">
+                                                    <i class="bi bi-share"></i>
+                                                </a>
+                                                <form action="{{ path('app_document_delete', {id: document.id}) }}" method="POST" style="display: inline;">
+                                                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ document.id) }}">
+                                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Êtes-vous sûr?')">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Shared with me Tab -->
+                <div class="tab-pane fade" id="shared" role="tabpanel" aria-labelledby="shared-tab">
+                    {% if sharedDocuments is empty %}
+                        <div class="alert alert-info">
+                            Aucun document n'a été partagé avec vous pour le moment.
+                        </div>
+                    {% else %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Nom</th>
+                                        <th>Propriétaire</th>
+                                        <th>Type</th>
+                                        <th>Taille</th>
+                                        <th>Partagé le</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for document in sharedDocuments %}
+                                        <tr>
+                                            <td>
+                                                <i class="bi {{ document.mimeType|mime_icon }}"></i>
+                                                {{ document.fileName }}
+                                            </td>
+                                            <td>{{ document.owner.username }}</td>
+                                            <td>
+                                                <span class="badge bg-secondary">{{ document.documentType }}</span>
+                                            </td>
+                                            <td>{{ document.getFileSizeFormatted() }}</td>
+                                            <td>{{ document.uploadedAt|date('d/m/Y H:i') }}</td>
+                                            <td>
+                                                <a href="{{ path('app_document_show', {id: document.id}) }}" class="btn btn-sm btn-info">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                <a href="{{ path('app_document_download', {id: document.id}) }}" class="btn btn-sm btn-success">
+                                                    <i class="bi bi-download"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

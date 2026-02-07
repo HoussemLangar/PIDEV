@@ -1,5 +1,23 @@
+# Use the front controller as index file. It serves as
+# the fallback file for all requests.
+DirectoryIndex index.php
+
 <IfModule mod_rewrite.c>
     RewriteEngine On
+
+    # Allow Authorization header
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule ^ - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # Redirect all requests to the front controller.
     RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteRule ^(.*)$ index.php [QSA,L]
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ index.php [L]
+</IfModule>
+
+<IfModule !mod_rewrite.c>
+    # Redirect all requests to the front controller.
+    <IfModule mod_alias.c>
+        RedirectMatch 307 ^/$ /index.php/
+    </IfModule>
 </IfModule>

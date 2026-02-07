@@ -46,6 +46,9 @@
 
                         <hr>
 
+                        <a href="{{ path('app_account') }}" class="dropdown-item">
+                            <i class="fas fa-columns"></i> Mon espace
+                        </a>
                         <a href="{{ path('profile_edit') }}" class="dropdown-item">
                             <i class="fas fa-cog"></i> {{ 'nav.settings'|trans }}
                         </a>
@@ -83,7 +86,6 @@
                         </a>
                     </div>
                 </div>
-                
                 {% else %}
                     <a href="{{ path('login') }}" class="btn-appointment">{{ 'nav.login'|trans }}</a>
                 {% endif %}

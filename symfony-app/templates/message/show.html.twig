@@ -1,0 +1,82 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Conversation avec {{ otherUser.username }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-4">
+                <div>
+                    <h3>{{ otherUser.username }}</h3>
+                    <small class="text-muted">{{ otherUser.prenom }} {{ otherUser.nom }}</small>
+                </div>
+                <div>
+                    <a href="{{ path('app_message_index') }}" class="btn btn-secondary btn-sm">
+                        <i class="bi bi-arrow-left"></i> Retour
+                    </a>
+                </div>
+            </div>
+
+            <!-- Messages Container -->
+            <div class="messages-container mb-4" style="height: 500px; overflow-y: auto; border: 1px solid #ddd; padding: 15px; border-radius: 8px; background-color: #f9f9f9;">
+                {% if messages is empty %}
+                    <div class="alert alert-info text-center">
+                        Aucun message dans cette conversation.
+                    </div>
+                {% else %}
+                    {% for message in messages %}
+                        <div class="mb-3 {% if message.sender == app.user %}text-end{% endif %}">
+                            <div class="d-inline-block p-2 rounded {% if message.sender == app.user %}bg-primary text-white{% else %}bg-light{% endif %}" 
+                                 style="max-width: 70%;">
+                                <p class="mb-1">{{ message.content }}</p>
+                                <small class="{% if message.sender == app.user %}text-light{% else %}text-muted{% endif %}">
+                                    {% if message.sender == app.user %}
+                                        Vous
+                                    {% else %}
+                                        {{ message.sender.username }}
+                                    {% endif %}
+                                    • {{ message.createdAt|date('H:i') }}
+                                    {% if message.sender == app.user and message.isRead %}
+                                        <i class="bi bi-check2-all"></i>
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+
+            <!-- Message Form -->
+            <div class="card">
+                <div class="card-body">
+                    {{ form_start(form, { 'attr': { 'class': 'form' } }) }}
+                    
+                    {{ form_widget(form.content, { 'attr': { 'class': 'form-control mb-3' } }) }}
+                    
+                    {% if form.content.vars.errors %}
+                        <div class="alert alert-danger">
+                            {{ form_errors(form.content) }}
+                        </div>
+                    {% endif %}
+
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-send"></i> Envoyer
+                    </button>
+                    
+                    {{ form_end(form) }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Auto-scroll to bottom
+    const messagesContainer = document.querySelector('.messages-container');
+    if (messagesContainer) {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+</script>
+{% endblock %}
