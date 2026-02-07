@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Médicaments - {{ pharmacy.nom }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        .header {
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            margin: 0;
+            color: #007bff;
+        }
+        .meta {
+            color: #666;
+            font-size: 12px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            font-size: 12px;
+            vertical-align: top;
+        }
+        th {
+            background: #f0f3f6;
+            text-align: left;
+        }
+        .footer {
+            text-align: center;
+            color: #999;
+            font-size: 11px;
+            margin-top: 30px;
+            padding-top: 10px;
+            border-top: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Médicaments de {{ pharmacy.nom }}</h1>
+        <div class="meta">
+            <div>Généré le {{ "now"|date('d/m/Y H:i') }}</div>
+            {% if search %}
+                <div>Recherche: "{{ search }}"</div>
+            {% endif %}
+            <div>Tri: {{ sortBy }} ({{ sortDir|upper }})</div>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID Stock</th>
+                <th>Nom</th>
+                <th>Dosage</th>
+                <th>Forme</th>
+                <th>Prix Vente</th>
+                <th>Stock</th>
+                <th>Fabricant</th>
+                <th>Expiration</th>
+                <th>Ajouté</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for stock in stocks %}
+                <tr>
+                    <td>{{ stock.id }}</td>
+                    <td>{{ stock.medicament.nom }}</td>
+                    <td>{{ stock.medicament.dosage ?? '-' }}</td>
+                    <td>{{ stock.medicament.forme ?? '-' }}</td>
+                    <td>{{ stock.prixVente ? stock.prixVente ~ ' €' : '-' }}</td>
+                    <td>{{ stock.quantite }}</td>
+                    <td>{{ stock.medicament.laboratoire ?? '-' }}</td>
+                    <td>{{ stock.dateExpiration ? stock.dateExpiration|date('d/m/Y') : '-' }}</td>
+                    <td>{{ stock.createdAt|date('d/m/Y') }}</td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="9">Aucun médicament trouvé.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="footer">
+        <p>Document généré automatiquement par le système de gestion des pharmacies.</p>
+    </div>
+</body>
+</html>

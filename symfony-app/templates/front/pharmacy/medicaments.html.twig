@@ -1,0 +1,57 @@
+{% extends 'front/base.html.twig' %}
+
+{% block title %}Médicaments - {{ pharmacy.nom }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col">
+            <a href="{{ path('pharmacy_list') }}" class="btn btn-outline-secondary mb-3">
+                <i class="fas fa-arrow-left"></i> Retour
+            </a>
+            <h1>
+                <i class="fas fa-pills"></i> Médicaments de {{ pharmacy.nom }}
+            </h1>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Nom</th>
+                        <th>Type</th>
+                        <th>Forme</th>
+                        <th>Dosage</th>
+                        <th>Prix</th>
+                        <th>Stock</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for stock in stocks %}
+                        <tr>
+                            <td><strong>{{ stock.medicament.nom }}</strong></td>
+                            <td>{{ stock.medicament.type ?? '-' }}</td>
+                            <td>{{ stock.medicament.forme ?? '-' }}</td>
+                            <td>{{ stock.medicament.dosage ?? '-' }}</td>
+                            <td>
+                                {% if stock.prixVente is not null %}
+                                    {{ stock.prixVente }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>{{ stock.quantite }}</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">Aucun médicament pour cette pharmacie</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,114 @@
+{% extends 'back/base.html.twig' %}
+
+{% block title %}Médicaments{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-5">
+    <div class="row mb-4">
+        <div class="col">
+            <h1><i class="fas fa-pills"></i> Médicaments</h1>
+        </div>
+        <div class="col text-end">
+            <a href="{{ path('admin_medicament_catalog_new') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Ajouter un médicament
+            </a>
+        </div>
+    </div>
+
+    {% if app.flashes('success') %}
+        {% for message in app.flashes('success') %}
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-6">
+                    <input type="text" name="search" class="form-control" placeholder="Rechercher par nom, type, forme, dosage, laboratoire" value="{{ search }}">
+                </div>
+                <div class="col-md-3">
+                    <select name="sort" class="form-control">
+                        <option value="id" {% if sort == 'id' %}selected{% endif %}>ID</option>
+                        <option value="nom" {% if sort == 'nom' %}selected{% endif %}>Nom</option>
+                        <option value="type" {% if sort == 'type' %}selected{% endif %}>Type</option>
+                        <option value="forme" {% if sort == 'forme' %}selected{% endif %}>Forme</option>
+                        <option value="dosage" {% if sort == 'dosage' %}selected{% endif %}>Dosage</option>
+                        <option value="prix" {% if sort == 'prix' %}selected{% endif %}>Prix</option>
+                        <option value="stock" {% if sort == 'stock' %}selected{% endif %}>Stock</option>
+                        <option value="laboratoire" {% if sort == 'laboratoire' %}selected{% endif %}>Laboratoire</option>
+                        <option value="createdAt" {% if sort == 'createdAt' %}selected{% endif %}>Créé</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select name="dir" class="form-control">
+                        <option value="asc" {% if dir == 'asc' %}selected{% endif %}>Ascendant</option>
+                        <option value="desc" {% if dir == 'desc' %}selected{% endif %}>Descendant</option>
+                    </select>
+                </div>
+                <div class="col-md-1">
+                    <button type="submit" class="btn btn-secondary w-100">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if medicaments|length > 0 %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Nom</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                        <th>Forme</th>
+                        <th>Dosage</th>
+                        <th>Prix</th>
+                        <th>Stock</th>
+                        <th>Laboratoire</th>
+                        <th>Créé</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for medicament in medicaments %}
+                        <tr>
+                            <td>{{ medicament.id }}</td>
+                            <td><strong>{{ medicament.nom }}</strong></td>
+                            <td>{{ medicament.type ?? '-' }}</td>
+                            <td>{{ medicament.description ? medicament.description|slice(0, 80) ~ (medicament.description|length > 80 ? '…' : '') : '-' }}</td>
+                            <td>{{ medicament.forme ?? '-' }}</td>
+                            <td>{{ medicament.dosage ?? '-' }}</td>
+                            <td>{{ medicament.prix ? medicament.prix ~ ' €' : '-' }}</td>
+                            <td>{{ medicament.stock }}</td>
+                            <td>{{ medicament.laboratoire ?? '-' }}</td>
+                            <td>{{ medicament.createdAt|date('d/m/Y') }}</td>
+                            <td class="text-end">
+                                <a href="{{ path('admin_medicament_catalog_edit', {id: medicament.id}) }}" class="btn btn-sm btn-warning">
+                                    <i class="fas fa-edit"></i> Éditer
+                                </a>
+                                <form method="POST" action="{{ path('admin_medicament_catalog_delete', {id: medicament.id}) }}" style="display:inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce médicament ?');">
+                                    <input type="hidden" name="_method" value="DELETE">
+                                    <button type="submit" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-trash"></i> Supprimer
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-info" role="alert">
+            <i class="fas fa-info-circle"></i> Aucun médicament trouvé
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

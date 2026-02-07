@@ -64,4 +64,28 @@ class MedicamentRepository extends ServiceEntityRepository
     {
         $this->getEntityManager()->flush();
     }
+
+    /**
+     * Search Medicaments by term with sorting
+     * @return Medicament[]
+     */
+    public function searchMedicaments(?string $search, string $sortBy = 'id', string $sortDir = 'ASC'): array
+    {
+        $qb = $this->createQueryBuilder('m');
+
+        if ($search) {
+            $qb->andWhere('
+                LOWER(m.nom) LIKE LOWER(:search) OR
+                LOWER(m.type) LIKE LOWER(:search) OR
+                LOWER(m.forme) LIKE LOWER(:search) OR
+                LOWER(m.dosage) LIKE LOWER(:search) OR
+                LOWER(m.laboratoire) LIKE LOWER(:search)
+            ')
+            ->setParameter('search', '%' . $search . '%');
+        }
+
+        $qb->orderBy('m.' . $sortBy, strtoupper($sortDir));
+
+        return $qb->getQuery()->getResult();
+    }
 }

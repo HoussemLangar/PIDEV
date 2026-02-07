@@ -64,4 +64,41 @@ class PharmacyRepository extends ServiceEntityRepository
     {
         $this->getEntityManager()->flush();
     }
+
+    /**
+     * Search pharmacies by name, address, or contact info
+     * @param string|null $search
+     * @param string $sortBy
+     * @param string $sortDir
+     * @return Pharmacy[]
+     */
+    public function searchPharmacies(?string $search = null, string $sortBy = 'id', string $sortDir = 'ASC'): array
+    {
+        $qb = $this->createQueryBuilder('p');
+
+        if ($search) {
+            $searchTerm = '%' . $search . '%';
+            $qb->andWhere(
+                $qb->expr()->orX(
+                    $qb->expr()->like('LOWER(p.nom)', 'LOWER(:search)'),
+                    $qb->expr()->like('LOWER(p.adresse)', 'LOWER(:search)'),
+                    $qb->expr()->like('LOWER(p.telephone)', 'LOWER(:search)'),
+                    $qb->expr()->like('LOWER(p.email)', 'LOWER(:search)')
+                )
+            )
+            ->setParameter('search', $searchTerm);
+        }
+
+        // Validate sort parameters
+        $validSortFields = ['id', 'nom', 'adresse', 'createdAt'];
+        if (!in_array($sortBy, $validSortFields)) {
+            $sortBy = 'id';
+        }
+
+        $sortDir = strtoupper($sortDir) === 'DESC' ? 'DESC' : 'ASC';
+
+        $qb->orderBy('p.' . $sortBy, $sortDir);
+
+        return $qb->getQuery()->getResult();
+    }
 }

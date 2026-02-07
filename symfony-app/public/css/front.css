@@ -1,0 +1,16 @@
+/* Front site styles (complementary to existing public/style.css) */
+:root{--accent:#40C4FF;--accent-dark:#0288D1;--muted:#6b7280}
+body{background:linear-gradient(180deg,#f8fcff, #f4f9ff);color:#223}
+.hero {border-bottom-left-radius:18px;border-bottom-right-radius:18px}
+.container {max-width:1200px;padding:0 20px;margin:0 auto}
+.section-title{font-size:2rem;color:#0f1724;margin-bottom:18px}
+.card{background:#fff;border-radius:12px;box-shadow:0 6px 20px rgba(16,24,40,0.04);padding:16px}
+.btn{display:inline-block;padding:10px 16px;border-radius:10px;text-decoration:none}
+.btn-primary{background:#40C4FF;color:#fff}
+.card .card-title{font-weight:700}
+
+/* Pharmacy cards */
+.pharmacy-card{transition:transform .18s ease, box-shadow .18s ease}
+.pharmacy-card:hover{transform:translateY(-6px);box-shadow:0 16px 40px rgba(16,24,40,0.08)}
+
+@media (max-width:900px){.nav-links{display:none}.menu-toggle{display:block}}

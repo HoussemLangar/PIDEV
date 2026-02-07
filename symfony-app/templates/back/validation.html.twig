@@ -1,0 +1,39 @@
+{% extends 'back/base.html.twig' %}
+
+{% block title %}Validations en attente - SANTÉA{% endblock %}
+
+{% block content %}
+    <div class="container-fluid py-5">
+        <div class="row mb-4">
+            <div class="col">
+                <h1><i class="fas fa-user-check"></i> Validations en attente</h1>
+                <p class="text-muted">Page de gestion des éléments en attente de validation (placeholder).</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h4>Comptes professionnels</h4>
+                        <p class="h2">{{ pendingValidations.professionals }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h4>Nouvelles pharmacies</h4>
+                        <p class="h2">{{ pendingValidations.pharmacies }}</p>
+                    </div>
+                </div>
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <h4>Articles à valider</h4>
+                        <p class="h2">{{ pendingValidations.articles }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h4>Signalements</h4>
+                        <p class="h2">{{ pendingValidations.reports }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

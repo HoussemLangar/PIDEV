@@ -1,0 +1,133 @@
+{% extends 'back/base.html.twig' %}
+
+{% block title %}{% if medicament %}Éditer{% else %}Ajouter{% endif %} un médicament{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <h1>
+                <i class="fas fa-pills"></i>
+                {% if medicament %}
+                    Éditer "{{ medicament.nom }}"
+                {% else %}
+                    Ajouter un médicament
+                {% endif %}
+            </h1>
+
+            <div class="card mt-4">
+                <div class="card-body">
+                    {% if medicament %}
+                        <form method="POST" action="{{ path('admin_medicament_catalog_update', {id: medicament.id}) }}" novalidate>
+                    {% else %}
+                        <form method="POST" action="{{ path('admin_medicament_catalog_create') }}" novalidate>
+                    {% endif %}
+
+                        <div class="mb-3">
+                            <label for="nom" class="form-label">Nom <span class="text-danger">*</span></label>
+                            {% set valueNom = data.nom is defined ? data.nom : (medicament ? medicament.nom : '') %}
+                            {% if errors is defined and errors.nom is defined %}
+                                <input type="text" id="nom" name="nom" class="form-control is-invalid" value="{{ valueNom }}">
+                                <div class="invalid-feedback d-block">{{ errors.nom }}</div>
+                            {% else %}
+                                <input type="text" id="nom" name="nom" class="form-control" value="{{ valueNom }}">
+                            {% endif %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="type" class="form-label">Type</label>
+                                {% set valueType = data.type is defined ? data.type : (medicament ? medicament.type : '') %}
+                                {% if errors is defined and errors.type is defined %}
+                                    <input type="text" id="type" name="type" class="form-control is-invalid" value="{{ valueType }}">
+                                    <div class="invalid-feedback d-block">{{ errors.type }}</div>
+                                {% else %}
+                                    <input type="text" id="type" name="type" class="form-control" value="{{ valueType }}">
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="laboratoire" class="form-label">Laboratoire</label>
+                                {% set valueLaboratoire = data.laboratoire is defined ? data.laboratoire : (medicament ? medicament.laboratoire : '') %}
+                                {% if errors is defined and errors.laboratoire is defined %}
+                                    <input type="text" id="laboratoire" name="laboratoire" class="form-control is-invalid" value="{{ valueLaboratoire }}">
+                                    <div class="invalid-feedback d-block">{{ errors.laboratoire }}</div>
+                                {% else %}
+                                    <input type="text" id="laboratoire" name="laboratoire" class="form-control" value="{{ valueLaboratoire }}">
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            {% set valueDescription = data.description is defined ? data.description : (medicament ? medicament.description : '') %}
+                            <textarea id="description" name="description" class="form-control" rows="4">{{ valueDescription }}</textarea>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="forme" class="form-label">Forme</label>
+                                {% set valueForme = data.forme is defined ? data.forme : (medicament ? medicament.forme : '') %}
+                                {% if errors is defined and errors.forme is defined %}
+                                    <input type="text" id="forme" name="forme" class="form-control is-invalid" value="{{ valueForme }}">
+                                    <div class="invalid-feedback d-block">{{ errors.forme }}</div>
+                                {% else %}
+                                    <input type="text" id="forme" name="forme" class="form-control" value="{{ valueForme }}">
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label for="dosage" class="form-label">Dosage</label>
+                                {% set valueDosage = data.dosage is defined ? data.dosage : (medicament ? medicament.dosage : '') %}
+                                {% if errors is defined and errors.dosage is defined %}
+                                    <input type="text" id="dosage" name="dosage" class="form-control is-invalid" value="{{ valueDosage }}">
+                                    <div class="invalid-feedback d-block">{{ errors.dosage }}</div>
+                                {% else %}
+                                    <input type="text" id="dosage" name="dosage" class="form-control" value="{{ valueDosage }}">
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label for="prix" class="form-label">Prix (€)</label>
+                                {% set valuePrix = data.prix is defined ? data.prix : (medicament ? medicament.prix : '') %}
+                                {% if errors is defined and errors.prix is defined %}
+                                    <input type="text" id="prix" name="prix" class="form-control is-invalid" value="{{ valuePrix }}">
+                                    <div class="invalid-feedback d-block">{{ errors.prix }}</div>
+                                {% else %}
+                                    <input type="text" id="prix" name="prix" class="form-control" value="{{ valuePrix }}">
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="stock" class="form-label">Stock <span class="text-danger">*</span></label>
+                            {% set valueStock = data.stock is defined ? data.stock : (medicament ? medicament.stock : 0) %}
+                            {% if errors is defined and errors.stock is defined %}
+                                <input type="number" id="stock" name="stock" class="form-control is-invalid" value="{{ valueStock }}">
+                                <div class="invalid-feedback d-block">{{ errors.stock }}</div>
+                            {% else %}
+                                <input type="number" id="stock" name="stock" class="form-control" value="{{ valueStock }}">
+                            {% endif %}
+                        </div>
+
+                        <div class="d-flex gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i>
+                                {% if medicament %}
+                                    Mettre à jour
+                                {% else %}
+                                    Ajouter le médicament
+                                {% endif %}
+                            </button>
+                            <a href="{{ path('admin_medicament_catalog_index') }}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i>
+                                Annuler
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

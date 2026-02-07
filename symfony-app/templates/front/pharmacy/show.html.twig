@@ -1,0 +1,94 @@
+{% extends 'front/base.html.twig' %}
+
+{% block title %}{{ pharmacy.nom }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col">
+            <a href="{{ path('pharmacy_list') }}" class="btn btn-outline-secondary mb-3">
+                <i class="fas fa-arrow-left"></i> Retour
+            </a>
+            <h1>
+                <i class="fas fa-hospital"></i> {{ pharmacy.nom }}
+            </h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-map-marker-alt"></i> Adresse
+                    </h5>
+                    <p class="card-text lead">{{ pharmacy.adresse }}</p>
+
+                    <hr>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5><i class="fas fa-phone"></i> Téléphone</h5>
+                            {% if pharmacy.telephone %}
+                                <p class="lead">
+                                    <a href="tel:{{ pharmacy.telephone }}">{{ pharmacy.telephone }}</a>
+                                </p>
+                            {% else %}
+                                <p class="text-muted">Non disponible</p>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <h5><i class="fas fa-envelope"></i> Email</h5>
+                            {% if pharmacy.email %}
+                                <p class="lead">
+                                    <a href="mailto:{{ pharmacy.email }}">{{ pharmacy.email }}</a>
+                                </p>
+                            {% else %}
+                                <p class="text-muted">Non disponible</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {% if pharmacy.horaires %}
+                        <hr>
+                        <h5><i class="fas fa-clock"></i> Horaires</h5>
+                        <pre style="background: #f5f5f5; padding: 15px; border-radius: 4px;">{{ pharmacy.horaires }}</pre>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Informations</h5>
+                    
+                    <div class="mb-3">
+                        <small class="text-muted">ID</small>
+                        <p class="mb-0"><strong>#{{ pharmacy.id }}</strong></p>
+                    </div>
+
+                    <div class="mb-3">
+                        <small class="text-muted">Créé le</small>
+                        <p class="mb-0">{{ pharmacy.createdAt|date('d/m/Y H:i') }}</p>
+                    </div>
+
+                    <div class="mb-3">
+                        <small class="text-muted">Modifié le</small>
+                        <p class="mb-0">{{ pharmacy.updatedAt|date('d/m/Y H:i') }}</p>
+                    </div>
+
+                    {% if pharmacy.pharmacien %}
+                        <div class="mb-3">
+                            <small class="text-muted">Pharmacien</small>
+                            <p class="mb-0">
+                                <strong>{{ pharmacy.pharmacien.user.nom }} {{ pharmacy.pharmacien.user.prenom }}</strong>
+                            </p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

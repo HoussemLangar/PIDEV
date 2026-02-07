@@ -55,8 +55,8 @@ class Medicament
 
     public function __construct()
     {
-        $this->createdAt = new \DateTimeImmutable();
-        $this->updatedAt = new \DateTimeImmutable();
+        $this->createdAt = new \DateTime();
+        $this->updatedAt = new \DateTime();
         $this->stockPharmacies = new ArrayCollection();
         $this->reponsesMedicaments = new ArrayCollection();
     }

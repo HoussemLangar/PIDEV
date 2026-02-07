@@ -1,0 +1,224 @@
+{% extends 'back/base.html.twig' %}
+
+{% block title %}{% if stock %}Éditer{% else %}Ajouter{% endif %} un médicament{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <h1>
+                <i class="fas fa-pills"></i>
+                {% if stock %}
+                    Éditer "{{ stock.medicament.nom }}"
+                {% else %}
+                    Ajouter un médicament à {{ pharmacy.nom }}
+                {% endif %}
+            </h1>
+
+            <div class="card mt-4">
+                <div class="card-body">
+                    {% if action == 'create' %}
+                        <form method="POST" action="{{ path('admin_medicament_create', {pharmacyId: pharmacy.id}) }}" novalidate>
+                    {% else %}
+                        <form method="POST" action="{{ path('admin_medicament_update', {pharmacyId: pharmacy.id, stockId: stock.id}) }}" novalidate>
+                    {% endif %}
+
+                        {% set mf = medicamentForm is defined and medicamentForm is iterable ? medicamentForm : {} %}
+
+                        {% if action == 'create' %}
+                            <!-- Sélection du médicament -->
+                            <div class="mb-3">
+                                <label for="medicament_id" class="form-label">Médicament</label>
+                                {% if errors is defined and errors.medicament_id is defined %}
+                                    <select id="medicament_id" name="medicament_id" class="form-control is-invalid">
+                                        <option value="">-- Nouveau médicament --</option>
+                                        {% for medicament in medicaments %}
+                                            <option value="{{ medicament.id }}"
+                                                data-nom="{{ medicament.nom|e('html_attr') }}"
+                                                data-type="{{ medicament.type|default('')|e('html_attr') }}"
+                                                data-description="{{ medicament.description|default('')|e('html_attr') }}"
+                                                data-forme="{{ medicament.forme|default('')|e('html_attr') }}"
+                                                data-dosage="{{ medicament.dosage|default('')|e('html_attr') }}"
+                                                data-prix="{{ medicament.prix|default('')|e('html_attr') }}"
+                                                data-stock="{{ medicament.stock|default(0)|e('html_attr') }}"
+                                                data-laboratoire="{{ medicament.laboratoire|default('')|e('html_attr') }}"
+                                                data-created-at="{{ medicament.createdAt ? medicament.createdAt|date('d/m/Y H:i') : '' }}"
+                                                data-updated-at="{{ medicament.updatedAt ? medicament.updatedAt|date('d/m/Y H:i') : '' }}"
+                                                {% if selectedMedicamentId is defined and selectedMedicamentId == medicament.id %}selected{% endif %}
+                                            >
+                                                {{ medicament.nom }} ({{ medicament.dosage }} - {{ medicament.forme }})
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="invalid-feedback d-block">{{ errors.medicament_id }}</div>
+                                {% else %}
+                                    <select id="medicament_id" name="medicament_id" class="form-control">
+                                        <option value="">-- Nouveau médicament --</option>
+                                        {% for medicament in medicaments %}
+                                            <option value="{{ medicament.id }}"
+                                                data-nom="{{ medicament.nom|e('html_attr') }}"
+                                                data-type="{{ medicament.type|default('')|e('html_attr') }}"
+                                                data-description="{{ medicament.description|default('')|e('html_attr') }}"
+                                                data-forme="{{ medicament.forme|default('')|e('html_attr') }}"
+                                                data-dosage="{{ medicament.dosage|default('')|e('html_attr') }}"
+                                                data-prix="{{ medicament.prix|default('')|e('html_attr') }}"
+                                                data-stock="{{ medicament.stock|default(0)|e('html_attr') }}"
+                                                data-laboratoire="{{ medicament.laboratoire|default('')|e('html_attr') }}"
+                                                data-created-at="{{ medicament.createdAt ? medicament.createdAt|date('d/m/Y H:i') : '' }}"
+                                                data-updated-at="{{ medicament.updatedAt ? medicament.updatedAt|date('d/m/Y H:i') : '' }}"
+                                                {% if selectedMedicamentId is defined and selectedMedicamentId == medicament.id %}selected{% endif %}
+                                            >
+                                                {{ medicament.nom }} ({{ medicament.dosage }} - {{ medicament.forme }})
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                {% endif %}
+                                <small class="text-muted">Laissez vide pour créer un nouveau médicament.</small>
+                            </div>
+                        {% else %}
+                            <!-- Affichage du médicament en mode édition -->
+                            <div class="mb-3">
+                                <label class="form-label">Médicament</label>
+                                <div class="form-control-plaintext">
+                                    <strong>{{ stock.medicament.nom }}</strong> ({{ stock.medicament.dosage }} - {{ stock.medicament.forme }})
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <h5 class="card-title mb-3">Attributs du médicament</h5>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="medicament_nom" class="form-label">Nom <span class="text-danger">*</span></label>
+                                        <input type="text" id="medicament_nom" name="medicament_nom"
+                                               class="form-control {% if errors is defined and errors.medicament_nom is defined %}is-invalid{% endif %}"
+                                               value="{{ mf.nom|default('') }}" required>
+                                        {% if errors is defined and errors.medicament_nom is defined %}
+                                            <div class="invalid-feedback d-block">{{ errors.medicament_nom }}</div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="medicament_type" class="form-label">Type</label>
+                                        <input type="text" id="medicament_type" name="medicament_type" class="form-control"
+                                               value="{{ mf.type|default('') }}">
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="medicament_description" class="form-label">Description</label>
+                                    <textarea id="medicament_description" name="medicament_description" class="form-control" rows="3">{{ mf.description|default('') }}</textarea>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <label for="medicament_forme" class="form-label">Forme</label>
+                                        <input type="text" id="medicament_forme" name="medicament_forme" class="form-control"
+                                               value="{{ mf.forme|default('') }}">
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="medicament_dosage" class="form-label">Dosage</label>
+                                        <input type="text" id="medicament_dosage" name="medicament_dosage" class="form-control"
+                                               value="{{ mf.dosage|default('') }}">
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="medicament_laboratoire" class="form-label">Laboratoire</label>
+                                        <input type="text" id="medicament_laboratoire" name="medicament_laboratoire" class="form-control"
+                                               value="{{ mf.laboratoire|default('') }}">
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <label for="medicament_prix" class="form-label">Prix</label>
+                                        <input type="number" id="medicament_prix" name="medicament_prix"
+                                               class="form-control {% if errors is defined and errors.medicament_prix is defined %}is-invalid{% endif %}"
+                                               value="{{ mf.prix|default('') }}" step="0.01" min="0">
+                                        {% if errors is defined and errors.medicament_prix is defined %}
+                                            <div class="invalid-feedback d-block">{{ errors.medicament_prix }}</div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="medicament_stock" class="form-label">Stock</label>
+                                        <input type="number" id="medicament_stock" name="medicament_stock"
+                                               class="form-control {% if errors is defined and errors.medicament_stock is defined %}is-invalid{% endif %}"
+                                               value="{{ mf.stock|default(0) }}" min="0">
+                                        {% if errors is defined and errors.medicament_stock is defined %}
+                                            <div class="invalid-feedback d-block">{{ errors.medicament_stock }}</div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Dates</label>
+                                        {% set createdAt = mf.createdAt is defined ? mf.createdAt : null %}
+                                        {% set updatedAt = mf.updatedAt is defined ? mf.updatedAt : null %}
+                                        <input type="text" id="medicament_created_at" class="form-control mb-2" value="Créé: {{ createdAt ? createdAt|date('d/m/Y H:i') : '-' }}" readonly>
+                                        <input type="text" id="medicament_updated_at" class="form-control" value="Modifié: {{ updatedAt ? updatedAt|date('d/m/Y H:i') : '-' }}" readonly>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i>
+                                {% if action == 'create' %}
+                                    Ajouter le médicament
+                                {% else %}
+                                    Mettre à jour
+                                {% endif %}
+                            </button>
+                            <a href="{{ path('admin_medicament_index', {pharmacyId: pharmacy.id}) }}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i>
+                                Annuler
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        var select = document.getElementById('medicament_id');
+        if (!select) return;
+
+        function setValue(id, value) {
+            var el = document.getElementById(id);
+            if (!el) return;
+            if (el.tagName.toLowerCase() === 'textarea') {
+                el.value = value || '';
+            } else {
+                el.value = value || '';
+            }
+        }
+
+        function hydrateFromOption(option) {
+            if (!option) return;
+            setValue('medicament_nom', option.dataset.nom || '');
+            setValue('medicament_type', option.dataset.type || '');
+            setValue('medicament_description', option.dataset.description || '');
+            setValue('medicament_forme', option.dataset.forme || '');
+            setValue('medicament_dosage', option.dataset.dosage || '');
+            setValue('medicament_prix', option.dataset.prix || '');
+            setValue('medicament_stock', option.dataset.stock || '0');
+            setValue('medicament_laboratoire', option.dataset.laboratoire || '');
+
+            var created = option.dataset.createdAt || '';
+            var updated = option.dataset.updatedAt || '';
+            var createdEl = document.getElementById('medicament_created_at');
+            var updatedEl = document.getElementById('medicament_updated_at');
+            if (createdEl) createdEl.value = 'Créé: ' + (created || '-');
+            if (updatedEl) updatedEl.value = 'Modifié: ' + (updated || '-');
+        }
+
+        select.addEventListener('change', function () {
+            hydrateFromOption(select.options[select.selectedIndex]);
+        });
+
+        hydrateFromOption(select.options[select.selectedIndex]);
+    })();
+</script>
+{% endblock %}

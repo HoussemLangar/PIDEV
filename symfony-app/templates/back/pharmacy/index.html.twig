@@ -1,0 +1,107 @@
+{% extends 'back/base.html.twig' %}
+
+{% block title %}Pharmacies{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-5">
+    <div class="row mb-4">
+        <div class="col">
+            <h1><i class="fas fa-hospital"></i> Gestion des Pharmacies</h1>
+        </div>
+        <div class="col text-end">
+            <a href="{{ path('admin_pharmacy_new') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Ajouter une pharmacie
+            </a>
+        </div>
+    </div>
+
+    {% if app.flashes('success') %}
+        {% for message in app.flashes('success') %}
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Formulaire de recherche et tri -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-6">
+                    <input type="text" name="search" class="form-control" placeholder="Rechercher par nom, adresse, téléphone ou email" value="{{ search }}">
+                </div>
+                <div class="col-md-3">
+                    <select name="sort" class="form-control">
+                        <option value="id" {% if sort == 'id' %}selected{% endif %}>ID</option>
+                        <option value="nom" {% if sort == 'nom' %}selected{% endif %}>Nom</option>
+                        <option value="adresse" {% if sort == 'adresse' %}selected{% endif %}>Adresse</option>
+                        <option value="createdAt" {% if sort == 'createdAt' %}selected{% endif %}>Date création</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select name="dir" class="form-control">
+                        <option value="asc" {% if dir == 'asc' %}selected{% endif %}>Ascendant</option>
+                        <option value="desc" {% if dir == 'desc' %}selected{% endif %}>Descendant</option>
+                    </select>
+                </div>
+                <div class="col-md-1">
+                    <button type="submit" class="btn btn-info w-100">Rechercher</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tableau -->
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Nom</th>
+                        <th>Adresse</th>
+                        <th>Téléphone</th>
+                        <th>Email</th>
+                        <th>Date création</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pharmacy in pharmacies %}
+                        <tr>
+                            <td>#{{ pharmacy.id }}</td>
+                            <td><strong>{{ pharmacy.nom }}</strong></td>
+                            <td>{{ pharmacy.adresse }}</td>
+                            <td>{{ pharmacy.telephone ?? '-' }}</td>
+                            <td>{{ pharmacy.email ?? '-' }}</td>
+                            <td>{{ pharmacy.createdAt|date('d/m/Y H:i') }}</td>
+                            <td>
+                                <a href="{{ path('admin_medicament_index', {pharmacyId: pharmacy.id}) }}" class="btn btn-sm btn-success">
+                                    <i class="fas fa-pills"></i> Médicaments
+                                </a>
+                                <a href="{{ path('admin_pharmacy_edit', {id: pharmacy.id}) }}" class="btn btn-sm btn-warning">
+                                    <i class="fas fa-edit"></i> Éditer
+                                </a>
+                                <a href="{{ path('admin_pharmacy_pdf', {id: pharmacy.id}) }}" class="btn btn-sm btn-info" target="_blank">
+                                    <i class="fas fa-file-pdf"></i> PDF
+                                </a>
+                                <form method="POST" action="{{ path('admin_pharmacy_delete', {id: pharmacy.id}) }}" style="display:inline;" onsubmit="return confirm('Êtes-vous sûr?');">
+                                    <input type="hidden" name="_method" value="DELETE">
+                                    <button type="submit" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-trash"></i> Supprimer
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-muted">Aucune pharmacie trouvée</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

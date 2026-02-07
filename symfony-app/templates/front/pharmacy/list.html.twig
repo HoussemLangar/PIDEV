@@ -1,0 +1,99 @@
+{% extends 'front/base.html.twig' %}
+
+{% block title %}Pharmacies{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col">
+            <h1><i class="fas fa-hospital"></i> Nos Pharmacies</h1>
+        </div>
+    </div>
+
+    <!-- Formulaire de recherche -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-6">
+                    <input type="text" name="search" class="form-control" placeholder="Rechercher une pharmacie..." value="{{ search }}">
+                </div>
+                <div class="col-md-3">
+                    <select name="sort" class="form-control">
+                        <option value="nom" {% if sort == 'nom' %}selected{% endif %}>Nom</option>
+                        <option value="adresse" {% if sort == 'adresse' %}selected{% endif %}>Adresse</option>
+                        <option value="createdAt" {% if sort == 'createdAt' %}selected{% endif %}>Récent</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select name="dir" class="form-control">
+                        <option value="asc" {% if dir == 'asc' %}selected{% endif %}>A-Z</option>
+                        <option value="desc" {% if dir == 'desc' %}selected{% endif %}>Z-A</option>
+                    </select>
+                </div>
+                <div class="col-md-1">
+                    <button type="submit" class="btn btn-primary w-100">Rechercher</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Liste des pharmacies -->
+    <div class="row">
+        {% for pharmacy in pharmacies %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100 shadow-sm hover-shadow" style="transition: transform 0.3s;">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-pills"></i> {{ pharmacy.nom }}
+                        </h5>
+                        <p class="card-text text-muted">
+                            <i class="fas fa-map-marker-alt"></i> {{ pharmacy.adresse }}
+                        </p>
+                        
+                        {% if pharmacy.telephone %}
+                            <p class="card-text small">
+                                <i class="fas fa-phone"></i> {{ pharmacy.telephone }}
+                            </p>
+                        {% endif %}
+                        
+                        {% if pharmacy.email %}
+                            <p class="card-text small">
+                                <i class="fas fa-envelope"></i> {{ pharmacy.email }}
+                            </p>
+                        {% endif %}
+                        
+                        {% if pharmacy.horaires %}
+                            <p class="card-text small text-secondary">
+                                <i class="fas fa-clock"></i>
+                                <small><pre style="margin: 5px 0; background: #f5f5f5; padding: 5px; border-radius: 3px;">{{ pharmacy.horaires }}</pre></small>
+                            </p>
+                        {% endif %}
+                    </div>
+                    <div class="card-footer bg-light d-grid gap-2">
+                        <a href="{{ path('pharmacy_show', {id: pharmacy.id}) }}" class="btn btn-sm btn-primary w-100">
+                            <i class="fas fa-eye"></i> Voir détails
+                        </a>
+                        <a href="{{ path('pharmacy_medicaments', {id: pharmacy.id}) }}" class="btn btn-sm btn-outline-secondary w-100">
+                            <i class="fas fa-pills"></i> Médicaments
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="col-12">
+                <div class="alert alert-info text-center py-5">
+                    <i class="fas fa-inbox" style="font-size: 48px; opacity: 0.5;"></i>
+                    <p class="mt-3">Aucune pharmacie trouvée</p>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    .hover-shadow:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.15) !important;
+    }
+</style>
+{% endblock %}

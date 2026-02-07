@@ -1,0 +1,110 @@
+{% extends 'back/base.html.twig' %}
+
+{% block title %}{% if pharmacy %}Éditer une pharmacie{% else %}Ajouter une pharmacie{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <h1>
+                <i class="fas fa-hospital"></i>
+                {% if pharmacy %}Éditer la pharmacie "{{ pharmacy.nom }}"{% else %}Ajouter une pharmacie{% endif %}
+            </h1>
+
+            <div class="card mt-4">
+                <div class="card-body">
+                    <form method="POST" action="{% if pharmacy %}{{ path('admin_pharmacy_update', {'id': pharmacy.id}) }}{% else %}{{ path('admin_pharmacy_create') }}{% endif %}" novalidate>
+                        <div class="mb-3">
+                            <label for="nom" class="form-label">Nom <span class="text-danger">*</span></label>
+                            {% set nomValue = '' %}
+                            {% if errors is defined and errors and errors['nom'] is defined %}
+                                {% set nomValue = data['nom'] %}
+                            {% elseif pharmacy %}
+                                {% set nomValue = pharmacy.nom %}
+                            {% endif %}
+                            <input type="text" id="nom" name="nom" class="form-control {% if errors is defined and errors and errors['nom'] is defined %}is-invalid{% endif %}" 
+                                   value="{{ nomValue }}" maxlength="150" required>
+                            {% if errors is defined and errors and errors['nom'] is defined %}
+                                <div class="invalid-feedback d-block">{{ errors['nom'] }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="adresse" class="form-label">Adresse <span class="text-danger">*</span></label>
+                            {% set adresseValue = '' %}
+                            {% if errors is defined and errors and errors['adresse'] is defined %}
+                                {% set adresseValue = data['adresse'] %}
+                            {% elseif pharmacy %}
+                                {% set adresseValue = pharmacy.adresse %}
+                            {% endif %}
+                            <textarea id="adresse" name="adresse" class="form-control {% if errors is defined and errors and errors['adresse'] is defined %}is-invalid{% endif %}" 
+                                      rows="3" maxlength="255" required>{{ adresseValue }}</textarea>
+                            {% if errors is defined and errors and errors['adresse'] is defined %}
+                                <div class="invalid-feedback d-block">{{ errors['adresse'] }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="telephone" class="form-label">Téléphone</label>
+                                {% set telephoneValue = '' %}
+                                {% if errors is defined and errors and errors['telephone'] is defined %}
+                                    {% set telephoneValue = data['telephone'] %}
+                                {% elseif pharmacy %}
+                                    {% set telephoneValue = pharmacy.telephone %}
+                                {% endif %}
+                                <input type="text" id="telephone" name="telephone" class="form-control {% if errors is defined and errors and errors['telephone'] is defined %}is-invalid{% endif %}" 
+                                       value="{{ telephoneValue }}" maxlength="20">
+                                {% if errors is defined and errors and errors['telephone'] is defined %}
+                                    <div class="invalid-feedback d-block">{{ errors['telephone'] }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                {% set emailValue = '' %}
+                                {% if errors is defined and errors and errors['email'] is defined %}
+                                    {% set emailValue = data['email'] %}
+                                {% elseif pharmacy %}
+                                    {% set emailValue = pharmacy.email %}
+                                {% endif %}
+                                <input type="email" id="email" name="email" class="form-control {% if errors is defined and errors and errors['email'] is defined %}is-invalid{% endif %}" 
+                                       value="{{ emailValue }}" maxlength="100">
+                                {% if errors is defined and errors and errors['email'] is defined %}
+                                    <div class="invalid-feedback d-block">{{ errors['email'] }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="horaires" class="form-label">Horaires</label>
+                            {% set horairesValue = '' %}
+                            {% if errors is defined and errors and errors['horaires'] is defined %}
+                                {% set horairesValue = data['horaires'] %}
+                            {% elseif pharmacy %}
+                                {% set horairesValue = pharmacy.horaires %}
+                            {% endif %}
+                            <textarea id="horaires" name="horaires" class="form-control {% if errors is defined and errors and errors['horaires'] is defined %}is-invalid{% endif %}" 
+                                      rows="2" maxlength="255">{{ horairesValue }}</textarea>
+                            {% if errors is defined and errors and errors['horaires'] is defined %}
+                                <div class="invalid-feedback d-block">{{ errors['horaires'] }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-flex gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i>
+                                {% if pharmacy %}Mettre à jour{% else %}Créer{% endif %}
+                            </button>
+                            <a href="{{ path('admin_pharmacy_index') }}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i>
+                                Annuler
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

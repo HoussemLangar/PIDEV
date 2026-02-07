@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Pharmacie #{{ pharmacy.id }} - {{ pharmacy.nom }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        .header {
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            margin: 0;
+            color: #007bff;
+        }
+        .section {
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 4px;
+        }
+        .section h3 {
+            color: #007bff;
+            margin-top: 0;
+        }
+        .field {
+            margin-bottom: 10px;
+        }
+        .field strong {
+            display: inline-block;
+            width: 150px;
+        }
+        .footer {
+            text-align: center;
+            color: #999;
+            font-size: 12px;
+            margin-top: 40px;
+            padding-top: 10px;
+            border-top: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Pharmacie #{{ pharmacy.id }}</h1>
+        <p style="margin: 0; color: #666;">Généré le {{ "now"|date('d/m/Y H:i') }}</p>
+    </div>
+
+    <div class="section">
+        <h3><i>Informations générales</i></h3>
+        <div class="field">
+            <strong>Nom :</strong> {{ pharmacy.nom }}
+        </div>
+        <div class="field">
+            <strong>Adresse :</strong> {{ pharmacy.adresse }}
+        </div>
+        <div class="field">
+            <strong>Téléphone :</strong> {{ pharmacy.telephone ?? '-' }}
+        </div>
+        <div class="field">
+            <strong>Email :</strong> {{ pharmacy.email ?? '-' }}
+        </div>
+        <div class="field">
+            <strong>Horaires :</strong>
+            {% if pharmacy.horaires %}
+                <pre>{{ pharmacy.horaires }}</pre>
+            {% else %}
+                -
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="section">
+        <h3><i>Métadonnées</i></h3>
+        <div class="field">
+            <strong>Créé le :</strong> {{ pharmacy.createdAt|date('d/m/Y H:i') }}
+        </div>
+        <div class="field">
+            <strong>Modifié le :</strong> {{ pharmacy.updatedAt|date('d/m/Y H:i') }}
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>Ce document a été généré automatiquement par le système de gestion des pharmacies.</p>
+    </div>
+</body>
+</html>

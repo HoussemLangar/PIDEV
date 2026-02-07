@@ -1,0 +1,17 @@
+<header>
+  <nav class="navbar container">
+    <div class="logo">SANTÉA</div>
+    <ul class="nav-links">
+      <li><a href="{{ path('app_home') }}">Accueil</a></li>
+      <li><a href="{{ path('pharmacy_list') }}">Pharmacies</a></li>
+      <li><a href="#services">Services</a></li>
+      <li><a href="#contact-section">Contact</a></li>
+    </ul>
+    {% if app.user %}
+      <a href="{{ path('app_home') }}" class="btn">Mon compte</a>
+    {% else %}
+      <a href="{{ path('login') }}" class="btn btn-primary" id="btn-login">Se connecter</a>
+    {% endif %}
+    <div class="menu-toggle"><i class="fas fa-bars"></i></div>
+  </nav>
+</header>
