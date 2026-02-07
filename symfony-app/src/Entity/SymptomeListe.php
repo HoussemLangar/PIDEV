@@ -23,28 +23,28 @@ class SymptomeListe
     private ?int $id = null;
 
     #[ORM\Column(type: 'string', length: 100, unique: true)]
-    #[Assert\NotBlank(message: 'Le nom du symptôme est obligatoire')]
+    #[Assert\NotBlank(message: 'Le nom du symptôme est obligatoire.')]
     #[Assert\Length(
         min: 4,
-        minMessage: 'Le nom du symptôme doit contenir au moins {{ limit }} caractères',
+        minMessage: 'Le nom du symptôme doit contenir au moins {{ limit }} caractères.',
         max: 100,
-        maxMessage: 'Le nom ne doit pas dépasser {{ limit }} caractères'
+        maxMessage: 'Le nom ne doit pas dépasser {{ limit }} caractères.'
     )]
     #[Assert\Regex(
         pattern: '/^[^\d]+$/u',
-        message: 'Le nom ne doit pas contenir de chiffres'
+        message: 'Le nom ne doit pas contenir de chiffres.'
     )]
     private string $nom;
 
     #[ORM\Column(type: 'string', length: 100, nullable: false)]
-    #[Assert\NotBlank(message: 'La catégorie est obligatoire')]
+    #[Assert\NotBlank(message: 'Veuillez choisir une catégorie.')]
     #[Assert\Length(
         max: 100,
-        maxMessage: 'La catégorie ne doit pas dépasser {{ limit }} caractères'
+        maxMessage: 'La catégorie ne doit pas dépasser {{ limit }} caractères.'
     )]
     #[Assert\Regex(
         pattern: '/^[^\d]+$/u',
-        message: 'La catégorie ne doit pas contenir de chiffres',
+        message: 'La catégorie ne doit pas contenir de chiffres.',
         match: true,
     )]
     private string $categorie;
@@ -78,14 +78,14 @@ class SymptomeListe
         return $this;
     }
 
-    public function getCategorie(): ?string
+    public function getCategorie(): string
     {
         return $this->categorie;
     }
 
     public function setCategorie(?string $categorie): self
     {
-        $this->categorie = $categorie ? trim($categorie) : null;
+        $this->categorie = $categorie ? trim($categorie) : '';
         return $this;
     }
 

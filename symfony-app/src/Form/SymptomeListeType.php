@@ -24,22 +24,21 @@ class SymptomeListeType extends AbstractType
                     'class' => 'form-control',
                     'placeholder' => 'Ex : Maux de tête, Fatigue intense, Nausées...',
                     'maxlength' => 100,
-                    'required' => false,
-                    'pattern' => false,
-                    'title' => false,
                 ],
+                'translation_domain' => false,
             ])
 
             // Catégorie - sélection parmi les catégories existantes
             ->add('categorie', ChoiceType::class, [
                 'label' => 'Catégorie',
                 'label_attr' => ['class' => 'form-label'],
-                'required' => false,
                 'choices' => $options['categories'] ?? [],
                 'attr' => [
                     'class' => 'form-control',
                 ],
-                'placeholder' => 'Sélectionnez une catégorie...',
+                'empty_data' => '',
+                'choice_translation_domain' => false,
+                'translation_domain' => false,
             ])
         ;
     }
@@ -47,13 +46,12 @@ class SymptomeListeType extends AbstractType
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
-            'data_class' => SymptomeListe::class,            'categories' => [],            
-            // Très important : désactive la validation HTML5 du navigateur
-            'attr' => [
-                'novalidate' => 'novalidate',
-            ],
-            
-            // Pour améliorer l’affichage des erreurs
+            'data_class' => SymptomeListe::class,            
+            'categories' => [],            
+                        // Forcer la locale française
+            'locale' => 'fr',
+            'translation_domain' => false,
+                        // Pour améliorer l’affichage des erreurs
             'error_mapping' => [
                 'nom' => 'nom',
             ],

@@ -24,7 +24,6 @@ final class AdminSymptomeController extends AbstractController
     #[Route('', name: 'app_symptome_liste_index', methods: ['GET', 'POST'])]
     public function index(Request $request): Response
     {
-        $symptome = new SymptomeListe();
         $categories = $this->symptomeRepository->findDistinctCategories();
         
         // Prepare categories for form choices (categories is already an array of strings)
@@ -33,23 +32,35 @@ final class AdminSymptomeController extends AbstractController
             $categoryChoices[$category] = $category;
         }
         
-        $form = $this->createForm(SymptomeListeType::class, $symptome, [
-            'categories' => $categoryChoices
-        ]);
-        $form->handleRequest($request);
+        // For GET requests (page refresh), always create a clean form
+        if ($request->isMethod('GET')) {
+            $symptome = new SymptomeListe();
+            $form = $this->createForm(SymptomeListeType::class, $symptome, [
+                'categories' => $categoryChoices
+            ]);
+        } else {
+            // For POST requests, handle form submission
+            $symptome = new SymptomeListe();
+            $form = $this->createForm(SymptomeListeType::class, $symptome, [
+                'categories' => $categoryChoices
+            ]);
+            $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $this->entityManager->persist($symptome);
-            $this->entityManager->flush();
+            if ($form->isSubmitted() && $form->isValid()) {
+                $this->entityManager->persist($symptome);
+                $this->entityManager->flush();
 
-            $this->addFlash('success', 'Le symptôme a été ajouté avec succès.');
-            return $this->redirectToRoute('app_symptome_liste_index');
+                $this->addFlash('success', 'Le symptôme a été ajouté avec succès.');
+                return $this->redirectToRoute('app_symptome_liste_index');
+            }
         }
 
         // Handle search
-        $search = $request->query->get('search', '');
-        if ($search) {
-            $symptomes = $this->symptomeRepository->searchSymptoms($search);
+        $search = $request->query->get('search', '') ?? '';
+        $category = $request->query->get('category', '') ?? '';
+        
+        if ($search || $category) {
+            $symptomes = $this->symptomeRepository->searchSymptoms($search, $category);
         } else {
             $symptomes = $this->symptomeRepository->findAll();
         }
@@ -90,13 +101,17 @@ final class AdminSymptomeController extends AbstractController
         $form = $this->createForm(SymptomeListeType::class, $symptome, [
             'categories' => $categoryChoices
         ]);
-        $form->handleRequest($request);
+        
+        // Only handle request for POST submissions, not GET (page refresh)
+        if ($request->isMethod('POST')) {
+            $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $this->entityManager->flush();
+            if ($form->isSubmitted() && $form->isValid()) {
+                $this->entityManager->flush();
 
-            $this->addFlash('success', 'Le symptôme a été modifié avec succès.');
-            return $this->redirectToRoute('app_symptome_liste_index');
+                $this->addFlash('success', 'Le symptôme a été modifié avec succès.');
+                return $this->redirectToRoute('app_symptome_liste_index');
+            }
         }
 
         // Handle search
@@ -174,6 +189,19 @@ final class AdminSymptomeController extends AbstractController
             'symptomes' => $symptomesData,
             'count' => count($symptomesData)
         ]);
+    }
+
+    #[Route('/{id}/data', name: 'app_symptome_liste_data', methods: ['GET'])]
+    public function getSymptomeData(SymptomeListe $symptome): Response
+    {
+        // Return symptom data as JSON for AJAX form filling
+        $data = [
+            'id' => $symptome->getId(),
+            'nom' => $symptome->getNom(),
+            'categorie' => $symptome->getCategorie(),
+        ];
+
+        return $this->json($data);
     }
 
     #[Route('/export', name: 'app_symptome_liste_export', methods: ['GET'])]
