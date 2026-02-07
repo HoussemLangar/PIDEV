@@ -1,0 +1,9 @@
+{% extends 'back/base.html.twig' %}
+{% block title %}Nouvelle pharmacie{% endblock %}
+{% block body %}
+<h1>Nouvelle pharmacie</h1>
+{{ form_start(form, { attr: { class: 'js-ajax-validate', novalidate: 'novalidate' } }) }}
+    {{ form_widget(form) }}
+    <button type="submit">Enregistrer</button>
+{{ form_end(form) }}
+{% endblock %}

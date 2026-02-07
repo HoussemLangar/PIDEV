@@ -1,0 +1,571 @@
+{% extends 'front/base.html.twig' %}
+
+{% block title %}Dashboard Pharmacien - SANTÉA{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+{% endblock %}
+
+{% block body %}
+<section class="container pharmacy-section">
+    <h1 class="section-title">Dashboard Pharmacien</h1>
+
+    {% for label, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="alert alert-{{ label == 'success' ? 'success' : 'danger' }}">{{ message }}</div>
+        {% endfor %}
+    {% endfor %}
+
+    <div class="section-switcher">
+        <button class="btn-primary section-toggle" data-target="#section-create-pharmacy">Créer une pharmacie</button>
+        <button class="btn-primary section-toggle" data-target="#section-my-pharmacies">Mes pharmacies</button>
+        <button class="btn-primary section-toggle" data-target="#section-reservations">Réservations</button>
+        <button class="btn-primary section-toggle" data-target="#section-stocks">Stocks</button>
+        <button class="btn-primary section-toggle" data-target="#section-my-medicaments">Mes médicaments</button>
+        <button class="btn-primary section-toggle" data-target="#section-medicaments">Ajouter un médicament</button>
+        <button class="btn-ghost section-toggle" data-target="#section-alerts">Alertes de stock</button>
+    </div>
+
+    <div id="section-create-pharmacy" class="section-panel is-open">
+        <div class="card dashboard-card glass-card">
+            <div class="section-title-row">
+                <div>
+                    <h3>Créer une pharmacie</h3>
+                    <p class="muted">Ajoute une nouvelle pharmacie et positionne-la sur la carte.</p>
+                </div>
+                <span class="pill">Nouveau</span>
+            </div>
+            {{ form_start(pharmacyForm, { attr: { class: 'dashboard-form js-ajax-validate', novalidate: 'novalidate' } }) }}
+                {{ form_row(pharmacyForm.nom, { attr: { placeholder: 'Nom' } }) }}
+                {{ form_row(pharmacyForm.adresse, { attr: { placeholder: 'Adresse' } }) }}
+                {{ form_row(pharmacyForm.ville, { attr: { placeholder: 'Ville' } }) }}
+                {{ form_row(pharmacyForm.telephone, { attr: { placeholder: 'Téléphone' } }) }}
+                {{ form_row(pharmacyForm.email, { attr: { placeholder: 'Email' } }) }}
+                <div class="time-grid" data-horaires>
+                    <select class="horaires-jours">
+                        <option value="Lun-Dim">Lun-Dim</option>
+                        <option value="Lun-Sam">Lun-Sam</option>
+                        <option value="Lun-Ven">Lun-Ven</option>
+                        <option value="Sam-Dim">Sam-Dim</option>
+                    </select>
+                    <input type="time" class="horaires-open" value="08:00">
+                    <input type="time" class="horaires-close" value="20:00">
+                    {{ form_row(pharmacyForm.horaires, { attr: { class: 'horaires-output', placeholder: 'Horaires', readonly: 'readonly' } }) }}
+                </div>
+                <div class="map-picker">
+                    <div id="map-create" class="map-canvas" data-lat-input="create-lat" data-lng-input="create-lng" data-lat="36.8065" data-lng="10.1815"></div>
+                    <div class="map-actions">
+                        <button type="button" class="btn-ghost map-locate" data-map-target="map-create">Utiliser ma position</button>
+                    </div>
+                    <div class="inline-fields">
+                        {{ form_row(pharmacyForm.latitude, { attr: { id: 'create-lat', placeholder: 'Latitude', readonly: 'readonly' }, row_attr: { class: 'form-field map-hidden' } }) }}
+                        {{ form_row(pharmacyForm.longitude, { attr: { id: 'create-lng', placeholder: 'Longitude', readonly: 'readonly' }, row_attr: { class: 'form-field map-hidden' } }) }}
+                    </div>
+                </div>
+                {{ form_row(pharmacyForm.active) }}
+                <button type="submit" class="btn-primary">Ajouter</button>
+            {{ form_end(pharmacyForm) }}
+        </div>
+    </div>
+
+    <div id="section-my-pharmacies" class="section-panel">
+        <div class="section-title-row">
+            <div>
+                <h2 class="subsection-title">Mes pharmacies</h2>
+                <p class="muted">Gère tes pharmacies et mets à jour les informations clés.</p>
+            </div>
+            <div class="filter-bar">
+                <input type="text" class="filter-input" data-filter="pharmacy" placeholder="Rechercher une pharmacie">
+                <select class="filter-select" data-filter="pharmacy">
+                    <option value="">Toutes les villes</option>
+                    {% for pharmacy in pharmacies %}
+                        {% if pharmacy.ville %}
+                            <option value="{{ pharmacy.ville }}">{{ pharmacy.ville }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="pharmacy-grid">
+            {% for pharmacy in pharmacies %}
+                <div class="card pharmacy-card" data-pharmacy-name="{{ pharmacy.nom|lower }}" data-pharmacy-city="{{ pharmacy.ville|lower }}">
+                    <div class="pharmacy-header-row">
+                        <div>
+                            <h3>{{ pharmacy.nom }}</h3>
+                            <p>{{ pharmacy.adresse }}{% if pharmacy.ville %}, {{ pharmacy.ville }}{% endif %}</p>
+                        </div>
+                        <div class="inline-actions">
+                            <button type="button" class="btn-small toggle-edit" data-target="#edit-{{ pharmacy.id }}">Modifier</button>
+                            <form method="post" action="{{ path('pharmacien_pharmacies_delete', {id: pharmacy.id}) }}">
+                                <button type="submit" class="btn-ghost">Supprimer</button>
+                            </form>
+                        </div>
+                    </div>
+                    <div id="edit-{{ pharmacy.id }}" class="edit-panel">
+                        {{ form_start(pharmacyEditForms[pharmacy.id], { attr: { class: 'dashboard-form js-ajax-validate', novalidate: 'novalidate' } }) }}
+                            {{ form_row(pharmacyEditForms[pharmacy.id].nom) }}
+                            {{ form_row(pharmacyEditForms[pharmacy.id].adresse) }}
+                            {{ form_row(pharmacyEditForms[pharmacy.id].ville) }}
+                            {{ form_row(pharmacyEditForms[pharmacy.id].telephone) }}
+                            {{ form_row(pharmacyEditForms[pharmacy.id].email) }}
+                            <div class="time-grid" data-horaires>
+                                <select class="horaires-jours">
+                                    <option value="Lun-Dim">Lun-Dim</option>
+                                    <option value="Lun-Sam">Lun-Sam</option>
+                                    <option value="Lun-Ven">Lun-Ven</option>
+                                    <option value="Sam-Dim">Sam-Dim</option>
+                                </select>
+                                <input type="time" class="horaires-open">
+                                <input type="time" class="horaires-close">
+                                {{ form_row(pharmacyEditForms[pharmacy.id].horaires, { attr: { class: 'horaires-output', readonly: 'readonly' } }) }}
+                            </div>
+                            <div class="map-picker">
+                                <div id="map-{{ pharmacy.id }}" class="map-canvas" data-lat-input="lat-{{ pharmacy.id }}" data-lng-input="lng-{{ pharmacy.id }}" data-lat="{{ pharmacy.latitude }}" data-lng="{{ pharmacy.longitude }}"></div>
+                                <div class="map-actions">
+                                    <button type="button" class="btn-ghost map-locate" data-map-target="map-{{ pharmacy.id }}">Utiliser ma position</button>
+                                </div>
+                                <div class="inline-fields">
+                                    {{ form_row(pharmacyEditForms[pharmacy.id].latitude, { attr: { id: 'lat-' ~ pharmacy.id, readonly: 'readonly' }, row_attr: { class: 'form-field map-hidden' } }) }}
+                                    {{ form_row(pharmacyEditForms[pharmacy.id].longitude, { attr: { id: 'lng-' ~ pharmacy.id, readonly: 'readonly' }, row_attr: { class: 'form-field map-hidden' } }) }}
+                                </div>
+                            </div>
+                            {{ form_row(pharmacyEditForms[pharmacy.id].active) }}
+                            <button type="submit" class="btn-primary">Enregistrer</button>
+                        {{ form_end(pharmacyEditForms[pharmacy.id]) }}
+                    </div>
+                </div>
+            {% else %}
+                <div class="empty-state">Aucune pharmacie.</div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div id="section-reservations" class="section-panel">
+        <div class="section-title-row">
+            <div>
+                <h2 class="subsection-title">Réservations</h2>
+                <p class="muted">Traite les demandes des patients.</p>
+            </div>
+            <div class="filter-bar">
+                <input type="text" class="filter-input" data-filter="reservation" placeholder="Rechercher une réservation">
+                <select class="filter-select" data-filter="reservation">
+                    <option value="">Tous les statuts</option>
+                    <option value="pending">En attente</option>
+                    <option value="confirmed">Confirmée</option>
+                    <option value="refused">Refusée</option>
+                </select>
+            </div>
+        </div>
+        <div class="reservations-list">
+            {% for reservation in reservations %}
+                <div class="card reservation-card" data-reservation-patient="{{ (reservation.patient.nom ~ ' ' ~ reservation.patient.prenom)|lower }}" data-reservation-med="{{ reservation.medicament.nom|lower }}" data-reservation-status="{{ reservation.statut }}">
+                    <div>
+                        <h3>{{ reservation.medicament.nom }}</h3>
+                        <p>{{ reservation.patient.nom }} {{ reservation.patient.prenom }} — {{ reservation.statut }}</p>
+                    </div>
+                    <div class="inline-actions">
+                        <form method="post" action="{{ path('pharmacien_reservations_confirm', {id: reservation.id}) }}">
+                            <button type="submit" class="btn-primary">Confirmer</button>
+                        </form>
+                        <form method="post" action="{{ path('pharmacien_reservations_refuse', {id: reservation.id}) }}">
+                            <div class="inline-fields">
+                                <label class="motif-label" for="motif-{{ reservation.id }}">Motif du refus</label>
+                                <input type="text" id="motif-{{ reservation.id }}" name="commentaire" placeholder="Ex: stock insuffisant (optionnel)">
+                                <button type="submit" class="btn-ghost">Refuser</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            {% else %}
+                <div class="empty-state">Aucune réservation.</div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div id="section-stocks" class="section-panel">
+        <div class="section-title-row">
+            <div>
+                <h2 class="subsection-title">Stocks</h2>
+                <p class="muted">Surveille les quantités et ajuste les prix.</p>
+            </div>
+            <div class="filter-bar">
+                <input type="text" class="filter-input" data-filter="stock" placeholder="Rechercher un médicament">
+                <select class="filter-select" data-filter="stock">
+                    <option value="">Toutes les pharmacies</option>
+                    {% for pharmacy in pharmacies %}
+                        <option value="{{ pharmacy.nom }}">{{ pharmacy.nom }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="card dashboard-card glass-card">
+            <div class="section-header-row">
+                <h3>Stock disponible</h3>
+                <button type="button" class="btn-primary toggle-edit" data-target="#stock-add-form">Ajouter</button>
+            </div>
+            <div id="stock-add-form" class="edit-panel">
+                {{ form_start(stockCreateForm, { attr: { class: 'dashboard-form js-ajax-validate', novalidate: 'novalidate' } }) }}
+                    {{ form_row(stockCreateForm.pharmacie) }}
+                    {{ form_row(stockCreateForm.medicament) }}
+                    <div class="inline-fields">
+                        {{ form_row(stockCreateForm.quantite) }}
+                        {{ form_row(stockCreateForm.prixVente) }}
+                    </div>
+                    {{ form_row(stockCreateForm.seuilAlerte) }}
+                    {{ form_row(stockCreateForm.dateExpiration) }}
+                    <button type="submit" class="btn-primary">Enregistrer</button>
+                {{ form_end(stockCreateForm) }}
+            </div>
+        </div>
+        <div class="pharmacy-stock">
+            {% for pharmacy in pharmacies %}
+                {% for stock in pharmacy.stocks %}
+                    <div class="card stock-card" data-stock-med="{{ stock.medicament.nom|lower }}" data-stock-pharmacy="{{ pharmacy.nom }}">
+                        <div>
+                            <h3>{{ stock.medicament.nom }}</h3>
+                            <p>{{ pharmacy.nom }}</p>
+                        </div>
+                        <div class="inline-actions">
+                            <button type="button" class="btn-small toggle-edit" data-target="#stock-edit-{{ stock.id }}">Modifier</button>
+                            <form method="post" action="{{ path('pharmacien_stocks_delete', {id: stock.id}) }}">
+                                <button type="submit" class="btn-ghost">Supprimer</button>
+                            </form>
+                        </div>
+                        <div id="stock-edit-{{ stock.id }}" class="edit-panel">
+                            {{ form_start(stockEditForms[stock.id], { attr: { class: 'stock-form js-ajax-validate', novalidate: 'novalidate' } }) }}
+                                {{ form_row(stockEditForms[stock.id].quantite) }}
+                                {{ form_row(stockEditForms[stock.id].prixVente) }}
+                                {{ form_row(stockEditForms[stock.id].seuilAlerte) }}
+                                {{ form_row(stockEditForms[stock.id].dateExpiration) }}
+                                <button type="submit" class="btn-primary">Enregistrer</button>
+                            {{ form_end(stockEditForms[stock.id]) }}
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+        </div>
+    </div>
+
+    <div id="section-my-medicaments" class="section-panel">
+        <div class="section-title-row">
+            <div>
+                <h2 class="subsection-title">Mes médicaments</h2>
+                <p class="muted">Consulte et modifie les médicaments disponibles.</p>
+            </div>
+            <div class="filter-bar">
+                <input type="text" class="filter-input" data-filter="medicament" placeholder="Rechercher un médicament">
+                <select class="filter-select" data-filter="medicament">
+                    <option value="">Tous les types</option>
+                    {% for medicament in medicaments %}
+                        {% if medicament.type %}
+                            <option value="{{ medicament.type }}">{{ medicament.type }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="pharmacy-grid">
+            {% for medicament in medicaments %}
+                <div class="card pharmacy-card" data-medicament-name="{{ medicament.nom|lower }}" data-medicament-type="{{ (medicament.type ?? '')|lower }}">
+                    <div class="pharmacy-header-row">
+                        <div>
+                            <h3>{{ medicament.nom }}</h3>
+                            <p>{{ medicament.type }}{% if medicament.forme %} • {{ medicament.forme }}{% endif %}</p>
+                        </div>
+                        <div class="inline-actions">
+                            <button type="button" class="btn-small toggle-edit" data-target="#edit-med-{{ medicament.id }}">Modifier</button>
+                            <form method="post" action="{{ path('pharmacien_medicaments_delete', {id: medicament.id}) }}">
+                                <button type="submit" class="btn-ghost">Supprimer</button>
+                            </form>
+                        </div>
+                    </div>
+                    <div id="edit-med-{{ medicament.id }}" class="edit-panel">
+                        {{ form_start(medicamentEditForms[medicament.id], { attr: { class: 'dashboard-form js-ajax-validate', novalidate: 'novalidate' } }) }}
+                            {{ form_row(medicamentEditForms[medicament.id].nom) }}
+                            {{ form_row(medicamentEditForms[medicament.id].type) }}
+                            {{ form_row(medicamentEditForms[medicament.id].forme) }}
+                            {{ form_row(medicamentEditForms[medicament.id].dosage) }}
+                            {{ form_row(medicamentEditForms[medicament.id].molecule) }}
+                            {{ form_row(medicamentEditForms[medicament.id].effet) }}
+                            {{ form_row(medicamentEditForms[medicament.id].laboratoire) }}
+                            {{ form_row(medicamentEditForms[medicament.id].codeBarres) }}
+                            {{ form_row(medicamentEditForms[medicament.id].prix) }}
+                            {{ form_row(medicamentEditForms[medicament.id].description) }}
+                            {{ form_row(medicamentEditForms[medicament.id].active) }}
+                            <button type="submit" class="btn-primary">Enregistrer</button>
+                        {{ form_end(medicamentEditForms[medicament.id]) }}
+                    </div>
+                </div>
+            {% else %}
+                <div class="empty-state">Aucun médicament.</div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div id="section-medicaments" class="section-panel">
+        <div class="card dashboard-card glass-card">
+            <div class="section-title-row">
+                <div>
+                    <h3>Ajouter un médicament</h3>
+                    <p class="muted">Crée une fiche médicament pour tes stocks.</p>
+                </div>
+            </div>
+            {{ form_start(medicamentForm, { attr: { class: 'dashboard-form js-ajax-validate', novalidate: 'novalidate' } }) }}
+                {{ form_row(medicamentForm.nom, { attr: { placeholder: 'Nom' } }) }}
+                {{ form_row(medicamentForm.type, { attr: { placeholder: 'Type' } }) }}
+                {{ form_row(medicamentForm.forme, { attr: { placeholder: 'Forme' } }) }}
+                {{ form_row(medicamentForm.dosage, { attr: { placeholder: 'Dosage' } }) }}
+                {{ form_row(medicamentForm.molecule, { attr: { placeholder: 'Molécule' } }) }}
+                {{ form_row(medicamentForm.effet, { attr: { placeholder: 'Effet' } }) }}
+                {{ form_row(medicamentForm.laboratoire, { attr: { placeholder: 'Laboratoire' } }) }}
+                <div class="inline-fields">
+                    {{ form_row(medicamentForm.codeBarres, { attr: { id: 'code-barres-input', placeholder: 'Code-barres / QR' } }) }}
+                    <button type="button" class="btn-ghost" id="scan-code-btn">Scanner</button>
+                </div>
+                {{ form_row(medicamentForm.prix, { attr: { placeholder: 'Prix indicatif' } }) }}
+                {{ form_row(medicamentForm.description, { attr: { placeholder: 'Description' } }) }}
+                {{ form_row(medicamentForm.active) }}
+                <button type="submit" class="btn-primary">Créer</button>
+            {{ form_end(medicamentForm) }}
+        </div>
+    </div>
+
+    <div id="section-alerts" class="section-panel">
+        <div class="card dashboard-card glass-card">
+            <h3>Alertes de stock</h3>
+            <div class="stock-alerts">
+                {% for stock in lowStocks %}
+                    <div class="stock-alert-item">
+                        <strong>{{ stock.medicament.nom }}</strong>
+                        <span>{{ stock.pharmacie.nom }} — {{ stock.quantite }}</span>
+                    </div>
+                {% else %}
+                    <div class="empty-state">Aucune alerte.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div id="scanner-modal" class="scanner-modal">
+        <div class="scanner-card">
+            <div class="scanner-header">
+                <h3>Scanner un code</h3>
+                <button type="button" class="btn-ghost" id="scanner-close">Fermer</button>
+            </div>
+            <div id="qr-reader" class="scanner-view"></div>
+            <p class="muted">Autorise la caméra pour scanner un QR code ou un code-barres.</p>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://unpkg.com/html5-qrcode@2.3.10/html5-qrcode.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggles = document.querySelectorAll('.section-toggle');
+            const panels = document.querySelectorAll('.section-panel');
+            toggles.forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    const target = document.querySelector(btn.dataset.target);
+                    if (!target) return;
+                    panels.forEach((p) => p.classList.remove('is-open'));
+                    target.classList.add('is-open');
+                    window.scrollTo({ top: target.offsetTop - 20, behavior: 'smooth' });
+                    setTimeout(() => {
+                        target.querySelectorAll('.map-canvas').forEach((el) => {
+                            if (el._leafletMap) {
+                                el._leafletMap.invalidateSize();
+                            }
+                        });
+                    }, 200);
+                });
+            });
+
+            document.querySelectorAll('.toggle-edit').forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    const target = document.querySelector(btn.dataset.target);
+                    if (!target) return;
+                    const isOpen = target.classList.contains('is-open');
+                    document.querySelectorAll('.edit-panel').forEach((p) => p.classList.remove('is-open'));
+                    if (!isOpen) {
+                        target.classList.add('is-open');
+                        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                });
+            });
+
+            document.querySelectorAll('[data-horaires]').forEach((wrap) => {
+                const days = wrap.querySelector('.horaires-jours');
+                const open = wrap.querySelector('.horaires-open');
+                const close = wrap.querySelector('.horaires-close');
+                const output = wrap.querySelector('.horaires-output');
+                const update = () => {
+                    if (!output) return;
+                    const d = days?.value || 'Lun-Dim';
+                    const o = open?.value || '08:00';
+                    const c = close?.value || '20:00';
+                    output.value = `${d} ${o}-${c}`;
+                };
+                if (days) days.addEventListener('change', update);
+                if (open) open.addEventListener('change', update);
+                if (close) close.addEventListener('change', update);
+                update();
+            });
+
+            document.querySelectorAll('.map-canvas').forEach((el) => {
+                const latInputId = el.dataset.latInput;
+                const lngInputId = el.dataset.lngInput;
+                const latInput = document.getElementById(latInputId);
+                const lngInput = document.getElementById(lngInputId);
+                const initialLat = parseFloat(el.dataset.lat || '36.8065');
+                const initialLng = parseFloat(el.dataset.lng || '10.1815');
+
+                const map = L.map(el).setView([initialLat, initialLng], 12);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19
+                }).addTo(map);
+
+                let marker = L.marker([initialLat, initialLng]).addTo(map);
+                el._leafletMap = map;
+                el._leafletMarker = marker;
+                if (latInput && lngInput) {
+                    latInput.value = isNaN(initialLat) ? '' : initialLat.toFixed(6);
+                    lngInput.value = isNaN(initialLng) ? '' : initialLng.toFixed(6);
+                }
+
+                map.on('click', (e) => {
+                    const { lat, lng } = e.latlng;
+                    marker.setLatLng([lat, lng]);
+                    if (latInput && lngInput) {
+                        latInput.value = lat.toFixed(6);
+                        lngInput.value = lng.toFixed(6);
+                    }
+                });
+            });
+
+            document.querySelectorAll('.map-locate').forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    const targetId = btn.dataset.mapTarget;
+                    const el = targetId ? document.getElementById(targetId) : null;
+                    if (!el || !el._leafletMap || !navigator.geolocation) return;
+                    navigator.geolocation.getCurrentPosition((pos) => {
+                        const lat = pos.coords.latitude;
+                        const lng = pos.coords.longitude;
+                        el._leafletMap.setView([lat, lng], 15);
+                        if (el._leafletMarker) {
+                            el._leafletMarker.setLatLng([lat, lng]);
+                        }
+                        const latInput = document.getElementById(el.dataset.latInput || '');
+                        const lngInput = document.getElementById(el.dataset.lngInput || '');
+                        if (latInput && lngInput) {
+                            latInput.value = lat.toFixed(6);
+                            lngInput.value = lng.toFixed(6);
+                        }
+                    });
+                });
+            });
+
+            const applyFilter = (type) => {
+                if (type === 'pharmacy') {
+                    const input = document.querySelector('.filter-input[data-filter="pharmacy"]');
+                    const select = document.querySelector('.filter-select[data-filter="pharmacy"]');
+                    const q = (input?.value || '').toLowerCase();
+                    const city = (select?.value || '').toLowerCase();
+                    document.querySelectorAll('[data-pharmacy-name]').forEach((card) => {
+                        const name = card.dataset.pharmacyName || '';
+                        const c = card.dataset.pharmacyCity || '';
+                        const match = (!q || name.includes(q)) && (!city || c === city.toLowerCase());
+                        card.style.display = match ? '' : 'none';
+                    });
+                }
+                if (type === 'reservation') {
+                    const input = document.querySelector('.filter-input[data-filter="reservation"]');
+                    const select = document.querySelector('.filter-select[data-filter="reservation"]');
+                    const q = (input?.value || '').toLowerCase();
+                    const status = select?.value || '';
+                    document.querySelectorAll('[data-reservation-status]').forEach((card) => {
+                        const patient = card.dataset.reservationPatient || '';
+                        const med = card.dataset.reservationMed || '';
+                        const st = card.dataset.reservationStatus || '';
+                        const match = (!q || patient.includes(q) || med.includes(q)) && (!status || st === status);
+                        card.style.display = match ? '' : 'none';
+                    });
+                }
+                if (type === 'stock') {
+                    const input = document.querySelector('.filter-input[data-filter="stock"]');
+                    const select = document.querySelector('.filter-select[data-filter="stock"]');
+                    const q = (input?.value || '').toLowerCase();
+                    const pharma = select?.value || '';
+                    document.querySelectorAll('[data-stock-med]').forEach((card) => {
+                        const med = card.dataset.stockMed || '';
+                        const p = card.dataset.stockPharmacy || '';
+                        const match = (!q || med.includes(q)) && (!pharma || p === pharma);
+                        card.style.display = match ? '' : 'none';
+                    });
+                }
+                if (type === 'medicament') {
+                    const input = document.querySelector('.filter-input[data-filter="medicament"]');
+                    const select = document.querySelector('.filter-select[data-filter="medicament"]');
+                    const q = (input?.value || '').toLowerCase();
+                    const t = (select?.value || '').toLowerCase();
+                    document.querySelectorAll('[data-medicament-name]').forEach((card) => {
+                        const name = card.dataset.medicamentName || '';
+                        const typeValue = card.dataset.medicamentType || '';
+                        const match = (!q || name.includes(q)) && (!t || typeValue === t);
+                        card.style.display = match ? '' : 'none';
+                    });
+                }
+            };
+
+            document.querySelectorAll('.filter-input').forEach((input) => {
+                input.addEventListener('input', () => applyFilter(input.dataset.filter));
+            });
+            document.querySelectorAll('.filter-select').forEach((select) => {
+                select.addEventListener('change', () => applyFilter(select.dataset.filter));
+            });
+
+            const scanBtn = document.getElementById('scan-code-btn');
+            const modal = document.getElementById('scanner-modal');
+            const closeBtn = document.getElementById('scanner-close');
+            const input = document.getElementById('code-barres-input');
+            let qrScanner = null;
+
+            const openScanner = () => {
+                if (!modal) return;
+                modal.classList.add('is-open');
+                if (!qrScanner) {
+                    qrScanner = new Html5Qrcode("qr-reader");
+                }
+                qrScanner.start(
+                    { facingMode: "environment" },
+                    { fps: 10, qrbox: { width: 250, height: 250 } },
+                    (decodedText) => {
+                        if (input) input.value = decodedText;
+                        closeScanner();
+                    },
+                    () => {}
+                ).catch(() => {});
+            };
+
+            const closeScanner = () => {
+                if (!modal) return;
+                modal.classList.remove('is-open');
+                if (qrScanner) {
+                    qrScanner.stop().catch(() => {});
+                }
+            };
+
+            if (scanBtn) scanBtn.addEventListener('click', openScanner);
+            if (closeBtn) closeBtn.addEventListener('click', closeScanner);
+            if (modal) {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) closeScanner();
+                });
+            }
+        });
+    </script>
+{% endblock %}

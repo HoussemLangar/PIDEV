@@ -1,0 +1,20 @@
+{% extends 'front/base.html.twig' %}
+
+{% block title %}Médicaments{% endblock %}
+
+{% block body %}
+<section class="container">
+    <h1 class="section-title">Médicaments</h1>
+    <div class="pharmacy-grid">
+        {% for medicament in medicaments %}
+            <div class="card pharmacy-card">
+                <h3>{{ medicament.nom }}</h3>
+                <p>{{ medicament.type }}{% if medicament.forme %} • {{ medicament.forme }}{% endif %}</p>
+                {% if medicament.prix %}<p>Prix: {{ medicament.prix }}</p>{% endif %}
+            </div>
+        {% else %}
+            <div class="empty-state">Aucun médicament.</div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

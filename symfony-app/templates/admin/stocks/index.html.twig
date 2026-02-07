@@ -1,0 +1,29 @@
+{% extends 'back/base.html.twig' %}
+{% block title %}Stocks{% endblock %}
+{% block body %}
+<h1>Stocks pharmacie</h1>
+<a class="btn-primary" href="{{ path('admin_stocks_new') }}">Ajouter</a>
+<table class="table">
+    <thead>
+        <tr><th>ID</th><th>Pharmacie</th><th>Médicament</th><th>Quantité</th><th>Actions</th></tr>
+    </thead>
+    <tbody>
+    {% for stock in stocks %}
+        <tr>
+            <td>{{ stock.id }}</td>
+            <td>{{ stock.pharmacie.nom }}</td>
+            <td>{{ stock.medicament.nom }}</td>
+            <td>{{ stock.quantite }}</td>
+            <td>
+                <a href="{{ path('admin_stocks_edit', {id: stock.id}) }}">Modifier</a>
+                <form method="post" action="{{ path('admin_stocks_delete', {id: stock.id}) }}" style="display:inline">
+                    <button type="submit">Supprimer</button>
+                </form>
+            </td>
+        </tr>
+    {% else %}
+        <tr><td colspan="5">Aucun stock.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

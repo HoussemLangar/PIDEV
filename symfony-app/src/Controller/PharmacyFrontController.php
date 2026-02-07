@@ -3,12 +3,16 @@
 namespace App\Controller;
 
 use App\Repository\PharmacyRepository;
+<<<<<<< HEAD
 use App\Repository\StockPharmacyRepository;
+=======
+>>>>>>> 31f0b74 (integration user + gestion pharmacie)
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
+<<<<<<< HEAD
 #[Route('/pharmacy', name: 'pharmacy_')]
 class PharmacyFrontController extends AbstractController
 {
@@ -95,4 +99,32 @@ class PharmacyFrontController extends AbstractController
             'stocks' => $stocks,
         ]);
     }
+=======
+#[Route('/pharmacies', name: 'front_pharmacies_')]
+class PharmacyFrontController extends AbstractController
+{
+    public function __construct(private PharmacyRepository $pharmacyRepository) {}
+
+    #[Route('', name: 'index', methods: ['GET'])]
+    public function index(Request $request): Response
+    {
+        $q = $request->query->get('q');
+        $pharmacies = $this->pharmacyRepository->search($q, true);
+        return $this->render('front/pharmacies/index.html.twig', [
+            'pharmacies' => $pharmacies,
+        ]);
+    }
+
+    #[Route('/{id}', name: 'show', methods: ['GET'])]
+    public function show(int $id): Response
+    {
+        $pharmacy = $this->pharmacyRepository->findById($id);
+        if (!$pharmacy) {
+            throw $this->createNotFoundException('Pharmacie introuvable');
+        }
+        return $this->render('front/pharmacies/show.html.twig', [
+            'pharmacy' => $pharmacy,
+        ]);
+    }
+>>>>>>> 31f0b74 (integration user + gestion pharmacie)
 }

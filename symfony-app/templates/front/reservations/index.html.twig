@@ -1,0 +1,20 @@
+{% extends 'front/base.html.twig' %}
+
+{% block title %}Mes réservations{% endblock %}
+
+{% block body %}
+<section class="container">
+    <h1 class="section-title">Mes réservations</h1>
+    <div class="reservations-list">
+        {% for reservation in reservations %}
+            <div class="card reservation-card">
+                <strong>{{ reservation.medicament.nom }}</strong>
+                <p>{{ reservation.pharmacy.nom }} — {{ reservation.statut }}</p>
+            </div>
+        {% else %}
+            <div class="empty-state">Aucune réservation.</div>
+        {% endfor %}
+    </div>
+    <a class="btn-primary" href="{{ path('front_reservations_new') }}">Nouvelle réservation</a>
+</section>
+{% endblock %}

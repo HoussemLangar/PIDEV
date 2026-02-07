@@ -1,0 +1,2 @@
+<?php
+// Disabled legacy controller (kept to avoid class name conflicts).

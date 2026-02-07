@@ -6,9 +6,15 @@ use App\Repository\MedicamentRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+<<<<<<< HEAD
+=======
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\Validator\Constraints as Assert;
+>>>>>>> 31f0b74 (integration user + gestion pharmacie)
 
 #[ORM\Entity(repositoryClass: MedicamentRepository::class)]
 #[ORM\Table(name: 'medicaments')]
+#[UniqueEntity(fields: ['codeBarres'], message: 'Code-barres déjà utilisé.')]
 class Medicament
 {
     #[ORM\Id]

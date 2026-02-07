@@ -1,0 +1,37 @@
+{% extends 'front/base.html.twig' %}
+
+{% block title %}Réservation{% endblock %}
+
+{% block body %}
+<section class="container">
+    <h1 class="section-title">Réserver un médicament</h1>
+    {% for label, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="alert alert-{{ label == 'success' ? 'success' : 'danger' }}">{{ message }}</div>
+        {% endfor %}
+    {% endfor %}
+    <form method="post">
+        <div class="form-field">
+            <label>Pharmacie</label>
+            <select name="pharmacy_id" required>
+                {% for p in pharmacies %}
+                    <option value="{{ p.id }}">{{ p.nom }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-field">
+            <label>Médicament</label>
+            <select name="medicament_id" required>
+                {% for m in medicaments %}
+                    <option value="{{ m.id }}">{{ m.nom }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-field">
+            <label>Quantité</label>
+            <input type="number" name="quantite" min="1" value="1" />
+        </div>
+        <button type="submit" class="btn-primary">Réserver</button>
+    </form>
+</section>
+{% endblock %}

@@ -16,7 +16,104 @@
 <body{% block body_class %}{% endblock %}>
     
     {% block header %}
+<<<<<<< HEAD
         {% include 'front/partials/header.html.twig' %}
+=======
+        <!-- Header / Navbar -->
+        <header>
+            <nav class="navbar">
+                <div class="logo">SANTÉA</div>
+
+                <ul class="nav-links">
+                    <li><a href="{{ path('app_home') }}">{{ 'nav.home'|trans }}</a></li>
+                    <li><a href="#quick-info">{{ 'nav.about'|trans }}</a></li>
+                    <li><a href="#appointment-section">{{ 'nav.services'|trans }}</a></li>
+                    {% if app.user and 'ROLE_PATIENT' in app.user.roles %}
+                        <li><a href="{{ path('front_pharmacies_index') }}">Pharmacies</a></li>
+                        <li><a href="{{ path('front_medicaments') }}">Médicaments</a></li>
+                    {% endif %}
+                    {% if app.user and 'ROLE_PHARMACIEN' in app.user.roles %}
+                        <li><a href="{{ path('pharmacien_dashboard') }}">Dashboard Pharma</a></li>
+                    {% endif %}
+                    <li><a href="#testimonials">{{ 'nav.blog'|trans }}</a></li>
+                    <li><a href="#contact-section">{{ 'nav.contact'|trans }}</a></li>
+                </ul>
+
+                {% if app.user %}
+                <div class="account-menu">
+                    <button class="btn-appointment account-toggle" id="accountBtn">                   
+                        {{ 'nav.account'|trans }} <i class="fas fa-chevron-down"></i>
+                    </button>
+
+                    <div class="account-dropdown" id="accountDropdown">
+                        <div class="account-info">
+                            <img src="{{ app.user.avatarDataUri ?: ('https://ui-avatars.com/api/?name=' ~ app.user.nom|url_encode ~ '+' ~ app.user.prenom|url_encode ~ '&background=0D8ABC&color=fff&size=30') }}" 
+                                        alt="Avatar" class="account-avatar">     
+                            <strong>{{ app.user.nom }} {{ app.user.prenom }}</strong>
+                            <p>{{ app.user.email }}</p>
+                        </div>
+
+                        <hr>
+
+                        <a href="{{ path('profile_edit') }}" class="dropdown-item">
+                            <i class="fas fa-cog"></i> {{ 'nav.settings'|trans }}
+                        </a>
+                        <a href="{{ path('profile_notifications') }}" class="dropdown-item">
+                            <i class="fas fa-shield-alt"></i> {{ 'nav.notifications'|trans }}
+                        </a>
+                        {% if 'ROLE_PATIENT' in app.user.roles %}
+                        <a href="{{ path('front_reservations') }}" class="dropdown-item">
+                            <i class="fas fa-clipboard-list"></i> Mes réservations
+                        </a>
+                        {% endif %}
+                        {% if 'ROLE_PHARMACIEN' in app.user.roles %}
+                        <a href="{{ path('pharmacien_dashboard') }}" class="dropdown-item">
+                            <i class="fas fa-prescription-bottle"></i> Dashboard Pharmacien
+                        </a>
+                        {% endif %}
+                        <a href="{{ path('profile_mfa') }}" class="dropdown-item">
+                            <i class="fas fa-key"></i> {{ 'nav.mfa'|trans }}
+                        </a>
+
+                        <a href="{{ path('app_subscription_overview') }}" class="dropdown-item">
+                            <i class="fas fa-star"></i> {{ 'nav.subscription'|trans }}
+                        </a>
+
+                        <div class="dropdown-divider"></div>
+
+                        <div class="dropdown-item dropdown-inline">
+                            <span>{{ 'nav.theme'|trans }}</span>
+                            <div class="inline-actions">
+                                <a href="{{ path('app_theme', {theme: 'light'}) }}" class="mini-pill">{{ 'theme.light'|trans }}</a>
+                                <a href="{{ path('app_theme', {theme: 'dark'}) }}" class="mini-pill">{{ 'theme.dark'|trans }}</a>
+                            </div>
+                        </div>
+                        <div class="dropdown-item dropdown-inline">
+                            <span>{{ 'nav.language'|trans }}</span>
+                            <div class="inline-actions">
+                                <a href="{{ path('app_locale', {_locale: 'fr'}) }}" class="mini-pill">FR</a>
+                                <a href="{{ path('app_locale', {_locale: 'en'}) }}" class="mini-pill">EN</a>
+                                <a href="{{ path('app_locale', {_locale: 'ar'}) }}" class="mini-pill">AR</a>
+                            </div>
+                        </div>
+
+                        <a href="{{ path('app_logout') }}" class="dropdown-item danger">
+                            <i class="fas fa-sign-out-alt"></i> {{ 'nav.logout'|trans }}
+                        </a>
+                    </div>
+                </div>
+                
+                {% else %}
+                    <a href="{{ path('login') }}" class="btn-appointment">{{ 'nav.login'|trans }}</a>
+                {% endif %}
+
+                <div class="menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </div>
+            </nav>
+        </header>
+
+>>>>>>> 31f0b74 (integration user + gestion pharmacie)
     {% endblock %}
     
     {% block body %}

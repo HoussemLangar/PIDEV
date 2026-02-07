@@ -1,0 +1,28 @@
+{% extends 'back/base.html.twig' %}
+{% block title %}Médicaments{% endblock %}
+{% block body %}
+<h1>Médicaments</h1>
+<a class="btn-primary" href="{{ path('admin_medications_new') }}">Ajouter</a>
+<table class="table">
+    <thead>
+        <tr><th>ID</th><th>Nom</th><th>Type</th><th>Actions</th></tr>
+    </thead>
+    <tbody>
+    {% for medicament in medicaments %}
+        <tr>
+            <td>{{ medicament.id }}</td>
+            <td>{{ medicament.nom }}</td>
+            <td>{{ medicament.type }}</td>
+            <td>
+                <a href="{{ path('admin_medications_edit', {id: medicament.id}) }}">Modifier</a>
+                <form method="post" action="{{ path('admin_medications_delete', {id: medicament.id}) }}" style="display:inline">
+                    <button type="submit">Supprimer</button>
+                </form>
+            </td>
+        </tr>
+    {% else %}
+        <tr><td colspan="4">Aucun médicament.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
