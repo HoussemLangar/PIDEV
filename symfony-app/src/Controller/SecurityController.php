@@ -182,6 +182,40 @@ class SecurityController extends AbstractController
         throw new \LogicException('This method can be blank - it will be intercepted by the logout key on your firewall.');
     }
 
+    #[Route('/verify-email/{token}', name: 'app_verify_email')]
+    public function verifyEmail(
+        string $token,
+        UserRepository $userRepository,
+        EntityManagerInterface $em
+    ): Response {
+        $user = $userRepository->findByEmailVerificationToken($token);
+        if (!$user) {
+            $this->addFlash('error', 'Lien de vérification invalide.');
+            return $this->redirectToRoute('login');
+        }
+
+        $expiresAt = $user->getEmailVerificationExpiresAt();
+        if ($expiresAt && $expiresAt < new \DateTimeImmutable()) {
+            $this->addFlash('error', 'Lien de vérification expiré.');
+            return $this->redirectToRoute('login');
+        }
+
+        $user->setEmailVerified(true);
+        $user->setEmailVerificationToken(null);
+        $user->setEmailVerificationExpiresAt(null);
+        $user->setUpdatedAt(new \DateTimeImmutable());
+        $em->flush();
+
+        $this->addFlash('success', 'Email confirmé. En attente de validation admin.');
+        return $this->redirectToRoute('login');
+    }
+
+    #[Route('/pending-approval', name: 'app_pending_approval')]
+    public function pendingApproval(): Response
+    {
+        return $this->render('security/pending_approval.html.twig');
+    }
+
     #[Route('/banned', name: 'app_banned')]
     public function banned(): Response
     {

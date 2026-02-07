@@ -219,7 +219,7 @@
     <script>
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
         const registerBtn = document.getElementById('registerBtn');
         const verifyBtn = document.getElementById('verifyBtn');
         const videoContainer = document.getElementById('videoContainer');
@@ -428,11 +428,10 @@
 
                 loadingDiv.style.display = 'none';
                 
+                const data = await response.json().catch(() => ({}));
                 if (!response.ok) {
-                    throw new Error('Erreur serveur: ' + response.status);
+                    throw new Error(data.message || ('Erreur serveur: ' + response.status));
                 }
-                
-                const data = await response.json();
                 
                 if (data.success) {
                     showStatus('✅ ' + data.message, 'success');
@@ -479,11 +478,10 @@
 
                 loadingDiv.style.display = 'none';
                 
+                const data = await response.json().catch(() => ({}));
                 if (!response.ok) {
-                    throw new Error('Erreur serveur: ' + response.status);
+                    throw new Error(data.message || ('Erreur serveur: ' + response.status));
                 }
-                
-                const data = await response.json();
                 
                 if (data.success) {
                     showStatus('✅ ' + data.message + ' Redirection...', 'success');

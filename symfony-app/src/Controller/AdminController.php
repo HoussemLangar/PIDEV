@@ -4,6 +4,7 @@ namespace App\Controller;
 use App\Entity\User;
 use App\Form\AdminUserType;
 use App\Form\AdminUserResetPasswordType;
+use App\Entity\Facture;
 use App\Repository\AbonnementRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -16,67 +17,131 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Form\FormError;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Bridge\Twig\Mime\TemplatedEmail;
+use Symfony\Component\Mime\Address;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 #[IsGranted('ROLE_ADMIN')]
 class AdminController extends AbstractController
 {
     // ========== DASHBOARD ==========
     #[Route('/admin_dashboard', name: 'admin_dashboard')]
-    public function dashboard(): Response
+    public function dashboard(
+        UserRepository $userRepository,
+        AbonnementRepository $abonnementRepository,
+        EntityManagerInterface $em
+    ): Response
     {
-        // Statistiques principales
+        $userStats = $userRepository->getUserStats();
+        $validationStats = $userRepository->getValidationStats();
+        $subscriptionStats = $abonnementRepository->getSubscriptionStats();
+
+        $monthStart = new \DateTimeImmutable('first day of this month 00:00:00');
+        $monthEnd = $monthStart->modify('first day of next month 00:00:00');
+
+        $monthlyRevenue = (float) $em->createQueryBuilder()
+            ->select('COALESCE(SUM(f.montantTtc), 0)')
+            ->from(Facture::class, 'f')
+            ->andWhere('f.createdAt >= :from')
+            ->andWhere('f.createdAt < :to')
+            ->setParameter('from', $monthStart)
+            ->setParameter('to', $monthEnd)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        $totalRevenue = (float) $em->createQueryBuilder()
+            ->select('COALESCE(SUM(f.montantTtc), 0)')
+            ->from(Facture::class, 'f')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        $totalInvoices = (int) $em->createQueryBuilder()
+            ->select('COUNT(f.id)')
+            ->from(Facture::class, 'f')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        $pendingPayments = (int) $em->createQueryBuilder()
+            ->select('COUNT(u.id)')
+            ->from(User::class, 'u')
+            ->andWhere('u.deletedAt IS NULL')
+            ->andWhere('u.subscriptionStatus = :status')
+            ->setParameter('status', 'PENDING')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        // Statistiques principales (demandées)
         $stats = [
-            'totalUsers' => 1234,
-            'newUsers' => 45,
-            'usersGrowth' => 12.5,
-            'activeSubscriptions' => 567,
-            'pendingSubscriptions' => 12,
-            'subscriptionsGrowth' => 8.3,
-            'monthlyAppointments' => 234,
-            'todayAppointments' => 23,
-            'weekAppointments' => 156,
-            'appointmentsGrowth' => 15.7,
-            'monthlyRevenue' => 12450,
-            'monthRevenue' => 12450,
-            'totalRevenue' => 145670,
-            'revenueGrowth' => 22.4,
-            'totalPharmacies' => 89,
-            'totalMedications' => 3456,
+            'totalUsers' => $userStats['total'],
+            'activeSubscriptions' => $subscriptionStats['active'],
+            'monthlyRevenue' => $monthlyRevenue,
+            'pendingPayments' => $pendingPayments,
+            // autres stats disponibles
+            'activeUsers' => $userStats['active'],
+            'bannedUsers' => $userStats['banned'],
+            'emailVerified' => $validationStats['emailVerified'],
+            'adminPending' => $validationStats['adminPending'],
+            'totalInvoices' => $totalInvoices,
+            'totalRevenue' => $totalRevenue,
+            'expiredSubscriptions' => $subscriptionStats['expired'],
+            'cancelledSubscriptions' => $subscriptionStats['cancelled'],
         ];
 
         // Utilisateurs par rôle
         $usersByRole = [
-            ['name' => 'Patients', 'count' => 892, 'icon' => 'fas fa-user'],
-            ['name' => 'Médecins', 'count' => 156, 'icon' => 'fas fa-user-md'],
-            ['name' => 'Pharmaciens', 'count' => 89, 'icon' => 'fas fa-prescription-bottle'],
-            ['name' => 'Accompagnants', 'count' => 97, 'icon' => 'fas fa-hands-helping'],
+            ['name' => 'Patients', 'count' => $userRepository->countByRole('ROLE_PATIENT'), 'icon' => 'fas fa-user'],
+            ['name' => 'Médecins', 'count' => $userRepository->countByRole('ROLE_MEDECIN'), 'icon' => 'fas fa-user-md'],
+            ['name' => 'Pharmaciens', 'count' => $userRepository->countByRole('ROLE_PHARMACIEN'), 'icon' => 'fas fa-prescription-bottle'],
+            ['name' => 'Coach', 'count' => $userRepository->countByRole('ROLE_COACH'), 'icon' => 'fas fa-dumbbell'],
+            ['name' => 'Nutritionnistes', 'count' => $userRepository->countByRole('ROLE_NUTRITIONNISTE'), 'icon' => 'fas fa-apple-alt'],
+            ['name' => 'Admins', 'count' => $userRepository->countByRole('ROLE_ADMIN'), 'icon' => 'fas fa-shield-alt'],
         ];
 
-        // Validations en attente
+        // Validations en attente (existant)
         $pendingValidations = [
-            'professionals' => 8,
-            'pharmacies' => 3,
-            'articles' => 5,
-            'reports' => 12,
+            'professionals' => $validationStats['adminPending'],
+            'pharmacies' => 0,
+            'articles' => 0,
+            'reports' => 0,
         ];
 
-        // Activité récente (24h)
+        // Activité récente (placeholder)
         $recentActivity = [
-            'newUsers' => 15,
-            'newAppointments' => 34,
-            'medicationSearches' => 567,
-            'trackerEntries' => 892,
+            'newUsers' => 0,
+            'newAppointments' => 0,
+            'medicationSearches' => 0,
+            'trackerEntries' => 0,
         ];
+
+        $registrationsChart = $userRepository->getRegistrationsChart(30);
+
+        $revenueByTypeRows = $em->createQueryBuilder()
+            ->select('a.typeAbonnement as type, COALESCE(SUM(f.montantTtc), 0) as total')
+            ->from(Facture::class, 'f')
+            ->leftJoin('f.abonnement', 'a')
+            ->groupBy('a.typeAbonnement')
+            ->getQuery()
+            ->getResult();
+
+        $revenueByType = [];
+        foreach ($revenueByTypeRows as $row) {
+            $revenueByType[$row['type'] ?? ''] = (float) $row['total'];
+        }
 
         // Données pour les graphiques
         $chartData = [
-            'registrations' => [
-                'labels' => ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
-                'data' => [12, 19, 15, 25, 22, 30, 28],
-            ],
+            'registrations' => $registrationsChart,
             'revenue' => [
-                'labels' => ['Abonnements', 'Rendez-vous', 'Accompagnements', 'Autres'],
-                'data' => [6500, 3200, 2100, 650],
+                'labels' => ['Médecin', 'Pharmacien', 'Coach', 'Nutritionniste', 'Patient'],
+                'data' => [
+                    $revenueByType['ROLE_MEDECIN'] ?? 0,
+                    $revenueByType['ROLE_PHARMACIEN'] ?? 0,
+                    $revenueByType['ROLE_COACH'] ?? 0,
+                    $revenueByType['ROLE_NUTRITIONNISTE'] ?? 0,
+                    $revenueByType['ROLE_PATIENT'] ?? 0,
+                ],
             ],
         ];
 
@@ -142,6 +207,83 @@ class AdminController extends AbstractController
             'chartData' => $chartData,
             'recentActivities' => $recentActivities,
         ]);
+    }
+
+    #[Route('/admin_dashboard/export', name: 'admin_dashboard_export')]
+    public function exportDashboardStats(
+        UserRepository $userRepository,
+        AbonnementRepository $abonnementRepository,
+        EntityManagerInterface $em
+    ): StreamedResponse {
+        $userStats = $userRepository->getUserStats();
+        $validationStats = $userRepository->getValidationStats();
+        $subscriptionStats = $abonnementRepository->getSubscriptionStats();
+
+        $monthStart = new \DateTimeImmutable('first day of this month 00:00:00');
+        $monthEnd = $monthStart->modify('first day of next month 00:00:00');
+
+        $monthlyRevenue = (float) $em->createQueryBuilder()
+            ->select('COALESCE(SUM(f.montantTtc), 0)')
+            ->from(Facture::class, 'f')
+            ->andWhere('f.createdAt >= :from')
+            ->andWhere('f.createdAt < :to')
+            ->setParameter('from', $monthStart)
+            ->setParameter('to', $monthEnd)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        $totalRevenue = (float) $em->createQueryBuilder()
+            ->select('COALESCE(SUM(f.montantTtc), 0)')
+            ->from(Facture::class, 'f')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        $totalInvoices = (int) $em->createQueryBuilder()
+            ->select('COUNT(f.id)')
+            ->from(Facture::class, 'f')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        $pendingPayments = (int) $em->createQueryBuilder()
+            ->select('COUNT(u.id)')
+            ->from(User::class, 'u')
+            ->andWhere('u.deletedAt IS NULL')
+            ->andWhere('u.subscriptionStatus = :status')
+            ->setParameter('status', 'PENDING')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        $filename = 'dashboard_stats_' . (new \DateTimeImmutable())->format('Ymd_His') . '.csv';
+        $response = new StreamedResponse(function () use (
+            $userStats,
+            $validationStats,
+            $subscriptionStats,
+            $monthlyRevenue,
+            $totalRevenue,
+            $totalInvoices,
+            $pendingPayments
+        ) {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, ['KPI', 'Valeur']);
+            fputcsv($handle, ['Utilisateurs total', $userStats['total']]);
+            fputcsv($handle, ['Utilisateurs actifs', $userStats['active']]);
+            fputcsv($handle, ['Utilisateurs bannis', $userStats['banned']]);
+            fputcsv($handle, ['Abonnements actifs', $subscriptionStats['active']]);
+            fputcsv($handle, ['Abonnements expirés', $subscriptionStats['expired']]);
+            fputcsv($handle, ['Abonnements annulés', $subscriptionStats['cancelled']]);
+            fputcsv($handle, ['Paiements en attente', $pendingPayments]);
+            fputcsv($handle, ['Revenus du mois (TND)', number_format($monthlyRevenue, 2, '.', '')]);
+            fputcsv($handle, ['Revenus total (TND)', number_format($totalRevenue, 2, '.', '')]);
+            fputcsv($handle, ['Factures total', $totalInvoices]);
+            fputcsv($handle, ['Email confirmés', $validationStats['emailVerified']]);
+            fputcsv($handle, ['Admin en attente', $validationStats['adminPending']]);
+            fclose($handle);
+        });
+
+        $response->headers->set('Content-Type', 'text/csv; charset=UTF-8');
+        $response->headers->set('Content-Disposition', 'attachment; filename="' . $filename . '"');
+
+        return $response;
     }
     // ========== GESTION UTILISATEURS ==========
     #[Route('/users', name: 'admin_users')]
@@ -325,9 +467,150 @@ class AdminController extends AbstractController
     }
 
     #[Route('/validation', name: 'admin_validation')]
-    public function validation(): Response
+    public function validation(Request $request, UserRepository $userRepository): Response
     {
-        return $this->render('admin/validation/index.html.twig');
+        $filters = [
+            'q' => trim((string) $request->query->get('q', '')),
+            'email_verified' => (string) $request->query->get('email_verified', ''),
+            'admin_approved' => (string) $request->query->get('admin_approved', 'no'),
+        ];
+
+        $qb = $userRepository->createValidationQueryBuilder($filters);
+        $users = $qb->getQuery()->getResult();
+        $stats = $userRepository->getValidationStats();
+        return $this->render('admin/validation/index.html.twig', [
+            'users' => $users,
+            'filters' => $filters,
+            'stats' => $stats,
+        ]);
+    }
+
+    #[Route('/validation/{id}/approve', name: 'admin_validation_approve', methods: ['POST'])]
+    public function approveValidation(int $id, Request $request, UserRepository $userRepository, EntityManagerInterface $em): RedirectResponse
+    {
+        $user = $userRepository->find($id);
+        if (!$user) {
+            throw $this->createNotFoundException('Utilisateur introuvable.');
+        }
+
+        if (!$this->isCsrfTokenValid('approve_' . $user->getId(), (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('CSRF token invalide.');
+        }
+
+        $user->setAdminApproved(true);
+        $user->setUpdatedAt(new \DateTimeImmutable());
+        $em->flush();
+
+        $this->addFlash('success', 'Compte approuvé.');
+        return $this->redirectToRoute('admin_validation');
+    }
+
+    #[Route('/validation/approve-all', name: 'admin_validation_approve_all', methods: ['POST'])]
+    public function approveAllValidation(Request $request, UserRepository $userRepository, EntityManagerInterface $em): RedirectResponse
+    {
+        if (!$this->isCsrfTokenValid('approve_all', (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('CSRF token invalide.');
+        }
+
+        $users = $userRepository->findPendingApprovals();
+        foreach ($users as $user) {
+            $user->setAdminApproved(true);
+            $user->setUpdatedAt(new \DateTimeImmutable());
+        }
+
+        $em->flush();
+        $this->addFlash('success', 'Tous les comptes en attente ont été approuvés.');
+        return $this->redirectToRoute('admin_validation');
+    }
+
+    #[Route('/validation/{id}/resend', name: 'admin_validation_resend', methods: ['POST'])]
+    public function resendValidationEmail(
+        int $id,
+        Request $request,
+        UserRepository $userRepository,
+        EntityManagerInterface $em,
+        MailerInterface $mailer
+    ): RedirectResponse {
+        $user = $userRepository->find($id);
+        if (!$user) {
+            throw $this->createNotFoundException('Utilisateur introuvable.');
+        }
+
+        if (!$this->isCsrfTokenValid('resend_' . $user->getId(), (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('CSRF token invalide.');
+        }
+
+        $token = bin2hex(random_bytes(32));
+        $user->setEmailVerificationToken($token);
+        $user->setEmailVerificationExpiresAt((new \DateTimeImmutable())->modify('+2 days'));
+        $user->setUpdatedAt(new \DateTimeImmutable());
+
+        $verifyUrl = $this->generateUrl('app_verify_email', [
+            'token' => $token,
+        ], UrlGeneratorInterface::ABSOLUTE_URL);
+
+        $email = (new TemplatedEmail())
+            ->from(new Address('houssemlangar17@gmail.com', 'SANTÉA'))
+            ->to($user->getEmail())
+            ->subject('Confirmation de votre email')
+            ->htmlTemplate('emails/verify_email.html.twig')
+            ->context([
+                'user' => $user,
+                'verifyUrl' => $verifyUrl,
+                'expiresAt' => $user->getEmailVerificationExpiresAt(),
+            ]);
+
+        $mailer->send($email);
+        $em->flush();
+
+        $this->addFlash('success', 'Email de vérification renvoyé.');
+        return $this->redirectToRoute('admin_validation');
+    }
+
+    #[Route('/validation/resend-all', name: 'admin_validation_resend_all', methods: ['POST'])]
+    public function resendAllValidationEmail(
+        Request $request,
+        UserRepository $userRepository,
+        EntityManagerInterface $em,
+        MailerInterface $mailer
+    ): RedirectResponse {
+        if (!$this->isCsrfTokenValid('resend_all', (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('CSRF token invalide.');
+        }
+
+        $users = $userRepository->createQueryBuilder('u')
+            ->andWhere('u.deletedAt IS NULL')
+            ->andWhere('u.emailVerified = false')
+            ->getQuery()
+            ->getResult();
+
+        foreach ($users as $user) {
+            $token = bin2hex(random_bytes(32));
+            $user->setEmailVerificationToken($token);
+            $user->setEmailVerificationExpiresAt((new \DateTimeImmutable())->modify('+2 days'));
+            $user->setUpdatedAt(new \DateTimeImmutable());
+
+            $verifyUrl = $this->generateUrl('app_verify_email', [
+                'token' => $token,
+            ], UrlGeneratorInterface::ABSOLUTE_URL);
+
+            $email = (new TemplatedEmail())
+                ->from(new Address('houssemlangar17@gmail.com', 'SANTÉA'))
+                ->to($user->getEmail())
+                ->subject('Confirmation de votre email')
+                ->htmlTemplate('emails/verify_email.html.twig')
+                ->context([
+                    'user' => $user,
+                    'verifyUrl' => $verifyUrl,
+                    'expiresAt' => $user->getEmailVerificationExpiresAt(),
+                ]);
+
+            $mailer->send($email);
+        }
+
+        $em->flush();
+        $this->addFlash('success', 'Emails renvoyés à tous les comptes non vérifiés.');
+        return $this->redirectToRoute('admin_validation');
     }
 
     #[Route('/roles', name: 'admin_roles')]
@@ -537,9 +820,107 @@ class AdminController extends AbstractController
     }
 
     #[Route('/payments', name: 'admin_payments')]
-    public function payments(): Response
+    public function payments(Request $request, \Doctrine\ORM\EntityManagerInterface $em): Response
     {
-        return $this->render('admin/payments/index.html.twig');
+        $repo = $em->getRepository(\App\Entity\Facture::class);
+
+        $page = max(1, (int) $request->query->get('page', 1));
+        $limit = 12;
+        $filters = [
+            'q' => trim((string) $request->query->get('q', '')),
+            'from' => (string) $request->query->get('from', ''),
+            'to' => (string) $request->query->get('to', ''),
+            'min' => (string) $request->query->get('min', ''),
+            'max' => (string) $request->query->get('max', ''),
+        ];
+
+        $qb = $repo->createQueryBuilder('f')
+            ->leftJoin('f.user', 'u')
+            ->leftJoin('f.abonnement', 'a')
+            ->addSelect('u', 'a');
+
+        if ($filters['q'] !== '') {
+            $qb->andWhere('u.email LIKE :q OR u.nom LIKE :q OR u.prenom LIKE :q OR f.numero LIKE :q')
+                ->setParameter('q', '%' . $filters['q'] . '%');
+        }
+        if ($filters['from'] !== '') {
+            try {
+                $qb->andWhere('f.createdAt >= :from')->setParameter('from', new \DateTime($filters['from'] . ' 00:00:00'));
+            } catch (\Throwable) {}
+        }
+        if ($filters['to'] !== '') {
+            try {
+                $qb->andWhere('f.createdAt <= :to')->setParameter('to', new \DateTime($filters['to'] . ' 23:59:59'));
+            } catch (\Throwable) {}
+        }
+        if ($filters['min'] !== '') {
+            $qb->andWhere('f.montantTtc >= :min')->setParameter('min', $filters['min']);
+        }
+        if ($filters['max'] !== '') {
+            $qb->andWhere('f.montantTtc <= :max')->setParameter('max', $filters['max']);
+        }
+
+        $qb->orderBy('f.createdAt', 'DESC')
+            ->setFirstResult(($page - 1) * $limit)
+            ->setMaxResults($limit);
+
+        $paginator = new \Doctrine\ORM\Tools\Pagination\Paginator($qb);
+        $total = count($paginator);
+        $pages = (int) max(1, ceil($total / $limit));
+
+        $stats = [
+            'total' => (int) $repo->createQueryBuilder('f')->select('COUNT(f.id)')->getQuery()->getSingleScalarResult(),
+            'revenue' => (string) $repo->createQueryBuilder('f')->select('COALESCE(SUM(f.montantTtc),0)')->getQuery()->getSingleScalarResult(),
+            'month' => (string) $repo->createQueryBuilder('f')->select('COALESCE(SUM(f.montantTtc),0)')->andWhere('f.createdAt >= :m')->setParameter('m', new \DateTime('first day of this month 00:00:00'))->getQuery()->getSingleScalarResult(),
+        ];
+
+        $chartRows = $repo->createQueryBuilder('f')
+            ->select('f.createdAt')
+            ->orderBy('f.createdAt', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        $labels = [];
+        $data = [];
+        $start = new \DateTimeImmutable('-30 days');
+        $cursor = $start;
+        for ($i = 0; $i <= 30; $i++) {
+            $labels[] = $cursor->format('Y-m-d');
+            $data[$cursor->format('Y-m-d')] = 0.0;
+            $cursor = $cursor->modify('+1 day');
+        }
+        foreach ($chartRows as $row) {
+            $key = $row['createdAt']->format('Y-m-d');
+            if (isset($data[$key])) {
+                $data[$key] += 1;
+            }
+        }
+
+        $chart = [
+            'labels' => $labels,
+            'data' => array_values($data),
+        ];
+
+        return $this->render('admin/payments/index.html.twig', [
+            'factures' => $paginator,
+            'page' => $page,
+            'pages' => $pages,
+            'total' => $total,
+            'filters' => $filters,
+            'stats' => $stats,
+            'chart' => $chart,
+        ]);
+    }
+
+    #[Route('/payments/{id}/download', name: 'admin_payments_download')]
+    public function downloadInvoice(int $id, \Doctrine\ORM\EntityManagerInterface $em): Response
+    {
+        $facture = $em->getRepository(\App\Entity\Facture::class)->find($id);
+        if (!$facture || !$facture->getPdfPath()) {
+            throw $this->createNotFoundException('Facture introuvable.');
+        }
+
+        return $this->file($facture->getPdfPath(), 'facture-' . $facture->getNumero() . '.pdf');
     }
 
     #[Route('/revenues', name: 'admin_revenues')]

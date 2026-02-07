@@ -38,10 +38,6 @@
                     <i class="fas fa-user-check"></i>
                     <span>Validation comptes</span>
                 </a>
-                <a href="{{ path('admin_roles') }}" class="admin-nav-item {{ app.request.get('_route') starts with 'admin_roles' ? 'active' : '' }}">
-                    <i class="fas fa-user-shield"></i>
-                    <span>Rôles & Permissions</span>
-                </a>
                 
                 <div class="nav-section-title">ABONNEMENTS</div>
                 <a href="{{ path('admin_subscriptions') }}" class="admin-nav-item {{ app.request.get('_route') starts with 'admin_subscriptions' ? 'active' : '' }}">
@@ -50,11 +46,7 @@
                 </a>
                 <a href="{{ path('admin_payments') }}" class="admin-nav-item {{ app.request.get('_route') starts with 'admin_payments' ? 'active' : '' }}">
                     <i class="fas fa-money-bill-wave"></i>
-                    <span>Paiements</span>
-                </a>
-                <a href="{{ path('admin_revenues') }}" class="admin-nav-item {{ app.request.get('_route') starts with 'admin_revenues' ? 'active' : '' }}">
-                    <i class="fas fa-chart-pie"></i>
-                    <span>Revenus</span>
+                    <span>Revenus & facturation</span>
                 </a>
                 
                 <div class="nav-section-title">SERVICES MÉDICAUX</div>

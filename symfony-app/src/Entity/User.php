@@ -132,6 +132,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     )]
     private string $role = 'ROLE_USER';
 
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    private bool $emailVerified = false;
+
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    private bool $adminApproved = false;
+
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    private ?string $emailVerificationToken = null;
+
+    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $emailVerificationExpiresAt = null;
+
     #[ORM\Column(type: 'string', length: 20, options: ['default' => 'PENDING'])]
     private string $subscriptionStatus = 'PENDING';
 
@@ -248,6 +260,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getRole(): string { return $this->role; }
     public function setRole(string $role): void { $this->role = $role; }
+
+    public function isEmailVerified(): bool { return $this->emailVerified; }
+    public function setEmailVerified(bool $emailVerified): void { $this->emailVerified = $emailVerified; }
+
+    public function isAdminApproved(): bool { return $this->adminApproved; }
+    public function setAdminApproved(bool $adminApproved): void { $this->adminApproved = $adminApproved; }
+
+    public function getEmailVerificationToken(): ?string { return $this->emailVerificationToken; }
+    public function setEmailVerificationToken(?string $token): void { $this->emailVerificationToken = $token; }
+
+    public function getEmailVerificationExpiresAt(): ?\DateTimeImmutable { return $this->emailVerificationExpiresAt; }
+    public function setEmailVerificationExpiresAt(?\DateTimeImmutable $expiresAt): void { $this->emailVerificationExpiresAt = $expiresAt; }
 
     public function getSubscriptionStatus(): string { return $this->subscriptionStatus; }
     public function setSubscriptionStatus(string $subscriptionStatus): void { $this->subscriptionStatus = $subscriptionStatus; }

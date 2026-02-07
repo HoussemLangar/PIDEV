@@ -16,12 +16,13 @@
 
 <div class="admin-card">
     <form method="get" class="admin-form" id="usersFilterForm">
-        <div class="form-row">
-            <div>
-                <label>Recherche</label>
-                <input type="text" name="q" value="{{ filters.q }}" placeholder="Nom, prénom, email..." id="usersFilterSearch">
+        <div class="form-row filters-inline filters-modern">
+            <div class="filter-search filter-field">
+                <label class="filter-label">Recherche</label>
+                <i class="fas fa-search"></i>
+                <input type="text" name="q" value="{{ filters.q }}" placeholder="Search" id="usersFilterSearch">
             </div>
-            <div>
+            <div class="filter-field">
                 <label>Rôle</label>
                 <select name="role">
                     <option value="">Tous</option>
@@ -38,7 +39,7 @@
                     {% endfor %}
                 </select>
             </div>
-            <div>
+            <div class="filter-field">
                 <label>Statut</label>
                 <select name="status">
                     <option value="">Tous</option>
@@ -47,17 +48,17 @@
                     <option value="deleted" {{ filters.status == 'deleted' ? 'selected' : '' }}>Supprimé</option>
                 </select>
             </div>
-            <div>
+            <div class="filter-field">
                 <label>Créé du</label>
                 <input type="date" name="from" value="{{ filters.from }}">
             </div>
-            <div>
+            <div class="filter-field">
                 <label>Au</label>
                 <input type="date" name="to" value="{{ filters.to }}">
             </div>
-        </div>
-        <div class="admin-actions-row">
-            <a class="btn btn-secondary" href="{{ path('admin_users') }}">Réinitialiser</a>
+            <div class="filter-actions">
+                <a class="btn btn-secondary" href="{{ path('admin_users') }}">Réinitialiser</a>
+            </div>
         </div>
     </form>
 </div>

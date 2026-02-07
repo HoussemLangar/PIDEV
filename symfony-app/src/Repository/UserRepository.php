@@ -180,6 +180,95 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
             ->getOneOrNullResult();
     }
 
+    public function findPendingApprovals(): array
+    {
+        return $this->createQueryBuilder('u')
+            ->andWhere('u.deletedAt IS NULL')
+            ->andWhere('u.adminApproved = false')
+            ->orderBy('u.createdAt', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function findByEmailVerificationToken(string $token): ?User
+    {
+        return $this->createQueryBuilder('u')
+            ->andWhere('u.emailVerificationToken = :token')
+            ->setParameter('token', $token)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    public function createValidationQueryBuilder(array $filters): \Doctrine\ORM\QueryBuilder
+    {
+        $qb = $this->createQueryBuilder('u')
+            ->andWhere('u.deletedAt IS NULL');
+
+        if (!empty($filters['q'])) {
+            $qb->andWhere('u.email LIKE :q OR u.nom LIKE :q OR u.prenom LIKE :q')
+                ->setParameter('q', '%' . $filters['q'] . '%');
+        }
+
+        if (($filters['email_verified'] ?? '') === 'yes') {
+            $qb->andWhere('u.emailVerified = true');
+        } elseif (($filters['email_verified'] ?? '') === 'no') {
+            $qb->andWhere('u.emailVerified = false');
+        }
+
+        if (($filters['admin_approved'] ?? '') === 'yes') {
+            $qb->andWhere('u.adminApproved = true');
+        } elseif (($filters['admin_approved'] ?? '') === 'no') {
+            $qb->andWhere('u.adminApproved = false');
+        }
+
+        return $qb->orderBy('u.createdAt', 'ASC');
+    }
+
+    public function getValidationStats(): array
+    {
+        $total = (int) $this->createQueryBuilder('u')
+            ->select('COUNT(u.id)')
+            ->andWhere('u.deletedAt IS NULL')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        $emailVerified = (int) $this->createQueryBuilder('u')
+            ->select('COUNT(u.id)')
+            ->andWhere('u.deletedAt IS NULL')
+            ->andWhere('u.emailVerified = true')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        $emailNotVerified = (int) $this->createQueryBuilder('u')
+            ->select('COUNT(u.id)')
+            ->andWhere('u.deletedAt IS NULL')
+            ->andWhere('u.emailVerified = false')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        $adminApproved = (int) $this->createQueryBuilder('u')
+            ->select('COUNT(u.id)')
+            ->andWhere('u.deletedAt IS NULL')
+            ->andWhere('u.adminApproved = true')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        $adminPending = (int) $this->createQueryBuilder('u')
+            ->select('COUNT(u.id)')
+            ->andWhere('u.deletedAt IS NULL')
+            ->andWhere('u.adminApproved = false')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return [
+            'total' => $total,
+            'emailVerified' => $emailVerified,
+            'emailNotVerified' => $emailNotVerified,
+            'adminApproved' => $adminApproved,
+            'adminPending' => $adminPending,
+        ];
+    }
+
     public function createFilteredQueryBuilder(array $filters): QueryBuilder
     {
         $qb = $this->createQueryBuilder('u');

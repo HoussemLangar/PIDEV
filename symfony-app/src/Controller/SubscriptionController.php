@@ -10,6 +10,11 @@ use App\Entity\Pharmacien;
 use App\Entity\CoachSportif;
 use App\Entity\Nutritionniste;
 use App\Repository\AbonnementRepository;
+use App\Entity\Facture;
+use App\Service\InvoiceService;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Bridge\Twig\Mime\TemplatedEmail;
+use Symfony\Component\Mime\Address;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -99,7 +104,7 @@ class SubscriptionController extends AbstractController
     }
 
     #[Route('/subscription/payment', name: 'app_subscription_payment', methods: ['GET', 'POST'])]
-    public function payment(Request $request, EntityManagerInterface $em): Response
+    public function payment(Request $request, EntityManagerInterface $em, InvoiceService $invoiceService, MailerInterface $mailer): Response
     {
         /** @var User $user */
         $user = $this->getUser();
@@ -161,6 +166,21 @@ class SubscriptionController extends AbstractController
 
             $em->persist($abonnement);
 
+            $tvaTaux = 19.0;
+            $montantHt = 10.00;
+            $tvaMontant = round($montantHt * $tvaTaux / 100, 2);
+            $montantTtc = $montantHt + $tvaMontant;
+
+            $facture = new Facture();
+            $facture->setNumero('INV-' . date('Ymd') . '-' . strtoupper(bin2hex(random_bytes(3))));
+            $facture->setUser($user);
+            $facture->setAbonnement($abonnement);
+            $facture->setMontantHt(number_format($montantHt, 2, '.', ''));
+            $facture->setTvaTaux(number_format($tvaTaux, 2, '.', ''));
+            $facture->setTvaMontant(number_format($tvaMontant, 2, '.', ''));
+            $facture->setMontantTtc(number_format($montantTtc, 2, '.', ''));
+            $em->persist($facture);
+
             $user->setRole($type);
             $user->setSubscriptionStatus('ACTIVE');
             $user->setSubscriptionType($type);
@@ -170,10 +190,27 @@ class SubscriptionController extends AbstractController
             $this->ensureRoleEntity($user, $type, $em);
 
             $em->flush();
+
+            $pdfPath = $invoiceService->generatePdf($facture);
+            $facture->setPdfPath($pdfPath);
+            $em->flush();
+
+            $email = (new TemplatedEmail())
+                ->from(new Address('houssemlangar17@gmail.com', 'SANTÉA'))
+                ->to($user->getEmail())
+                ->subject('Votre facture - ' . $facture->getNumero())
+                ->htmlTemplate('emails/invoice.html.twig')
+                ->context([
+                    'user' => $user,
+                    'facture' => $facture,
+                ])
+                ->attachFromPath($pdfPath, 'facture-' . $facture->getNumero() . '.pdf');
+
+            $mailer->send($email);
             $request->getSession()->remove('subscription_type');
 
             $this->addFlash('success', 'Paiement réussi. Abonnement activé.');
-            return $this->redirectToRoute('app_home');
+            return $this->redirectToRoute('app_subscription_overview');
         }
 
         return $this->render('front/subscription_payment.html.twig', [
