@@ -18,6 +18,9 @@ security:
         main:
             lazy: true
             provider: app_user_provider
+            login_throttling:
+                max_attempts: 5
+                interval: '15 minutes'
             
             # ✅ CORRECTION : Définir le point d'entrée
             entry_point: form_login
@@ -31,6 +34,10 @@ security:
                 username_parameter: _username  # correspond au champ email
                 password_parameter: _password
                 success_handler: App\Security\LoginSuccessHandler
+
+            two_factor:
+                auth_form_path: scheb_two_factor_form
+                check_path: scheb_two_factor_check
 
             # Authentification OAuth
             custom_authenticators:
@@ -55,6 +62,9 @@ security:
         - { path: ^/login, roles: PUBLIC_ACCESS }
         - { path: ^/register, roles: PUBLIC_ACCESS }
         - { path: ^/connect, roles: PUBLIC_ACCESS }
+        - { path: ^/theme, roles: PUBLIC_ACCESS }
+        - { path: ^/locale, roles: PUBLIC_ACCESS }
+        - { path: ^/2fa, roles: IS_AUTHENTICATED_2FA_IN_PROGRESS }
         
         # Routes protégées (décommentez selon vos besoins)
         # - { path: ^/admin, roles: ROLE_ADMIN }

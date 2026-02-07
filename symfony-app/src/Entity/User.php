@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use Scheb\TwoFactorBundle\Model\Google\TwoFactorInterface;
 use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -21,7 +22,7 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
     fields: ['email'],
     message: 'Cette adresse email est déjà associée à un compte existant.'
 )]
-class User implements UserInterface, PasswordAuthenticatedUserInterface
+class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFactorInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -137,6 +138,24 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(type: 'boolean', options: ['default' => false])]
     private bool $adminApproved = false;
+
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    private bool $mfaEnabled = false;
+
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    private ?string $googleAuthenticatorSecret = null;
+
+    #[ORM\Column(type: 'string', length: 10, options: ['default' => 'light'])]
+    private string $themePreference = 'light';
+
+    #[ORM\Column(type: 'string', length: 5, options: ['default' => 'fr'])]
+    private string $locale = 'fr';
+
+    #[ORM\Column(type: 'blob', nullable: true)]
+    private $avatarData = null;
+
+    #[ORM\Column(type: 'string', length: 50, nullable: true)]
+    private ?string $avatarMime = null;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private ?string $emailVerificationToken = null;
@@ -266,6 +285,53 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function isAdminApproved(): bool { return $this->adminApproved; }
     public function setAdminApproved(bool $adminApproved): void { $this->adminApproved = $adminApproved; }
+
+    public function isMfaEnabled(): bool { return $this->mfaEnabled; }
+    public function setMfaEnabled(bool $mfaEnabled): void { $this->mfaEnabled = $mfaEnabled; }
+
+    public function getGoogleAuthenticatorSecret(): ?string { return $this->googleAuthenticatorSecret; }
+    public function setGoogleAuthenticatorSecret(?string $secret): void { $this->googleAuthenticatorSecret = $secret; }
+
+    public function isGoogleAuthenticatorEnabled(): bool
+    {
+        return $this->mfaEnabled && $this->googleAuthenticatorSecret !== null;
+    }
+
+    public function getGoogleAuthenticatorUsername(): string
+    {
+        return $this->getEmail();
+    }
+
+    public function getThemePreference(): string { return $this->themePreference; }
+    public function setThemePreference(string $themePreference): void { $this->themePreference = $themePreference; }
+
+    public function getLocale(): string { return $this->locale; }
+    public function setLocale(string $locale): void { $this->locale = $locale; }
+
+    public function getAvatarData(): ?string
+    {
+        if ($this->avatarData === null) {
+            return null;
+        }
+        if (is_resource($this->avatarData)) {
+            return stream_get_contents($this->avatarData) ?: null;
+        }
+        return $this->avatarData;
+    }
+
+    public function setAvatarData(?string $avatarData): void { $this->avatarData = $avatarData; }
+
+    public function getAvatarMime(): ?string { return $this->avatarMime; }
+    public function setAvatarMime(?string $avatarMime): void { $this->avatarMime = $avatarMime; }
+
+    public function getAvatarDataUri(): ?string
+    {
+        $data = $this->getAvatarData();
+        if ($data === null || $this->avatarMime === null) {
+            return null;
+        }
+        return 'data:' . $this->avatarMime . ';base64,' . base64_encode($data);
+    }
 
     public function getEmailVerificationToken(): ?string { return $this->emailVerificationToken; }
     public function setEmailVerificationToken(?string $token): void { $this->emailVerificationToken = $token; }

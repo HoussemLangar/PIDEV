@@ -2,10 +2,13 @@
 namespace App\Controller;
 
 use App\Entity\User;
+use App\Entity\UserSession;
 use App\Form\AdminUserType;
 use App\Form\AdminUserResetPasswordType;
 use App\Entity\Facture;
 use App\Repository\AbonnementRepository;
+use App\Repository\SuspiciousLoginRepository;
+use App\Repository\UserSessionRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\Pagination\Paginator;
@@ -31,6 +34,7 @@ class AdminController extends AbstractController
     public function dashboard(
         UserRepository $userRepository,
         AbonnementRepository $abonnementRepository,
+        SuspiciousLoginRepository $suspiciousLoginRepository,
         EntityManagerInterface $em
     ): Response
     {
@@ -145,6 +149,9 @@ class AdminController extends AbstractController
             ],
         ];
 
+        $suspiciousRecent = $suspiciousLoginRepository->findRecent(6);
+        $suspiciousCount = $suspiciousLoginRepository->countBlocked();
+
         // Activités récentes pour le tableau
         $recentActivities = [
             [
@@ -206,6 +213,8 @@ class AdminController extends AbstractController
             'recentActivity' => $recentActivity,
             'chartData' => $chartData,
             'recentActivities' => $recentActivities,
+            'suspiciousRecent' => $suspiciousRecent,
+            'suspiciousCount' => $suspiciousCount,
         ]);
     }
 
@@ -213,6 +222,7 @@ class AdminController extends AbstractController
     public function exportDashboardStats(
         UserRepository $userRepository,
         AbonnementRepository $abonnementRepository,
+        SuspiciousLoginRepository $suspiciousLoginRepository,
         EntityManagerInterface $em
     ): StreamedResponse {
         $userStats = $userRepository->getUserStats();
@@ -252,6 +262,7 @@ class AdminController extends AbstractController
             ->setParameter('status', 'PENDING')
             ->getQuery()
             ->getSingleScalarResult();
+        $suspiciousCount = $suspiciousLoginRepository->countBlocked();
 
         $filename = 'dashboard_stats_' . (new \DateTimeImmutable())->format('Ymd_His') . '.csv';
         $response = new StreamedResponse(function () use (
@@ -277,6 +288,7 @@ class AdminController extends AbstractController
             fputcsv($handle, ['Factures total', $totalInvoices]);
             fputcsv($handle, ['Email confirmés', $validationStats['emailVerified']]);
             fputcsv($handle, ['Admin en attente', $validationStats['adminPending']]);
+            fputcsv($handle, ['Connexions suspectes', $suspiciousCount]);
             fclose($handle);
         });
 
@@ -284,6 +296,63 @@ class AdminController extends AbstractController
         $response->headers->set('Content-Disposition', 'attachment; filename="' . $filename . '"');
 
         return $response;
+    }
+
+    // ========== SÉCURITÉ (SESSIONS / ALERTES) ==========
+    #[Route('/admin/security/sessions', name: 'admin_security_sessions')]
+    public function sessions(Request $request, UserSessionRepository $userSessionRepository): Response
+    {
+        $filters = [
+            'q' => trim((string) $request->query->get('q', '')),
+            'status' => (string) $request->query->get('status', ''),
+            'ip' => trim((string) $request->query->get('ip', '')),
+            'country' => (string) $request->query->get('country', ''),
+        ];
+
+        $sessions = $userSessionRepository->createAdminQueryBuilder($filters)
+            ->getQuery()
+            ->getResult();
+
+        return $this->render('admin/security/sessions.html.twig', [
+            'sessions' => $sessions,
+            'filters' => $filters,
+            'idleMinutes' => 30,
+        ]);
+    }
+
+    #[Route('/admin/security/sessions/{id}/revoke', name: 'admin_security_sessions_revoke', methods: ['POST'])]
+    public function revokeSession(UserSession $session, Request $request, EntityManagerInterface $em): RedirectResponse
+    {
+        if (!$this->isCsrfTokenValid('revoke_session_' . $session->getId(), $request->request->get('_token'))) {
+            return $this->redirectToRoute('admin_security_sessions');
+        }
+
+        if (!$session->isRevoked()) {
+            $session->setRevokedAt(new \DateTimeImmutable());
+            $em->flush();
+        }
+
+        $this->addFlash('success', 'Session révoquée.');
+        return $this->redirectToRoute('admin_security_sessions');
+    }
+
+    #[Route('/admin/security/suspicious', name: 'admin_security_suspicious')]
+    public function suspiciousLogins(Request $request, SuspiciousLoginRepository $suspiciousLoginRepository): Response
+    {
+        $filters = [
+            'q' => trim((string) $request->query->get('q', '')),
+            'status' => (string) $request->query->get('status', ''),
+            'country' => (string) $request->query->get('country', ''),
+        ];
+
+        $logins = $suspiciousLoginRepository->createAdminQueryBuilder($filters)
+            ->getQuery()
+            ->getResult();
+
+        return $this->render('admin/security/suspicious.html.twig', [
+            'logins' => $logins,
+            'filters' => $filters,
+        ]);
     }
     // ========== GESTION UTILISATEURS ==========
     #[Route('/users', name: 'admin_users')]

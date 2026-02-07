@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="{{ app.request.locale }}" dir="{{ app.request.locale == 'ar' ? 'rtl' : 'ltr' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,7 +13,8 @@
     
     {% block head_scripts %}{% endblock %}
 </head>
-<body{% block body_class %}{% endblock %}>
+{% set theme = app.user ? app.user.themePreference : (app.session ? app.session.get('theme') : 'light') %}
+<body data-theme="{{ theme ?: 'light' }}"{% block body_class %}{% endblock %}>
     
     {% block header %}
         <!-- Header / Navbar -->
@@ -22,22 +23,22 @@
                 <div class="logo">SANTÉA</div>
 
                 <ul class="nav-links">
-                    <li><a href="{{ path('app_home') }}">Accueil</a></li>
-                    <li><a href="#quick-info">À propos</a></li>
-                    <li><a href="#appointment-section">Services</a></li>
-                    <li><a href="#testimonials">Blog</a></li>
-                    <li><a href="#contact-section">Contact</a></li>
+                    <li><a href="{{ path('app_home') }}">{{ 'nav.home'|trans }}</a></li>
+                    <li><a href="#quick-info">{{ 'nav.about'|trans }}</a></li>
+                    <li><a href="#appointment-section">{{ 'nav.services'|trans }}</a></li>
+                    <li><a href="#testimonials">{{ 'nav.blog'|trans }}</a></li>
+                    <li><a href="#contact-section">{{ 'nav.contact'|trans }}</a></li>
                 </ul>
 
                 {% if app.user %}
                 <div class="account-menu">
                     <button class="btn-appointment account-toggle" id="accountBtn">                   
-                        Mon compte <i class="fas fa-chevron-down"></i>
+                        {{ 'nav.account'|trans }} <i class="fas fa-chevron-down"></i>
                     </button>
 
                     <div class="account-dropdown" id="accountDropdown">
                         <div class="account-info">
-                            <img src="https://ui-avatars.com/api/?name={{ app.user.nom|url_encode }}+{{ app.user.prenom|url_encode }}&background=0D8ABC&color=fff&size=30" 
+                            <img src="{{ app.user.avatarDataUri ?: ('https://ui-avatars.com/api/?name=' ~ app.user.nom|url_encode ~ '+' ~ app.user.prenom|url_encode ~ '&background=0D8ABC&color=fff&size=30') }}" 
                                         alt="Avatar" class="account-avatar">     
                             <strong>{{ app.user.nom }} {{ app.user.prenom }}</strong>
                             <p>{{ app.user.email }}</p>
@@ -46,20 +47,45 @@
                         <hr>
 
                         <a href="{{ path('profile_edit') }}" class="dropdown-item">
-                            <i class="fas fa-cog"></i> Paramètres
+                            <i class="fas fa-cog"></i> {{ 'nav.settings'|trans }}
+                        </a>
+                        <a href="{{ path('profile_notifications') }}" class="dropdown-item">
+                            <i class="fas fa-shield-alt"></i> {{ 'nav.notifications'|trans }}
+                        </a>
+                        <a href="{{ path('profile_mfa') }}" class="dropdown-item">
+                            <i class="fas fa-key"></i> {{ 'nav.mfa'|trans }}
                         </a>
 
                         <a href="{{ path('app_subscription_overview') }}" class="dropdown-item">
-                            <i class="fas fa-star"></i> Abonnement
+                            <i class="fas fa-star"></i> {{ 'nav.subscription'|trans }}
                         </a>
+
+                        <div class="dropdown-divider"></div>
+
+                        <div class="dropdown-item dropdown-inline">
+                            <span>{{ 'nav.theme'|trans }}</span>
+                            <div class="inline-actions">
+                                <a href="{{ path('app_theme', {theme: 'light'}) }}" class="mini-pill">{{ 'theme.light'|trans }}</a>
+                                <a href="{{ path('app_theme', {theme: 'dark'}) }}" class="mini-pill">{{ 'theme.dark'|trans }}</a>
+                            </div>
+                        </div>
+                        <div class="dropdown-item dropdown-inline">
+                            <span>{{ 'nav.language'|trans }}</span>
+                            <div class="inline-actions">
+                                <a href="{{ path('app_locale', {_locale: 'fr'}) }}" class="mini-pill">FR</a>
+                                <a href="{{ path('app_locale', {_locale: 'en'}) }}" class="mini-pill">EN</a>
+                                <a href="{{ path('app_locale', {_locale: 'ar'}) }}" class="mini-pill">AR</a>
+                            </div>
+                        </div>
+
                         <a href="{{ path('app_logout') }}" class="dropdown-item danger">
-                            <i class="fas fa-sign-out-alt"></i> Déconnexion
+                            <i class="fas fa-sign-out-alt"></i> {{ 'nav.logout'|trans }}
                         </a>
                     </div>
                 </div>
                 
                 {% else %}
-                    <a href="{{ path('login') }}" class="btn-appointment">Se connecter</a>
+                    <a href="{{ path('login') }}" class="btn-appointment">{{ 'nav.login'|trans }}</a>
                 {% endif %}
 
                 <div class="menu-toggle">

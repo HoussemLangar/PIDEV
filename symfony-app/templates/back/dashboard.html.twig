@@ -135,6 +135,28 @@
                 </div>
             </div>
         </div>
+
+        <div class="quick-stat-card">
+            <div class="quick-stat-header">
+                <h3>Connexions suspectes</h3>
+                <a href="{{ path('admin_security_suspicious') }}" class="quick-stat-btn">Voir tout</a>
+            </div>
+            <div class="quick-stat-list">
+                {% if suspiciousRecent is not empty %}
+                    {% for item in suspiciousRecent %}
+                        <div class="quick-stat-item {{ item.blocked ? 'alert' : '' }}">
+                            <span><i class="fas fa-shield-alt"></i> {{ item.user.email }}</span>
+                            <strong>{{ item.createdAt|date('d/m H:i') }}</strong>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="quick-stat-item">
+                        <span><i class="fas fa-shield-alt"></i> Aucune alerte</span>
+                        <strong>0</strong>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
         
         <div class="quick-stat-card">
             <div class="quick-stat-header">

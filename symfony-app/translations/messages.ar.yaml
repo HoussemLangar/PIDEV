@@ -1,0 +1,43 @@
+nav:
+  home: الرئيسية
+  about: من نحن
+  services: الخدمات
+  blog: المدونة
+  contact: تواصل
+  account: حسابي
+  settings: الإعدادات
+  notifications: الإشعارات
+  mfa: الأمان (MFA)
+  subscription: الاشتراك
+  logout: تسجيل الخروج
+  login: تسجيل الدخول
+  theme: المظهر
+  language: اللغة
+  dashboard: لوحة التحكم
+  users_section: إدارة المستخدمين
+  users: المستخدمون
+  validation: التحقق من الحسابات
+  sessions: الجلسات
+  suspicious: محاولات تسجيل مشبوهة
+  subscriptions_section: الاشتراكات
+  subscriptions: الاشتراكات
+  payments: الإيرادات والفواتير
+  medical_section: الخدمات الطبية
+  accompaniments: المرافقة
+  appointments: المواعيد
+  medical_control: الفحص الطبي
+  pharmacy_section: الصيدلية
+  pharmacies: الصيدليات
+  medications: الأدوية
+  tracker_section: تتبع الصحة
+  tracker_stats: إحصائيات المتتبع
+  content_section: المحتوى
+  content: المقالات والأدلة
+  moderation: الإشراف
+  system_section: النظام
+  reports: البلاغات
+  admin: مسؤول
+
+theme:
+  light: فاتح
+  dark: داكن

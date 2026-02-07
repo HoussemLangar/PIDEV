@@ -1,0 +1,6 @@
+scheb_two_factor:
+    google:
+        enabled: true
+        issuer: 'SANTÉA'
+        server_name: 'SANTÉA'
+        template: 'security/2fa_form.html.twig'

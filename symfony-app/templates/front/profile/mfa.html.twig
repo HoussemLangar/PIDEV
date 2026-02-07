@@ -1,0 +1,47 @@
+{% extends 'front/base.html.twig' %}
+
+{% block title %}Sécurité - MFA{% endblock %}
+
+{% block body %}
+<div class="container" style="max-width:720px;margin:50px auto;">
+    <div style="background:#ffffff;border-radius:16px;box-shadow:0 12px 28px rgba(15,23,42,0.1);padding:28px;">
+        <h2 style="margin:0 0 6px;">Authentification multi-facteurs</h2>
+        <p style="margin:0 0 18px;color:#64748b;">Activez Google Authenticator pour sécuriser votre compte.</p>
+
+        {% for label, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="alert alert-{{ label == 'success' ? 'success' : 'danger' }}">{{ message }}</div>
+            {% endfor %}
+        {% endfor %}
+
+        {% if app.user.isMfaEnabled %}
+            <div style="padding:16px;border:1px solid #e2e8f0;border-radius:12px;background:#f8fafc;">
+                <p style="margin:0 0 10px;font-weight:600;">MFA est activé</p>
+                {% if qrContent %}
+                    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data={{ qrContent|url_encode }}"
+                             alt="QR MFA" style="width:220px;height:220px;border-radius:12px;border:1px solid #e2e8f0;background:#fff;">
+                        <div style="flex:1;min-width:220px;">
+                            <p style="margin:0 0 6px;font-size:13px;color:#64748b;">Scannez ce QR dans Google Authenticator.</p>
+                            <p style="margin:0 0 6px;font-size:12px;color:#94a3b8;">Si besoin, utilisez l’URI :</p>
+                            <code style="display:block;word-break:break-all;background:#fff;border:1px dashed #cbd5f5;border-radius:8px;padding:10px;">{{ qrContent }}</code>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+            <form method="post" style="margin-top:16px;">
+                <input type="hidden" name="disable_mfa" value="1">
+                <button class="btn btn-danger" type="submit">Désactiver MFA</button>
+            </form>
+        {% else %}
+            <div style="padding:16px;border:1px solid #e2e8f0;border-radius:12px;background:#f8fafc;">
+                <p style="margin:0 0 6px;font-weight:600;">MFA non activé</p>
+                <p style="margin:0;color:#64748b;font-size:13px;">Cliquez sur “Activer” pour générer votre secret Google Authenticator.</p>
+            </div>
+            <form method="post" style="margin-top:16px;">
+                <button class="btn btn-primary" type="submit">Activer MFA</button>
+            </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

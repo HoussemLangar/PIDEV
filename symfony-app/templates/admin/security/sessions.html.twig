@@ -1,0 +1,97 @@
+{% extends 'back/base.html.twig' %}
+
+{% block title %}Sessions actives{% endblock %}
+
+{% block admin_content %}
+<div class="admin-page-header">
+    <div class="admin-page-title">
+        <h1>Sessions actives</h1>
+        <p>Suivez les connexions et déconnectez une session à distance.</p>
+    </div>
+</div>
+
+<div class="admin-card">
+    <form method="get" class="admin-form">
+        <div class="form-row filters-inline filters-modern">
+            <div class="filter-search filter-field">
+                <label class="filter-label">Recherche</label>
+                <input type="text" name="q" value="{{ filters.q }}" placeholder="Email ou nom">
+            </div>
+            <div class="filter-field">
+                <label>Statut</label>
+                <select name="status">
+                    <option value="">Tous</option>
+                    <option value="active" {{ filters.status == 'active' ? 'selected' : '' }}>Actif</option>
+                    <option value="revoked" {{ filters.status == 'revoked' ? 'selected' : '' }}>Révoqué</option>
+                </select>
+            </div>
+            <div class="filter-field">
+                <label>IP</label>
+                <input type="text" name="ip" value="{{ filters.ip }}" placeholder="192.168.x.x">
+            </div>
+            <div class="filter-field">
+                <label>Pays</label>
+                <input type="text" name="country" value="{{ filters.country }}" placeholder="TN, FR">
+            </div>
+            <div class="filter-actions">
+                <a class="btn btn-secondary" href="{{ path('admin_security_sessions') }}">Réinitialiser</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="admin-card">
+    <div style="overflow-x: auto;">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Utilisateur</th>
+                    <th>IP</th>
+                    <th>Pays</th>
+                    <th>Dernière activité</th>
+                    <th>Statut</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% set activeSince = "now"|date_modify("-" ~ idleMinutes ~ " minutes") %}
+            {% for session in sessions %}
+                {% set isActive = session.revokedAt is null and session.lastActivityAt >= activeSince %}
+                <tr>
+                    <td>
+                        <div style="font-weight: 600;">{{ session.user.fullName ?? session.user.email }}</div>
+                        <div style="color: var(--admin-muted); font-size: 0.9rem;">{{ session.user.email }}</div>
+                    </td>
+                    <td>{{ session.ipAddress ?? '-' }}</td>
+                    <td>{{ session.country ?? '-' }}</td>
+                    <td>{{ session.lastActivityAt|date('d/m/Y H:i') }}</td>
+                    <td>
+                        {% if session.revokedAt %}
+                            <span class="admin-badge danger">Révoqué</span>
+                        {% elseif isActive %}
+                            <span class="admin-badge success">Actif</span>
+                        {% else %}
+                            <span class="admin-badge warning">Inactif</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if session.revokedAt %}
+                            -
+                        {% else %}
+                            <form method="post" action="{{ path('admin_security_sessions_revoke', {id: session.id}) }}" onsubmit="return confirm('Révoquer cette session ?');">
+                                <input type="hidden" name="_token" value="{{ csrf_token('revoke_session_' ~ session.id) }}">
+                                <button class="btn btn-danger" type="submit">Déconnecter</button>
+                            </form>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="6" style="text-align:center; color: var(--admin-muted);">Aucune session trouvée</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,43 @@
+nav:
+  home: Home
+  about: About
+  services: Services
+  blog: Blog
+  contact: Contact
+  account: My account
+  settings: Settings
+  notifications: Notifications
+  mfa: Security (MFA)
+  subscription: Subscription
+  logout: Logout
+  login: Sign in
+  theme: Theme
+  language: Language
+  dashboard: Dashboard
+  users_section: User management
+  users: Users
+  validation: Account validation
+  sessions: Sessions
+  suspicious: Suspicious logins
+  subscriptions_section: Subscriptions
+  subscriptions: Subscriptions
+  payments: Revenue & billing
+  medical_section: Medical services
+  accompaniments: Accompaniments
+  appointments: Appointments
+  medical_control: Medical control
+  pharmacy_section: Pharmacy
+  pharmacies: Pharmacies
+  medications: Medications
+  tracker_section: Health tracker
+  tracker_stats: Tracker stats
+  content_section: Content
+  content: Articles & Guides
+  moderation: Moderation
+  system_section: System
+  reports: Reports
+  admin: Administrator
+
+theme:
+  light: Light
+  dark: Dark

@@ -20,6 +20,17 @@
 
         <div class="profile-card">
             {{ form_start(form, { attr: { class: 'profile-form', id: 'profileForm' } }) }}
+                <div class="profile-avatar-row">
+                    <div class="profile-avatar-preview">
+                        <img src="{{ app.user.avatarDataUri ?: ('https://ui-avatars.com/api/?name=' ~ app.user.nom|url_encode ~ '+' ~ app.user.prenom|url_encode ~ '&background=0D8ABC&color=fff&size=80') }}" alt="Avatar">
+                    </div>
+                    <div class="profile-avatar-upload">
+                        {{ form_label(form.avatarFile) }}
+                        {{ form_widget(form.avatarFile) }}
+                        {{ form_errors(form.avatarFile) }}
+                    </div>
+                </div>
+
                 <div class="profile-grid">
                     <div>
                         {{ form_label(form.nom) }}
@@ -102,6 +113,7 @@
             <p>Vous pouvez supprimer définitivement votre compte.</p>
             <button type="button" class="btn btn-danger" data-modal-open="deleteModal">Supprimer mon compte</button>
         </div>
+
     </div>
 
     <div class="profile-modal" id="deleteModal" aria-hidden="true">

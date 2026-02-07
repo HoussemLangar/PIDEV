@@ -10,6 +10,7 @@ use App\Entity\Pharmacien;
 use App\Entity\CoachSportif;
 use App\Entity\Nutritionniste;
 use App\Repository\AbonnementRepository;
+use App\Repository\SuspiciousLoginRepository;
 use App\Entity\Facture;
 use App\Service\InvoiceService;
 use Symfony\Component\Mailer\MailerInterface;
@@ -20,8 +21,10 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\Routing\Annotation\Route;
 
+#[AsController]
 class SubscriptionController extends AbstractController
 {
     #[Route('/subscription', name: 'app_subscription')]
