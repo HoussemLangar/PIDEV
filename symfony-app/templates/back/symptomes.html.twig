@@ -1,0 +1,438 @@
+{% extends 'back/base.html.twig' %}
+
+{% block title %}Gestion des Symptômes - SANTÉA Admin{% endblock %}
+
+{% block admin_content %}
+
+    <!-- Top Header -->
+    <header class="admin-header">
+        <div class="admin-header-left">
+            <h1>Gestion des Symptômes</h1>
+            <p class="header-subtitle">Administration des données de symptômes des utilisateurs</p>
+        </div>
+        <div class="admin-header-right">
+            <div class="admin-user-avatar">
+                <img src="https://i.pravatar.cc/150?img=12" alt="Admin">
+            </div>
+        </div>
+    </header>
+
+            <!-- Privacy Notice -->
+            <section class="privacy-notice">
+                <i class="fas fa-shield-alt"></i>
+                <div>
+                    <strong>Conformité RGPD & confidentialité</strong>
+                    <p>Les données de symptômes sont anonymisées et utilisées uniquement pour l'administration du système.</p>
+                </div>
+            </section>
+
+            <!-- Data Box -->
+            <section class="admin-stats">
+                <div class="stat-card-admin">
+                    <div class="stat-icon-box" style="background: linear-gradient(135deg, #FF6B6B, #EE5A52);">
+                        <i class="fas fa-stethoscope"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Total symptômes</span>
+                        <span class="stat-value">{{ stats.total }}</span>
+                        <span class="stat-change">Enregistrés dans le système</span>
+                    </div>
+                </div>
+
+                <div class="stat-card-admin">
+                    <div class="stat-icon-box" style="background: linear-gradient(135deg, #4ECDC4, #44A08D);">
+                        <i class="fas fa-tags"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Catégories</span>
+                        <span class="stat-value">{{ stats.categories }}</span>
+                        <span class="stat-change">Catégories différentes</span>
+                    </div>
+                </div>
+
+                <div class="stat-card-admin">
+                    <div class="stat-icon-box" style="background: linear-gradient(135deg, #45B7D1, #96CEB4);">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Cette semaine</span>
+                        <span class="stat-value">{{ stats.weekly }}</span>
+                        <span class="stat-change">Nouveaux symptômes</span>
+                    </div>
+                </div>
+
+                <div class="stat-card-admin">
+                    <div class="stat-icon-box" style="background: linear-gradient(135deg, #F7DC6F, #F39C12);">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Symptômes récents</span>
+                        <span class="stat-value">{{ stats.recent }}</span>
+                        <span class="stat-change">Ajoutés récemment</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Add/Edit Symptom Form -->
+            <section class="admin-section">
+                <div class="section-header">
+                    <h2>
+                        <i class="fas fa-plus-circle"></i>
+                        {% if edit_mode is defined and edit_mode %}
+                            Modifier le symptôme "{{ current_symptome.nom }}"
+                        {% else %}
+                            Ajouter un nouveau symptôme
+                        {% endif %}
+                    </h2>
+                </div>
+
+                <div class="admin-form-container">
+                    {{ form_start(form, {'attr': {'class': 'admin-form', 'novalidate': 'novalidate', 'id': 'symptom-form'}}) }}
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            {{ form_label(form.nom) }}
+                            {{ form_widget(form.nom) }}
+                            {{ form_errors(form.nom) }}
+                        </div>
+
+                        <div class="form-group">
+                            {{ form_label(form.categorie) }}
+                            {{ form_widget(form.categorie) }}
+                            {{ form_errors(form.categorie) }}
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-save"></i>
+                            {% if edit_mode is defined and edit_mode %}
+                                Modifier le symptôme
+                            {% else %}
+                                Enregistrer le symptôme
+                            {% endif %}
+                        </button>
+                        {% if edit_mode is defined and edit_mode %}
+                            <a href="{{ path('app_symptome_liste_index') }}" class="btn-secondary">
+                                <i class="fas fa-times"></i> Annuler
+                            </a>
+                        {% endif %}
+                    </div>
+
+                    {{ form_end(form) }}
+                </div>
+            </section>
+
+            <!-- Symptoms Table -->
+            <section class="admin-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-list"></i> Tous les symptômes</h2>
+                    <div class="section-actions">
+                        <!-- AJAX Search & Filter -->
+                        <div style="display: flex; gap: 10px; align-items: center; margin-right: 10px;">
+                            <input type="text" id="search-input" 
+                                   placeholder="Rechercher un symptôme..." 
+                                   class="form-control" style="width: 200px;" autocomplete="off">
+                            <select id="category-filter" class="form-control" style="width: 180px;" autocomplete="off">
+                                <option value="">Toutes catégories</option>
+                                {% for category in categories %}
+                                    <option value="{{ category.categorie }}">{{ category.categorie }}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="button" id="search-btn" class="btn-secondary">
+                                <i class="fas fa-search"></i> Rechercher
+                            </button>
+                            <button type="button" id="clear-filters" class="btn-secondary" style="display: none;">
+                                <i class="fas fa-times"></i> Effacer
+                            </button>
+                        </div>
+                        
+                        <a href="{{ path('app_symptome_liste_export') }}" id="export-btn" class="btn-secondary">
+                            <i class="fas fa-download"></i> Exporter
+                        </a>
+                    </div>
+                </div>
+
+                {% if symptomes is empty %}
+                    <div id="no-data" class="no-data-message">
+                        <i class="fas fa-stethoscope"></i>
+                        <p>Aucun symptôme enregistré pour le moment.</p>
+                    </div>
+                {% else %}
+                    <div class="admin-table-container">
+                        <table class="admin-table" id="symptoms-table">
+                            <thead>
+                                <tr>
+                                    <th>Nom</th>
+                                    <th>Catégorie</th>
+                                    <th>Créé le</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="symptoms-tbody">
+                                {% for symptome in symptomes %}
+                                    <tr>
+                                        <td>{{ symptome.nom }}</td>
+                                        <td>
+                                            {% if symptome.categorie %}
+                                                <span class="category-badge category-{{ symptome.categorie|lower|replace({' ':'-'}) }}">
+                                                    {{ symptome.categorie }}
+                                                </span>
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ symptome.createdAt|date('d/m/Y') }}</td>
+                                        <td>
+                                            <a href="{{ path('app_symptome_liste_edit', {'id': symptome.id}) }}" class="action-btn edit-btn">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <form method="post" action="{{ path('app_symptome_liste_delete', {'id': symptome.id}) }}" onsubmit="return confirm('Vraiment supprimer ce symptôme ?');" style="display:inline;">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ symptome.id) }}">
+                                                <button type="submit" class="action-btn delete-btn">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+            </section>
+
+        </main>
+    </div>
+
+{% endblock %}
+
+{% block javascripts %}
+<script>
+    // Initialize when DOM is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        // Forcer le reset des champs de recherche et filtre catégorie AVANT tout
+        const searchInput = document.getElementById('search-input');
+        const categoryFilter = document.getElementById('category-filter');
+        if (searchInput) {
+            searchInput.value = '';
+            searchInput.setAttribute('autocomplete', 'off');
+        }
+        if (categoryFilter) {
+            categoryFilter.selectedIndex = 0;
+            categoryFilter.setAttribute('autocomplete', 'off');
+        }
+        setTimeout(() => {
+            if (searchInput) searchInput.value = '';
+            if (categoryFilter) categoryFilter.selectedIndex = 0;
+        }, 50);
+        setupEventListeners();
+        clearFormOnLoad();
+    });
+
+    // Clear form fields on page load
+    function clearFormOnLoad() {
+        const form = document.getElementById('symptom-form');
+        if (form) {
+            // Clear all input and textarea fields
+            const inputs = form.querySelectorAll('input[type="text"], textarea, select');
+            inputs.forEach(input => {
+                if (input.type === 'text' || input.tagName === 'TEXTAREA') {
+                    input.value = '';
+                } else if (input.tagName === 'SELECT') {
+                    input.selectedIndex = 0;
+                }
+            });
+            
+            // Clear all error messages (form validation errors)
+            const errorMessages = form.querySelectorAll('.invalid-feedback, .form-error, .help-block, .error, ul');
+            errorMessages.forEach(error => {
+                error.remove();
+            });
+            
+            // Remove error classes from form controls
+            const formControls = form.querySelectorAll('.form-control, .is-invalid');
+            formControls.forEach(control => {
+                control.classList.remove('is-invalid', 'error');
+            });
+        }
+    }
+
+    // Setup event listeners
+    function setupEventListeners() {
+        // AJAX Search functionality
+        const searchInput = document.getElementById('search-input');
+        const categoryFilter = document.getElementById('category-filter');
+        const searchBtn = document.getElementById('search-btn');
+        const clearBtn = document.getElementById('clear-filters');
+        let searchTimeout;
+
+        if (searchBtn && searchInput) {
+            // Search on button click
+            searchBtn.addEventListener('click', performSearch);
+            
+            // Search on Enter key
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    performSearch();
+                }
+            });
+            
+            // Real-time search while typing (with debounce)
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(performSearch, 300); // Wait 300ms after user stops typing
+                updateClearButton();
+            });
+            
+            // Auto-search on category change
+            if (categoryFilter) {
+                categoryFilter.addEventListener('change', performSearch);
+            }
+            
+            // Show/hide clear button based on input or filter
+            function updateClearButton() {
+                const hasSearch = searchInput.value.trim();
+                const hasCategory = categoryFilter && categoryFilter.value;
+                
+                if (hasSearch || hasCategory) {
+                    clearBtn.style.display = 'inline-block';
+                } else {
+                    clearBtn.style.display = 'none';
+                }
+            }
+            
+            if (categoryFilter) {
+                categoryFilter.addEventListener('change', updateClearButton);
+            }
+        }
+
+        if (clearBtn) {
+            clearBtn.addEventListener('click', function() {
+                searchInput.value = '';
+                if (categoryFilter) categoryFilter.value = '';
+                clearBtn.style.display = 'none';
+                clearTimeout(searchTimeout);
+                performSearch();
+            });
+        }
+    }
+
+    // Perform AJAX search
+    function performSearch() {
+        const searchInput = document.getElementById('search-input');
+        const categoryFilter = document.getElementById('category-filter');
+        const searchTerm = searchInput.value.trim();
+        const category = categoryFilter ? categoryFilter.value : '';
+        const tbody = document.getElementById('symptoms-tbody');
+        const noDataDiv = document.getElementById('no-data');
+        
+        // Show loading
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px;"><i class="fas fa-spinner fa-spin"></i> Recherche en cours...</td></tr>';
+        
+        // Build query parameters
+        const params = new URLSearchParams();
+        if (searchTerm) params.append('search', searchTerm);
+        if (category) params.append('category', category);
+        
+        const url = '{{ path('app_symptome_liste_search') }}' + (params.toString() ? '?' + params.toString() : '');
+        
+        fetch(url, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Erreur réseau: ' + response.status);
+            }
+            return response.json();
+        })
+        .then(data => {
+            updateTable(data.symptomes, searchTerm, category);
+        })
+        .catch(error => {
+            console.error('Erreur de recherche:', error);
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px; color: red;">Erreur lors de la recherche: ' + error.message + '</td></tr>';
+        });
+    }
+
+    // Update table with search results
+    function updateTable(symptomes, searchTerm, category) {
+        const tbody = document.getElementById('symptoms-tbody');
+        const noDataDiv = document.getElementById('no-data');
+        const tableContainer = document.querySelector('.admin-table-container');
+        
+        if (symptomes.length === 0) {
+            // Hide table, show no data message
+            if (tableContainer) tableContainer.style.display = 'none';
+            if (noDataDiv) {
+                noDataDiv.style.display = 'block';
+                let message = 'Aucun symptôme enregistré pour le moment.';
+                if (searchTerm && category) {
+                    message = `Aucun symptôme trouvé pour "${searchTerm}" dans la catégorie "${category}".`;
+                } else if (searchTerm) {
+                    message = `Aucun symptôme trouvé pour "${searchTerm}".`;
+                } else if (category) {
+                    message = `Aucun symptôme trouvé dans la catégorie "${category}".`;
+                }
+                noDataDiv.querySelector('p').textContent = message;
+            }
+        } else {
+            // Show table, hide no data message
+            if (tableContainer) tableContainer.style.display = 'block';
+            if (noDataDiv) noDataDiv.style.display = 'none';
+            
+            // Update table content
+            tbody.innerHTML = symptomes.map(symptome => `
+                <tr>
+                    <td>${symptome.nom}</td>
+                    <td>
+                        ${symptome.categorie ? 
+                            `<span class="category-badge category-${symptome.categorie.toLowerCase().replace(/\s+/g, '-')}">${symptome.categorie}</span>` : 
+                            '-'
+                        }
+                    </td>
+                    <td>${symptome.createdAt}</td>
+                    <td>
+                        <a href="${symptome.editUrl}" class="action-btn edit-btn">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <form method="post" action="${symptome.deleteUrl}" onsubmit="return confirm('Vraiment supprimer ce symptôme ?');" style="display:inline;">
+                            <input type="hidden" name="_token" value="${symptome.deleteToken}">
+                            <button type="submit" class="action-btn delete-btn">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            `).join('');
+        }
+    }
+
+    // Toast notification
+    function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.textContent = message;
+        toast.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${type === 'success' ? '#4CAF50' : '#FF5722'};
+            color: white;
+            padding: 12px 20px;
+            border-radius: 4px;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        `;
+
+        document.body.appendChild(toast);
+        setTimeout(() => {
+            toast.style.animation = 'fadeOut 0.3s ease';
+            setTimeout(() => document.body.removeChild(toast), 300);
+        }, 3000);
+    }
+</script>
+{% endblock %}

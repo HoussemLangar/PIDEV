@@ -1,0 +1,169 @@
+﻿nom_symptome,categorie,description
+Céphalée,Neurologique,Douleur localisée ou diffuse au niveau de la tête.
+Céphalée aiguë,Neurologique,Douleur localisée ou diffuse au niveau de la tête. Évolution aiguë.
+Céphalée chronique,Neurologique,Douleur localisée ou diffuse au niveau de la tête. Évolution chronique.
+Céphalée sévère,Neurologique,Douleur localisée ou diffuse au niveau de la tête. Évolution sévère.
+Céphalée modérée,Neurologique,Douleur localisée ou diffuse au niveau de la tête. Évolution modérée.
+Céphalée légère,Neurologique,Douleur localisée ou diffuse au niveau de la tête. Évolution légère.
+Céphalée persistante,Neurologique,Douleur localisée ou diffuse au niveau de la tête. Évolution persistante.
+Céphalée récurrente,Neurologique,Douleur localisée ou diffuse au niveau de la tête. Évolution récurrente.
+Migraine,Neurologique,Maux de tête intenses souvent accompagnés de nausées ou de sensibilité à la lumière.
+Migraine aiguë,Neurologique,Maux de tête intenses souvent accompagnés de nausées ou de sensibilité à la lumière. Évolution aiguë.
+Migraine chronique,Neurologique,Maux de tête intenses souvent accompagnés de nausées ou de sensibilité à la lumière. Évolution chronique.
+Migraine sévère,Neurologique,Maux de tête intenses souvent accompagnés de nausées ou de sensibilité à la lumière. Évolution sévère.
+Migraine modérée,Neurologique,Maux de tête intenses souvent accompagnés de nausées ou de sensibilité à la lumière. Évolution modérée.
+Migraine légère,Neurologique,Maux de tête intenses souvent accompagnés de nausées ou de sensibilité à la lumière. Évolution légère.
+Migraine persistante,Neurologique,Maux de tête intenses souvent accompagnés de nausées ou de sensibilité à la lumière. Évolution persistante.
+Migraine récurrente,Neurologique,Maux de tête intenses souvent accompagnés de nausées ou de sensibilité à la lumière. Évolution récurrente.
+Vertige,Neurologique,Sensation de rotation ou de perte d’équilibre.
+Vertige aiguë,Neurologique,Sensation de rotation ou de perte d’équilibre. Évolution aiguë.
+Vertige chronique,Neurologique,Sensation de rotation ou de perte d’équilibre. Évolution chronique.
+Vertige sévère,Neurologique,Sensation de rotation ou de perte d’équilibre. Évolution sévère.
+Vertige modérée,Neurologique,Sensation de rotation ou de perte d’équilibre. Évolution modérée.
+Vertige légère,Neurologique,Sensation de rotation ou de perte d’équilibre. Évolution légère.
+Vertige persistante,Neurologique,Sensation de rotation ou de perte d’équilibre. Évolution persistante.
+Vertige récurrente,Neurologique,Sensation de rotation ou de perte d’équilibre. Évolution récurrente.
+Syncope,Neurologique,Perte de connaissance brève et brutale.
+Syncope aiguë,Neurologique,Perte de connaissance brève et brutale. Évolution aiguë.
+Syncope chronique,Neurologique,Perte de connaissance brève et brutale. Évolution chronique.
+Syncope sévère,Neurologique,Perte de connaissance brève et brutale. Évolution sévère.
+Syncope modérée,Neurologique,Perte de connaissance brève et brutale. Évolution modérée.
+Syncope légère,Neurologique,Perte de connaissance brève et brutale. Évolution légère.
+Syncope persistante,Neurologique,Perte de connaissance brève et brutale. Évolution persistante.
+Syncope récurrente,Neurologique,Perte de connaissance brève et brutale. Évolution récurrente.
+Convulsion,Neurologique,Contractions musculaires involontaires et incontrôlées.
+Convulsion aiguë,Neurologique,Contractions musculaires involontaires et incontrôlées. Évolution aiguë.
+Convulsion chronique,Neurologique,Contractions musculaires involontaires et incontrôlées. Évolution chronique.
+Convulsion sévère,Neurologique,Contractions musculaires involontaires et incontrôlées. Évolution sévère.
+Convulsion modérée,Neurologique,Contractions musculaires involontaires et incontrôlées. Évolution modérée.
+Convulsion légère,Neurologique,Contractions musculaires involontaires et incontrôlées. Évolution légère.
+Convulsion persistante,Neurologique,Contractions musculaires involontaires et incontrôlées. Évolution persistante.
+Convulsion récurrente,Neurologique,Contractions musculaires involontaires et incontrôlées. Évolution récurrente.
+Douleur thoracique,Cardiovasculaire,Douleur ou gêne ressentie dans la poitrine.
+Douleur thoracique aiguë,Cardiovasculaire,Douleur ou gêne ressentie dans la poitrine. Évolution aiguë.
+Douleur thoracique chronique,Cardiovasculaire,Douleur ou gêne ressentie dans la poitrine. Évolution chronique.
+Douleur thoracique sévère,Cardiovasculaire,Douleur ou gêne ressentie dans la poitrine. Évolution sévère.
+Douleur thoracique modérée,Cardiovasculaire,Douleur ou gêne ressentie dans la poitrine. Évolution modérée.
+Douleur thoracique légère,Cardiovasculaire,Douleur ou gêne ressentie dans la poitrine. Évolution légère.
+Douleur thoracique persistante,Cardiovasculaire,Douleur ou gêne ressentie dans la poitrine. Évolution persistante.
+Douleur thoracique récurrente,Cardiovasculaire,Douleur ou gêne ressentie dans la poitrine. Évolution récurrente.
+Palpitations,Cardiovasculaire,Perception anormale des battements du cœur.
+Palpitations aiguë,Cardiovasculaire,Perception anormale des battements du cœur. Évolution aiguë.
+Palpitations chronique,Cardiovasculaire,Perception anormale des battements du cœur. Évolution chronique.
+Palpitations sévère,Cardiovasculaire,Perception anormale des battements du cœur. Évolution sévère.
+Palpitations modérée,Cardiovasculaire,Perception anormale des battements du cœur. Évolution modérée.
+Palpitations légère,Cardiovasculaire,Perception anormale des battements du cœur. Évolution légère.
+Palpitations persistante,Cardiovasculaire,Perception anormale des battements du cœur. Évolution persistante.
+Palpitations récurrente,Cardiovasculaire,Perception anormale des battements du cœur. Évolution récurrente.
+Tachycardie,Cardiovasculaire,Accélération anormale du rythme cardiaque.
+Tachycardie aiguë,Cardiovasculaire,Accélération anormale du rythme cardiaque. Évolution aiguë.
+Tachycardie chronique,Cardiovasculaire,Accélération anormale du rythme cardiaque. Évolution chronique.
+Tachycardie sévère,Cardiovasculaire,Accélération anormale du rythme cardiaque. Évolution sévère.
+Tachycardie modérée,Cardiovasculaire,Accélération anormale du rythme cardiaque. Évolution modérée.
+Tachycardie légère,Cardiovasculaire,Accélération anormale du rythme cardiaque. Évolution légère.
+Tachycardie persistante,Cardiovasculaire,Accélération anormale du rythme cardiaque. Évolution persistante.
+Tachycardie récurrente,Cardiovasculaire,Accélération anormale du rythme cardiaque. Évolution récurrente.
+Bradycardie,Cardiovasculaire,Ralentissement anormal du rythme cardiaque.
+Bradycardie aiguë,Cardiovasculaire,Ralentissement anormal du rythme cardiaque. Évolution aiguë.
+Bradycardie chronique,Cardiovasculaire,Ralentissement anormal du rythme cardiaque. Évolution chronique.
+Bradycardie sévère,Cardiovasculaire,Ralentissement anormal du rythme cardiaque. Évolution sévère.
+Bradycardie modérée,Cardiovasculaire,Ralentissement anormal du rythme cardiaque. Évolution modérée.
+Bradycardie légère,Cardiovasculaire,Ralentissement anormal du rythme cardiaque. Évolution légère.
+Bradycardie persistante,Cardiovasculaire,Ralentissement anormal du rythme cardiaque. Évolution persistante.
+Bradycardie récurrente,Cardiovasculaire,Ralentissement anormal du rythme cardiaque. Évolution récurrente.
+Toux,Respiratoire,Expiration brutale visant à dégager les voies respiratoires.
+Toux aiguë,Respiratoire,Expiration brutale visant à dégager les voies respiratoires. Évolution aiguë.
+Toux chronique,Respiratoire,Expiration brutale visant à dégager les voies respiratoires. Évolution chronique.
+Toux sévère,Respiratoire,Expiration brutale visant à dégager les voies respiratoires. Évolution sévère.
+Toux modérée,Respiratoire,Expiration brutale visant à dégager les voies respiratoires. Évolution modérée.
+Toux légère,Respiratoire,Expiration brutale visant à dégager les voies respiratoires. Évolution légère.
+Toux persistante,Respiratoire,Expiration brutale visant à dégager les voies respiratoires. Évolution persistante.
+Toux récurrente,Respiratoire,Expiration brutale visant à dégager les voies respiratoires. Évolution récurrente.
+Dyspnée,Respiratoire,Difficulté ou gêne respiratoire.
+Dyspnée aiguë,Respiratoire,Difficulté ou gêne respiratoire. Évolution aiguë.
+Dyspnée chronique,Respiratoire,Difficulté ou gêne respiratoire. Évolution chronique.
+Dyspnée sévère,Respiratoire,Difficulté ou gêne respiratoire. Évolution sévère.
+Dyspnée modérée,Respiratoire,Difficulté ou gêne respiratoire. Évolution modérée.
+Dyspnée légère,Respiratoire,Difficulté ou gêne respiratoire. Évolution légère.
+Dyspnée persistante,Respiratoire,Difficulté ou gêne respiratoire. Évolution persistante.
+Dyspnée récurrente,Respiratoire,Difficulté ou gêne respiratoire. Évolution récurrente.
+Apnée,Respiratoire,Arrêt temporaire de la respiration.
+Apnée aiguë,Respiratoire,Arrêt temporaire de la respiration. Évolution aiguë.
+Apnée chronique,Respiratoire,Arrêt temporaire de la respiration. Évolution chronique.
+Apnée sévère,Respiratoire,Arrêt temporaire de la respiration. Évolution sévère.
+Apnée modérée,Respiratoire,Arrêt temporaire de la respiration. Évolution modérée.
+Apnée légère,Respiratoire,Arrêt temporaire de la respiration. Évolution légère.
+Apnée persistante,Respiratoire,Arrêt temporaire de la respiration. Évolution persistante.
+Apnée récurrente,Respiratoire,Arrêt temporaire de la respiration. Évolution récurrente.
+Nausée,Digestif,Envie de vomir avec malaise digestif.
+Nausée aiguë,Digestif,Envie de vomir avec malaise digestif. Évolution aiguë.
+Nausée chronique,Digestif,Envie de vomir avec malaise digestif. Évolution chronique.
+Nausée sévère,Digestif,Envie de vomir avec malaise digestif. Évolution sévère.
+Nausée modérée,Digestif,Envie de vomir avec malaise digestif. Évolution modérée.
+Nausée légère,Digestif,Envie de vomir avec malaise digestif. Évolution légère.
+Nausée persistante,Digestif,Envie de vomir avec malaise digestif. Évolution persistante.
+Nausée récurrente,Digestif,Envie de vomir avec malaise digestif. Évolution récurrente.
+Vomissement,Digestif,Rejet du contenu gastrique par la bouche.
+Vomissement aiguë,Digestif,Rejet du contenu gastrique par la bouche. Évolution aiguë.
+Vomissement chronique,Digestif,Rejet du contenu gastrique par la bouche. Évolution chronique.
+Vomissement sévère,Digestif,Rejet du contenu gastrique par la bouche. Évolution sévère.
+Vomissement modérée,Digestif,Rejet du contenu gastrique par la bouche. Évolution modérée.
+Vomissement légère,Digestif,Rejet du contenu gastrique par la bouche. Évolution légère.
+Vomissement persistante,Digestif,Rejet du contenu gastrique par la bouche. Évolution persistante.
+Vomissement récurrente,Digestif,Rejet du contenu gastrique par la bouche. Évolution récurrente.
+Diarrhée,Digestif,Augmentation de la fréquence et de la liquidité des selles.
+Diarrhée aiguë,Digestif,Augmentation de la fréquence et de la liquidité des selles. Évolution aiguë.
+Diarrhée chronique,Digestif,Augmentation de la fréquence et de la liquidité des selles. Évolution chronique.
+Diarrhée sévère,Digestif,Augmentation de la fréquence et de la liquidité des selles. Évolution sévère.
+Diarrhée modérée,Digestif,Augmentation de la fréquence et de la liquidité des selles. Évolution modérée.
+Diarrhée légère,Digestif,Augmentation de la fréquence et de la liquidité des selles. Évolution légère.
+Diarrhée persistante,Digestif,Augmentation de la fréquence et de la liquidité des selles. Évolution persistante.
+Diarrhée récurrente,Digestif,Augmentation de la fréquence et de la liquidité des selles. Évolution récurrente.
+Fièvre,Général,Élévation anormale de la température corporelle.
+Fièvre aiguë,Général,Élévation anormale de la température corporelle. Évolution aiguë.
+Fièvre chronique,Général,Élévation anormale de la température corporelle. Évolution chronique.
+Fièvre sévère,Général,Élévation anormale de la température corporelle. Évolution sévère.
+Fièvre modérée,Général,Élévation anormale de la température corporelle. Évolution modérée.
+Fièvre légère,Général,Élévation anormale de la température corporelle. Évolution légère.
+Fièvre persistante,Général,Élévation anormale de la température corporelle. Évolution persistante.
+Fièvre récurrente,Général,Élévation anormale de la température corporelle. Évolution récurrente.
+Fatigue,Général,Sensation persistante de manque d’énergie.
+Fatigue aiguë,Général,Sensation persistante de manque d’énergie. Évolution aiguë.
+Fatigue chronique,Général,Sensation persistante de manque d’énergie. Évolution chronique.
+Fatigue sévère,Général,Sensation persistante de manque d’énergie. Évolution sévère.
+Fatigue modérée,Général,Sensation persistante de manque d’énergie. Évolution modérée.
+Fatigue légère,Général,Sensation persistante de manque d’énergie. Évolution légère.
+Fatigue persistante,Général,Sensation persistante de manque d’énergie. Évolution persistante.
+Fatigue récurrente,Général,Sensation persistante de manque d’énergie. Évolution récurrente.
+Frissons,Général,Contractions musculaires involontaires liées au froid ou à la fièvre.
+Frissons aiguë,Général,Contractions musculaires involontaires liées au froid ou à la fièvre. Évolution aiguë.
+Frissons chronique,Général,Contractions musculaires involontaires liées au froid ou à la fièvre. Évolution chronique.
+Frissons sévère,Général,Contractions musculaires involontaires liées au froid ou à la fièvre. Évolution sévère.
+Frissons modérée,Général,Contractions musculaires involontaires liées au froid ou à la fièvre. Évolution modérée.
+Frissons légère,Général,Contractions musculaires involontaires liées au froid ou à la fièvre. Évolution légère.
+Frissons persistante,Général,Contractions musculaires involontaires liées au froid ou à la fièvre. Évolution persistante.
+Frissons récurrente,Général,Contractions musculaires involontaires liées au froid ou à la fièvre. Évolution récurrente.
+Anxiété,Psychologique,État de nervosité ou d’inquiétude excessive.
+Anxiété aiguë,Psychologique,État de nervosité ou d’inquiétude excessive. Évolution aiguë.
+Anxiété chronique,Psychologique,État de nervosité ou d’inquiétude excessive. Évolution chronique.
+Anxiété sévère,Psychologique,État de nervosité ou d’inquiétude excessive. Évolution sévère.
+Anxiété modérée,Psychologique,État de nervosité ou d’inquiétude excessive. Évolution modérée.
+Anxiété légère,Psychologique,État de nervosité ou d’inquiétude excessive. Évolution légère.
+Anxiété persistante,Psychologique,État de nervosité ou d’inquiétude excessive. Évolution persistante.
+Anxiété récurrente,Psychologique,État de nervosité ou d’inquiétude excessive. Évolution récurrente.
+Dépression,Psychologique,Tristesse persistante avec perte d’intérêt.
+Dépression aiguë,Psychologique,Tristesse persistante avec perte d’intérêt. Évolution aiguë.
+Dépression chronique,Psychologique,Tristesse persistante avec perte d’intérêt. Évolution chronique.
+Dépression sévère,Psychologique,Tristesse persistante avec perte d’intérêt. Évolution sévère.
+Dépression modérée,Psychologique,Tristesse persistante avec perte d’intérêt. Évolution modérée.
+Dépression légère,Psychologique,Tristesse persistante avec perte d’intérêt. Évolution légère.
+Dépression persistante,Psychologique,Tristesse persistante avec perte d’intérêt. Évolution persistante.
+Dépression récurrente,Psychologique,Tristesse persistante avec perte d’intérêt. Évolution récurrente.
+Insomnie,Psychologique,Difficulté à s’endormir ou à rester endormi.
+Insomnie aiguë,Psychologique,Difficulté à s’endormir ou à rester endormi. Évolution aiguë.
+Insomnie chronique,Psychologique,Difficulté à s’endormir ou à rester endormi. Évolution chronique.
+Insomnie sévère,Psychologique,Difficulté à s’endormir ou à rester endormi. Évolution sévère.
+Insomnie modérée,Psychologique,Difficulté à s’endormir ou à rester endormi. Évolution modérée.
+Insomnie légère,Psychologique,Difficulté à s’endormir ou à rester endormi. Évolution légère.
+Insomnie persistante,Psychologique,Difficulté à s’endormir ou à rester endormi. Évolution persistante.
+Insomnie récurrente,Psychologique,Difficulté à s’endormir ou à rester endormi. Évolution récurrente.
