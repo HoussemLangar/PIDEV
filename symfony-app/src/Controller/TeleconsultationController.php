@@ -41,12 +41,17 @@ class TeleconsultationController extends AbstractController
         $ongoing = $this->repository->findOngoing($user);
         $past = $this->repository->findPast($user);
         $stats = $this->repository->getStatistics($user);
+        $canStartMap = [];
+        foreach (array_merge($upcoming, $ongoing) as $consultation) {
+            $canStartMap[$consultation->getId()] = $this->canStartConsultation($consultation);
+        }
 
         return $this->render('teleconsultation/index.html.twig', [
             'upcoming' => $upcoming,
             'ongoing' => $ongoing,
             'past' => $past,
             'stats' => $stats,
+            'canStartMap' => $canStartMap,
         ]);
     }
 
@@ -173,6 +178,8 @@ class TeleconsultationController extends AbstractController
         return $this->render('teleconsultation/join.html.twig', [
             'consultation' => $consultation,
             'roomUrl' => $roomUrl,
+            'jitsiServerUrl' => $this->jitsiService->getServerUrl(),
+            'jitsiServerDomain' => $this->jitsiService->getServerDomain(),
         ]);
     }
 
@@ -180,12 +187,16 @@ class TeleconsultationController extends AbstractController
      * End a teleconsultation
      */
     #[Route('/{id}/end', name: 'end', methods: ['POST'])]
-    public function end(Teleconsultation $consultation): Response
+    public function end(Request $request, Teleconsultation $consultation): Response
     {
         $this->denyAccessUnlessTeleconsultationRole();
 
         $user = $this->getUser();
         assert($user instanceof User);
+
+        if (!$this->isCsrfTokenValid('teleconsultation_end' . $consultation->getId(), $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Jeton CSRF invalide.');
+        }
 
         if ($consultation->getInitiator() !== $user && $consultation->getRecipient() !== $user) {
             throw $this->createAccessDeniedException();
@@ -215,12 +226,16 @@ class TeleconsultationController extends AbstractController
      * Cancel a consultation
      */
     #[Route('/{id}/cancel', name: 'cancel', methods: ['POST'])]
-    public function cancel(Teleconsultation $consultation): Response
+    public function cancel(Request $request, Teleconsultation $consultation): Response
     {
         $this->denyAccessUnlessTeleconsultationRole();
 
         $user = $this->getUser();
         assert($user instanceof User);
+
+        if (!$this->isCsrfTokenValid('teleconsultation_cancel' . $consultation->getId(), $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Jeton CSRF invalide.');
+        }
 
         if ($consultation->getInitiator() !== $user) {
             throw $this->createAccessDeniedException('Seul l\'initiateur peut annuler une consultation.');
@@ -232,6 +247,11 @@ class TeleconsultationController extends AbstractController
         }
 
         $consultation->setStatus('cancelled');
+        $consultation->setEndedAt(new \DateTimeImmutable());
+        if ($consultation->getStartedAt()) {
+            $duration = $consultation->getEndedAt()->getTimestamp() - $consultation->getStartedAt()->getTimestamp();
+            $consultation->setDurationSeconds($duration);
+        }
         $this->em->flush();
 
         $this->addFlash('success', 'Consultation annulée.');

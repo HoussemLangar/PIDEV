@@ -23,7 +23,7 @@
     </div>
 </div>
 
-<script src="https://meet.jit.si/external_api.js"></script>
+<script src="{{ jitsiServerUrl }}/external_api.js"></script>
 <script>
     // Extract room name
     const roomName = "{{ consultation.roomName }}";
@@ -54,7 +54,7 @@
     };
 
     // Initialize Jitsi
-    const api = new JitsiMeetExternalAPI('meet.jit.si', options);
+    const api = new JitsiMeetExternalAPI('{{ jitsiServerDomain }}', options);
 
     // Event listeners
     api.addEventListener('videoConferenceJoined', function(event) {

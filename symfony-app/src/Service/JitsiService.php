@@ -123,7 +123,7 @@ class JitsiService
         return $this->serverUrl;
     }
 
-    private function getServerDomain(): string
+    public function getServerDomain(): string
     {
         $host = parse_url($this->serverUrl, PHP_URL_HOST);
         if (!empty($host)) {

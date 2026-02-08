@@ -119,7 +119,6 @@
 
                 <!-- Upcoming -->
                 <div class="tab-pane fade" id="upcoming" role="tabpanel">
-                    {% set now = date('now') %}
                     {% if upcoming is empty %}
                         <div class="alert alert-info">
                             Aucune consultation programmée.
@@ -150,8 +149,7 @@
                                             {% endif %}
                                         </div>
                                         <div class="card-footer">
-                                            {% set allowStartAt = consultation.scheduledAt|date_modify('-5 minutes') %}
-                                            {% if allowStartAt <= now %}
+                                            {% if canStartMap[consultation.id]|default(false) %}
                                                 <a href="{{ path('app_teleconsultation_join', {id: consultation.id}) }}" class="btn btn-sm btn-success">
                                                     <i class="bi bi-camera-video"></i> Rejoindre
                                                 </a>
@@ -162,6 +160,7 @@
                                             {% if consultation.initiator == app.user %}
                                                 <form action="{{ path('app_teleconsultation_cancel', {id: consultation.id}) }}" 
                                                       method="POST" style="display:inline;">
+                                                    <input type="hidden" name="_token" value="{{ csrf_token('teleconsultation_cancel' ~ consultation.id) }}">
                                                     <button type="submit" class="btn btn-sm btn-danger" 
                                                             onclick="return confirm('Annuler cette consultation?')">
                                                         <i class="bi bi-x-circle"></i> Annuler
@@ -205,6 +204,8 @@
                                             <td>
                                                 {% if consultation.completed %}
                                                     <span class="badge bg-success">Complétée</span>
+                                                {% elseif consultation.pending %}
+                                                    <span class="badge bg-warning text-dark">En attente</span>
                                                 {% else %}
                                                     <span class="badge bg-danger">Annulée</span>
                                                 {% endif %}
@@ -212,7 +213,13 @@
                                             <td>
                                                 {{ consultation.durationFormatted }}
                                             </td>
-                                            <td>{{ consultation.endedAt|date('d/m/Y H:i') }}</td>
+                                            <td>
+                                                {% if consultation.endedAt %}
+                                                    {{ consultation.endedAt|date('d/m/Y H:i') }}
+                                                {% else %}
+                                                    {{ consultation.scheduledAt|date('d/m/Y H:i') }}
+                                                {% endif %}
+                                            </td>
                                             <td>
                                                 <a href="{{ path('app_teleconsultation_show', {id: consultation.id}) }}" class="btn btn-sm btn-info">
                                                     <i class="bi bi-eye"></i>

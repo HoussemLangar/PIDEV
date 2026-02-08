@@ -42,9 +42,11 @@ class TeleconsultationRepository extends ServiceEntityRepository
     {
         return $this->createQueryBuilder('t')
             ->where('(t.initiator = :user OR t.recipient = :user)')
-            ->andWhere('t.status IN (:statuses)')
+            ->andWhere('(t.status IN (:statuses) OR (t.status = :pending AND t.scheduledAt < :now))')
             ->setParameter('user', $user)
             ->setParameter('statuses', ['completed', 'cancelled'])
+            ->setParameter('pending', 'pending')
+            ->setParameter('now', new \DateTimeImmutable())
             ->orderBy('t.endedAt', 'DESC')
             ->setMaxResults($limit)
             ->getQuery()

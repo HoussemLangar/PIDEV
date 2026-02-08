@@ -88,6 +88,7 @@
 
                     {% if consultation.pending and isInitiator %}
                         <form action="{{ path('app_teleconsultation_cancel', {id: consultation.id}) }}" method="POST" style="display:inline;">
+                            <input type="hidden" name="_token" value="{{ csrf_token('teleconsultation_cancel' ~ consultation.id) }}">
                             <button type="submit" class="btn btn-danger" onclick="return confirm('Êtes-vous sûr?')">
                                 <i class="bi bi-x-circle"></i> Annuler
                             </button>
@@ -96,6 +97,7 @@
 
                     {% if consultation.ongoing %}
                         <form action="{{ path('app_teleconsultation_end', {id: consultation.id}) }}" method="POST" style="display:inline;">
+                            <input type="hidden" name="_token" value="{{ csrf_token('teleconsultation_end' ~ consultation.id) }}">
                             <button type="submit" class="btn btn-warning" onclick="return confirm('Terminer la consultation?')">
                                 <i class="bi bi-stop-circle"></i> Terminer
                             </button>
