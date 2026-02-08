@@ -82,6 +82,10 @@ class SubscriptionGateSubscriber implements EventSubscriberInterface
             $restrictedInDiscovery = [
                 'front_content_',
                 'api_content_',
+                'front_pharmacy_',
+                'api_pharmacies_',
+                'front_pharmacien_',
+                'api_pharmacien_',
                 'admin_',
             ];
             foreach ($restrictedInDiscovery as $prefix) {

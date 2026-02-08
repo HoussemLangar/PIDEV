@@ -35,6 +35,15 @@ class Pharmacy
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private ?string $horaires = null;
 
+    #[ORM\Column(type: 'decimal', precision: 10, scale: 6, nullable: true)]
+    private ?string $latitude = null;
+
+    #[ORM\Column(type: 'decimal', precision: 10, scale: 6, nullable: true)]
+    private ?string $longitude = null;
+
+    #[ORM\Column(type: 'boolean', options: ['default' => true])]
+    private bool $isActive = true;
+
     #[ORM\Column(type: 'datetime', options: ['default' => 'CURRENT_TIMESTAMP'])]
     private \DateTimeInterface $createdAt;
 
@@ -46,8 +55,8 @@ class Pharmacy
 
     public function __construct()
     {
-        $this->createdAt = new \DateTimeImmutable();
-        $this->updatedAt = new \DateTimeImmutable();
+        $this->createdAt = new \DateTime();
+        $this->updatedAt = new \DateTime();
         $this->stocks = new ArrayCollection();
     }
 
@@ -64,6 +73,12 @@ class Pharmacy
     public function setEmail(?string $email): void { $this->email = $email; }
     public function getHoraires(): ?string { return $this->horaires; }
     public function setHoraires(?string $horaires): void { $this->horaires = $horaires; }
+    public function getLatitude(): ?string { return $this->latitude; }
+    public function setLatitude(?string $latitude): void { $this->latitude = $latitude; }
+    public function getLongitude(): ?string { return $this->longitude; }
+    public function setLongitude(?string $longitude): void { $this->longitude = $longitude; }
+    public function isActive(): bool { return $this->isActive; }
+    public function setIsActive(bool $isActive): void { $this->isActive = $isActive; }
     public function getCreatedAt(): \DateTimeInterface { return $this->createdAt; }
     public function setCreatedAt(\DateTimeInterface $createdAt): void { $this->createdAt = $createdAt; }
     public function getUpdatedAt(): \DateTimeInterface { return $this->updatedAt; }

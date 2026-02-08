@@ -54,6 +54,12 @@
                     <li><a href="#quick-info">{{ 'nav.about'|trans }}</a></li>
                     <li><a href="#appointment-section">{{ 'nav.services'|trans }}</a></li>
                     <li><a href="{{ path('front_content_index') }}">{{ 'nav.blog'|trans }}</a></li>
+                    {% if app.user and app.user.subscriptionStatus == 'ACTIVE' and (app.user.subscriptionType ?? app.user.role) == 'ROLE_PATIENT' %}
+                        <li><a href="{{ path('front_pharmacy_index') }}">Pharmacies</a></li>
+                    {% endif %}
+                    {% if app.user and app.user.subscriptionStatus == 'ACTIVE' and (app.user.subscriptionType ?? app.user.role) == 'ROLE_PHARMACIEN' %}
+                        <li><a href="{{ path('front_pharmacien_dashboard') }}">Ma pharmacie</a></li>
+                    {% endif %}
                     <li><a href="#contact-section">{{ 'nav.contact'|trans }}</a></li>
                 </ul>
 
@@ -89,6 +95,11 @@
                         <a href="{{ path('app_appointments') }}" class="dropdown-item">
                             <i class="fas fa-calendar-check"></i> Rendez-vous
                         </a>
+                        {% if app.user and (app.user.subscriptionType ?? app.user.role) == 'ROLE_PHARMACIEN' %}
+                        <a href="{{ path('front_pharmacien_dashboard') }}" class="dropdown-item">
+                            <i class="fas fa-clinic-medical"></i> Ma pharmacie
+                        </a>
+                        {% endif %}
 
                         <div class="dropdown-divider"></div>
 
@@ -142,8 +153,62 @@
         </div>
     {% endif %}
 
+    <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+
     {% block javascripts %}
         <script>
+            (function () {
+                const container = document.getElementById('toastContainer');
+                const showToast = (type, message) => {
+                    if (!container || !message) return;
+                    const toast = document.createElement('div');
+                    toast.className = `toast toast-${type || 'info'}`;
+                    toast.innerHTML = `<span>${message}</span>`;
+                    container.appendChild(toast);
+                    requestAnimationFrame(() => toast.classList.add('show'));
+                    setTimeout(() => {
+                        toast.classList.remove('show');
+                        setTimeout(() => toast.remove(), 300);
+                    }, 3000);
+                };
+
+                window.showToast = showToast;
+
+                const originalFetch = window.fetch.bind(window);
+                window.fetch = async (...args) => {
+                    const options = args[1] || {};
+                    const method = (options.method || 'GET').toUpperCase();
+                    const skipToast = options.toast === false;
+                    const showLoader = options.loading === true && typeof window.setLoading === 'function';
+                    if (showLoader) window.setLoading(true);
+                    let response;
+                    try {
+                        response = await originalFetch(...args);
+                    } finally {
+                        if (showLoader) window.setLoading(false);
+                    }
+
+                    if (!skipToast && method !== 'GET') {
+                        const contentType = response.headers.get('content-type') || '';
+                        let payload = null;
+                        if (contentType.includes('application/json')) {
+                            try {
+                                payload = await response.clone().json();
+                            } catch (_) {}
+                        }
+                        if (response.ok) {
+                            const msg = payload?.message || 'Opération réussie.';
+                            showToast('success', msg);
+                        } else {
+                            const msg = payload?.message || payload?.error || response.statusText || 'Erreur.';
+                            showToast('error', msg);
+                        }
+                    }
+
+                    return response;
+                };
+            })();
+
             (function () {
                 const loader = document.getElementById('globalLoader');
                 if (!loader) return;
@@ -155,6 +220,7 @@
                     loader.classList.remove('show');
                     loader.setAttribute('aria-hidden', 'true');
                 };
+                window.setLoading = (on) => (on ? show() : hide());
 
                 document.querySelectorAll('form').forEach((form) => {
                     if (form.dataset.ajax === '1') return;
@@ -218,7 +284,7 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    alert(data.message);
+                    window.showToast?.('success', data.message || 'Inscription réussie.');
                     window.location.href = data.redirect || "/";
                 }
 
@@ -234,6 +300,7 @@
                         }
                     }
                 }
+                window.showToast?.('error', 'Erreur lors de l’inscription.');
             }
         });
         }

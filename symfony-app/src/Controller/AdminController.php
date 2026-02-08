@@ -1212,16 +1212,63 @@ class AdminController extends AbstractController
     }
 
     // ========== PHARMACIE ==========
-    #[Route('/pharmacies', name: 'admin_pharmacies')]
-    public function pharmacies(): Response
-    {
-        return $this->render('admin/pharmacies/index.html.twig');
+    #[Route('/admin/pharmacies', name: 'admin_pharmacies')]
+    public function pharmacies(
+        \App\Repository\PharmacyRepository $pharmacyRepository,
+        \App\Repository\ReservationMedicamentRepository $reservationRepository
+    ): Response {
+        $pharmacies = $pharmacyRepository->findBy([], ['createdAt' => 'DESC']);
+        $stats = [
+            'pharmacies_total' => count($pharmacies),
+            'pharmacies_active' => (int) $pharmacyRepository->createQueryBuilder('p')
+                ->select('COUNT(p.id)')
+                ->andWhere('p.isActive = 1')
+                ->getQuery()
+                ->getSingleScalarResult(),
+            'reservations_pending' => (int) $reservationRepository->createQueryBuilder('r')
+                ->select('COUNT(r.id)')
+                ->andWhere('r.statut = :s')
+                ->setParameter('s', 'en_attente')
+                ->getQuery()
+                ->getSingleScalarResult(),
+        ];
+
+        return $this->render('admin/pharmacies/index.html.twig', [
+            'pharmacies' => $pharmacies,
+            'stats' => $stats,
+        ]);
     }
 
-    #[Route('/medications', name: 'admin_medications')]
-    public function medications(): Response
+    #[Route('/admin/medications', name: 'admin_medications')]
+    public function medications(\App\Repository\MedicamentRepository $medicamentRepository): Response
     {
-        return $this->render('admin/medications/index.html.twig');
+        $medicaments = $medicamentRepository->findBy([], ['nom' => 'ASC']);
+        return $this->render('admin/medications/index.html.twig', [
+            'medicaments' => $medicaments,
+        ]);
+    }
+
+    #[Route('/admin/stocks', name: 'admin_stocks')]
+    public function stocks(
+        \App\Repository\StockPharmacyRepository $stockRepository,
+        \App\Repository\PharmacyRepository $pharmacyRepository,
+        \App\Repository\MedicamentRepository $medicamentRepository
+    ): Response {
+        $stocks = $stockRepository->createQueryBuilder('s')
+            ->leftJoin('s.pharmacie', 'p')
+            ->addSelect('p')
+            ->leftJoin('s.medicament', 'm')
+            ->addSelect('m')
+            ->orderBy('s.updatedAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+        $pharmacies = $pharmacyRepository->findBy([], ['nom' => 'ASC']);
+        $medicaments = $medicamentRepository->findBy([], ['nom' => 'ASC']);
+        return $this->render('admin/stocks/index.html.twig', [
+            'stocks' => $stocks,
+            'pharmacies' => $pharmacies,
+            'medicaments' => $medicaments,
+        ]);
     }
 
     // ========== TRACKER SANTÉ ==========

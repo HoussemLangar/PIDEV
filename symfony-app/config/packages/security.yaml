@@ -73,6 +73,10 @@ security:
         - { path: ^/api/content, roles: ROLE_USER }
         - { path: ^/admin/content, roles: ROLE_ADMIN }
         - { path: ^/admin/moderation, roles: ROLE_ADMIN }
+        - { path: ^/pharmacies, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/pharmacies, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/pharmacien, roles: ROLE_PHARMACIEN }
+        - { path: ^/api/pharmacien, roles: ROLE_PHARMACIEN }
         
         # Routes protégées (décommentez selon vos besoins)
         # - { path: ^/admin, roles: ROLE_ADMIN }

@@ -81,6 +81,10 @@
                     <i class="fas fa-pills"></i>
                     <span>{{ 'nav.medications'|trans }}</span>
                 </a>
+                <a href="{{ path('admin_stocks') }}" class="admin-nav-item {{ app.request.get('_route') starts with 'admin_stocks' ? 'active' : '' }}">
+                    <i class="fas fa-warehouse"></i>
+                    <span>Stocks</span>
+                </a>
                 
                 <div class="nav-section-title">{{ 'nav.tracker_section'|trans }}</div>
                 <a href="{{ path('admin_tracker') }}" class="admin-nav-item {{ app.request.get('_route') starts with 'admin_tracker' ? 'active' : '' }}">

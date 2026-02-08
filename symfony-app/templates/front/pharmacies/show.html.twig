@@ -1,0 +1,183 @@
+{% extends 'front/base.html.twig' %}
+
+{% block title %}{{ pharmacy.nom }}{% endblock %}
+
+{% block body %}
+<section class="content-page">
+    <div class="content-hero">
+        <div class="content-header">
+            <div>
+                <div class="profile-badge">Pharmacie</div>
+                <h1>{{ pharmacy.nom }}</h1>
+                <p>{{ pharmacy.adresse }}</p>
+            </div>
+            <div>
+                <a href="{{ path('front_pharmacy_index') }}" class="btn btn-secondary">Retour</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-section">
+        <div class="content-section-header">
+            <div class="content-section-title">
+                <h3>Comparer un médicament</h3>
+                <p>Recherche par nom ou code‑barres.</p>
+            </div>
+        </div>
+        <div class="content-section" style="margin-bottom:16px;">
+            <div class="content-section-header">
+                <div class="content-section-title">
+                    <h3>Médicaments disponibles</h3>
+                    <p>Liste du stock de cette pharmacie.</p>
+                </div>
+            </div>
+            <div id="pharmacyStockList" class="content-grid"></div>
+        </div>
+        <div class="content-filters">
+            <input type="text" id="medSearch" placeholder="Nom / code-barres">
+            <button class="btn btn-primary btn-xs" id="medSearchBtn">Rechercher</button>
+        </div>
+        <div id="medResults" class="content-grid"></div>
+        <div id="compareBox" class="content-section" style="margin-top:16px; display:none;">
+            <div class="content-section-header">
+                <div class="content-section-title">
+                    <h3>Comparateur</h3>
+                    <p>Prix et disponibilité</p>
+                </div>
+            </div>
+            <div id="compareList"></div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        (function () {
+            const medInput = document.getElementById('medSearch');
+            const searchBtn = document.getElementById('medSearchBtn');
+            const results = document.getElementById('medResults');
+            const pharmacyStockList = document.getElementById('pharmacyStockList');
+            const compareBox = document.getElementById('compareBox');
+            const compareList = document.getElementById('compareList');
+            const apiFetch = (url, options = {}) => fetch(url, { ...options, loading: true });
+
+            const renderMed = (m) => `
+                <div class="content-card">
+                    <div class="content-meta">
+                        <span class="content-pill">Médicament</span>
+                        <span>${m.type || ''}</span>
+                    </div>
+                    <h3>${m.nom}</h3>
+                    <p>${m.forme || ''} ${m.dosage || ''}</p>
+                    <div class="content-actions">
+                        <button class="btn btn-primary btn-xs" data-med="${m.id}">Comparer</button>
+                    </div>
+                </div>
+            `;
+
+            const loadMeds = async () => {
+                const q = medInput.value.trim();
+                const res = await apiFetch(`/api/pharmacies/medicaments/search?q=${encodeURIComponent(q)}`);
+                const data = await res.json();
+                results.innerHTML = '';
+                (data.items || []).forEach(m => results.insertAdjacentHTML('beforeend', renderMed(m)));
+            };
+
+            const loadPharmacyStocks = async () => {
+                const res = await apiFetch(`{{ path('api_pharmacies_pharmacy_stocks', {id: pharmacy.id}) }}`);
+                const data = await res.json();
+                pharmacyStockList.innerHTML = '';
+                (data.items || []).forEach(item => {
+                    pharmacyStockList.insertAdjacentHTML('beforeend', `
+                        <div class="content-card">
+                            <div class="content-meta">
+                                <span class="content-pill">Stock</span>
+                                <span>${item.type || ''}</span>
+                            </div>
+                            <h3>${item.medicament}</h3>
+                            <p>${item.forme || ''} ${item.dosage || ''}</p>
+                            <div class="content-actions">
+                                <span class="content-pill">${item.prix ?? 'N/A'} DT</span>
+                                <span>Stock: ${item.quantite}</span>
+                                <input type="number" min="1" value="1" class="reserve-qty" data-stock="${item.stock_id}">
+                                <button class="btn btn-primary btn-xs" type="button" data-stock="${item.stock_id}">Réserver</button>
+                            </div>
+                        </div>
+                    `);
+                });
+            };
+
+            const compare = async (id) => {
+                const res = await apiFetch(`/api/pharmacies/medicaments/${id}/compare`);
+                const data = await res.json();
+                compareList.innerHTML = '';
+                (data.items || []).forEach(item => {
+                    compareList.insertAdjacentHTML('beforeend', `
+                        <div class="content-card">
+                            <h4>${item.pharmacie}</h4>
+                            <p>${item.adresse}</p>
+                            <div class="content-actions">
+                                <span class="content-pill">${item.prix ?? 'N/A'} DT</span>
+                                <span>Stock: ${item.quantite}</span>
+                                <input type="number" min="1" value="1" class="reserve-qty" data-stock="${item.stock_id}">
+                                <button class="btn btn-primary btn-xs" type="button" data-stock="${item.stock_id}">Réserver</button>
+                            </div>
+                        </div>
+                    `);
+                });
+                compareBox.style.display = 'block';
+            };
+
+            searchBtn.addEventListener('click', loadMeds);
+            results.addEventListener('click', (e) => {
+                const btn = e.target.closest('button[data-med]');
+                if (!btn) return;
+                compare(btn.dataset.med);
+            });
+
+            compareList.addEventListener('click', async (e) => {
+                const btn = e.target.closest('button[data-stock]');
+                if (!btn) return;
+                const stockId = btn.dataset.stock;
+                const qtyInput = compareList.querySelector(`.reserve-qty[data-stock="${stockId}"]`);
+                const qty = qtyInput ? parseInt(qtyInput.value || '1', 10) : 1;
+                const res = await apiFetch('/api/pharmacies/reservations', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ stock_id: stockId, quantite: qty }),
+                });
+                let data = null;
+                try { data = await res.json(); } catch (_) {}
+                if (res.ok && (data?.success ?? true)) {
+                    window.showToast?.('success', data?.message || 'Réservation envoyée.');
+                } else {
+                    window.showToast?.('error', data?.message || 'Réservation impossible.');
+                }
+            });
+
+            pharmacyStockList.addEventListener('click', async (e) => {
+                const btn = e.target.closest('button[data-stock]');
+                if (!btn) return;
+                const stockId = btn.dataset.stock;
+                const qtyInput = pharmacyStockList.querySelector(`.reserve-qty[data-stock="${stockId}"]`);
+                const qty = qtyInput ? parseInt(qtyInput.value || '1', 10) : 1;
+                const res = await apiFetch('/api/pharmacies/reservations', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ stock_id: stockId, quantite: qty }),
+                });
+                let data = null;
+                try { data = await res.json(); } catch (_) {}
+                if (res.ok && (data?.success ?? true)) {
+                    window.showToast?.('success', data?.message || 'Réservation envoyée.');
+                } else {
+                    window.showToast?.('error', data?.message || 'Réservation impossible.');
+                }
+            });
+
+            loadPharmacyStocks();
+        })();
+    </script>
+{% endblock %}

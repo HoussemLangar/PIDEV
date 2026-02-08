@@ -8,3 +8,8 @@ api_appointments_doctor_status:
     path: /api/appointments/{id}/doctor-status
     controller: App\Controller\AppointmentController::doctorStatus
     methods: [POST]
+
+api_pharmacies_pharmacy_stocks:
+    path: /api/pharmacies/{id}/stocks
+    controller: App\Controller\FrontOffice\PharmacyApiController::pharmacyStocks
+    methods: [GET]
