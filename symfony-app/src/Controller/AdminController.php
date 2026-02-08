@@ -7,6 +7,7 @@ use App\Form\AdminUserType;
 use App\Form\AdminUserResetPasswordType;
 use App\Entity\Facture;
 use App\Repository\AbonnementRepository;
+use App\Repository\ContenuRepository;
 use App\Repository\SuspiciousLoginRepository;
 use App\Repository\UserSessionRepository;
 use App\Repository\UserRepository;
@@ -34,6 +35,7 @@ class AdminController extends AbstractController
     public function dashboard(
         UserRepository $userRepository,
         AbonnementRepository $abonnementRepository,
+        ContenuRepository $contenuRepository,
         SuspiciousLoginRepository $suspiciousLoginRepository,
         EntityManagerInterface $em
     ): Response
@@ -107,7 +109,7 @@ class AdminController extends AbstractController
         $pendingValidations = [
             'professionals' => $validationStats['adminPending'],
             'pharmacies' => 0,
-            'articles' => 0,
+            'articles' => $contenuRepository->countPending(),
             'reports' => 0,
         ];
 
@@ -1227,19 +1229,6 @@ class AdminController extends AbstractController
     public function tracker(): Response
     {
         return $this->render('admin/tracker/index.html.twig');
-    }
-
-    // ========== CONTENU ==========
-    #[Route('/content', name: 'admin_content')]
-    public function content(): Response
-    {
-        return $this->render('admin/content/index.html.twig');
-    }
-
-    #[Route('/moderation', name: 'admin_moderation')]
-    public function moderation(): Response
-    {
-        return $this->render('admin/moderation/index.html.twig');
     }
 
     // ========== SYSTÈME ==========

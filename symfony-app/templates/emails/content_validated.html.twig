@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="fr">
+<body style="font-family:Arial, sans-serif; background:#f8fafc; padding:20px;">
+    <div style="max-width:600px; margin:0 auto; background:#ffffff; border-radius:12px; padding:24px;">
+        <h2 style="margin:0 0 12px; color:#0f172a;">Contenu validé 🎉</h2>
+        <p style="margin:0 0 12px; color:#334155;">
+            Bonjour {{ user.fullName ?? user.email }},
+        </p>
+        <p style="margin:0 0 12px; color:#334155;">
+            Votre contenu <strong>{{ contenu.titre }}</strong> a été validé par l’administrateur.
+        </p>
+        <p style="margin:0; color:#64748b; font-size:13px;">
+            Merci d’utiliser SANTÉA.
+        </p>
+    </div>
+</body>
+</html>

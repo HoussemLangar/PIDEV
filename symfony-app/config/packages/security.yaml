@@ -69,6 +69,10 @@ security:
         - { path: ^/appointments, roles: ROLE_USER }
         - { path: ^/rendez-vous, roles: ROLE_USER }
         - { path: ^/api/appointments, roles: ROLE_USER }
+        - { path: ^/contenus, roles: ROLE_USER }
+        - { path: ^/api/content, roles: ROLE_USER }
+        - { path: ^/admin/content, roles: ROLE_ADMIN }
+        - { path: ^/admin/moderation, roles: ROLE_ADMIN }
         
         # Routes protégées (décommentez selon vos besoins)
         # - { path: ^/admin, roles: ROLE_ADMIN }
