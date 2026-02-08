@@ -24,15 +24,30 @@ class SanteQuotidienneController extends AbstractController
     #[Route('', name: 'app_sante_quotidienne_index', methods: ['GET'])]
     public function index(SanteQuotidienneRepository $repository): Response
     {
-        // On récupère uniquement les entrées de l'utilisateur connecté
-        $santes = $repository->findBy(
-            ['user' => $this->getUser()],
-            ['date' => 'DESC']
-        );
+        $sante = new SanteQuotidienne();
 
-        return $this->render('sante_quotidienne/index.html.twig', [
+        $form = $this->createForm(SanteQuotidienneType::class, $sante);
+
+        // Récupère les entrées de l'utilisateur connecté pour affichage et actions
+        $santes = $repository->findBy([
+            'user' => $this->getUser(),
+        ], ['date' => 'DESC']);
+
+        // Moyenne de sommeil pour l'utilisateur connecté
+        $averageSommeil = $repository->getAverageSommeilForUser($this->getUser());
+
+        // Statistiques pour les boîtes d'action
+        $moodStats = $repository->getMoodStatistics($this->getUser());
+        $activityStats = $repository->getActivityStatistics($this->getUser());
+        $nutritionStats = $repository->getNutritionStatistics($this->getUser());
+
+        return $this->render('front/santequotidienne/form.html.twig', [
+            'form' => $form->createView(),
             'santes' => $santes,
-            'controller_name' => 'SanteQuotidienneController',
+            'averageSommeil' => $averageSommeil,
+            'moodStats' => $moodStats,
+            'activityStats' => $activityStats,
+            'nutritionStats' => $nutritionStats,
         ]);
     }
 

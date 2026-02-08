@@ -173,4 +173,71 @@ class SymptomeQuotidienRepository extends ServiceEntityRepository
 
         return $qb->getQuery()->getResult();
     }
+
+    /**
+     * Obtenir les statistiques des patients qui enregistrent des symptômes
+     */
+    public function getUserSymptomStatistics(): array
+    {
+        $conn = $this->getEntityManager()->getConnection();
+        
+        $sql = "
+            SELECT 
+                p.id as patient_id,
+                u.email as user_email,
+                u.nom as patient_nom,
+                u.prenom as patient_prenom,
+                COUNT(sq.id) as total_symptoms,
+                COUNT(DISTINCT sq.date_symptome) as days_tracked,
+                AVG(sq.intensite) as avg_intensity,
+                MAX(sq.date_symptome) as last_symptom_date
+            FROM symptomes_quotidiens sq
+            INNER JOIN patients p ON sq.patient_id = p.id
+            INNER JOIN users u ON p.user_id = u.id
+            GROUP BY p.id, u.email, u.nom, u.prenom
+            ORDER BY total_symptoms DESC
+        ";
+        
+        $results = $conn->executeQuery($sql)->fetchAllAssociative();
+        
+        // Formater les résultats
+        foreach ($results as &$result) {
+            $nom = trim($result['patient_nom'] ?? '');
+            $prenom = trim($result['patient_prenom'] ?? '');
+            $result['patient_name'] = !empty($nom) || !empty($prenom) 
+                ? trim($nom . ' ' . $prenom) 
+                : 'Patient #' . $result['patient_id'];
+                
+            // Convertir last_symptom_date en DateTime
+            if ($result['last_symptom_date']) {
+                $result['last_symptom_date'] = new \DateTime($result['last_symptom_date']);
+            }
+        }
+        
+        return $results;
+    }
+
+    /**
+     * Obtenir les symptômes les plus courants trackés par tous les patients
+     */
+    public function getMostCommonSymptoms(int $limit = 10): array
+    {
+        $conn = $this->getEntityManager()->getConnection();
+        
+        $sql = "
+            SELECT 
+                sl.nom as symptom_name,
+                sl.categorie as category,
+                COUNT(sq.id) as count
+            FROM symptomes_quotidiens sq
+            INNER JOIN symptomes_liste sl ON sq.symptome_id = sl.id
+            GROUP BY sl.id, sl.nom, sl.categorie
+            ORDER BY count DESC
+            LIMIT " . (int)$limit . "
+        ";
+        
+        $results = $conn->executeQuery($sql)->fetchAllAssociative();
+        
+        return $results;
+    }
 }

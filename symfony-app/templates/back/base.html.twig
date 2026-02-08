@@ -9,6 +9,8 @@
         <link rel="stylesheet" href="{{ asset('css/style.css') }}">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     {% endblock %}
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body class="admin-body">
     
@@ -81,10 +83,6 @@
                 </a>
                 
                 <div class="nav-section-title">TRACKER SANTÉ</div>
-                <a href="{{ path('admin_analytics') }}" class="admin-nav-item {{ app.request.get('_route') starts with 'admin_analytics' ? 'active' : '' }}">
-                    <i class="fas fa-chart-area"></i>
-                    <span>Statistiques tracker</span>
-                </a>
                 <a href="{{ path('app_symptome_liste_index') }}" class="admin-nav-item {{ app.request.get('_route') starts with 'app_symptome_liste' ? 'active' : '' }}">
                     <i class="fas fa-stethoscope"></i>
                     <span>Symptomes</span>

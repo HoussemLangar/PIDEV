@@ -71,6 +71,17 @@
                         <span class="stat-change">Ajoutés récemment</span>
                     </div>
                 </div>
+
+                <div class="stat-card-admin">
+                    <div class="stat-icon-box" style="background: linear-gradient(135deg, #9B59B6, #8E44AD);">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Patients actifs</span>
+                        <span class="stat-value">{{ stats.active_patients }}</span>
+                        <span class="stat-change">Trackent leurs symptômes</span>
+                    </div>
+                </div>
             </section>
 
             <!-- Add/Edit Symptom Form -->
@@ -173,7 +184,7 @@
                         </p>
                     </div>
                 {% else %}
-                    <div class="admin-table-container">
+                    <div class="admin-table-container" style="max-height: 500px; overflow-y: auto;">
                         <table class="admin-table">
                             <thead>
                                 <tr>
@@ -216,6 +227,84 @@
                 {% endif %}
             </section>
 
+            <!-- Section Statistiques des patients -->
+            <section class="admin-section" style="margin-top: 30px;">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-chart-pie"></i>
+                        Symptômes les plus courants
+                    </h2>
+                </div>
+
+                {% if most_common_symptoms is defined and most_common_symptoms|length > 0 %}
+                    <div style="max-width: 600px; margin: 0 auto; padding: 30px;">
+                        <canvas id="symptomsChart"></canvas>
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-chart-pie" style="font-size: 3rem; color: #ccc; margin-bottom: 15px;"></i>
+                        <p>Aucun symptôme enregistré</p>
+                    </div>
+                {% endif %}
+            </section>
+
+            <!-- Section Statistiques des patients -->
+            <section class="admin-section" style="margin-top: 30px;">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-users"></i>
+                        Patients qui enregistrent des symptômes
+                    </h2>
+                    <div class="section-actions">
+                        <a href="{{ path('app_patient_stats_export') }}" class="btn-secondary">
+                            <i class="fas fa-download"></i> Exporter CSV
+                        </a>
+                    </div>
+                </div>
+
+                {% if user_stats is defined and user_stats|length > 0 %}
+                    <div class="table-container">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Patient</th>
+                                    <th>Email</th>
+                                    <th>Total symptômes</th>
+                                    <th>Jours de suivi</th>
+                                    <th>Intensité moyenne</th>
+                                    <th>Dernier enregistrement</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in user_stats %}
+                                    <tr>
+                                        <td><strong>{{ user.patient_name|default('N/A') }}</strong></td>
+                                        <td>{{ user.user_email }}</td>
+                                        <td>
+                                            <span class="badge" style="background: linear-gradient(135deg, #40C4FF, #0288D1); color: white; padding: 5px 10px; border-radius: 12px;">
+                                                {{ user.total_symptoms }}
+                                            </span>
+                                        </td>
+                                        <td>{{ user.days_tracked }} jours</td>
+                                        <td>
+                                            <span class="intensity-badge" style="background: {% if user.avg_intensity < 4 %}#4CAF50{% elseif user.avg_intensity < 7 %}#FF9800{% else %}#f44336{% endif %}; color: white; padding: 3px 8px; border-radius: 8px; font-size: 0.9rem;">
+                                                {{ user.avg_intensity|number_format(1) }}/10
+                                            </span>
+                                        </td>
+                                        <td>{{ user.last_symptom_date|date('d/m/Y') }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-user-slash" style="font-size: 3rem; color: #ccc; margin-bottom: 15px;"></i>
+                        <p>Aucun patient n'a encore enregistré de symptômes</p>
+                    </div>
+                {% endif %}
+            </section>
+
         </main>
     </div>
 
@@ -239,6 +328,65 @@
                 errorMessages.forEach(error => error.remove());
             }
         });
+
+        // Chart for most common symptoms
+        {% if most_common_symptoms is defined and most_common_symptoms|length > 0 %}
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('symptomsChart').getContext('2d');
+            
+            const symptomData = {
+                labels: [
+                    {% for symptom in most_common_symptoms %}
+                        '{{ symptom.symptom_name|e('js') }}'{{ loop.last ? '' : ',' }}
+                    {% endfor %}
+                ],
+                datasets: [{
+                    data: [
+                        {% for symptom in most_common_symptoms %}
+                            {{ symptom.count }}{{ loop.last ? '' : ',' }}
+                        {% endfor %}
+                    ],
+                    backgroundColor: [
+                        '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
+                        '#FF9F40', '#FF6384', '#C9CBCF', '#4BC0C0', '#FF6384'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            };
+
+            new Chart(ctx, {
+                type: 'pie',
+                data: symptomData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 15,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return label + ': ' + value + ' (' + percentage + '%)';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+        {% endif %}
     </script>
 
 {% endblock %}

@@ -58,10 +58,51 @@ final class AdminController extends AbstractController
     }
 
     #[Route('/analytics', name: 'admin_analytics')]
-    public function analytics(): Response
+    public function analytics(
+        \App\Repository\SymptomeListeRepository $symptomeListeRepository,
+        \App\Repository\SymptomeQuotidienRepository $symptomeQuotidienRepository
+    ): Response
     {
-        return $this->render('admin/analytics.html.twig', [
-            'title' => 'Analyses & Statistiques'
+        // Créer un formulaire vide pour l'ajout de symptômes
+        $symptome = new \App\Entity\SymptomeListe();
+        
+        // Récupérer les catégories pour le formulaire
+        $categories = $symptomeListeRepository->findDistinctCategories();
+        $categoryChoices = [];
+        foreach ($categories as $category) {
+            $categoryChoices[$category] = $category;
+        }
+        
+        $form = $this->createForm(\App\Form\SymptomeListeType::class, $symptome, [
+            'categories' => $categoryChoices
+        ]);
+        
+        // Récupérer les statistiques pour la page
+        $stats = [
+            'total' => $symptomeListeRepository->getTotalCount(),
+            'categories' => $symptomeListeRepository->getCategoriesCount(),
+            'weekly' => $symptomeListeRepository->getWeeklyCount(),
+            'recent' => $symptomeListeRepository->getRecentCount(),
+        ];
+        
+        // Formater les catégories pour le template
+        $categoriesFormatted = [];
+        foreach ($categories as $category) {
+            $categoriesFormatted[] = ['categorie' => $category];
+        }
+        
+        // Récupérer tous les symptômes
+        $symptomes = $symptomeListeRepository->findAll();
+        
+        // Récupérer les statistiques des utilisateurs
+        $userStats = $symptomeQuotidienRepository->getUserSymptomStatistics();
+        
+        return $this->render('back/symptomes.html.twig', [
+            'stats' => $stats,
+            'categories' => $categoriesFormatted,
+            'symptomes' => $symptomes,
+            'form' => $form->createView(),
+            'user_stats' => $userStats,
         ]);
     }
 

@@ -19,6 +19,7 @@ final class AdminSymptomeController extends AbstractController
         private readonly SymptomeListeRepository $symptomeRepository,
         private readonly EntityManagerInterface $entityManager,
         private readonly CsrfTokenManagerInterface $csrfTokenManager,
+        private readonly \App\Repository\SymptomeQuotidienRepository $symptomeQuotidienRepository,
     ) {}
 
     #[Route('', name: 'app_symptome_liste_index', methods: ['GET', 'POST'])]
@@ -78,12 +79,23 @@ final class AdminSymptomeController extends AbstractController
         foreach ($categories as $category) {
             $categoriesForTemplate[] = ['categorie' => $category];
         }
+        
+        // Get user statistics
+        $userStats = $this->symptomeQuotidienRepository->getUserSymptomStatistics();
+        
+        // Add active patients count to stats
+        $stats['active_patients'] = count($userStats);
+        
+        // Get most common symptoms
+        $mostCommonSymptoms = $this->symptomeQuotidienRepository->getMostCommonSymptoms(10);
 
         return $this->render('back/symptomes.html.twig', [
             'symptomes' => $symptomes,
             'categories' => $categoriesForTemplate,
             'stats' => $stats,
             'form' => $form->createView(),
+            'user_stats' => $userStats,
+            'most_common_symptoms' => $mostCommonSymptoms,
         ]);
     }
 
@@ -223,6 +235,34 @@ final class AdminSymptomeController extends AbstractController
         $response->headers->set('Content-Type', 'text/csv');
         $response->headers->set('Content-Disposition', 'attachment; filename="symptomes-' . date('Y-m-d') . '.csv"');
 
+        return $response;
+    }
+
+    #[Route('/patient-stats/export', name: 'app_patient_stats_export', methods: ['GET'])]
+    public function exportPatientStats(): Response
+    {
+        $userStats = $this->symptomeQuotidienRepository->getUserSymptomStatistics();
+        
+        // Create CSV content with UTF-8 BOM for Excel compatibility
+        $csvContent = "\xEF\xBB\xBF"; // UTF-8 BOM
+        $csvContent .= '"Patient","Email","Total symptômes","Jours de suivi","Intensité moyenne","Dernier enregistrement"' . "\n";
+        
+        foreach ($userStats as $stat) {
+            $csvContent .= sprintf(
+                '"%s","%s","%s","%s","%s","%s"' . "\n",
+                str_replace('"', '""', $stat['patient_name'] ?? 'N/A'),
+                str_replace('"', '""', $stat['user_email']),
+                $stat['total_symptoms'],
+                $stat['days_tracked'] . ' jours',
+                number_format($stat['avg_intensity'], 1) . '/10',
+                $stat['last_symptom_date']->format('d/m/Y')
+            );
+        }
+        
+        $response = new Response($csvContent);
+        $response->headers->set('Content-Type', 'text/csv; charset=utf-8');
+        $response->headers->set('Content-Disposition', 'attachment; filename="patients-symptomes-' . date('Y-m-d') . '.csv"');
+        
         return $response;
     }
 }
