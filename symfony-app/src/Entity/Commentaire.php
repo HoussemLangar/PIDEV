@@ -6,6 +6,7 @@ use App\Repository\CommentaireRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: CommentaireRepository::class)]
 #[ORM\Table(name: 'commentaires')]
@@ -32,6 +33,13 @@ class Commentaire
     private Collection $replies;
 
     #[ORM\Column(type: 'text')]
+    #[Assert\NotBlank(message: 'Le commentaire est obligatoire.')]
+    #[Assert\Length(
+        min: 3,
+        max: 1000,
+        minMessage: 'Le commentaire doit contenir au moins {{ limit }} caractères.',
+        maxMessage: 'Le commentaire ne peut pas dépasser {{ limit }} caractères.'
+    )]
     private string $commentaire;
 
     #[ORM\Column(type: 'integer', nullable: true)]
@@ -48,8 +56,8 @@ class Commentaire
 
     public function __construct()
     {
-        $this->createdAt = new \DateTimeImmutable();
-        $this->updatedAt = new \DateTimeImmutable();
+        $this->createdAt = new \DateTime();
+        $this->updatedAt = new \DateTime();
         $this->replies = new ArrayCollection();
     }
 

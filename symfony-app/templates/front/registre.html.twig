@@ -2,97 +2,134 @@
 
 {% block title %}Inscription - SANTÉA{% endblock %}
 
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/form-validation-styles.css') }}">
+{% endblock %}
+
 {% block auth_content %}
     <div class="auth-form" id="signUpForm">
         <h1>Créer un compte</h1>
         
         <div class="social-buttons">
-            <button class="social-btn google-btn">
+            <a href="{{ path('connect_google_start') }}" class="social-btn google-btn">
                 <i class="fab fa-google"></i>
                 S'inscrire avec Google
-            </button>
-            <button class="social-btn facebook-btn">
+            </a>
+            <a href="{{ path('connect_facebook_start') }}" class="social-btn facebook-btn">
                 <i class="fab fa-facebook-f"></i>
                 S'inscrire avec Facebook
-            </button>
+            </a>
         </div>
 
         <div class="divider">
             <span>OU</span>
         </div>
 
+        {# Affichage des messages Flash - SUCCESS #}
         {% for message in app.flashes('success') %}
             <div class="alert alert-success">
                 {{ message }}
             </div>
         {% endfor %}
 
+        {# Affichage des messages Flash - ERROR #}
         {% for message in app.flashes('error') %}
             <div class="alert alert-danger">
                 {{ message }}
             </div>
         {% endfor %}
 
-        {{ form_start(registration_form, { attr: { novalidate: 'novalidate' } }) }}
+        {{ form_start(registration_form, { action: path('app_register'), attr: { id: 'registerForm', novalidate: 'novalidate', 'data-skip-client-validation': '1' } }) }}
 
-            
+            {# USERNAME #}
             <div class="form-group">
-                {{ form_label(registration_form.username) }}
-                {{ form_widget(registration_form.username) }}
+                {{ form_label(registration_form.username, null, {'label_attr': {'class': 'required'}}) }}
+                {{ form_widget(registration_form.username, {'attr': {'class': 'form-control'}}) }}
                 {{ form_errors(registration_form.username) }}
             </div>
 
+            {# EMAIL #}
             <div class="form-group">
-                {{ form_label(registration_form.email) }}
-                {{ form_widget(registration_form.email) }}
+                {{ form_label(registration_form.email, null, {'label_attr': {'class': 'required'}}) }}
+                {{ form_widget(registration_form.email, {'attr': {'class': 'form-control'}}) }}
                 {{ form_errors(registration_form.email) }}
             </div>
 
+            {# NOM #}
             <div class="form-group">
-                {{ form_label(registration_form.plainPassword.first) }}
+                {{ form_label(registration_form.nom, null, {'label_attr': {'class': 'required'}}) }}
+                {{ form_widget(registration_form.nom, {'attr': {'class': 'form-control'}}) }}
+                {{ form_errors(registration_form.nom) }}
+            </div>
+
+            {# PRENOM #}
+            <div class="form-group">
+                {{ form_label(registration_form.prenom, null, {'label_attr': {'class': 'required'}}) }}
+                {{ form_widget(registration_form.prenom, {'attr': {'class': 'form-control'}}) }}
+                {{ form_errors(registration_form.prenom) }}
+            </div>
+
+            {# DATE DE NAISSANCE #}
+            <div class="form-group">
+                {{ form_label(registration_form.dateNaissance, null, {'label_attr': {'class': 'required'}}) }}
+                {{ form_widget(registration_form.dateNaissance, {'attr': {'class': 'form-control date-picker'}}) }}
+                {{ form_help(registration_form.dateNaissance) }}
+                {{ form_errors(registration_form.dateNaissance) }}
+            </div>
+
+            {# MOT DE PASSE #}
+            <div class="form-group">
+                {{ form_label(registration_form.plainPassword.first, null, {'label_attr': {'class': 'required'}}) }}
                 <div class="password-input">
-                    {{ form_widget(registration_form.plainPassword.first) }}
+                    {{ form_widget(registration_form.plainPassword.first, {
+                        'attr': {
+                            'class': 'form-control',
+                            'id': 'users_plainPassword_first'
+                        }
+                    }) }}
                     <i class="fas fa-eye-slash toggle-password" onclick="togglePassword('users_plainPassword_first')"></i>
                 </div>
                 {{ form_errors(registration_form.plainPassword.first) }}
+                
+                {# Info sur les exigences du mot de passe #}
+                <div class="password-requirements" style="margin-top: 10px; padding: 10px; background: #f0f7ff; border-left: 3px solid #3498db; border-radius: 4px; font-size: 12px;">
+                    <strong>Le mot de passe doit contenir :</strong>
+                    <ul style="margin: 5px 0 0 20px; padding: 0;">
+                        <li>Au moins 8 caractères</li>
+                        <li>Une lettre majuscule</li>
+                        <li>Une lettre minuscule</li>
+                        <li>Un chiffre</li>
+                    </ul>
+                </div>
             </div>
 
+            {# CONFIRMATION MOT DE PASSE #}
             <div class="form-group">
-                {{ form_label(registration_form.plainPassword.second) }}
+                {{ form_label(registration_form.plainPassword.second, null, {'label_attr': {'class': 'required'}}) }}
                 <div class="password-input">
-                    {{ form_widget(registration_form.plainPassword.second) }}
+                    {{ form_widget(registration_form.plainPassword.second, {
+                        'attr': {
+                            'class': 'form-control',
+                            'id': 'users_plainPassword_second'
+                        }
+                    }) }}
                     <i class="fas fa-eye-slash toggle-password" onclick="togglePassword('users_plainPassword_second')"></i>
                 </div>
                 {{ form_errors(registration_form.plainPassword.second) }}
             </div>
 
-            <div class="form-group">
-                {{ form_label(registration_form.nom) }}
-                {{ form_widget(registration_form.nom) }}
-                {{ form_errors(registration_form.nom) }}
-            </div>
-
-            <div class="form-group">
-                {{ form_label(registration_form.prenom) }}
-                {{ form_widget(registration_form.prenom) }}
-                {{ form_errors(registration_form.prenom) }}
-            </div>
-
-            <div class="form-group">
-                {{ form_label(registration_form.dateNaissance) }}
-                {{ form_widget(registration_form.dateNaissance) }}
-                {{ form_errors(registration_form.dateNaissance) }}
-            </div>
-
+            {# ADRESSE #}
             <div class="form-group">
                 {{ form_label(registration_form.adresse) }}
-                {{ form_widget(registration_form.adresse) }}
+                {{ form_widget(registration_form.adresse, {'attr': {'class': 'form-control'}}) }}
                 {{ form_errors(registration_form.adresse) }}
             </div>
 
+            {# TELEPHONE #}
             <div class="form-group">
                 {{ form_label(registration_form.telephone) }}
-                {{ form_widget(registration_form.telephone) }}
+                {{ form_widget(registration_form.telephone, {'attr': {'class': 'form-control'}}) }}
                 {{ form_errors(registration_form.telephone) }}
             </div>
 
@@ -108,7 +145,394 @@
 
 {% block javascripts %}
     {{ parent() }}
+    <script src="{{ asset('js/form-validation.js') }}"></script>
+    <script src="{{ asset('js/date-input-script.js') }}"></script>
     <script>
-        // Script supplémentaire spécifique à l'inscription si nécessaire
+        document.addEventListener('DOMContentLoaded', function() {
+            
+            console.log('🔍 Initialisation du gestionnaire de validation...');
+            
+            // ============================================
+            // 1. DÉTECTION AUTOMATIQUE DES ERREURS
+            // ============================================
+            
+            /**
+            * Ajoute la classe 'has-error' aux form-groups contenant des erreurs
+            */
+            function markErrorFields() {
+                // Sélectionner tous les messages d'erreur Symfony
+                const errorMessages = document.querySelectorAll('.form-error, .invalid-feedback, ul.form-errors');
+                
+                errorMessages.forEach(function(errorMsg) {
+                    // Trouver le form-group parent
+                    const formGroup = errorMsg.closest('.form-group');
+                    
+                    if (formGroup) {
+                        // Ajouter la classe d'erreur au groupe
+                        formGroup.classList.add('has-error');
+                        
+                        // Trouver l'input dans ce groupe
+                        const input = formGroup.querySelector('input, select, textarea');
+                        
+                        if (input) {
+                            // Ajouter la classe d'erreur à l'input
+                            input.classList.add('is-invalid');
+                            
+                            // Marquer le label comme erreur
+                            const label = formGroup.querySelector('label');
+                            if (label) {
+                                label.classList.add('error-label');
+                            }
+                            
+                            // Pour les champs de mot de passe
+                            const passwordWrapper = input.closest('.password-input');
+                            if (passwordWrapper) {
+                                passwordWrapper.classList.add('has-error');
+                            }
+                            
+                            console.log(`❌ Erreur détectée sur: ${input.name || input.id}`);
+                        }
+                    }
+                });
+            }
+            
+            // ============================================
+            // 2. AMÉLIORATION DES ALERTES
+            // ============================================
+            
+            /**
+            * Ajoute un bouton de fermeture aux alertes
+            */
+            function enhanceAlerts() {
+                const alerts = document.querySelectorAll('.alert');
+                
+                alerts.forEach(function(alert) {
+                    // Vérifier si le bouton de fermeture n'existe pas déjà
+                    if (!alert.querySelector('.close-alert')) {
+                        // Créer le bouton de fermeture
+                        const closeBtn = document.createElement('button');
+                        closeBtn.className = 'close-alert';
+                        closeBtn.innerHTML = '×';
+                        closeBtn.setAttribute('aria-label', 'Fermer');
+                        
+                        // Ajouter l'événement de fermeture
+                        closeBtn.addEventListener('click', function() {
+                            alert.style.animation = 'fadeOut 0.3s ease';
+                            setTimeout(() => {
+                                alert.remove();
+                            }, 300);
+                        });
+                        
+                        // Ajouter le bouton à l'alerte
+                        alert.appendChild(closeBtn);
+                    }
+                    
+                    // Auto-fermeture après 5 secondes pour les alertes de succès
+                    if (alert.classList.contains('alert-success')) {
+                        setTimeout(() => {
+                            if (alert.parentElement) {
+                                alert.style.animation = 'fadeOut 0.3s ease';
+                                setTimeout(() => {
+                                    alert.remove();
+                                }, 300);
+                            }
+                        }, 5000);
+                    }
+                });
+            }
+            
+            // Animation de sortie
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes fadeOut {
+                    from {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                    to {
+                        opacity: 0;
+                        transform: translateY(-20px);
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+            
+            // ============================================
+            // 3. VALIDATION EN TEMPS RÉEL
+            // ============================================
+            
+            /**
+            * Valide un champ en temps réel
+            */
+            function validateField(input) {
+                const formGroup = input.closest('.form-group');
+                if (!formGroup) return;
+                
+                // Vérifier si le champ est requis
+                const isRequired = input.hasAttribute('required') || 
+                                input.classList.contains('required');
+                
+                // Vérifier si le champ a une valeur
+                const hasValue = input.value.trim() !== '';
+                
+                // Pour les champs requis vides
+                if (isRequired && !hasValue) {
+                    formGroup.classList.add('has-error');
+                    formGroup.classList.remove('is-valid');
+                    input.classList.add('is-invalid');
+                    input.classList.remove('is-valid');
+                    return false;
+                }
+                
+                // Validation spécifique par type
+                let isValid = true;
+                
+                switch(input.type) {
+                    case 'email':
+                        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                        isValid = emailRegex.test(input.value);
+                        break;
+                        
+                    case 'tel':
+                        const telRegex = /^[\d\s\+\-\(\)]{8,20}$/;
+                        isValid = telRegex.test(input.value);
+                        break;
+                        
+                    case 'date':
+                        if (hasValue) {
+                            const selectedDate = new Date(input.value);
+                            const today = new Date();
+                            const minDate = new Date();
+                            minDate.setFullYear(minDate.getFullYear() - 120);
+                            
+                            isValid = selectedDate < today && selectedDate > minDate;
+                        }
+                        break;
+                        
+                    case 'password':
+                        if (hasValue) {
+                            // Au moins 8 caractères, 1 majuscule, 1 minuscule, 1 chiffre
+                            const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+                            isValid = passwordRegex.test(input.value);
+                        }
+                        break;
+                }
+                
+                // Appliquer les classes appropriées
+                if (hasValue) {
+                    if (isValid) {
+                        formGroup.classList.remove('has-error');
+                        formGroup.classList.add('is-valid');
+                        input.classList.remove('is-invalid');
+                        input.classList.add('is-valid');
+                    } else {
+                        formGroup.classList.add('has-error');
+                        formGroup.classList.remove('is-valid');
+                        input.classList.add('is-invalid');
+                        input.classList.remove('is-valid');
+                    }
+                } else {
+                    // Réinitialiser si vide et non requis
+                    if (!isRequired) {
+                        formGroup.classList.remove('has-error', 'is-valid');
+                        input.classList.remove('is-invalid', 'is-valid');
+                    }
+                }
+                
+                return isValid;
+            }
+            
+            /**
+            * Ajoute les écouteurs de validation en temps réel
+            */
+            function addRealtimeValidation() {
+                const inputs = document.querySelectorAll('.form-group input, .form-group select, .form-group textarea');
+                
+                inputs.forEach(function(input) {
+                    // Validation à la perte de focus
+                    input.addEventListener('blur', function() {
+                        validateField(this);
+                    });
+                    
+                    // Retirer l'erreur lors de la saisie
+                    input.addEventListener('input', function() {
+                        const formGroup = this.closest('.form-group');
+                        if (formGroup && formGroup.classList.contains('has-error')) {
+                            // Retirer temporairement l'erreur pour encourager l'utilisateur
+                            if (this.value.trim() !== '') {
+                                formGroup.classList.remove('has-error');
+                                this.classList.remove('is-invalid');
+                            }
+                        }
+                    });
+                });
+            }
+            
+            // ============================================
+            // 4. VALIDATION DES MOTS DE PASSE IDENTIQUES
+            // ============================================
+            
+            /**
+            * Vérifie que les deux mots de passe sont identiques
+            */
+            function validatePasswordMatch() {
+                const password1 = document.querySelector('input[name*="plainPassword"][name*="first"]');
+                const password2 = document.querySelector('input[name*="plainPassword"][name*="second"]');
+                
+                if (password1 && password2) {
+                    password2.addEventListener('blur', function() {
+                        const formGroup = this.closest('.form-group');
+                        
+                        if (this.value && this.value !== password1.value) {
+                            formGroup.classList.add('has-error');
+                            this.classList.add('is-invalid');
+                            
+                            // Créer un message d'erreur s'il n'existe pas
+                            if (!formGroup.querySelector('.password-match-error')) {
+                                const errorMsg = document.createElement('div');
+                                errorMsg.className = 'form-error password-match-error';
+                                errorMsg.textContent = 'Les mots de passe ne correspondent pas';
+                                formGroup.appendChild(errorMsg);
+                            }
+                        } else if (this.value === password1.value && this.value !== '') {
+                            formGroup.classList.remove('has-error');
+                            formGroup.classList.add('is-valid');
+                            this.classList.remove('is-invalid');
+                            this.classList.add('is-valid');
+                            
+                            // Supprimer le message d'erreur
+                            const errorMsg = formGroup.querySelector('.password-match-error');
+                            if (errorMsg) {
+                                errorMsg.remove();
+                            }
+                        }
+                    });
+                    
+                    password1.addEventListener('input', function() {
+                        // Réinitialiser la validation du second champ si le premier change
+                        const formGroup2 = password2.closest('.form-group');
+                        if (formGroup2) {
+                            formGroup2.classList.remove('has-error', 'is-valid');
+                            password2.classList.remove('is-invalid', 'is-valid');
+                            const errorMsg = formGroup2.querySelector('.password-match-error');
+                            if (errorMsg) errorMsg.remove();
+                        }
+                    });
+                }
+            }
+            
+            // ============================================
+            // 5. SCROLL VERS LA PREMIÈRE ERREUR
+            // ============================================
+            
+            /**
+            * Fait défiler la page jusqu'à la première erreur
+            */
+            function scrollToFirstError() {
+                const firstError = document.querySelector('.form-group.has-error, .alert-danger');
+                
+                if (firstError) {
+                    setTimeout(() => {
+                        firstError.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'center'
+                        });
+                        
+                        // Focus sur le premier input en erreur
+                        const firstInput = firstError.querySelector('input, select, textarea');
+                        if (firstInput) {
+                            firstInput.focus();
+                        }
+                    }, 100);
+                }
+            }
+            
+            // ============================================
+            // 6. VALIDATION AVANT SOUMISSION
+            // ============================================
+            
+            /**
+            * Valide tous les champs avant la soumission
+            */
+            function validateFormBeforeSubmit(form) {
+                let isValid = true;
+                const inputs = form.querySelectorAll('input[required], select[required], textarea[required]');
+                
+                inputs.forEach(function(input) {
+                    if (!validateField(input)) {
+                        isValid = false;
+                    }
+                });
+                
+                return isValid;
+            }
+            
+            // Ajouter la validation à tous les formulaires
+            const forms = document.querySelectorAll('form');
+            forms.forEach(function(form) {
+                form.addEventListener('submit', function(e) {
+                    if (this.dataset.skipClientValidation === '1') {
+                        return;
+                    }
+                    if (!validateFormBeforeSubmit(this)) {
+                        e.preventDefault();
+                        scrollToFirstError();
+                        
+                        // Afficher une alerte générale
+                        const existingAlert = document.querySelector('.validation-error-alert');
+                        if (!existingAlert) {
+                            const alert = document.createElement('div');
+                            alert.className = 'alert alert-danger validation-error-alert';
+                            alert.textContent = 'Veuillez corriger les erreurs dans le formulaire avant de continuer.';
+                            
+                            form.insertBefore(alert, form.firstChild);
+                            enhanceAlerts();
+                        }
+                    }
+                });
+            });
+            
+            // ============================================
+            // 7. INITIALISATION
+            // ============================================
+            
+            // Marquer les champs avec erreur au chargement
+            markErrorFields();
+            
+            // Améliorer les alertes
+            enhanceAlerts();
+            
+            // Ajouter la validation en temps réel
+            addRealtimeValidation();
+            
+            // Valider les mots de passe identiques
+            validatePasswordMatch();
+            
+            // Faire défiler vers la première erreur
+            scrollToFirstError();
+            
+            console.log('✅ Gestionnaire de validation initialisé avec succès');
+        });
+
+        /**
+        * Fonction pour basculer la visibilité du mot de passe
+        * (utilisée dans le template)
+        */
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            const icon = event.target;
+            
+            if (input) {
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                } else {
+                    input.type = 'password';
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                }
+            }
+        }
     </script>
 {% endblock %}

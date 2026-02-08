@@ -1,0 +1,11 @@
+<div style="font-family: Arial, sans-serif; color: #0f172a;">
+    <h2>Nouvelle réservation en attente</h2>
+    <p>Vous avez reçu une nouvelle réservation.</p>
+    <ul>
+        <li>Médicament : {{ reservation.medicament.nom }}</li>
+        <li>Quantité : {{ reservation.quantite }}</li>
+        <li>Patient : {{ reservation.patient.nom }} {{ reservation.patient.prenom }}</li>
+        <li>Pharmacie : {{ reservation.pharmacie.nom }}</li>
+    </ul>
+    <p>Veuillez confirmer ou refuser depuis votre dashboard.</p>
+</div>

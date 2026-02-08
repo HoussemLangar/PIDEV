@@ -33,6 +33,27 @@ class LikeRepository extends ServiceEntityRepository
         return $this->find($id);
     }
 
+    public function findOneByUserAndContenu(int $userId, int $contenuId): ?Like
+    {
+        return $this->createQueryBuilder('l')
+            ->andWhere('l.user = :uid')
+            ->andWhere('l.contenu = :cid')
+            ->setParameter('uid', $userId)
+            ->setParameter('cid', $contenuId)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    public function countByContenu(int $contenuId): int
+    {
+        return (int) $this->createQueryBuilder('l')
+            ->select('COUNT(l.id)')
+            ->andWhere('l.contenu = :cid')
+            ->setParameter('cid', $contenuId)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
     /**
      * Save Like entity
      */

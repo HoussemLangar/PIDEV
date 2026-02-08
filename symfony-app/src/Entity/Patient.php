@@ -16,7 +16,7 @@ class Patient
     #[ORM\Column(type: 'integer')]
     private ?int $id = null;
 
-    #[ORM\OneToOne(targetEntity: User::class)]
+    #[ORM\OneToOne(inversedBy: 'patient', targetEntity: User::class)]
     #[ORM\JoinColumn(name: 'user_id', nullable: false, onDelete: 'CASCADE')]
     private User $user;
 
@@ -61,8 +61,8 @@ class Patient
 
     public function __construct()
     {
-        $this->createdAt = new \DateTimeImmutable();
-        $this->updatedAt = new \DateTimeImmutable();
+        $this->createdAt = new \DateTime();
+        $this->updatedAt = new \DateTime();
         $this->rendezVous = new ArrayCollection();
         $this->rapportsAnalyses = new ArrayCollection();
         $this->rapportsMedicaux = new ArrayCollection();

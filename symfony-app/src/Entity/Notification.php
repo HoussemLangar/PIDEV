@@ -44,8 +44,8 @@ class Notification
 
     public function __construct()
     {
-        $this->createdAt = new \DateTimeImmutable();
-        $this->dateEnvoi = new \DateTimeImmutable();
+        $this->createdAt = new \DateTime();
+        $this->dateEnvoi = new \DateTime();
     }
 
     public function getId(): ?int { return $this->id; }

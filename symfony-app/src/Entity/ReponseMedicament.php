@@ -42,8 +42,8 @@ class ReponseMedicament
 
     public function __construct()
     {
-        $this->createdAt = new \DateTimeImmutable();
-        $this->dateQuestion = new \DateTimeImmutable();
+        $this->createdAt = new \DateTime();
+        $this->dateQuestion = new \DateTime();
     }
 
     public function getId(): ?int { return $this->id; }

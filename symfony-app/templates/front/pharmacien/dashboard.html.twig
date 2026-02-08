@@ -1,0 +1,704 @@
+{% extends 'front/base.html.twig' %}
+
+{% block title %}Dashboard Pharmacie{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+{% endblock %}
+
+{% block body %}
+<section class="content-page pharm-dashboard">
+    <div class="content-hero">
+        <div class="content-header">
+            <div>
+                <div class="profile-badge">Pharmacien</div>
+                <h1>Dashboard pharmacie</h1>
+                <p>Gérez vos pharmacies, vos médicaments, vos stocks et vos réservations.</p>
+            </div>
+        </div>
+        <div class="dash-stats">
+            <div class="dash-stat">
+                <span>Pharmacies</span>
+                <strong>{{ pharmacies|length }}</strong>
+            </div>
+            <div class="dash-stat">
+                <span>Médicaments</span>
+                <strong>{{ medicaments|length }}</strong>
+            </div>
+            <div class="dash-stat">
+                <span>Stocks</span>
+                <strong>{{ stocks|length }}</strong>
+            </div>
+            <div class="dash-stat">
+                <span>Réservations</span>
+                <strong>{{ reservations|length }}</strong>
+            </div>
+        </div>
+        <div class="dash-actions">
+            <button class="btn btn-primary dash-nav" data-target="create-pharmacy">Créer pharmacie</button>
+            <button class="btn btn-secondary dash-nav" data-target="list-pharmacies">Mes pharmacies</button>
+            <button class="btn btn-primary dash-nav" data-target="create-medicament">Ajouter médicament</button>
+            <button class="btn btn-secondary dash-nav" data-target="list-medicaments">Mes médicaments</button>
+            <button class="btn btn-primary dash-nav" data-target="create-stock">Ajouter stock</button>
+            <button class="btn btn-secondary dash-nav" data-target="list-stocks">Mon stock</button>
+            <button class="btn btn-secondary dash-nav" data-target="list-reservations">Réservations</button>
+        </div>
+        <div class="dash-hint">
+            Choisissez une action pour afficher la section correspondante.
+        </div>
+    </div>
+
+    <div class="content-section dash-panel" id="create-pharmacy">
+        <div class="content-section-header">
+            <div class="content-section-title">
+                <h3>Créer une pharmacie</h3>
+                <p>Renseignez les informations principales.</p>
+            </div>
+        </div>
+        <div class="dash-form-grid">
+            <input type="text" id="pharmacyName" placeholder="Nom pharmacie">
+            <input type="text" id="pharmacyAddress" placeholder="Adresse">
+            <input type="text" id="pharmacyPhone" placeholder="Téléphone">
+            <input type="email" id="pharmacyEmail" placeholder="Email">
+            <input type="hidden" id="pharmacyHours">
+            <input type="text" id="pharmacyLat" placeholder="Latitude">
+            <input type="text" id="pharmacyLng" placeholder="Longitude">
+            <select id="pharmacyActive">
+                <option value="1">Active</option>
+                <option value="0">Inactive</option>
+            </select>
+        </div>
+        <div class="dash-schedule">
+            <div class="dash-map-header">
+                <strong>Horaires d'ouverture</strong>
+                <span>Sélectionnez les jours et les plages horaires.</span>
+            </div>
+            <div class="schedule-grid" id="scheduleGrid">
+                {% set days = [
+                    {'key':'mon','label':'Lun'},
+                    {'key':'tue','label':'Mar'},
+                    {'key':'wed','label':'Mer'},
+                    {'key':'thu','label':'Jeu'},
+                    {'key':'fri','label':'Ven'},
+                    {'key':'sat','label':'Sam'},
+                    {'key':'sun','label':'Dim'}
+                ] %}
+                {% for d in days %}
+                    <div class="schedule-row" data-day="{{ d.key }}">
+                        <span class="schedule-day">{{ d.label }}</span>
+                        <label class="schedule-toggle">
+                            <input type="checkbox" class="schedule-open" checked>
+                            <span>Ouvert</span>
+                        </label>
+                        <input type="time" class="schedule-from" value="08:00">
+                        <span class="schedule-sep">→</span>
+                        <input type="time" class="schedule-to" value="18:00">
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="dash-map">
+            <div class="dash-map-header">
+                <strong>Localisation</strong>
+                <span>Cliquez sur la carte pour définir la position.</span>
+            </div>
+            <div id="pharmacyMap" class="dash-map-canvas"></div>
+        </div>
+        <div class="dash-actions-row">
+            <button class="btn btn-primary" id="pharmacyCreate">Créer pharmacie</button>
+        </div>
+    </div>
+
+    <div class="content-section dash-panel" id="list-pharmacies">
+        <div class="content-section-header">
+            <div class="content-section-title">
+                <h3>Mes pharmacies</h3>
+                <p>Modifiez ou supprimez vos pharmacies.</p>
+            </div>
+        </div>
+        <div class="content-filters">
+            <input type="text" id="pharmacyFilterName" placeholder="Filtrer par nom">
+            <input type="text" id="pharmacyFilterAddress" placeholder="Filtrer par adresse">
+            <select id="pharmacyFilterActive">
+                <option value="">Tous les statuts</option>
+                <option value="active">Actives</option>
+                <option value="inactive">Inactives</option>
+            </select>
+        </div>
+        <div class="content-grid" id="pharmaciesList">
+            {% for p in pharmacies %}
+                <div class="content-card dash-card pharmacy-card" data-name="{{ p.nom|lower }}" data-address="{{ p.adresse|lower }}" data-active="{{ p.isActive ? 'active' : 'inactive' }}" data-id="{{ p.id }}">
+                    <div class="dash-card-header">
+                        <h3>{{ p.nom }}</h3>
+                        <span class="content-pill">{{ p.isActive ? 'Active' : 'Inactive' }}</span>
+                    </div>
+                    <div class="dash-form-grid">
+                        <input type="text" data-field="nom" value="{{ p.nom }}">
+                        <input type="text" data-field="adresse" value="{{ p.adresse }}">
+                        <input type="text" data-field="telephone" value="{{ p.telephone }}">
+                        <input type="email" data-field="email" value="{{ p.email }}">
+                        <input type="text" data-field="horaires" value="{{ p.horaires }}">
+                        <input type="text" data-field="latitude" value="{{ p.latitude }}">
+                        <input type="text" data-field="longitude" value="{{ p.longitude }}">
+                        <select data-field="is_active">
+                            <option value="1" {{ p.isActive ? 'selected' : '' }}>Active</option>
+                            <option value="0" {{ p.isActive ? '' : 'selected' }}>Inactive</option>
+                        </select>
+                    </div>
+                    <div class="dash-actions-row">
+                        <button class="btn btn-primary btn-xs pharmacy-save">Mettre à jour</button>
+                        <button class="btn btn-secondary btn-xs pharmacy-delete">Supprimer</button>
+                    </div>
+                </div>
+            {% else %}
+                <p>Aucune pharmacie liée.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="content-section dash-panel" id="create-medicament">
+        <div class="content-section-header">
+            <div class="content-section-title">
+                <h3>Ajouter un médicament</h3>
+                <p>Créez un médicament dans le catalogue.</p>
+            </div>
+        </div>
+        <div class="dash-form-grid">
+            <input type="text" id="medName" placeholder="Nom médicament">
+            <input type="text" id="medType" placeholder="Type">
+            <input type="text" id="medForme" placeholder="Forme">
+            <input type="text" id="medDosage" placeholder="Dosage">
+            <input type="text" id="medLab" placeholder="Laboratoire">
+            <input type="text" id="medCode" placeholder="Code-barres / QR">
+            <input type="number" step="0.01" id="medPrice" placeholder="Prix indicatif">
+        </div>
+        <div class="scan-modal" id="scanPanel" aria-hidden="true">
+            <div class="scan-modal-backdrop" data-close="scan"></div>
+            <div class="scan-modal-card" role="dialog" aria-modal="true" aria-labelledby="scanTitle">
+                <div class="scan-modal-header">
+                    <div>
+                        <strong id="scanTitle">Scanner un code</strong>
+                        <span>Autorisez la caméra pour détecter un QR ou code-barres.</span>
+                    </div>
+                    <button class="btn btn-secondary btn-xs" id="closeScanBtn" type="button">Fermer</button>
+                </div>
+                <video id="scanVideo" class="scan-video" playsinline></video>
+                <div class="dash-actions-row">
+                    <button class="btn btn-secondary btn-xs" id="stopScanBtn" type="button">Arrêter</button>
+                </div>
+                <div class="scan-hint" id="scanHint"></div>
+            </div>
+        </div>
+        <div class="dash-actions-row">
+            <button class="btn btn-secondary btn-xs scan-btn" id="scanCodeBtn" type="button">Scanner le code</button>
+            <button class="btn btn-primary" id="medCreate" type="button">Ajouter médicament</button>
+        </div>
+    </div>
+
+    <div class="content-section dash-panel" id="list-medicaments">
+        <div class="content-section-header">
+            <div class="content-section-title">
+                <h3>Mes médicaments</h3>
+                <p>Médicaments liés à vos stocks.</p>
+            </div>
+        </div>
+        <div class="content-filters">
+            <input type="text" id="medFilterName" placeholder="Filtrer par nom">
+            <input type="text" id="medFilterType" placeholder="Filtrer par type">
+        </div>
+        <div class="content-grid" id="medicamentsList">
+            {% for m in medicaments %}
+                <div class="content-card dash-card medicament-card" data-name="{{ m.nom|lower }}" data-type="{{ (m.type ?? '')|lower }}" data-id="{{ m.id }}">
+                    <div class="dash-card-header">
+                        <h3>{{ m.nom }}</h3>
+                        <span class="content-pill">{{ m.type ?: 'Non défini' }}</span>
+                    </div>
+                    <div class="dash-form-grid">
+                        <input type="text" data-field="nom" value="{{ m.nom }}">
+                        <input type="text" data-field="type" value="{{ m.type }}">
+                        <input type="text" data-field="forme" value="{{ m.forme }}">
+                        <input type="text" data-field="dosage" value="{{ m.dosage }}">
+                        <input type="text" data-field="laboratoire" value="{{ m.laboratoire }}">
+                        <input type="text" data-field="code_barre" value="{{ m.codeBarre }}">
+                        <input type="number" step="0.01" data-field="prix" value="{{ m.prix }}">
+                    </div>
+                    <div class="dash-actions-row">
+                        <button class="btn btn-primary btn-xs med-save">Mettre à jour</button>
+                        <button class="btn btn-secondary btn-xs med-delete">Supprimer</button>
+                    </div>
+                </div>
+            {% else %}
+                <p>Aucun médicament lié à vos stocks.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="content-section dash-panel" id="create-stock">
+        <div class="content-section-header">
+            <div class="content-section-title">
+                <h3>Ajouter du stock</h3>
+                <p>Associez un médicament à une pharmacie.</p>
+            </div>
+        </div>
+        <div class="dash-form-grid">
+            <select id="stockPharmacyId">
+                <option value="">Choisir une pharmacie</option>
+                {% for p in pharmacies %}
+                    <option value="{{ p.id }}">{{ p.nom }}</option>
+                {% endfor %}
+            </select>
+            <select id="stockMedId">
+                <option value="">Choisir un médicament</option>
+                {% for m in medicaments_all %}
+                    <option value="{{ m.id }}">{{ m.nom }}</option>
+                {% endfor %}
+            </select>
+            <input type="number" id="stockQty" placeholder="Quantité">
+            <input type="number" step="0.01" id="stockPrice" placeholder="Prix">
+        </div>
+        <div class="dash-actions-row">
+            <button class="btn btn-primary" id="stockCreate">Ajouter stock</button>
+        </div>
+    </div>
+
+    <div class="content-section dash-panel" id="list-stocks">
+        <div class="content-section-header">
+            <div class="content-section-title">
+                <h3>Mon stock</h3>
+                <p>Mettez à jour les quantités et les prix.</p>
+            </div>
+        </div>
+        <div class="content-filters">
+            <input type="text" id="stockFilterMed" placeholder="Filtrer par médicament">
+            <input type="text" id="stockFilterPharmacy" placeholder="Filtrer par pharmacie">
+        </div>
+        <div class="content-grid" id="stocksList">
+            {% for s in stocks %}
+                <div class="content-card dash-card stock-card" data-stock-id="{{ s.id }}" data-med="{{ s.medicament.nom|lower }}" data-pharmacy="{{ s.pharmecie.nom|lower }}">
+                    <div class="dash-card-header">
+                        <h3>{{ s.medicament.nom }}</h3>
+                        <span class="content-pill">{{ s.pharmecie.nom }}</span>
+                    </div>
+                    <div class="dash-form-grid">
+                        <input type="number" min="0" value="{{ s.quantite }}" class="stock-qty">
+                        <input type="number" step="0.01" value="{{ s.prixVente }}" class="stock-price">
+                    </div>
+                    <div class="dash-actions-row">
+                        <button class="btn btn-primary btn-xs stock-save">Mettre à jour</button>
+                        <button class="btn btn-secondary btn-xs stock-delete">Supprimer</button>
+                    </div>
+                </div>
+            {% else %}
+                <p>Aucun stock.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="content-section dash-panel" id="list-reservations">
+        <div class="content-section-header">
+            <div class="content-section-title">
+                <h3>Réservations</h3>
+                <p>Confirmer ou refuser.</p>
+            </div>
+        </div>
+        <div class="content-filters">
+            <input type="text" id="resFilterMed" placeholder="Filtrer par médicament">
+            <input type="text" id="resFilterPatient" placeholder="Filtrer par patient">
+            <select id="resFilterStatus">
+                <option value="">Tous les statuts</option>
+                <option value="en_attente">En attente</option>
+                <option value="confirmee">Confirmée</option>
+                <option value="refusee">Refusée</option>
+                <option value="annulee">Annulée</option>
+                <option value="expiree">Expirée</option>
+            </select>
+        </div>
+        <div class="content-grid">
+            {% for r in reservations %}
+                <div class="content-card reservation-card"
+                     data-reservation-id="{{ r.id }}"
+                     data-med="{{ r.medicament.nom|lower }}"
+                     data-patient="{{ (r.patient.nom ~ ' ' ~ r.patient.prenom)|lower }}"
+                     data-status="{{ r.statut }}">
+                    <div class="content-meta">
+                        <span class="content-pill">{{ r.statut }}</span>
+                        <span>{{ r.createdAt|date('d/m/Y H:i') }}</span>
+                    </div>
+                    <h3>{{ r.medicament.nom }}</h3>
+                    <p>{{ r.patient.nom }} {{ r.patient.prenom }} • {{ r.pharmacie.nom }} • Qté {{ r.quantite }}</p>
+                    <div class="content-actions">
+                        {% if r.statut == 'en_attente' %}
+                            <button class="btn btn-primary btn-xs res-confirm">Confirmer</button>
+                            <button class="btn btn-secondary btn-xs res-reject">Refuser</button>
+                        {% endif %}
+                    </div>
+                </div>
+            {% else %}
+                <p>Aucune réservation.</p>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        (function () {
+            const apiFetch = (url, options = {}) => fetch(url, { ...options, loading: true });
+            const hoursInput = document.getElementById('pharmacyHours');
+            const scheduleGrid = document.getElementById('scheduleGrid');
+            const dayLabels = {
+                mon: 'Lun', tue: 'Mar', wed: 'Mer', thu: 'Jeu', fri: 'Ven', sat: 'Sam', sun: 'Dim'
+            };
+            const buildSchedule = () => {
+                if (!scheduleGrid || !hoursInput) return;
+                const rows = scheduleGrid.querySelectorAll('.schedule-row');
+                const parts = [];
+                rows.forEach((row) => {
+                    const day = row.dataset.day;
+                    const isOpen = row.querySelector('.schedule-open').checked;
+                    const from = row.querySelector('.schedule-from').value;
+                    const to = row.querySelector('.schedule-to').value;
+                    parts.push(`${dayLabels[day]} ${isOpen ? `${from}-${to}` : 'Fermé'}`);
+                    row.classList.toggle('is-closed', !isOpen);
+                });
+                hoursInput.value = parts.join('; ');
+            };
+            scheduleGrid?.addEventListener('change', buildSchedule);
+            buildSchedule();
+
+            const mapEl = document.getElementById('pharmacyMap');
+            const latInput = document.getElementById('pharmacyLat');
+            const lngInput = document.getElementById('pharmacyLng');
+            if (mapEl && window.L) {
+                const defaultLat = 36.8065;
+                const defaultLng = 10.1815;
+                const map = L.map(mapEl).setView([defaultLat, defaultLng], 12);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: '&copy; OpenStreetMap'
+                }).addTo(map);
+
+                let marker = L.marker([defaultLat, defaultLng], { draggable: true }).addTo(map);
+                const syncInputs = (latlng) => {
+                    latInput.value = latlng.lat.toFixed(6);
+                    lngInput.value = latlng.lng.toFixed(6);
+                };
+                syncInputs(marker.getLatLng());
+
+                map.on('click', (e) => {
+                    marker.setLatLng(e.latlng);
+                    syncInputs(e.latlng);
+                });
+                marker.on('dragend', () => syncInputs(marker.getLatLng()));
+
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition((pos) => {
+                        const coords = [pos.coords.latitude, pos.coords.longitude];
+                        map.setView(coords, 14);
+                        marker.setLatLng(coords);
+                        syncInputs(marker.getLatLng());
+                    });
+                }
+            }
+
+            const panels = document.querySelectorAll('.dash-panel');
+            const buttons = document.querySelectorAll('.dash-nav');
+            const activatePanel = (id) => {
+                panels.forEach((p) => p.classList.toggle('is-active', p.id === id));
+                buttons.forEach((b) => b.classList.toggle('is-active', b.dataset.target === id));
+                const target = document.getElementById(id);
+                if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            };
+            buttons.forEach((btn) => {
+                btn.addEventListener('click', () => activatePanel(btn.dataset.target));
+            });
+
+            const toLower = (val) => (val || '').toString().toLowerCase();
+            const filterCards = (cards, predicate) => {
+                cards.forEach((card) => {
+                    card.style.display = predicate(card) ? '' : 'none';
+                });
+            };
+
+            const pharmacyList = document.querySelectorAll('#pharmaciesList .pharmacy-card');
+            const pharmacyName = document.getElementById('pharmacyFilterName');
+            const pharmacyAddress = document.getElementById('pharmacyFilterAddress');
+            const pharmacyStatus = document.getElementById('pharmacyFilterActive');
+            const applyPharmacyFilter = () => {
+                const name = toLower(pharmacyName?.value);
+                const address = toLower(pharmacyAddress?.value);
+                const status = toLower(pharmacyStatus?.value);
+                filterCards(pharmacyList, (card) => {
+                    const matchesName = !name || card.dataset.name.includes(name);
+                    const matchesAddress = !address || card.dataset.address.includes(address);
+                    const matchesStatus = !status || card.dataset.active === status;
+                    return matchesName && matchesAddress && matchesStatus;
+                });
+            };
+            pharmacyName?.addEventListener('input', applyPharmacyFilter);
+            pharmacyAddress?.addEventListener('input', applyPharmacyFilter);
+            pharmacyStatus?.addEventListener('change', applyPharmacyFilter);
+
+            const medList = document.querySelectorAll('#medicamentsList .medicament-card');
+            const medName = document.getElementById('medFilterName');
+            const medType = document.getElementById('medFilterType');
+            const applyMedFilter = () => {
+                const name = toLower(medName?.value);
+                const type = toLower(medType?.value);
+                filterCards(medList, (card) => {
+                    const matchesName = !name || card.dataset.name.includes(name);
+                    const matchesType = !type || card.dataset.type.includes(type);
+                    return matchesName && matchesType;
+                });
+            };
+            medName?.addEventListener('input', applyMedFilter);
+            medType?.addEventListener('input', applyMedFilter);
+
+            const stockList = document.querySelectorAll('#stocksList .stock-card');
+            const stockMed = document.getElementById('stockFilterMed');
+            const stockPharmacy = document.getElementById('stockFilterPharmacy');
+            const applyStockFilter = () => {
+                const med = toLower(stockMed?.value);
+                const pharmacy = toLower(stockPharmacy?.value);
+                filterCards(stockList, (card) => {
+                    const matchesMed = !med || card.dataset.med.includes(med);
+                    const matchesPharmacy = !pharmacy || card.dataset.pharmacy.includes(pharmacy);
+                    return matchesMed && matchesPharmacy;
+                });
+            };
+            stockMed?.addEventListener('input', applyStockFilter);
+            stockPharmacy?.addEventListener('input', applyStockFilter);
+
+            const resList = document.querySelectorAll('#list-reservations .reservation-card');
+            const resMed = document.getElementById('resFilterMed');
+            const resPatient = document.getElementById('resFilterPatient');
+            const resStatus = document.getElementById('resFilterStatus');
+            const applyResFilter = () => {
+                const med = toLower(resMed?.value);
+                const patient = toLower(resPatient?.value);
+                const status = toLower(resStatus?.value);
+                filterCards(resList, (card) => {
+                    const matchesMed = !med || card.dataset.med.includes(med);
+                    const matchesPatient = !patient || card.dataset.patient.includes(patient);
+                    const matchesStatus = !status || card.dataset.status === status;
+                    return matchesMed && matchesPatient && matchesStatus;
+                });
+            };
+            resMed?.addEventListener('input', applyResFilter);
+            resPatient?.addEventListener('input', applyResFilter);
+            resStatus?.addEventListener('change', applyResFilter);
+
+            document.addEventListener('click', async (e) => {
+                const stockBtn = e.target.closest('.stock-save');
+                if (stockBtn) {
+                    const card = stockBtn.closest('[data-stock-id]');
+                    const qty = card.querySelector('.stock-qty').value;
+                    const price = card.querySelector('.stock-price').value;
+                    await apiFetch(`/api/pharmacien/stocks/${card.dataset.stockId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ quantite: qty, prix: price })
+                    });
+                }
+
+                const stockDeleteBtn = e.target.closest('.stock-delete');
+                if (stockDeleteBtn) {
+                    const card = stockDeleteBtn.closest('[data-stock-id]');
+                    if (!confirm('Supprimer ce stock ?')) return;
+                    await apiFetch(`/api/pharmacien/stocks/${card.dataset.stockId}/delete`, { method: 'POST' });
+                    location.reload();
+                }
+
+                const confirmBtn = e.target.closest('.res-confirm');
+                if (confirmBtn) {
+                    const card = confirmBtn.closest('[data-reservation-id]');
+                    await apiFetch(`/api/pharmacien/reservations/${card.dataset.reservationId}/confirm`, { method: 'POST' });
+                }
+                const rejectBtn = e.target.closest('.res-reject');
+                if (rejectBtn) {
+                    const card = rejectBtn.closest('[data-reservation-id]');
+                    await apiFetch(`/api/pharmacien/reservations/${card.dataset.reservationId}/reject`, { method: 'POST' });
+                }
+
+                const pharmacySave = e.target.closest('.pharmacy-save');
+                if (pharmacySave) {
+                    const card = pharmacySave.closest('.pharmacy-card');
+                    const payload = {};
+                    card.querySelectorAll('[data-field]').forEach((input) => {
+                        payload[input.dataset.field] = input.value;
+                    });
+                    await apiFetch(`/api/pharmacien/pharmacies/${card.dataset.id}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload),
+                    });
+                }
+
+                const pharmacyDelete = e.target.closest('.pharmacy-delete');
+                if (pharmacyDelete) {
+                    const card = pharmacyDelete.closest('.pharmacy-card');
+                    if (!confirm('Supprimer cette pharmacie ?')) return;
+                    await apiFetch(`/api/pharmacien/pharmacies/${card.dataset.id}/delete`, { method: 'POST' });
+                    location.reload();
+                }
+
+                const medSave = e.target.closest('.med-save');
+                if (medSave) {
+                    const card = medSave.closest('.medicament-card');
+                    const payload = {};
+                    card.querySelectorAll('[data-field]').forEach((input) => {
+                        payload[input.dataset.field] = input.value;
+                    });
+                    await apiFetch(`/api/pharmacien/medicaments/${card.dataset.id}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload),
+                    });
+                }
+
+                const medDelete = e.target.closest('.med-delete');
+                if (medDelete) {
+                    const card = medDelete.closest('.medicament-card');
+                    if (!confirm('Supprimer ce médicament ?')) return;
+                    await apiFetch(`/api/pharmacien/medicaments/${card.dataset.id}/delete`, { method: 'POST' });
+                    location.reload();
+                }
+            });
+
+            document.getElementById('pharmacyCreate')?.addEventListener('click', async () => {
+                const payload = {
+                    nom: document.getElementById('pharmacyName').value,
+                    adresse: document.getElementById('pharmacyAddress').value,
+                    telephone: document.getElementById('pharmacyPhone').value,
+                    email: document.getElementById('pharmacyEmail').value,
+                    horaires: document.getElementById('pharmacyHours').value,
+                    latitude: document.getElementById('pharmacyLat').value,
+                    longitude: document.getElementById('pharmacyLng').value,
+                    is_active: document.getElementById('pharmacyActive').value === '1',
+                };
+                await apiFetch('/api/pharmacien/pharmacies', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+                location.reload();
+            });
+
+            document.getElementById('medCreate')?.addEventListener('click', async () => {
+                const payload = {
+                    nom: document.getElementById('medName').value,
+                    type: document.getElementById('medType').value,
+                    forme: document.getElementById('medForme').value,
+                    dosage: document.getElementById('medDosage').value,
+                    laboratoire: document.getElementById('medLab').value,
+                    code_barre: document.getElementById('medCode').value,
+                    prix: document.getElementById('medPrice').value,
+                };
+                const res = await apiFetch('/api/pharmacien/medicaments', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+                let data = null;
+                try { data = await res.json(); } catch (_) {}
+                if (res.ok && (data?.success ?? true)) {
+                    window.showToast?.('success', data?.message || 'Médicament ajouté.');
+                    document.getElementById('medName').value = '';
+                    document.getElementById('medType').value = '';
+                    document.getElementById('medForme').value = '';
+                    document.getElementById('medDosage').value = '';
+                    document.getElementById('medLab').value = '';
+                    document.getElementById('medCode').value = '';
+                    document.getElementById('medPrice').value = '';
+                } else {
+                    window.showToast?.('error', data?.message || 'Erreur lors de l’ajout.');
+                }
+            });
+
+            const scanBtn = document.getElementById('scanCodeBtn');
+            const scanPanel = document.getElementById('scanPanel');
+            const scanVideo = document.getElementById('scanVideo');
+            const scanHint = document.getElementById('scanHint');
+            const stopScanBtn = document.getElementById('stopScanBtn');
+            const closeScanBtn = document.getElementById('closeScanBtn');
+            const codeInput = document.getElementById('medCode');
+            let scanStream = null;
+            let scanning = false;
+
+            const stopScan = () => {
+                scanning = false;
+                if (scanStream) {
+                    scanStream.getTracks().forEach((t) => t.stop());
+                    scanStream = null;
+                }
+                if (scanVideo) {
+                    scanVideo.srcObject = null;
+                }
+                scanPanel?.classList.remove('is-active');
+                scanPanel?.setAttribute('aria-hidden', 'true');
+            };
+
+            const startScan = async () => {
+                if (!('BarcodeDetector' in window)) {
+                    scanHint.textContent = 'Scanner non supporté par ce navigateur.';
+                    scanPanel.classList.add('is-active');
+                    scanPanel.setAttribute('aria-hidden', 'false');
+                    return;
+                }
+                scanHint.textContent = 'Recherche du code...';
+                scanPanel.classList.add('is-active');
+                scanPanel.setAttribute('aria-hidden', 'false');
+                scanStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                scanVideo.srcObject = scanStream;
+                await scanVideo.play();
+                const detector = new BarcodeDetector({ formats: ['qr_code', 'ean_13', 'code_128', 'ean_8', 'upc_a', 'upc_e'] });
+                scanning = true;
+                const loop = async () => {
+                    if (!scanning) return;
+                    try {
+                        const barcodes = await detector.detect(scanVideo);
+                        if (barcodes.length) {
+                            codeInput.value = barcodes[0].rawValue || '';
+                            scanHint.textContent = 'Code détecté.';
+                            stopScan();
+                            return;
+                        }
+                    } catch (e) {
+                        scanHint.textContent = 'Impossible de scanner.';
+                    }
+                    requestAnimationFrame(loop);
+                };
+                requestAnimationFrame(loop);
+            };
+
+            scanBtn?.addEventListener('click', startScan);
+            stopScanBtn?.addEventListener('click', stopScan);
+            closeScanBtn?.addEventListener('click', stopScan);
+            scanPanel?.addEventListener('click', (e) => {
+                if (e.target?.dataset?.close === 'scan') {
+                    stopScan();
+                }
+            });
+
+            document.getElementById('stockCreate')?.addEventListener('click', async () => {
+                const payload = {
+                    pharmacy_id: document.getElementById('stockPharmacyId').value,
+                    medicament_id: document.getElementById('stockMedId').value,
+                    quantite: document.getElementById('stockQty').value,
+                    prix: document.getElementById('stockPrice').value,
+                };
+                await apiFetch('/api/pharmacien/stocks', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+                location.reload();
+            });
+        })();
+    </script>
+{% endblock %}

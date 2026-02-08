@@ -29,6 +29,15 @@ class Medecin
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private ?string $cabinetAdresse = null;
 
+    #[ORM\Column(type: 'string', length: 100, nullable: true)]
+    private ?string $cabinetVille = null;
+
+    #[ORM\Column(type: 'decimal', precision: 10, scale: 6, nullable: true)]
+    private ?string $cabinetLat = null;
+
+    #[ORM\Column(type: 'decimal', precision: 10, scale: 6, nullable: true)]
+    private ?string $cabinetLng = null;
+
     #[ORM\Column(type: 'string', length: 20, nullable: true)]
     private ?string $telephoneCabinet = null;
 
@@ -55,8 +64,8 @@ class Medecin
 
     public function __construct()
     {
-        $this->createdAt = new \DateTimeImmutable();
-        $this->updatedAt = new \DateTimeImmutable();
+        $this->createdAt = new \DateTime();
+        $this->updatedAt = new \DateTime();
         $this->disponibilites = new ArrayCollection();
         $this->rendezVous = new ArrayCollection();
         $this->rapportsAnalyses = new ArrayCollection();
@@ -72,6 +81,12 @@ class Medecin
     public function setNumeroOrdre(?string $numeroOrdre): void { $this->numeroOrdre = $numeroOrdre; }
     public function getCabinetAdresse(): ?string { return $this->cabinetAdresse; }
     public function setCabinetAdresse(?string $cabinetAdresse): void { $this->cabinetAdresse = $cabinetAdresse; }
+    public function getCabinetVille(): ?string { return $this->cabinetVille; }
+    public function setCabinetVille(?string $cabinetVille): void { $this->cabinetVille = $cabinetVille; }
+    public function getCabinetLat(): ?string { return $this->cabinetLat; }
+    public function setCabinetLat(?string $cabinetLat): void { $this->cabinetLat = $cabinetLat; }
+    public function getCabinetLng(): ?string { return $this->cabinetLng; }
+    public function setCabinetLng(?string $cabinetLng): void { $this->cabinetLng = $cabinetLng; }
     public function getTelephoneCabinet(): ?string { return $this->telephoneCabinet; }
     public function setTelephoneCabinet(?string $telephoneCabinet): void { $this->telephoneCabinet = $telephoneCabinet; }
     public function getTarifConsultation(): ?string { return $this->tarifConsultation; }

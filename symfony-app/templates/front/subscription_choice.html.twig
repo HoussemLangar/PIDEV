@@ -1,0 +1,38 @@
+{% extends 'front/base.html.twig' %}
+
+{% block title %}Choix d'abonnement{% endblock %}
+
+{% block body %}
+<section class="subscription-wrap">
+    <div class="subscription-header">
+        <h1>Choisissez votre abonnement</h1>
+        <p>Accès complet aux fonctionnalités premium. 10 DT / mois, renouvellement mensuel.</p>
+    </div>
+
+    <div class="subscription-grid">
+        {% for plan in plans %}
+            <div class="subscription-card">
+                <div class="plan-icon">{{ plan.icon }}</div>
+                <h3>{{ plan.label }}</h3>
+                <div class="plan-price">10 DT <span>/ mois</span></div>
+                <ul>
+                    <li>Durée 1 mois</li>
+                    <li>Renouvellement mensuel</li>
+                    <li>Accès premium</li>
+                </ul>
+                <form method="post" action="{{ path('app_subscription_checkout') }}">
+                    <input type="hidden" name="subscription_type" value="{{ plan.role }}">
+                    <button class="btn-appointment" type="submit">✅ S'abonner maintenant</button>
+                </form>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="subscription-skip">
+        <form method="post" action="{{ path('app_subscription_skip') }}">
+            <button class="btn-ghost" type="submit">⏭️ Skip temporaire</button>
+        </form>
+        <p class="subscription-note">Certaines fonctionnalités nécessitent un abonnement actif.</p>
+    </div>
+</section>
+{% endblock %}

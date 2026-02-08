@@ -4,6 +4,19 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
+    geoip_db_path: '%kernel.project_dir%/var/geoip/GeoLite2-Country.mmdb'
+    geoip_api_url: '%env(resolve:GEOIP_API_URL)%'
+    content_forbidden_words:
+        - spam
+        - arnaque
+        - insultant
+        - obscenite
+        - menace
+        - haine
+        - violence
+        - harcelement
+        - discriminant
+        - faux
 
 services:
     # default configuration for services in *this* file
@@ -19,6 +32,19 @@ services:
             - '../src/DependencyInjection/'
             - '../src/Entity/'
             - '../src/Kernel.php'
+
+    App\Service\InvoiceService:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+
+    App\Security\GeoIpService:
+        arguments:
+            $geoIpDbPath: '%geoip_db_path%'
+            $geoIpApiUrl: '%geoip_api_url%'
+
+    App\Service\ForbiddenWordsFilterService:
+        arguments:
+            $forbiddenWords: '%content_forbidden_words%'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

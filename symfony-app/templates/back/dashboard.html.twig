@@ -10,9 +10,9 @@
             <p class="header-subtitle">Vue d'ensemble de la plateforme SANTÉA</p>
         </div>
         <div class="admin-header-right">
-            <button class="btn-export">
+            <a class="btn-export" href="{{ path('admin_dashboard_export') }}">
                 <i class="fas fa-download"></i> Exporter les données
-            </button>
+            </a>
         </div>
     </div>
     
@@ -23,15 +23,14 @@
                 <i class="fas fa-users"></i>
             </div>
             <div class="stat-content">
-                <span class="stat-label">Utilisateurs totaux</span>
+                <span class="stat-label">Utilisateurs total</span>
                 <span class="stat-value">{{ stats.totalUsers|number_format(0, ',', ' ') }}</span>
-                <span class="stat-change {{ stats.usersGrowth > 0 ? 'positive' : 'negative' }}">
-                    <i class="fas fa-arrow-{{ stats.usersGrowth > 0 ? 'up' : 'down' }}"></i> 
-                    {{ stats.usersGrowth > 0 ? '+' : '' }}{{ stats.usersGrowth }}% ce mois
+                <span class="stat-change positive">
+                    <i class="fas fa-user-check"></i> Actifs: {{ stats.activeUsers|number_format(0, ',', ' ') }}
                 </span>
             </div>
         </div>
-        
+
         <div class="stat-card-admin">
             <div class="stat-icon-box" style="background: linear-gradient(135deg, #4CAF50, #388E3C);">
                 <i class="fas fa-credit-card"></i>
@@ -39,39 +38,55 @@
             <div class="stat-content">
                 <span class="stat-label">Abonnements actifs</span>
                 <span class="stat-value">{{ stats.activeSubscriptions|number_format(0, ',', ' ') }}</span>
-                <span class="stat-change {{ stats.subscriptionsGrowth > 0 ? 'positive' : 'negative' }}">
-                    <i class="fas fa-arrow-{{ stats.subscriptionsGrowth > 0 ? 'up' : 'down' }}"></i> 
-                    {{ stats.subscriptionsGrowth > 0 ? '+' : '' }}{{ stats.subscriptionsGrowth }}% ce mois
+                <span class="stat-change positive">
+                    <i class="fas fa-sync"></i> Expirés: {{ stats.expiredSubscriptions|number_format(0, ',', ' ') }}
                 </span>
             </div>
         </div>
-        
+
         <div class="stat-card-admin">
             <div class="stat-icon-box" style="background: linear-gradient(135deg, #FF9800, #F57C00);">
-                <i class="fas fa-calendar-check"></i>
+                <i class="fas fa-coins"></i>
             </div>
             <div class="stat-content">
-                <span class="stat-label">Rendez-vous ce mois</span>
-                <span class="stat-value">{{ stats.monthlyAppointments|number_format(0, ',', ' ') }}</span>
-                <span class="stat-change {{ stats.appointmentsGrowth > 0 ? 'positive' : 'negative' }}">
-                    <i class="fas fa-arrow-{{ stats.appointmentsGrowth > 0 ? 'up' : 'down' }}"></i> 
-                    {{ stats.appointmentsGrowth > 0 ? '+' : '' }}{{ stats.appointmentsGrowth }}% ce mois
+                <span class="stat-label">Revenus du mois</span>
+                <span class="stat-value">{{ stats.monthlyRevenue|number_format(0, ',', ' ') }} TND</span>
+                <span class="stat-change positive">
+                    <i class="fas fa-file-invoice"></i> Factures: {{ stats.totalInvoices|number_format(0, ',', ' ') }}
                 </span>
             </div>
         </div>
-        
+
         <div class="stat-card-admin">
             <div class="stat-icon-box" style="background: linear-gradient(135deg, #9C27B0, #7B1FA2);">
-                <i class="fas fa-euro-sign"></i>
+                <i class="fas fa-hourglass-half"></i>
             </div>
             <div class="stat-content">
-                <span class="stat-label">Revenus mensuels</span>
-                <span class="stat-value">{{ stats.monthlyRevenue|number_format(0, ',', ' ') }}€</span>
-                <span class="stat-change {{ stats.revenueGrowth > 0 ? 'positive' : 'negative' }}">
-                    <i class="fas fa-arrow-{{ stats.revenueGrowth > 0 ? 'up' : 'down' }}"></i> 
-                    {{ stats.revenueGrowth > 0 ? '+' : '' }}{{ stats.revenueGrowth }}% ce mois
+                <span class="stat-label">Paiements en attente</span>
+                <span class="stat-value">{{ stats.pendingPayments|number_format(0, ',', ' ') }}</span>
+                <span class="stat-change negative">
+                    <i class="fas fa-ban"></i> Bannies: {{ stats.bannedUsers|number_format(0, ',', ' ') }}
                 </span>
             </div>
+        </div>
+    </section>
+
+    <section class="admin-grid cards-4" style="margin-bottom: 30px;">
+        <div class="admin-card">
+            <div class="admin-badge">Email confirmés</div>
+            <h2>{{ stats.emailVerified|number_format(0, ',', ' ') }}</h2>
+        </div>
+        <div class="admin-card">
+            <div class="admin-badge warning">Admin en attente</div>
+            <h2>{{ stats.adminPending|number_format(0, ',', ' ') }}</h2>
+        </div>
+        <div class="admin-card">
+            <div class="admin-badge danger">Abonnements annulés</div>
+            <h2>{{ stats.cancelledSubscriptions|number_format(0, ',', ' ') }}</h2>
+        </div>
+        <div class="admin-card">
+            <div class="admin-badge">Revenus total</div>
+            <h2>{{ stats.totalRevenue|number_format(0, ',', ' ') }} TND</h2>
         </div>
     </section>
     
@@ -120,6 +135,28 @@
                 </div>
             </div>
         </div>
+
+        <div class="quick-stat-card">
+            <div class="quick-stat-header">
+                <h3>Connexions suspectes</h3>
+                <a href="{{ path('admin_security_suspicious') }}" class="quick-stat-btn">Voir tout</a>
+            </div>
+            <div class="quick-stat-list">
+                {% if suspiciousRecent is not empty %}
+                    {% for item in suspiciousRecent %}
+                        <div class="quick-stat-item {{ item.blocked ? 'alert' : '' }}">
+                            <span><i class="fas fa-shield-alt"></i> {{ item.user.email }}</span>
+                            <strong>{{ item.createdAt|date('d/m H:i') }}</strong>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="quick-stat-item">
+                        <span><i class="fas fa-shield-alt"></i> Aucune alerte</span>
+                        <strong>0</strong>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
         
         <div class="quick-stat-card">
             <div class="quick-stat-header">
@@ -147,79 +184,6 @@
         </div>
     </section>
     
-    <!-- Charts Section -->
-    <section class="admin-charts">
-        <div class="chart-card">
-            <div class="chart-header">
-                <h3>Évolution des inscriptions</h3>
-                <select class="chart-filter">
-                    <option>7 derniers jours</option>
-                    <option>30 derniers jours</option>
-                    <option>3 derniers mois</option>
-                    <option>12 derniers mois</option>
-                </select>
-            </div>
-            <div class="chart-container">
-                <canvas id="registrationsChart"></canvas>
-            </div>
-        </div>
-        
-        <div class="chart-card">
-            <div class="chart-header">
-                <h3>Revenus par catégorie</h3>
-                <button class="chart-export-btn"><i class="fas fa-download"></i></button>
-            </div>
-            <div class="chart-container">
-                <canvas id="revenueChart"></canvas>
-            </div>
-        </div>
-    </section>
-    
-    <!-- Recent Activity Table -->
-    <section class="admin-table-section">
-        <div class="table-header">
-            <h3>Dernières activités</h3>
-            <div class="table-actions">
-                <input type="text" placeholder="Rechercher..." class="table-search">
-                <button class="btn-filter"><i class="fas fa-filter"></i> Filtrer</button>
-            </div>
-        </div>
-        <div class="admin-table-wrapper">
-            <table class="admin-table">
-                <thead>
-                    <tr>
-                        <th>Date & Heure</th>
-                        <th>Type</th>
-                        <th>Utilisateur</th>
-                        <th>Action</th>
-                        <th>Statut</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for activity in recentActivities %}
-                        <tr>
-                            <td>{{ activity.createdAt|date('d/m/Y H:i') }}</td>
-                            <td>
-                                <span class="activity-type {{ activity.type }}">
-                                    <i class="{{ activity.icon }}"></i> {{ activity.typeName }}
-                                </span>
-                            </td>
-                            <td>
-                                <div class="user-cell">
-                                    <img src="{{ activity.user.avatar ?? 'https://i.pravatar.cc/40?img=' ~ loop.index }}" alt="{{ activity.user.name }}">
-                                    <span>{{ activity.user.name }}</span>
-                                </div>
-                            </td>
-                            <td>{{ activity.description }}</td>
-                            <td>
-                                <span class="status-badge {{ activity.status }}">{{ activity.statusText }}</span>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </section>
 {% endblock %}
 
 {% block javascripts %}

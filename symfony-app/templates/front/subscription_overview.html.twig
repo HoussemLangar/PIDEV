@@ -1,0 +1,44 @@
+{% extends 'front/base.html.twig' %}
+
+{% block title %}Mon abonnement{% endblock %}
+
+{% block body %}
+<section class="subscription-wrap">
+    <div class="subscription-hero">
+        <h2>Mon abonnement</h2>
+        <p>Plan actif et informations de facturation.</p>
+        <div class="plan-price">{{ abonnement.prix }} DT <span>/ mois</span></div>
+    </div>
+
+    <div class="subscription-details">
+        <div class="subscription-detail-card">
+            <strong>Plan</strong>
+            <div>{{ abonnement.nom }}</div>
+        </div>
+        <div class="subscription-detail-card">
+            <strong>Type</strong>
+            <div>{{ abonnement.typeAbonnement }}</div>
+        </div>
+        <div class="subscription-detail-card">
+            <strong>Date début</strong>
+            <div>{{ abonnement.dateDebut|date('d/m/Y') }}</div>
+        </div>
+        <div class="subscription-detail-card">
+            <strong>Date fin</strong>
+            <div>{{ abonnement.dateFin|date('d/m/Y') }}</div>
+        </div>
+        <div class="subscription-detail-card">
+            <strong>Statut</strong>
+            <div>{{ abonnement.statut }}</div>
+        </div>
+    </div>
+
+    <div class="subscription-actions">
+        <a class="btn-appointment" href="{{ path('app_subscription') }}">Changer d'abonnement</a>
+        <form method="post" action="{{ path('app_subscription_cancel') }}" onsubmit="return confirm('Annuler votre abonnement ?');">
+            <button class="btn-ghost" type="submit">Annuler l'abonnement</button>
+        </form>
+    </div>
+
+</section>
+{% endblock %}

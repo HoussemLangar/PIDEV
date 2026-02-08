@@ -7,6 +7,7 @@
     
     {% block stylesheets %}
         <link rel="stylesheet" href="{{ asset('style.css') }}">
+        <link rel="SHORTCUT ICON" type="image/x-icon" href="{{ asset('logo.png') }}">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     {% endblock %}
 </head>
@@ -64,7 +65,50 @@
                 }
             }
         </script>
+        <script>
+            (function () {
+                const loader = document.getElementById('globalLoader');
+                if (!loader) return;
+                const show = () => {
+                    loader.classList.add('show');
+                    loader.setAttribute('aria-hidden', 'false');
+                };
+                const hide = () => {
+                    loader.classList.remove('show');
+                    loader.setAttribute('aria-hidden', 'true');
+                };
+
+                document.querySelectorAll('form').forEach((form) => {
+                    if (form.dataset.ajax === '1') return;
+                    form.addEventListener('submit', () => {
+                        show();
+                    });
+                });
+
+                document.querySelectorAll('a[href]').forEach((link) => {
+                    if (link.target === '_blank' || link.hasAttribute('download')) return;
+                    link.addEventListener('click', () => {
+                        const href = link.getAttribute('href');
+                        if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
+                        show();
+                    });
+                });
+
+                window.addEventListener('pageshow', (e) => {
+                    if (e.persisted) hide();
+                });
+
+                window.addEventListener('load', hide);
+            })();
+        </script>
     {% endblock %}
+
+    <div class="global-loader" id="globalLoader" aria-hidden="true">
+        <div class="loader-card">
+            <div class="loader-spinner"></div>
+            <div class="loader-text">Chargement…</div>
+        </div>
+    </div>
     
 </body>
 </html>

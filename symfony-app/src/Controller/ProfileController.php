@@ -3,7 +3,8 @@
 namespace App\Controller;
 
 use App\Entity\User;
-use App\Form\UsersType;
+use App\Form\ProfileType;
+use App\Repository\SuspiciousLoginRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -11,6 +12,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Scheb\TwoFactorBundle\Security\TwoFactor\Provider\Google\GoogleAuthenticatorInterface;
 
 
 #[Route('/profile', name: 'profile_')]
@@ -18,18 +20,31 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 class ProfileController extends AbstractController
 {
     #[Route('', name: 'edit', methods: ['GET', 'POST'])]
-    public function edit(Request $request, EntityManagerInterface $em, UserPasswordHasherInterface $passwordHasher): Response
+    public function edit(
+        Request $request,
+        EntityManagerInterface $em,
+        UserPasswordHasherInterface $passwordHasher
+    ): Response
     {
         $user = $this->getUser();
 
-        $form = $this->createForm(UsersType::class, $user, [
-            'validation_groups' => ['profile'],
-        ]);
+        $form = $this->createForm(ProfileType::class, $user);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            if ($form->get('password')->getData()) {
-                $hashedPassword = $passwordHasher->hashPassword($user, $form->get('password')->getData());
+            $avatarFile = $form->get('avatarFile')->getData();
+            if ($avatarFile) {
+                $mime = $avatarFile->getMimeType();
+                $data = @file_get_contents($avatarFile->getPathname());
+                if ($data !== false && $mime) {
+                    $user->setAvatarMime($mime);
+                    $user->setAvatarData($data);
+                } else {
+                    $this->addFlash('error', 'Upload avatar échoué. Réessayez avec une image valide.');
+                }
+            }
+            if ($form->get('plainPassword')->getData()) {
+                $hashedPassword = $passwordHasher->hashPassword($user, $form->get('plainPassword')->getData());
                 $user->setPassword($hashedPassword);
             }
 
@@ -62,5 +77,55 @@ class ProfileController extends AbstractController
         }
 
         return $this->redirectToRoute('profile_edit');
+    }
+
+    #[Route('/mfa', name: 'mfa', methods: ['GET', 'POST'])]
+    public function mfa(Request $request, EntityManagerInterface $em, GoogleAuthenticatorInterface $googleAuthenticator): Response
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+
+        if ($request->isMethod('POST')) {
+            if ($request->request->get('disable_mfa')) {
+                $user->setMfaEnabled(false);
+                $user->setGoogleAuthenticatorSecret(null);
+                $em->flush();
+                $this->addFlash('success', 'MFA désactivé.');
+                return $this->redirectToRoute('profile_mfa');
+            }
+
+            if (!$user->getGoogleAuthenticatorSecret()) {
+                $user->setGoogleAuthenticatorSecret($googleAuthenticator->generateSecret());
+            }
+            $user->setMfaEnabled(true);
+            $em->flush();
+            $this->addFlash('success', 'MFA activé.');
+            return $this->redirectToRoute('profile_mfa');
+        }
+
+        $qrContent = null;
+        if ($user->getGoogleAuthenticatorSecret()) {
+            $qrContent = $googleAuthenticator->getQRContent($user);
+        }
+
+        return $this->render('front/profile/mfa.html.twig', [
+            'qrContent' => $qrContent,
+        ]);
+    }
+
+    #[Route('/notifications', name: 'notifications', methods: ['GET'])]
+    public function notifications(SuspiciousLoginRepository $suspiciousLoginRepository): Response
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->redirectToRoute('login');
+        }
+
+        $notifications = $suspiciousLoginRepository->findForUser($user, 20);
+
+        return $this->render('front/profile/notifications.html.twig', [
+            'securityNotifications' => $notifications,
+        ]);
     }
 }

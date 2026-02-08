@@ -1,0 +1,179 @@
+{% extends 'front/base.html.twig' %}
+
+{% block title %}{{ contenu.titre }}{% endblock %}
+
+{% block body %}
+<section class="content-page">
+    <div class="content-hero">
+        <div class="content-header">
+            <div>
+                <div class="profile-badge">Contenu</div>
+                <h1>{{ contenu.titre }}</h1>
+                <p>{{ contenu.description ?? '' }}</p>
+            </div>
+            <div>
+                <a href="{{ path('front_content_index') }}" class="btn btn-secondary">Retour</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-section content-card" data-content-id="{{ contenu.id }}">
+        <div class="content-meta">
+            <span class="content-pill">{{ contenu.type|upper }}</span>
+            <span>{{ (contenu.datePublication ?? contenu.createdAt)|date('d/m/Y') }}</span>
+            <span>{{ contenu.auteur ? (contenu.auteur.fullName ?? contenu.auteur.email) : 'Anonyme' }}</span>
+        </div>
+
+        <div style="margin-top: 14px;">
+            {% set isLocal = contenu.contenu starts with '/media/' %}
+            {% if contenu.type == 'article' %}
+                <p>{{ contenu.contenu|raw }}</p>
+            {% elseif contenu.type == 'pdf' %}
+                <a class="btn btn-primary" href="{{ contenu.contenu }}" target="_blank">Télécharger le PDF</a>
+            {% elseif contenu.type == 'video' and isLocal %}
+                <video controls style="width:100%; border-radius:12px;">
+                    <source src="{{ contenu.contenu }}" type="video/mp4">
+                    Votre navigateur ne supporte pas la vidéo.
+                </video>
+            {% else %}
+                <a class="btn btn-primary" href="{{ contenu.contenu }}" target="_blank">Accéder au lien</a>
+            {% endif %}
+        </div>
+
+        <div class="content-actions">
+            <button class="like-btn" data-liked="0">
+                <i class="fas fa-heart"></i>
+                <span class="like-count">{{ contenu.likes|length }}</span>
+            </button>
+            <button class="btn btn-secondary btn-xs comment-toggle">
+                Commentaires (<span class="comment-count">{{ contenu.commentaires|length }}</span>)
+            </button>
+            {% if isOwner %}
+                <a class="btn btn-secondary btn-xs" href="{{ path('front_content_edit', {id: contenu.id}) }}">Modifier</a>
+                <form method="post" action="{{ path('front_content_delete', {id: contenu.id}) }}" style="display:inline;" onsubmit="return confirm('Supprimer ce contenu ?');">
+                    <input type="hidden" name="_token" value="{{ csrf_token('content_delete_' ~ contenu.id) }}">
+                    <button class="btn btn-danger btn-xs" type="submit">Supprimer</button>
+                </form>
+            {% endif %}
+        </div>
+
+        <div class="comment-panel" hidden>
+            <div class="comment-list"></div>
+            <form class="comment-form" data-ajax="1">
+                <textarea rows="2" placeholder="Ajouter un commentaire..."></textarea>
+                <div class="content-actions">
+                    <button type="submit" class="btn btn-primary btn-xs">Publier</button>
+                    <div class="form-error" data-comment-error></div>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        (function () {
+            const card = document.querySelector('.content-card');
+            if (!card) return;
+            const csrfToken = '{{ csrf_token('content_action') }}';
+            const currentUserId = {{ app.user ? app.user.id : 'null' }};
+            const contentId = card.dataset.contentId;
+            const likeBtn = card.querySelector('.like-btn');
+            const likeCount = card.querySelector('.like-count');
+            const commentToggle = card.querySelector('.comment-toggle');
+            const commentPanel = card.querySelector('.comment-panel');
+            const commentList = card.querySelector('.comment-list');
+            const commentForm = card.querySelector('.comment-form');
+            const commentCount = card.querySelector('.comment-count');
+            const errorEl = card.querySelector('[data-comment-error]');
+
+            const fetchComments = async () => {
+                const res = await fetch(`{{ path('api_content_list') }}/${contentId}/comments`);
+                const data = await res.json();
+                commentList.innerHTML = '';
+                (data.items || []).forEach((comment) => {
+                    const canDelete = currentUserId && comment.user_id === currentUserId;
+                    const deleteBtn = canDelete ? `<button class="btn btn-secondary btn-xs comment-delete" data-comment-id="${comment.id}">Supprimer</button>` : '';
+                    commentList.insertAdjacentHTML('beforeend', `
+                        <div class="comment-item" data-comment-id="${comment.id}">
+                            <div class="comment-meta">${comment.user} • ${comment.date}</div>
+                            <div>${comment.message}</div>
+                            ${deleteBtn}
+                        </div>
+                    `);
+                });
+            };
+
+            commentToggle.addEventListener('click', async () => {
+                commentPanel.hidden = !commentPanel.hidden;
+                if (!commentPanel.hidden) {
+                    await fetchComments();
+                }
+            });
+
+            likeBtn.addEventListener('click', async () => {
+                const res = await fetch(`{{ path('api_content_list') }}/${contentId}/like`, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': csrfToken,
+                    },
+                });
+                const data = await res.json();
+                if (data.success) {
+                    likeBtn.classList.toggle('active', data.liked);
+                    likeBtn.dataset.liked = data.liked ? '1' : '0';
+                    likeCount.textContent = data.count;
+                }
+            });
+
+            commentForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const message = commentForm.querySelector('textarea').value.trim();
+                errorEl.textContent = '';
+                if (!message) {
+                    errorEl.textContent = 'Le commentaire est obligatoire.';
+                    return;
+                }
+                const res = await fetch(`{{ path('api_content_list') }}/${contentId}/comment`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': csrfToken,
+                    },
+                    body: JSON.stringify({ message }),
+                });
+                const data = await res.json();
+                if (!data.success) {
+                    errorEl.textContent = data.message || (data.errors ? data.errors.join(', ') : 'Erreur.');
+                    return;
+                }
+                commentForm.querySelector('textarea').value = '';
+                await fetchComments();
+                commentCount.textContent = data.count;
+            });
+
+            card.addEventListener('click', async (e) => {
+                const deleteBtn = e.target.closest('.comment-delete');
+                if (!deleteBtn) return;
+                if (!confirm('Supprimer ce commentaire ?')) return;
+                const commentId = deleteBtn.dataset.commentId;
+                const res = await fetch(`{{ path('api_content_list') }}/comments/${commentId}/delete`, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': csrfToken,
+                    },
+                });
+                const data = await res.json();
+                if (data.success) {
+                    await fetchComments();
+                    commentCount.textContent = data.count;
+                }
+            });
+        })();
+    </script>
+{% endblock %}

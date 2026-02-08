@@ -1,0 +1,188 @@
+{% extends 'back/base.html.twig' %}
+
+{% block title %}Paiements{% endblock %}
+
+{% block admin_content %}
+<div class="admin-page-header payments-header">
+    <div class="admin-page-title">
+        <div class="payments-title">
+            <span class="payments-chip">Paiements</span>
+            <h1>Revenus & facturation</h1>
+        </div>
+        <p>Suivi des factures, des revenus et des clients payants.</p>
+    </div>
+</div>
+
+<div class="admin-grid cards-4 payments-stats">
+    <div class="admin-card">
+        <div class="admin-badge">Total factures</div>
+        <h2>{{ stats.total }}</h2>
+    </div>
+    <div class="admin-card">
+        <div class="admin-badge success">Revenus</div>
+        <h2>{{ stats.revenue }} TND</h2>
+    </div>
+    <div class="admin-card">
+        <div class="admin-badge warning">Ce mois</div>
+        <h2>{{ stats.month }} TND</h2>
+    </div>
+    <div class="admin-card">
+        <div class="admin-badge">Période</div>
+        <h2>{{ filters.from ?: '—' }} → {{ filters.to ?: '—' }}</h2>
+    </div>
+</div>
+
+<div class="admin-card payments-filters">
+    <form method="get" class="admin-form" id="paymentsFilterForm">
+        <div class="form-row filters-inline filters-modern">
+            <div class="filter-search filter-field">
+                <label class="filter-label">Recherche</label>
+                <i class="fas fa-search"></i>
+                <input type="text" name="q" value="{{ filters.q }}" placeholder="Search">
+            </div>
+            <div class="filter-field">
+                <label>Du</label>
+                <input type="date" name="from" value="{{ filters.from }}">
+            </div>
+            <div class="filter-field">
+                <label>Au</label>
+                <input type="date" name="to" value="{{ filters.to }}">
+            </div>
+            <div class="filter-field">
+                <label>Min (TND)</label>
+                <input type="number" step="0.01" name="min" value="{{ filters.min }}">
+            </div>
+            <div class="filter-field">
+                <label>Max (TND)</label>
+                <input type="number" step="0.01" name="max" value="{{ filters.max }}">
+            </div>
+            <div class="filter-actions">
+                <a class="btn btn-secondary" href="{{ path('admin_payments') }}">Réinitialiser</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="admin-card payments-table">
+    <div class="payments-table-header">
+        <div>
+            <strong>{{ total }}</strong> factures
+        </div>
+        <div class="payments-legend">
+            <span class="admin-badge success">Payé</span>
+            <span class="admin-badge">PDF disponible</span>
+        </div>
+    </div>
+    <div style="overflow-x:auto;">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Facture</th>
+                    <th>Client</th>
+                    <th>Plan</th>
+                    <th>Total TTC</th>
+                    <th>Date</th>
+                    <th>PDF</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for f in factures %}
+                <tr>
+                    <td>{{ f.numero }}</td>
+                    <td>{{ f.user ? (f.user.fullName ?? f.user.email) : '-' }}</td>
+                    <td>{{ f.abonnement ? f.abonnement.nom : '-' }}</td>
+                    <td>{{ f.montantTtc }} {{ f.devise }}</td>
+                    <td>{{ f.createdAt|date('d/m/Y') }}</td>
+                    <td>
+                        {% if f.pdfPath %}
+                            <a class="btn btn-secondary" href="{{ path('admin_payments_download', {id: f.id}) }}">Télécharger</a>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="6" style="text-align:center; color: var(--admin-muted);">Aucune facture</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if pages > 1 %}
+        <div class="admin-pagination" style="margin-top: 16px;">
+            {% for p in 1..pages %}
+                {% if p == page %}
+                    <span class="active">{{ p }}</span>
+                {% else %}
+                    <a href="{{ path('admin_payments', filters|merge({page: p})) }}">{{ p }}</a>
+                {% endif %}
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+
+<div class="admin-card">
+    <div class="chart-toggle">
+        <h3>Factures (30 derniers jours)</h3>
+        <button class="btn btn-secondary" type="button" id="togglePaymentsChart">Afficher le graphique</button>
+    </div>
+    <div id="paymentsChartWrap" class="chart-wrap">
+        <canvas id="paymentsChart" height="110"></canvas>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        (function () {
+            const form = document.getElementById('paymentsFilterForm');
+            if (!form) return;
+            const inputs = form.querySelectorAll('input');
+            inputs.forEach((el) => {
+                el.addEventListener('change', () => form.submit());
+            });
+        })();
+    </script>
+    <script>
+        const ctx = document.getElementById('paymentsChart');
+        if (ctx) {
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: {{ chart.labels|json_encode|raw }},
+                    datasets: [{
+                        label: 'Factures',
+                        data: {{ chart.data|json_encode|raw }},
+                        borderColor: '#0ea5e9',
+                        backgroundColor: 'rgba(14, 165, 233, 0.18)',
+                        fill: true,
+                        tension: 0.35
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { display: false } },
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+    </script>
+    <script>
+        (function () {
+            const btn = document.getElementById('togglePaymentsChart');
+            const wrap = document.getElementById('paymentsChartWrap');
+            if (!btn || !wrap) return;
+            btn.addEventListener('click', () => {
+                wrap.classList.toggle('open');
+                btn.textContent = wrap.classList.contains('open') ? 'Masquer le graphique' : 'Afficher le graphique';
+            });
+        })();
+    </script>
+{% endblock %}

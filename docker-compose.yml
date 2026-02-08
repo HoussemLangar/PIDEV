@@ -9,6 +9,7 @@ services:
     container_name: pidev-web
     ports:
       - "8000:80"
+      - "8443:443"
     volumes:
       - ./symfony-app:/var/www/html
     environment:

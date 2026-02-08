@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: DejaVu Sans, Arial, sans-serif; color: #1f2937; font-size: 12px; }
+        .header { display: flex; justify-content: space-between; align-items: center; }
+        .brand { font-size: 20px; font-weight: bold; color: #0288D1; }
+        .invoice-box { margin-top: 10px; padding: 16px; border: 1px solid #e5e7eb; border-radius: 8px; }
+        .row { display: flex; justify-content: space-between; margin-top: 6px; }
+        .muted { color: #6b7280; }
+        table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+        th, td { border-bottom: 1px solid #e5e7eb; padding: 8px; text-align: left; }
+        th { background: #f9fafb; }
+        .total { text-align: right; margin-top: 12px; }
+        .total strong { font-size: 14px; }
+        .footer { margin-top: 24px; font-size: 11px; color: #6b7280; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="brand">SANTÉA</div>
+        <div>
+            <div><strong>Facture</strong> #{{ facture.numero }}</div>
+            <div class="muted">Date: {{ facture.createdAt|date('d/m/Y') }}</div>
+        </div>
+    </div>
+
+    <div class="invoice-box">
+        <div class="row">
+            <div>
+                <strong>Client</strong><br>
+                {{ facture.user.fullName ?? facture.user.email }}<br>
+                {{ facture.user.email }}<br>
+                {{ facture.user.adresse ?? '' }}
+            </div>
+            <div>
+                <strong>Abonnement</strong><br>
+                {{ facture.abonnement.nom }}<br>
+                Début: {{ facture.abonnement.dateDebut|date('d/m/Y') }}<br>
+                Fin: {{ facture.abonnement.dateFin|date('d/m/Y') }}
+            </div>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Description</th>
+                <th>Qté</th>
+                <th>Prix HT</th>
+                <th>Total HT</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Abonnement {{ facture.abonnement.nom }} (1 mois)</td>
+                <td>1</td>
+                <td>{{ facture.montantHt }} {{ facture.devise }}</td>
+                <td>{{ facture.montantHt }} {{ facture.devise }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="total">
+        <div>Sous-total: {{ facture.montantHt }} {{ facture.devise }}</div>
+        <div>TVA ({{ facture.tvaTaux }}%): {{ facture.tvaMontant }} {{ facture.devise }}</div>
+        <strong>Total TTC: {{ facture.montantTtc }} {{ facture.devise }}</strong>
+    </div>
+
+    <div class="footer">
+        Merci pour votre confiance. Cette facture a été générée automatiquement.
+    </div>
+</body>
+</html>

@@ -6,6 +6,7 @@ use App\Repository\ContenuRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: ContenuRepository::class)]
 #[ORM\Table(name: 'contenu')]
@@ -21,13 +22,39 @@ class Contenu
     private ?User $auteur = null;
 
     #[ORM\Column(type: 'string', length: 255)]
+    #[Assert\NotBlank(message: 'Le titre est obligatoire.')]
+    #[Assert\Length(
+        min: 5,
+        max: 255,
+        minMessage: 'Le titre doit contenir au moins {{ limit }} caractères.',
+        maxMessage: 'Le titre ne peut pas dépasser {{ limit }} caractères.'
+    )]
     private string $titre;
 
     #[ORM\Column(type: 'string', length: 50)]
+    #[Assert\NotBlank(message: 'Le type de contenu est obligatoire.')]
+    #[Assert\Choice(
+        choices: ['article', 'video', 'pdf', 'lien'],
+        message: 'Type de contenu invalide.'
+    )]
     private string $type;
 
+    #[ORM\Column(type: 'text', nullable: true)]
+    #[Assert\Length(
+        max: 500,
+        maxMessage: 'La description ne peut pas dépasser {{ limit }} caractères.'
+    )]
+    private ?string $description = null;
+
     #[ORM\Column(type: 'text')]
-    private string $contenu;
+    #[Assert\NotBlank(message: 'Le contenu est obligatoire.')]
+    #[Assert\Length(
+        min: 5,
+        max: 20000,
+        minMessage: 'Le contenu doit contenir au moins {{ limit }} caractères.',
+        maxMessage: 'Le contenu ne peut pas dépasser {{ limit }} caractères.'
+    )]
+    private string $contenu = '';
 
     #[ORM\Column(type: 'string', length: 100, nullable: true)]
     private ?string $categorie = null;
@@ -35,8 +62,8 @@ class Contenu
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private ?string $tags = null;
 
-    #[ORM\Column(type: 'string', length: 20, options: ['default' => 'publie'])]
-    private string $statut = 'publie';
+    #[ORM\Column(type: 'string', length: 20, options: ['default' => 'en_attente'])]
+    private string $statut = 'en_attente';
 
     #[ORM\Column(type: 'datetime', nullable: true)]
     private ?\DateTimeInterface $datePublication = null;
@@ -55,8 +82,8 @@ class Contenu
 
     public function __construct()
     {
-        $this->createdAt = new \DateTimeImmutable();
-        $this->updatedAt = new \DateTimeImmutable();
+        $this->createdAt = new \DateTime();
+        $this->updatedAt = new \DateTime();
         $this->likes = new ArrayCollection();
         $this->commentaires = new ArrayCollection();
     }
@@ -68,6 +95,8 @@ class Contenu
     public function setTitre(string $titre): void { $this->titre = $titre; }
     public function getType(): string { return $this->type; }
     public function setType(string $type): void { $this->type = $type; }
+    public function getDescription(): ?string { return $this->description; }
+    public function setDescription(?string $description): void { $this->description = $description; }
     public function getContenu(): string { return $this->contenu; }
     public function setContenu(string $contenu): void { $this->contenu = $contenu; }
     public function getCategorie(): ?string { return $this->categorie; }
