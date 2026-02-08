@@ -1273,9 +1273,28 @@ class AdminController extends AbstractController
 
     // ========== TRACKER SANTÉ ==========
     #[Route('/tracker', name: 'admin_tracker')]
-    public function tracker(): Response
+    public function tracker(
+        \App\Repository\SymptomeListeRepository $symptomeListeRepository,
+        \App\Repository\SymptomeQuotidienRepository $symptomeQuotidienRepository
+    ): Response
     {
-        return $this->render('admin/tracker/index.html.twig');
+        $userStats = $symptomeQuotidienRepository->getUserSymptomStatistics();
+
+        $stats = [
+            'list_total' => $symptomeListeRepository->getTotalCount(),
+            'tracked_total' => $symptomeQuotidienRepository->getTotalTrackedCount(),
+            'tracked_weekly' => $symptomeQuotidienRepository->getWeeklyTrackedCount(),
+            'avg_intensity' => $symptomeQuotidienRepository->getAverageIntensityAll(),
+            'active_patients' => count($userStats),
+        ];
+
+        $mostCommonSymptoms = $symptomeQuotidienRepository->getMostCommonSymptoms(10);
+
+        return $this->render('admin/tracker/index.html.twig', [
+            'stats' => $stats,
+            'user_stats' => $userStats,
+            'most_common_symptoms' => $mostCommonSymptoms,
+        ]);
     }
 
     // ========== SYSTÈME ==========

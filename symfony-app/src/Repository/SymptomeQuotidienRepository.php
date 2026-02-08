@@ -89,6 +89,30 @@ class SymptomeQuotidienRepository extends ServiceEntityRepository
     }
 
     /**
+     * Trouve les symptômes enregistrés à une date spécifique pour un patient
+     * @param string $date Date au format Y-m-d
+     */
+    public function findByDateForPatient(string $date, $patient): array
+    {
+        $startDate = new \DateTime($date . ' 00:00:00');
+        $endDate = new \DateTime($date . ' 23:59:59');
+
+        return $this->createQueryBuilder('s')
+            ->leftJoin('s.symptome', 'sl')
+            ->leftJoin('s.patient', 'p')
+            ->addSelect('sl', 'p')
+            ->where('s.dateSymptome >= :startDate')
+            ->andWhere('s.dateSymptome <= :endDate')
+            ->andWhere('s.patient = :patient')
+            ->setParameter('startDate', $startDate)
+            ->setParameter('endDate', $endDate)
+            ->setParameter('patient', $patient)
+            ->orderBy('s.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
      * Trouver tous les symptômes d'un patient avec leurs détails
      */
     public function findByPatientWithDetails($patient): array
@@ -239,5 +263,44 @@ class SymptomeQuotidienRepository extends ServiceEntityRepository
         $results = $conn->executeQuery($sql)->fetchAllAssociative();
         
         return $results;
+    }
+
+    /**
+     * Nombre total de symptômes enregistrés (tous patients)
+     */
+    public function getTotalTrackedCount(): int
+    {
+        return (int) $this->createQueryBuilder('sq')
+            ->select('COUNT(sq.id)')
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    /**
+     * Nombre de symptômes enregistrés sur les 7 derniers jours (tous patients)
+     */
+    public function getWeeklyTrackedCount(): int
+    {
+        $weekAgo = new \DateTimeImmutable('-7 days');
+
+        return (int) $this->createQueryBuilder('sq')
+            ->select('COUNT(sq.id)')
+            ->where('sq.dateSymptome >= :weekAgo')
+            ->setParameter('weekAgo', $weekAgo)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    /**
+     * Intensité moyenne globale (tous patients)
+     */
+    public function getAverageIntensityAll(): float
+    {
+        $result = $this->createQueryBuilder('sq')
+            ->select('AVG(sq.intensite)')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return $result ? round((float) $result, 1) : 0.0;
     }
 }

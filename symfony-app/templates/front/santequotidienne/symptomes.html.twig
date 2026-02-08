@@ -1,11 +1,33 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Mes Symptômes - SANTÉA</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+{% extends 'front/base.html.twig' %}
+
+{% block title %}Mes Symptômes - SANTÉA{% endblock %}
+
+{% block stylesheets %}
+  {{ parent() }}
   <style>
+  .health-tracker-page-neutral {
+    background: #f5f7fb;
+    padding-left: 0;
+  }
+  .health-tracker-page-neutral::before,
+  .health-tracker-page-neutral::after {
+    content: none;
+  }
+  body {
+    background: #f5f7fb;
+  }
+  .content-hero {
+    background: #f5f7fb;
+    border-color: #e5e7eb;
+    box-shadow: none;
+    width: 100%;
+  }
+  .content-page {
+    padding-left: 0.15vw;
+    padding-right: 0.15vw;
+    width: 85%;
+  }
+
 /* Reset CSS */
 * {
   margin: 0;
@@ -1443,80 +1465,23 @@ footer {
   }
 }
   </style>
-</head>
-<body>
+{% endblock %}
 
-  <!-- Header / Navbar -->
-  <header>
-    <nav class="navbar">
-      <div class="logo">SANTÉA</div>
-      <ul class="nav-links">
-        <li><a href="{{ path('app_home') }}">Accueil</a></li>
-        <li><a href="#rendez-vous">Mes rendez-vous</a></li>
-        <li><a href="{{ path('app_pharmacies') }}">Pharmacies</a></li>
-        <li><a href="{{ path('app_sante_quotidienne_index') }}" class="active">Tracker Santé</a></li>
-        <li><a href="#profil">Mon profil</a></li>
-      </ul>
-      <div class="user-menu">
-        <i class="fas fa-user-circle"></i>
-        <span>Mon compte</span>
-      </div>
-      <div class="menu-toggle"><i class="fas fa-bars"></i></div>
-    </nav>
-  </header>
-
-  <!-- Page principale -->
-  <main class="health-tracker-page-v2" style="position:relative;">
+{% block body %}
+  <main class="health-tracker-page-v2 health-tracker-page-neutral" style="position:relative; background:#f5f7fb; background-image:none;">
     
-    <!-- Animated floating icons background -->
-    <div class="hero-animation" style="position:fixed; top:0; left:0; width:100%; height:100%; z-index:1; pointer-events:none;">
-      <div class="floating-shape shape-1"></div>
-      <div class="floating-shape shape-3"></div>
-      <div class="floating-shape shape-4"></div>
-      <div class="floating-shape shape-5"></div>
-      <div class="floating-icon icon-1"><i class="fas fa-heartbeat"></i></div>
-      <div class="floating-icon icon-2"><i class="fas fa-stethoscope"></i></div>
-      <div class="floating-icon icon-3"><i class="fas fa-briefcase-medical"></i></div>
-      <div class="floating-icon icon-4" style="top: 50%; right: 5%;"><i class="fas fa-dumbbell"></i></div>
-    </div>
-    
-    <!-- Sidebar -->
-    <aside class="health-sidebar">
-      <div class="sidebar-logo">
-        <i class="fas fa-heart-pulse"></i>
-        <span>Ma Santé</span>
-      </div>
-      <nav class="sidebar-nav">
-        <a href="{{ path('app_sante_quotidienne_index') }}" class="sidebar-link">
-          <i class="fas fa-book-medical"></i>
-          <span>Mon journal santé</span>
-        </a>
-        <a href="{{ path('app_symptomes') }}" class="sidebar-link active">
-          <i class="fas fa-stethoscope"></i>
-          <span>Mes symptômes</span>
-        </a>
-        <a href="#" class="sidebar-link">
-          <i class="fas fa-calendar-days"></i>
-          <span>Mon historique</span>
-        </a>
-      </nav>
-    </aside>
-
+    <section class="content-page">
     <div class="container-wide" style="position:relative; z-index:2;">
       
-      <!-- Header -->
-      <div class="page-header-animated">
-        <div class="header-content">
-          <div class="title-with-emoji">
-            <span class="emoji-float">🩺</span>
-            <div>
-                            <h1 style="font-size: 2.8em; font-weight: 600; margin: 0; width:100%; letter-spacing:0.02em;">Mes Symptômes</h1>
-
-              <p>Suivez et gérez vos symptômes au quotidien</p>
-            </div>
+      <section class="content-hero">
+        <div class="content-header">
+          <div>
+            <div class="profile-badge">Tracker Santé</div>
+            <h1>Mes Symptômes</h1>
+            <p>Suivez et gérez vos symptômes au quotidien.</p>
           </div>
         </div>
-      </div>
+      </section>
 
       <!-- Messages flash -->
       {% for type, messages in app.flashes %}
@@ -1697,6 +1662,7 @@ footer {
 
       </div>
     </div>
+    </section>
   </main>
 
   <!-- Modal d'édition -->
@@ -1729,13 +1695,10 @@ footer {
     </div>
   </div>
 
-  <!-- Footer -->
-  <footer>
-    <div class="container">
-      <p>2026 SANTÉA - All Rights Reserved</p>
-    </div>
-  </footer>
+{% endblock %}
 
+{% block javascripts %}
+  {{ parent() }}
   <script>
     // Dates des symptômes depuis le serveur
     const datesSymptomes = {{ dates_symptomes|json_encode|raw }};
@@ -2500,5 +2463,4 @@ footer {
     `;
     document.head.appendChild(notificationStyles);
   </script>
-</body>
-</html>
+{% endblock %}

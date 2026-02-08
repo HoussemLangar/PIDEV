@@ -54,7 +54,9 @@
                     <li><a href="#quick-info">{{ 'nav.about'|trans }}</a></li>
                     <li><a href="#appointment-section">{{ 'nav.services'|trans }}</a></li>
                     <li><a href="{{ path('front_content_index') }}">{{ 'nav.blog'|trans }}</a></li>
-                    {% if app.user and app.user.subscriptionStatus == 'ACTIVE' and (app.user.subscriptionType ?? app.user.role) == 'ROLE_PATIENT' %}
+                    <li><a href="{{ path('app_sante_quotidienne_index') }}">Mon journal santé</a></li>
+                    {% if app.user and (app.user.subscriptionType ?? app.user.role) == 'ROLE_PATIENT' %}
+                        <li><a href="{{ path('app_symptomes') }}">Mes symptômes</a></li>
                         <li><a href="{{ path('front_pharmacy_index') }}">Pharmacies</a></li>
                     {% endif %}
                     {% if app.user and app.user.subscriptionStatus == 'ACTIVE' and (app.user.subscriptionType ?? app.user.role) == 'ROLE_PHARMACIEN' %}
@@ -88,6 +90,15 @@
                         <a href="{{ path('profile_mfa') }}" class="dropdown-item">
                             <i class="fas fa-key"></i> {{ 'nav.mfa'|trans }}
                         </a>
+
+                        {% if app.user and (app.user.subscriptionType ?? app.user.role) == 'ROLE_PATIENT' %}
+                        <a href="{{ path('app_sante_quotidienne_index') }}" class="dropdown-item">
+                            <i class="fas fa-book-medical"></i> Mon journal santé
+                        </a>
+                        <a href="{{ path('app_symptomes') }}" class="dropdown-item">
+                            <i class="fas fa-stethoscope"></i> Mes symptômes
+                        </a>
+                        {% endif %}
 
                         <a href="{{ path('app_subscription_overview') }}" class="dropdown-item">
                             <i class="fas fa-star"></i> {{ 'nav.subscription'|trans }}

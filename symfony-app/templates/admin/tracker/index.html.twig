@@ -1,0 +1,146 @@
+{% extends 'back/base.html.twig' %}
+
+{% block title %}Tracker Santé - Admin{% endblock %}
+
+{% block admin_content %}
+    <header class="admin-header">
+        <div class="admin-header-left">
+            <h1>Tracker Santé</h1>
+            <p class="header-subtitle">Statistiques globales des symptômes enregistrés</p>
+        </div>
+    </header>
+
+    <section class="admin-stats">
+        <div class="stat-card-admin">
+            <div class="stat-icon-box" style="background: linear-gradient(135deg, #6EC6FF, #2196F3);">
+                <i class="fas fa-list"></i>
+            </div>
+            <div class="stat-content">
+                <span class="stat-label">Symptômes (liste)</span>
+                <span class="stat-value">{{ stats.list_total }}</span>
+                <span class="stat-change">Disponibles au catalogue</span>
+            </div>
+        </div>
+
+        <div class="stat-card-admin">
+            <div class="stat-icon-box" style="background: linear-gradient(135deg, #FF8A65, #FF7043);">
+                <i class="fas fa-notes-medical"></i>
+            </div>
+            <div class="stat-content">
+                <span class="stat-label">Symptômes trackés</span>
+                <span class="stat-value">{{ stats.tracked_total }}</span>
+                <span class="stat-change">Total enregistrés</span>
+            </div>
+        </div>
+
+        <div class="stat-card-admin">
+            <div class="stat-icon-box" style="background: linear-gradient(135deg, #81C784, #4CAF50);">
+                <i class="fas fa-calendar-week"></i>
+            </div>
+            <div class="stat-content">
+                <span class="stat-label">Derniers 7 jours</span>
+                <span class="stat-value">{{ stats.tracked_weekly }}</span>
+                <span class="stat-change">Nouveaux enregistrements</span>
+            </div>
+        </div>
+
+        <div class="stat-card-admin">
+            <div class="stat-icon-box" style="background: linear-gradient(135deg, #BA68C8, #8E24AA);">
+                <i class="fas fa-thermometer-half"></i>
+            </div>
+            <div class="stat-content">
+                <span class="stat-label">Intensité moyenne</span>
+                <span class="stat-value">{{ stats.avg_intensity }}/10</span>
+                <span class="stat-change">Moyenne globale</span>
+            </div>
+        </div>
+
+        <div class="stat-card-admin">
+            <div class="stat-icon-box" style="background: linear-gradient(135deg, #FFD54F, #FBC02D);">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-content">
+                <span class="stat-label">Patients actifs</span>
+                <span class="stat-value">{{ stats.active_patients }}</span>
+                <span class="stat-change">Avec suivi symptômes</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="admin-section">
+        <div class="section-header">
+            <h2><i class="fas fa-chart-bar"></i> Symptômes les plus courants</h2>
+        </div>
+        <div class="admin-form-container">
+            {% if most_common_symptoms is not empty %}
+                <table class="admin-table" style="width:100%; border-collapse: collapse;">
+                    <thead>
+                        <tr>
+                            <th>Symptôme</th>
+                            <th>Catégorie</th>
+                            <th>Occurrences</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in most_common_symptoms %}
+                            <tr>
+                                <td>{{ item.symptom_name }}</td>
+                                <td>{{ item.category ?: '-' }}</td>
+                                <td>{{ item.count }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>Aucune donnée disponible.</p>
+            {% endif %}
+        </div>
+    </section>
+
+    <section class="admin-section">
+        <div class="section-header">
+            <h2><i class="fas fa-user-check"></i> Suivi par patient</h2>
+        </div>
+        <div class="admin-form-container">
+            {% if user_stats is not empty %}
+                <table class="admin-table" style="width:100%; border-collapse: collapse;">
+                    <thead>
+                        <tr>
+                            <th>Patient</th>
+                            <th>Email</th>
+                            <th>Total symptômes</th>
+                            <th>Jours suivis</th>
+                            <th>Intensité moyenne</th>
+                            <th>Dernière date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for stat in user_stats %}
+                            <tr>
+                                <td>{{ stat.patient_name }}</td>
+                                <td>{{ stat.user_email }}</td>
+                                <td>{{ stat.total_symptoms }}</td>
+                                <td>{{ stat.days_tracked }}</td>
+                                <td>{{ stat.avg_intensity|number_format(1) }}/10</td>
+                                <td>{{ stat.last_symptom_date ? stat.last_symptom_date|date('d/m/Y') : '-' }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>Aucun patient n'a encore enregistré de symptômes.</p>
+            {% endif %}
+        </div>
+    </section>
+
+    <section class="admin-section">
+        <div class="section-header">
+            <h2><i class="fas fa-tools"></i> Gestion</h2>
+        </div>
+        <div class="admin-form-container">
+            <a href="{{ path('app_symptome_liste_index') }}" class="btn-secondary">
+                <i class="fas fa-stethoscope"></i> Gérer la liste des symptômes
+            </a>
+        </div>
+    </section>
+{% endblock %}

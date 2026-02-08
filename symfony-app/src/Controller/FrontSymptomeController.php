@@ -22,7 +22,7 @@ class FrontSymptomeController extends AbstractController
     /**
      * Interface web pour ajouter un symptôme
      */
-    #[Route('/symptomes', name: 'app_symptomes', methods: ['GET', 'POST'])]
+    #[Route('/legacy/symptomes', name: 'legacy_symptomes', methods: ['GET', 'POST'])]
     public function symptomes(Request $request, EntityManagerInterface $em, PatientRepository $patientRepository, SymptomeQuotidienRepository $symptomeRepository, SymptomeListeRepository $symptomeListeRepository): Response
     {
         // Créer ou récupérer un patient de test temporaire
@@ -139,13 +139,13 @@ class FrontSymptomeController extends AbstractController
         return $patient;
     }
 
-    #[Route('/sante-quotidienne', name: 'app_sante_quotidienne')]
+    #[Route('/legacy/sante-quotidienne', name: 'app_sante_quotidienne')]
     public function santeQuotidienne(): Response
     {
         return $this->render('front/santequotidienne/index.html.twig');
     }
 
-    #[Route('/symptomes/filter-by-category', name: 'app_symptomes_filter', methods: ['POST'])]
+    #[Route('/legacy/symptomes/filter-by-category', name: 'legacy_symptomes_filter', methods: ['POST'])]
     public function filterSymptomesByCategory(Request $request, SymptomeListeRepository $symptomeListeRepository): JsonResponse
     {
         $categorie = $request->request->get('categorie');
@@ -170,7 +170,7 @@ class FrontSymptomeController extends AbstractController
         return new JsonResponse($data);
     }
 
-    #[Route('/symptomes/by-date/{date}', name: 'app_symptomes_by_date', methods: ['GET'])]
+    #[Route('/legacy/symptomes/by-date/{date}', name: 'legacy_symptomes_by_date', methods: ['GET'])]
     public function getSymptomesByDate(string $date, SymptomeQuotidienRepository $symptomeRepository): JsonResponse
     {
         $symptomes = $symptomeRepository->findByDate($date);
@@ -191,7 +191,7 @@ class FrontSymptomeController extends AbstractController
         return new JsonResponse($data);
     }
 
-    #[Route('/symptomes/delete/{id}', name: 'app_symptome_delete', methods: ['DELETE'])]
+    #[Route('/legacy/symptomes/delete/{id}', name: 'legacy_symptome_delete', methods: ['DELETE'])]
     public function deleteSymptome(int $id, SymptomeQuotidienRepository $symptomeRepository, EntityManagerInterface $em): JsonResponse
     {
         $symptome = $symptomeRepository->find($id);
@@ -206,7 +206,7 @@ class FrontSymptomeController extends AbstractController
         return new JsonResponse(['success' => true, 'message' => 'Symptôme supprimé avec succès']);
     }
 
-    #[Route('/symptomes/edit/{id}', name: 'app_symptome_edit', methods: ['POST'])]
+    #[Route('/legacy/symptomes/edit/{id}', name: 'legacy_symptome_edit', methods: ['POST'])]
     public function editSymptome(int $id, Request $request, SymptomeQuotidienRepository $symptomeRepository, EntityManagerInterface $em, ValidatorInterface $validator): JsonResponse
     {
         $symptome = $symptomeRepository->find($id);
@@ -255,7 +255,7 @@ class FrontSymptomeController extends AbstractController
     /**
      * Route pour récupérer les statistiques des symptômes
      */
-    #[Route('/symptomes/statistics', name: 'app_symptomes_statistics', methods: ['GET'])]
+    #[Route('/legacy/symptomes/statistics', name: 'legacy_symptomes_statistics', methods: ['GET'])]
     public function getSymptomStatistics(
         PatientRepository $patientRepository, 
         SymptomeQuotidienRepository $symptomeRepository
