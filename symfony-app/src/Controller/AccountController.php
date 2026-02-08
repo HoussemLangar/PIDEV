@@ -6,7 +6,6 @@ use App\Entity\User;
 use App\Repository\AccompanimentPlanRepository;
 use App\Repository\CoachSportifRepository;
 use App\Repository\ConversationRepository;
-use App\Repository\NutritionnisteRepository;
 use App\Repository\PatientRepository;
 use App\Repository\SharedDocumentRepository;
 use App\Repository\TeleconsultationRepository;
@@ -26,7 +25,6 @@ class AccountController extends AbstractController
         private AccompanimentPlanRepository $planRepository,
         private PatientRepository $patientRepository,
         private CoachSportifRepository $coachRepository,
-        private NutritionnisteRepository $nutritionnisteRepository,
     ) {
     }
 
@@ -47,7 +45,6 @@ class AccountController extends AbstractController
 
         $patientPlans = [];
         $coachPlans = [];
-        $nutritionistPlans = [];
 
         $patient = $this->patientRepository->findOneBy(['user' => $user]);
         if ($patient) {
@@ -57,11 +54,6 @@ class AccountController extends AbstractController
         $coach = $this->coachRepository->findOneBy(['user' => $user]);
         if ($coach) {
             $coachPlans = $this->planRepository->findByCoach($coach);
-        }
-
-        $nutritionist = $this->nutritionnisteRepository->findOneBy(['user' => $user]);
-        if ($nutritionist) {
-            $nutritionistPlans = $this->planRepository->findByNutritionist($nutritionist);
         }
 
         return $this->render('front/account.html.twig', [
@@ -74,10 +66,10 @@ class AccountController extends AbstractController
             'sharedDocumentCount' => count($sharedDocuments),
             'patientPlanCount' => count($patientPlans),
             'coachPlanCount' => count($coachPlans),
-            'nutritionistPlanCount' => count($nutritionistPlans),
+            'nutritionistPlanCount' => 0,
             'isPatient' => $patient !== null,
             'isCoach' => $coach !== null,
-            'isNutritionist' => $nutritionist !== null,
+            'isNutritionist' => false,
             'isMedecin' => $this->isGranted('ROLE_MEDECIN'),
         ]);
     }

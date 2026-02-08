@@ -97,9 +97,9 @@ class AccompanimentPlanRepository extends ServiceEntityRepository
     {
         $result = $this->createQueryBuilder('p')
             ->select('
-                COUNT(CASE WHEN p.status = \'active\' THEN 1 END) as active,
-                COUNT(CASE WHEN p.status = \'completed\' THEN 1 END) as completed,
-                COUNT(CASE WHEN p.status = \'cancelled\' THEN 1 END) as cancelled
+                SUM(CASE WHEN p.status = \'active\' THEN 1 ELSE 0 END) as active,
+                SUM(CASE WHEN p.status = \'completed\' THEN 1 ELSE 0 END) as completed,
+                SUM(CASE WHEN p.status = \'cancelled\' THEN 1 ELSE 0 END) as cancelled
             ')
             ->where('p.patient = :patient')
             ->setParameter('patient', $patient)

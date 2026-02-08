@@ -28,6 +28,8 @@ class DocumentAccessType extends AbstractType
                 ],
                 'query_builder' => function ($repo) {
                     return $repo->createQueryBuilder('u')
+                        ->where('u.role = :role')
+                        ->setParameter('role', 'ROLE_PATIENT')
                         ->orderBy('u.username', 'ASC');
                 },
             ])

@@ -4,13 +4,11 @@ namespace App\Controller;
 
 use App\Entity\AccompanimentPlan;
 use App\Entity\CoachSportif;
-use App\Entity\Nutritionniste;
 use App\Entity\Patient;
 use App\Entity\User;
 use App\Form\AccompanimentPlanType;
 use App\Repository\AccompanimentPlanRepository;
 use App\Repository\CoachSportifRepository;
-use App\Repository\NutritionnisteRepository;
 use App\Repository\PatientRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -27,7 +25,6 @@ class AccompanimentPlanController extends AbstractController
         private AccompanimentPlanRepository $planRepository,
         private PatientRepository $patientRepository,
         private CoachSportifRepository $coachRepository,
-        private NutritionnisteRepository $nutritionnisteRepository,
         private EntityManagerInterface $em,
     ) {
     }
@@ -40,6 +37,14 @@ class AccompanimentPlanController extends AbstractController
     {
         $user = $this->getUser();
         assert($user instanceof User);
+
+        if (!$this->isGranted('ROLE_PATIENT')) {
+            if ($this->isGranted('ROLE_COACH')) {
+                return $this->redirectToRoute('app_plan_professional_plans');
+            }
+
+            throw $this->createAccessDeniedException();
+        }
 
         // Try to get the patient profile
         $patient = $this->patientRepository->findOneBy(['user' => $user]);
@@ -69,10 +74,9 @@ class AccompanimentPlanController extends AbstractController
 
         $isPatient = $plan->getPatient()->getUser() === $user;
         $isCoach = $plan->getCoach() && $plan->getCoach()->getUser() === $user;
-        $isNutritionist = $plan->getNutritionist() && $plan->getNutritionist()->getUser() === $user;
 
         // Verify access (patient or assigned professional)
-        if (!$isPatient && !$isCoach && !$isNutritionist) {
+        if (!$isPatient && !$isCoach) {
             throw $this->createAccessDeniedException();
         }
 
@@ -88,8 +92,7 @@ class AccompanimentPlanController extends AbstractController
     public function create(Request $request, int $patientId): Response
     {
         if (
-            !$this->isGranted('ROLE_COACH') &&
-            !$this->isGranted('ROLE_NUTRITIONNISTE')
+            !$this->isGranted('ROLE_COACH')
         ) {
             throw $this->createAccessDeniedException();
         }
@@ -130,8 +133,7 @@ class AccompanimentPlanController extends AbstractController
         assert($user instanceof User);
 
         // Verify access - creator or patient can edit
-        $isCreator = ($plan->getCoach() && $plan->getCoach()->getUser() === $user) ||
-                    ($plan->getNutritionist() && $plan->getNutritionist()->getUser() === $user);
+        $isCreator = ($plan->getCoach() && $plan->getCoach()->getUser() === $user);
         $isPatient = $plan->getPatient()->getUser() === $user;
 
         if (!$isCreator && !$isPatient) {
@@ -165,8 +167,7 @@ class AccompanimentPlanController extends AbstractController
         assert($user instanceof User);
 
         // Only creator or patient can delete
-        $isCreator = ($plan->getCoach() && $plan->getCoach()->getUser() === $user) ||
-                    ($plan->getNutritionist() && $plan->getNutritionist()->getUser() === $user);
+        $isCreator = ($plan->getCoach() && $plan->getCoach()->getUser() === $user);
         $isPatient = $plan->getPatient()->getUser() === $user;
 
         if (!$isCreator && !$isPatient) {
@@ -186,7 +187,7 @@ class AccompanimentPlanController extends AbstractController
     #[Route('/professional/my-plans', name: 'professional_plans', methods: ['GET'])]
     public function professionalPlans(): Response
     {
-        if (!$this->isGranted('ROLE_COACH') && !$this->isGranted('ROLE_NUTRITIONNISTE')) {
+        if (!$this->isGranted('ROLE_COACH')) {
             throw $this->createAccessDeniedException();
         }
 
@@ -195,27 +196,19 @@ class AccompanimentPlanController extends AbstractController
 
         $plans = [];
 
-        // Get plans for coaching
-        if ($this->isGranted('ROLE_COACH')) {
-            $coach = $this->coachRepository->findOneBy(['user' => $user]);
-            if ($coach) {
-                $plans = array_merge($plans, $this->planRepository->findByCoach($coach));
-            }
-        }
-
-        // Get plans for nutrition
-        if ($this->isGranted('ROLE_NUTRITIONNISTE')) {
-            $nutritionist = $this->nutritionnisteRepository->findOneBy(['user' => $user]);
-            if ($nutritionist) {
-                $plans = array_merge($plans, $this->planRepository->findByNutritionist($nutritionist));
-            }
+        $coach = $this->coachRepository->findOneBy(['user' => $user]);
+        if ($coach) {
+            $plans = array_merge($plans, $this->planRepository->findByCoach($coach));
         }
 
         // Sort by most recent first
         usort($plans, fn($a, $b) => $b->getCreatedAt() <=> $a->getCreatedAt());
 
+        $patients = $this->patientRepository->findAll();
+
         return $this->render('plan/professional_plans.html.twig', [
             'plans' => $plans,
+            'patients' => $patients,
         ]);
     }
 }

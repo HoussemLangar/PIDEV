@@ -41,9 +41,20 @@ class MessageController extends AbstractController
         $conversations = $this->conversationRepository->findUserConversations($user);
         $unreadCount = $this->conversationRepository->getUnreadCount($user);
 
+        $availableRecipients = [];
+        if ($this->isGranted('ROLE_PATIENT')) {
+            $availableRecipients = array_filter(
+                $this->userRepository->findAll(),
+                fn (User $u) => $u->getId() !== $user->getId()
+            );
+        } else {
+            $availableRecipients = $this->userRepository->findByRole('ROLE_PATIENT');
+        }
+
         return $this->render('message/index.html.twig', [
             'conversations' => $conversations,
             'unreadCount' => $unreadCount,
+            'availableRecipients' => $availableRecipients,
         ]);
     }
 
@@ -105,6 +116,8 @@ class MessageController extends AbstractController
             throw $this->createAccessDeniedException('Vous ne pouvez pas vous envoyer des messages.');
         }
 
+        $this->denyIfInvalidMessagingPair($sender, $recipient);
+
         $conversation = $this->conversationRepository->findOrCreateConversation($sender, $recipient);
 
         return $this->redirectToRoute('app_message_show', ['id' => $conversation->getId()]);
@@ -129,6 +142,8 @@ class MessageController extends AbstractController
         if (!$recipient) {
             return $this->json(['error' => 'Destinataire introuvable'], 404);
         }
+
+        $this->denyIfInvalidMessagingPair($sender, $recipient);
 
         $conversation = $this->conversationRepository->findOrCreateConversation($sender, $recipient);
 
@@ -212,6 +227,8 @@ class MessageController extends AbstractController
             return $this->json(['error' => 'Utilisateur introuvable'], 404);
         }
 
+        $this->denyIfInvalidMessagingPair($user, $recipient);
+
         $page = $request->query->getInt('page', 1);
         $limit = 50;
         $offset = ($page - 1) * $limit;
@@ -250,5 +267,15 @@ class MessageController extends AbstractController
         $this->em->flush();
 
         return $this->redirectToRoute('app_message_index');
+    }
+
+    private function denyIfInvalidMessagingPair(User $sender, User $recipient): void
+    {
+        $senderIsPatient = $this->isGranted('ROLE_PATIENT');
+        $recipientIsPatient = in_array('ROLE_PATIENT', $recipient->getRoles(), true);
+
+        if (!$senderIsPatient && !$recipientIsPatient) {
+            throw $this->createAccessDeniedException('Vous ne pouvez contacter que des patients.');
+        }
     }
 }

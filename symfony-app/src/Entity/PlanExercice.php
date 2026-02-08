@@ -3,7 +3,6 @@
 namespace App\Entity;
 
 use App\Repository\PlanExerciceRepository;
-use App\Entity\AccompanimentPlan;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: PlanExerciceRepository::class)]
@@ -19,10 +18,13 @@ class PlanExercice
     #[ORM\JoinColumn(name: 'patient_id', nullable: false, onDelete: 'CASCADE')]
     private Patient $patient;
 
+    #[ORM\ManyToOne(targetEntity: Accompagnement::class, inversedBy: 'plansExercices')]
+    #[ORM\JoinColumn(name: 'accompagnement_id', nullable: true, onDelete: 'SET NULL')]
+    private ?Accompagnement $accompagnement = null;
+
     #[ORM\ManyToOne(targetEntity: AccompanimentPlan::class, inversedBy: 'exercisePlans')]
     #[ORM\JoinColumn(name: 'accompaniment_plan_id', nullable: true, onDelete: 'SET NULL')]
     private ?AccompanimentPlan $plan = null;
-
 
     #[ORM\Column(type: 'string', length: 255)]
     private string $titre;
@@ -57,8 +59,10 @@ class PlanExercice
     public function getId(): ?int { return $this->id; }
     public function getPatient(): Patient { return $this->patient; }
     public function setPatient(Patient $patient): void { $this->patient = $patient; }
+    public function getAccompagnement(): ?Accompagnement { return $this->accompagnement; }
+    public function setAccompagnement(?Accompagnement $accompagnement): void { $this->accompagnement = $accompagnement; }
     public function getPlan(): ?AccompanimentPlan { return $this->plan; }
-    public function setPlan(?AccompanimentPlan $plan): void { $this->plan = $plan; }
+    public function setPlan(?AccompanimentPlan $plan): self { $this->plan = $plan; return $this; }
     public function getTitre(): string { return $this->titre; }
     public function setTitre(string $titre): void { $this->titre = $titre; }
     public function getDescription(): ?string { return $this->description; }

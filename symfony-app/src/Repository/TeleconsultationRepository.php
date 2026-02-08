@@ -89,4 +89,20 @@ class TeleconsultationRepository extends ServiceEntityRepository
             'totalDuration' => $stats['totalDuration'] ? (int)$stats['totalDuration'] : 0,
         ];
     }
+
+    public function isDoctorAvailable(User $doctor, \DateTimeInterface $scheduledAt): bool
+    {
+        $count = $this->createQueryBuilder('t')
+            ->select('COUNT(t.id)')
+            ->where('(t.initiator = :doctor OR t.recipient = :doctor)')
+            ->andWhere('t.status IN (:statuses)')
+            ->andWhere('t.scheduledAt = :scheduledAt')
+            ->setParameter('doctor', $doctor)
+            ->setParameter('statuses', ['pending', 'ongoing'])
+            ->setParameter('scheduledAt', $scheduledAt)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return (int) $count === 0;
+    }
 }

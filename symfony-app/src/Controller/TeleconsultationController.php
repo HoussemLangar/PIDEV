@@ -32,6 +32,8 @@ class TeleconsultationController extends AbstractController
     #[Route('', name: 'index', methods: ['GET'])]
     public function index(): Response
     {
+        $this->denyAccessUnlessTeleconsultationRole();
+
         $user = $this->getUser();
         assert($user instanceof User);
 
@@ -54,18 +56,41 @@ class TeleconsultationController extends AbstractController
     #[Route('/schedule', name: 'schedule', methods: ['GET', 'POST'])]
     public function schedule(Request $request): Response
     {
+        if (!$this->isGranted('ROLE_MEDECIN') && !$this->isGranted('ROLE_PATIENT')) {
+            throw $this->createAccessDeniedException();
+        }
+
         $user = $this->getUser();
         assert($user instanceof User);
 
         $consultation = new Teleconsultation();
         $consultation->setInitiator($user);
-        
-        $form = $this->createForm(TeleconsultationType::class, $consultation);
+
+        $recipientRole = $this->isGranted('ROLE_MEDECIN') ? 'ROLE_PATIENT' : 'ROLE_MEDECIN';
+        $form = $this->createForm(TeleconsultationType::class, $consultation, [
+            'recipient_role' => $recipientRole,
+        ]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $recipient = $consultation->getRecipient();
+            if (!$recipient || !in_array($recipientRole, $recipient->getRoles(), true)) {
+                $this->addFlash('error', 'Vous devez sélectionner un utilisateur valide.');
+                return $this->render('teleconsultation/schedule.html.twig', [
+                    'form' => $form,
+                ]);
+            }
+
+            $doctor = $this->isGranted('ROLE_MEDECIN') ? $user : $recipient;
+            if (!$this->repository->isDoctorAvailable($doctor, $consultation->getScheduledAt())) {
+                $this->addFlash('error', 'Le médecin n\'est pas disponible à cette date et heure.');
+                return $this->render('teleconsultation/schedule.html.twig', [
+                    'form' => $form,
+                ]);
+            }
+
             // Generate room name
-            $roomName = $this->jitsiService->generateRoomName($user, $consultation->getRecipient());
+            $roomName = $this->jitsiService->generateRoomName($user, $recipient);
             $consultation->setRoomName($roomName);
             $consultation->setStatus('pending');
 
@@ -87,6 +112,8 @@ class TeleconsultationController extends AbstractController
     #[Route('/{id}', name: 'show', methods: ['GET'])]
     public function show(Teleconsultation $consultation): Response
     {
+        $this->denyAccessUnlessTeleconsultationRole();
+
         $user = $this->getUser();
         assert($user instanceof User);
 
@@ -119,6 +146,8 @@ class TeleconsultationController extends AbstractController
     #[Route('/{id}/join', name: 'join', methods: ['GET'])]
     public function join(Teleconsultation $consultation): Response
     {
+        $this->denyAccessUnlessTeleconsultationRole();
+
         $user = $this->getUser();
         assert($user instanceof User);
 
@@ -153,6 +182,8 @@ class TeleconsultationController extends AbstractController
     #[Route('/{id}/end', name: 'end', methods: ['POST'])]
     public function end(Teleconsultation $consultation): Response
     {
+        $this->denyAccessUnlessTeleconsultationRole();
+
         $user = $this->getUser();
         assert($user instanceof User);
 
@@ -186,6 +217,8 @@ class TeleconsultationController extends AbstractController
     #[Route('/{id}/cancel', name: 'cancel', methods: ['POST'])]
     public function cancel(Teleconsultation $consultation): Response
     {
+        $this->denyAccessUnlessTeleconsultationRole();
+
         $user = $this->getUser();
         assert($user instanceof User);
 
@@ -211,6 +244,8 @@ class TeleconsultationController extends AbstractController
     #[Route('/api/upcoming', name: 'api_upcoming', methods: ['GET'])]
     public function apiUpcoming(): JsonResponse
     {
+        $this->denyAccessUnlessTeleconsultationRole();
+
         $user = $this->getUser();
         assert($user instanceof User);
 
@@ -241,11 +276,19 @@ class TeleconsultationController extends AbstractController
 
         if ($consultation->isPending()) {
             // Allow starting 5 minutes before scheduled time
-            $now = new \DateTimeImmutable();
-            $allowStart = $consultation->getScheduledAt()->modify('-5 minutes');
+            $scheduledAt = $consultation->getScheduledAt();
+            $now = new \DateTimeImmutable('now', $scheduledAt->getTimezone());
+            $allowStart = $scheduledAt->modify('-5 minutes');
             return $now >= $allowStart;
         }
 
         return false;
+    }
+
+    private function denyAccessUnlessTeleconsultationRole(): void
+    {
+        if (!$this->isGranted('ROLE_PATIENT') && !$this->isGranted('ROLE_MEDECIN')) {
+            throw $this->createAccessDeniedException();
+        }
     }
 }

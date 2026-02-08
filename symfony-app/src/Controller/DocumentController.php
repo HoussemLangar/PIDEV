@@ -212,6 +212,12 @@ class DocumentController extends AbstractController
 
         // Get file content from database
         $fileContent = $this->storageService->getDocumentContent($document);
+        if (is_resource($fileContent)) {
+            $fileContent = stream_get_contents($fileContent);
+        }
+        if (!is_string($fileContent)) {
+            throw $this->createNotFoundException('Le fichier est indisponible.');
+        }
 
         // Create response with file content
         $response = new Response($fileContent);

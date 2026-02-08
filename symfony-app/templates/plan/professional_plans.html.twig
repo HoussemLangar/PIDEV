@@ -37,6 +37,44 @@
             </div>
 
             <!-- Plans Table -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Créer un plan pour un patient</h5>
+                </div>
+                <div class="card-body">
+                    {% if patients is empty %}
+                        <div class="alert alert-info mb-0">
+                            Aucun patient disponible pour le moment.
+                        </div>
+                    {% else %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Patient</th>
+                                        <th>Email</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for patient in patients %}
+                                        <tr>
+                                            <td>{{ patient.user.username }}</td>
+                                            <td>{{ patient.user.email }}</td>
+                                            <td>
+                                                <a href="{{ path('app_plan_create', {patientId: patient.id}) }}" class="btn btn-sm btn-primary">
+                                                    <i class="bi bi-plus-circle"></i> Créer un plan
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
             <div class="card">
                 <div class="card-header">
                     <h5 class="mb-0"><i class="bi bi-list-ul"></i> Liste des plans</h5>

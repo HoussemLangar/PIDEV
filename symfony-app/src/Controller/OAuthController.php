@@ -3,16 +3,15 @@
 namespace App\Controller;
 
 use App\Entity\User;
-use App\Security\FormLoginAuthenticator;
 use Doctrine\ORM\EntityManagerInterface;
 use KnpU\OAuth2ClientBundle\Client\ClientRegistry;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Security\Http\Authentication\UserAuthenticatorInterface;
 
 class OAuthController extends AbstractController
 {
@@ -56,9 +55,8 @@ class OAuthController extends AbstractController
     public function confirmOAuth(
         Request $request,
         EntityManagerInterface $entityManager,
-        UserAuthenticatorInterface $userAuthenticator,
-        FormLoginAuthenticator $formLoginAuthenticator,
         UserPasswordHasherInterface $passwordHasher,
+        Security $security,
     ): Response {
         $session = $request->getSession();
         $oauthData = $session->get('_oauth_data');
@@ -126,11 +124,8 @@ class OAuthController extends AbstractController
         $session->remove('_oauth_needs_confirmation');
 
         // Authentifier l'utilisateur manuellement
-        return $userAuthenticator->authenticateUser(
-            $user,
-            $formLoginAuthenticator,
-            $request
-        );
+        $response = $security->login($user, 'main');
+        return $response ?? $this->redirectToRoute('app_home');
     }
 
     /**

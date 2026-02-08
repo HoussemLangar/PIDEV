@@ -27,9 +27,14 @@ class TeleconsultationType extends AbstractType
                 'attr' => [
                     'class' => 'form-control',
                 ],
-                'query_builder' => function ($repo) {
-                    return $repo->createQueryBuilder('u')
+                'query_builder' => function ($repo) use ($options) {
+                    $qb = $repo->createQueryBuilder('u')
                         ->orderBy('u.username', 'ASC');
+                    if (!empty($options['recipient_role'])) {
+                        $qb->where('u.role = :role')
+                            ->setParameter('role', $options['recipient_role']);
+                    }
+                    return $qb;
                 },
             ])
             ->add('scheduledAt', DateTimeType::class, [
@@ -73,6 +78,7 @@ class TeleconsultationType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => Teleconsultation::class,
+            'recipient_role' => null,
         ]);
     }
 }
