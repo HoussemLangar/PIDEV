@@ -39,7 +39,7 @@ class SanteQuotidienneController extends AbstractController
     #[Route('/front', name: 'app_sante_quotidienne_front', methods: ['GET'])]
     public function front(): Response
     {
-        return $this->render('front/santequotidienne/base.html.twig');
+        return $this->redirectToRoute('app_symptomes');
     }
 
     #[Route('/front/new-form', name: 'app_sante_quotidienne_front_new', methods: ['GET'])]

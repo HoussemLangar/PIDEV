@@ -161,4 +161,19 @@ class SymptomeListeRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    /**
+     * Récupérer les symptômes par catégorie
+     * @param string $categorie
+     * @return SymptomeListe[]
+     */
+    public function findByCategorie(string $categorie): array
+    {
+        return $this->createQueryBuilder('s')
+            ->where('s.categorie = :categorie')
+            ->setParameter('categorie', $categorie)
+            ->orderBy('s.nom', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
 }

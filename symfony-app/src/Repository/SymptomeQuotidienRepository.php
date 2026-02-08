@@ -64,4 +64,113 @@ class SymptomeQuotidienRepository extends ServiceEntityRepository
     {
         $this->getEntityManager()->flush();
     }
+
+    /**
+     * Trouve les symptômes enregistrés à une date spécifique
+     * @param string $date Date au format Y-m-d
+     * @return SymptomeQuotidien[]
+     */
+    public function findByDate(string $date): array
+    {
+        $startDate = new \DateTime($date . ' 00:00:00');
+        $endDate = new \DateTime($date . ' 23:59:59');
+        
+        return $this->createQueryBuilder('s')
+            ->leftJoin('s.symptome', 'sl')
+            ->leftJoin('s.patient', 'p')
+            ->addSelect('sl', 'p')
+            ->where('s.dateSymptome >= :startDate')
+            ->andWhere('s.dateSymptome <= :endDate')
+            ->setParameter('startDate', $startDate)
+            ->setParameter('endDate', $endDate)
+            ->orderBy('s.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Trouver tous les symptômes d'un patient avec leurs détails
+     */
+    public function findByPatientWithDetails($patient): array
+    {
+        return $this->createQueryBuilder('sq')
+            ->leftJoin('sq.symptome', 's')
+            ->addSelect('s')
+            ->where('sq.patient = :patient')
+            ->setParameter('patient', $patient)
+            ->orderBy('sq.dateSymptome', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Obtenir les statistiques des symptômes les plus courants pour un patient
+     */
+    public function getTopSymptomStatistics($patient, int $limit = 6): array
+    {
+        return $this->createQueryBuilder('sq')
+            ->select('s.nom as symptome_nom, s.categorie as categorie_nom, COUNT(sq.id) as count, AVG(sq.intensite) as avg_intensite, MAX(sq.dateSymptome) as lastDate')
+            ->leftJoin('sq.symptome', 's')
+            ->where('sq.patient = :patient')
+            ->setParameter('patient', $patient)
+            ->groupBy('s.id')
+            ->orderBy('count', 'DESC')
+            ->addOrderBy('avg_intensite', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Obtenir le nombre total de symptômes pour un patient
+     */
+    public function getTotalSymptomsCount($patient): int
+    {
+        return $this->createQueryBuilder('sq')
+            ->select('COUNT(sq.id)')
+            ->where('sq.patient = :patient')
+            ->setParameter('patient', $patient)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    /**
+     * Obtenir la moyenne générale d'intensité des symptômes pour un patient
+     */
+    public function getAverageIntensity($patient): float
+    {
+        $result = $this->createQueryBuilder('sq')
+            ->select('AVG(sq.intensite)')
+            ->where('sq.patient = :patient')
+            ->setParameter('patient', $patient)
+            ->getQuery()
+            ->getSingleScalarResult();
+            
+        return $result ? round($result, 1) : 0.0;
+    }
+
+    /**
+     * Obtenir les symptômes par période pour un patient
+     */
+    public function getSymptomsByPeriod($patient, \DateTime $startDate = null, \DateTime $endDate = null): array
+    {
+        $qb = $this->createQueryBuilder('sq')
+            ->leftJoin('sq.symptome', 's')
+            ->addSelect('s')
+            ->where('sq.patient = :patient')
+            ->setParameter('patient', $patient)
+            ->orderBy('sq.dateSymptome', 'DESC');
+
+        if ($startDate) {
+            $qb->andWhere('sq.dateSymptome >= :startDate')
+               ->setParameter('startDate', $startDate);
+        }
+
+        if ($endDate) {
+            $qb->andWhere('sq.dateSymptome <= :endDate')
+               ->setParameter('endDate', $endDate);
+        }
+
+        return $qb->getQuery()->getResult();
+    }
 }
