@@ -1,0 +1,121 @@
+{% extends 'back/base.html.twig' %}
+
+{% block title %}Modération des commentaires{% endblock %}
+
+{% block admin_content %}
+<div class="admin-page-header">
+    <div class="admin-page-title">
+        <h1>Modération des commentaires</h1>
+        <p>Surveillez les commentaires et supprimez les contenus inappropriés.</p>
+    </div>
+    <div class="admin-actions-row">
+        <span class="admin-badge warning">Total: {{ stats.total }}</span>
+    </div>
+</div>
+
+<div class="admin-grid cards-4 validation-stats">
+    <div class="admin-card">
+        <div class="admin-badge">7 derniers jours</div>
+        <h2>{{ stats.last7 }}</h2>
+    </div>
+    <div class="admin-card">
+        <div class="admin-badge success">Contenus uniques</div>
+        <h2>{{ stats.uniqueContents }}</h2>
+    </div>
+    <div class="admin-card">
+        <div class="admin-badge warning">Commentaires</div>
+        <h2>{{ stats.total }}</h2>
+    </div>
+    <div class="admin-card">
+        <div class="admin-badge">Actifs</div>
+        <h2>{{ comments|length }}</h2>
+    </div>
+</div>
+
+<div class="admin-card">
+    <form method="get" class="admin-form" style="margin-bottom: 12px;">
+        <div class="form-row filters-inline filters-modern">
+            <div class="filter-search filter-field">
+                <label>Recherche</label>
+                <i class="fas fa-search"></i>
+                <input type="text" name="q" value="{{ q }}" placeholder="Commentaire, titre, email...">
+            </div>
+            <div class="filter-field">
+                <label>Type de contenu</label>
+                <select name="type">
+                    <option value="" {{ type is empty ? 'selected' : '' }}>Tous</option>
+                    <option value="article" {{ type == 'article' ? 'selected' : '' }}>Article</option>
+                    <option value="video" {{ type == 'video' ? 'selected' : '' }}>Vidéo</option>
+                    <option value="pdf" {{ type == 'pdf' ? 'selected' : '' }}>PDF</option>
+                    <option value="lien" {{ type == 'lien' ? 'selected' : '' }}>Lien</option>
+                </select>
+            </div>
+            <div class="filter-actions">
+                <a class="btn btn-secondary" href="{{ path('admin_moderation') }}">Réinitialiser</a>
+            </div>
+        </div>
+    </form>
+    <div style="overflow-x:auto;">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Contenu</th>
+                    <th>Utilisateur</th>
+                    <th>Commentaire</th>
+                    <th>Date</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="commentTableBody">
+            {% for comment in comments %}
+                <tr data-comment-id="{{ comment.id }}">
+                    <td>{{ comment.contenu.titre }}</td>
+                    <td>{{ comment.user.fullName ?? comment.user.email }}</td>
+                    <td>{{ comment.commentaire }}</td>
+                    <td>{{ comment.createdAt|date('d/m/Y H:i') }}</td>
+                    <td>
+                        <button class="btn btn-danger btn-xs action-delete" data-token="{{ csrf_token('comment_action_' ~ comment.id) }}">Supprimer</button>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="5" style="text-align:center; color: var(--admin-muted);">Aucun commentaire.</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        (function () {
+            const table = document.getElementById('commentTableBody');
+            if (!table) return;
+
+            const postAction = async (url, token) => {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    body: new URLSearchParams({ _token: token }),
+                });
+                return res.json();
+            };
+
+            table.addEventListener('click', async (e) => {
+                const btn = e.target.closest('.action-delete');
+                if (!btn) return;
+                const row = btn.closest('tr[data-comment-id]');
+                if (!row) return;
+                if (!confirm('Supprimer ce commentaire ?')) return;
+                const id = row.dataset.commentId;
+                const data = await postAction(`/admin/moderation/comments/${id}/delete`, btn.dataset.token);
+                if (data.success) {
+                    row.remove();
+                }
+            });
+        })();
+    </script>
+{% endblock %}

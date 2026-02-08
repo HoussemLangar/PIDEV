@@ -1,0 +1,722 @@
+{% extends 'back/base.html.twig' %}
+
+{% block title %}Gestion des Symptômes - SANTÉA Admin{% endblock %}
+
+{% block admin_content %}
+
+    <div class="admin-container">
+
+        <!-- Sidebar Navigation (inchangée) -->
+        <aside class="admin-sidebar">
+            <div class="admin-logo">
+                <i class="fas fa-heartbeat"></i>
+                <span>SANTÉA</span>
+            </div>
+
+            <nav class="admin-nav">
+                <a href="{{ path('admin_dashboard') }}" class="admin-nav-item">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </a>
+
+                <div class="nav-section-title">GESTION UTILISATEURS</div>
+                <a href="{{ path('admin_users') }}" class="admin-nav-item">
+                    <i class="fas fa-users"></i>
+                    <span>Utilisateurs</span>
+                </a>
+                <a href="{{ path('admin_validation') }}" class="admin-nav-item">
+                    <i class="fas fa-user-check"></i>
+                    <span>Validation comptes</span>
+                </a>
+                <a href="{{ path('admin_roles') }}" class="admin-nav-item">
+                    <i class="fas fa-user-shield"></i>
+                    <span>Rôles & Permissions</span>
+                </a>
+
+                <div class="nav-section-title">ABONNEMENTS</div>
+                <a href="{{ path('admin_subscriptions') }}" class="admin-nav-item">
+                    <i class="fas fa-credit-card"></i>
+                    <span>Abonnements</span>
+                </a>
+                <a href="{{ path('admin_payments') }}" class="admin-nav-item">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span>Paiements</span>
+                </a>
+                <a href="#" class="admin-nav-item">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Revenus</span>
+                </a>
+
+                <div class="nav-section-title">SERVICES MÉDICAUX</div>
+                <a href="#" class="admin-nav-item">
+                    <i class="fas fa-hands-helping"></i>
+                    <span>Accompagnements</span>
+                </a>
+                <a href="#" class="admin-nav-item">
+                    <i class="fas fa-calendar-check"></i>
+                    <span>Rendez-vous</span>
+                </a>
+                <a href="#" class="admin-nav-item">
+                    <i class="fas fa-file-medical"></i>
+                    <span>Contrôle médical</span>
+                </a>
+
+                <div class="nav-section-title">PHARMACIE</div>
+                <a href="#" class="admin-nav-item">
+                    <i class="fas fa-clinic-medical"></i>
+                    <span>Pharmacies</span>
+                </a>
+                <a href="#" class="admin-nav-item">
+                    <i class="fas fa-pills"></i>
+                    <span>Médicaments</span>
+                </a>
+
+                <div class="nav-section-title">TRACKER SANTÉ</div>
+                <a href="{{ path('admin_analytics') }}" class="admin-nav-item">
+                    <i class="fas fa-chart-area"></i>
+                    <span>Statistiques tracker</span>
+                </a>
+                <a href="{{ path('app_symptome_liste_index') }}" class="admin-nav-item active">
+                    <i class="fas fa-stethoscope"></i>
+                    <span>Gestion symptômes</span>
+                </a>
+
+                <div class="nav-section-title">CONTENU</div>
+                <a href="#" class="admin-nav-item">
+                    <i class="fas fa-newspaper"></i>
+                    <span>Articles & Guides</span>
+                </a>
+                <a href="#" class="admin-nav-item">
+                    <i class="fas fa-flag"></i>
+                    <span>Modération</span>
+                </a>
+
+                <div class="nav-section-title">SYSTÈME</div>
+                <a href="#" class="admin-nav-item">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Signalements</span>
+                </a>
+                <a href="{{ path('admin_settings') }}" class="admin-nav-item">
+                    <i class="fas fa-cog"></i>
+                    <span>Paramètres</span>
+                </a>
+            </nav>
+
+            <div class="admin-sidebar-footer">
+                <div class="admin-user-profile">
+                    <img src="https://i.pravatar.cc/150?img=12" alt="Admin">
+                    <div class="admin-user-info">
+                        <strong>Dr. Admin</strong>
+                        <span>Administrateur</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="admin-main">
+
+            <!-- Top Header -->
+            <header class="admin-header">
+                <div class="admin-header-left">
+                    <h1>Gestion des Symptômes</h1>
+                    <p class="header-subtitle">Administration des données de symptômes des utilisateurs</p>
+                </div>
+                <div class="admin-header-right">
+                    <button class="admin-icon-btn">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge">2</span>
+                    </button>
+                    <button class="admin-icon-btn">
+                        <i class="fas fa-envelope"></i>
+                    </button>
+                    <div class="admin-user-avatar">
+                        <img src="https://i.pravatar.cc/150?img=12" alt="Admin">
+                    </div>
+                </div>
+            </header>
+
+            <!-- Privacy Notice -->
+            <section class="privacy-notice">
+                <i class="fas fa-shield-alt"></i>
+                <div>
+                    <strong>Conformité RGPD & confidentialité</strong>
+                    <p>Les données de symptômes sont anonymisées et utilisées uniquement pour l'administration du système.</p>
+                </div>
+            </section>
+
+            <!-- Data Box -->
+            <section class="admin-stats">
+                <div class="stat-card-admin">
+                    <div class="stat-icon-box" style="background: linear-gradient(135deg, #FF6B6B, #EE5A52);">
+                        <i class="fas fa-stethoscope"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Total symptômes</span>
+                        <span class="stat-value" id="total-symptoms">{{ symptomes|length }}</span>
+                        <span class="stat-change">Enregistrés dans le système</span>
+                    </div>
+                </div>
+
+                <div class="stat-card-admin">
+                    <div class="stat-icon-box" style="background: linear-gradient(135deg, #4ECDC4, #44A08D);">
+                        <i class="fas fa-tags"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Catégories</span>
+                        <span class="stat-value" id="total-categories">{{ categories|length }}</span>
+                        <span class="stat-change">Catégories différentes</span>
+                    </div>
+                </div>
+
+                <div class="stat-card-admin">
+                    <div class="stat-icon-box" style="background: linear-gradient(135deg, #45B7D1, #96CEB4);">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Cette semaine</span>
+                        <span class="stat-value" id="weekly-symptoms">0</span>
+                        <span class="stat-change">Nouveaux symptômes</span>
+                    </div>
+                </div>
+
+                <div class="stat-card-admin">
+                    <div class="stat-icon-box" style="background: linear-gradient(135deg, #F7DC6F, #F39C12);">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Symptômes actifs</span>
+                        <span class="stat-value" id="active-symptoms">0</span>
+                        <span class="stat-change">Nécessitant attention</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Add/Edit Symptom Form -->
+            <section class="admin-section">
+                <div class="section-header">
+                    <h2>
+                        <i class="fas fa-plus-circle"></i>
+                        {% if edit_mode is defined and edit_mode %}
+                            Modifier le symptôme "{{ current_symptome.nom }}"
+                        {% else %}
+                            Ajouter un nouveau symptôme
+                        {% endif %}
+                    </h2>
+                </div>
+
+                <div class="admin-form-container">
+                    {{ form_start(form, {'attr': {'class': 'admin-form', 'novalidate': 'novalidate', 'id': 'symptom-form'}}) }}
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            {{ form_label(form.nom) }}
+                            {{ form_widget(form.nom) }}
+                            {{ form_errors(form.nom) }}
+                            {{ form_help(form.nom) }}
+                        </div>
+
+                        <div class="form-group">
+                            {{ form_label(form.categorie) }}
+                            {{ form_widget(form.categorie) }}
+                            {{ form_errors(form.categorie) }}
+                            {{ form_help(form.categorie) }}
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        {{ form_label(form.description) }}
+                        {{ form_widget(form.description) }}
+                        {{ form_errors(form.description) }}
+                        {{ form_help(form.description) }}
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="symptom_intensity">Intensité (1-10)</label>
+                            <input type="range" id="symptom_intensity" name="intensity" min="1" max="10" value="5">
+                            <div class="intensity-display">
+                                <span>Faible</span>
+                                <span id="intensity-value">5</span>
+                                <span>Sévère</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="symptom_location">Localisation</label>
+                            <input type="text" id="symptom_location" name="location">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="symptom_duration">Durée</label>
+                            <input type="text" id="symptom_duration" name="duration">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="symptom_treatment">Traitement</label>
+                            <input type="text" id="symptom_treatment" name="treatment">
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-save"></i>
+                            {% if edit_mode is defined and edit_mode %}
+                                Modifier le symptôme
+                            {% else %}
+                                Enregistrer le symptôme
+                            {% endif %}
+                        </button>
+                        {% if edit_mode is defined and edit_mode %}
+                            <a href="{{ path('app_symptome_liste_index') }}" class="btn-secondary">
+                                <i class="fas fa-times"></i> Annuler
+                            </a>
+                        {% endif %}
+                    </div>
+
+                    {{ form_end(form) }}
+                </div>
+            </section>
+
+            <!-- Symptoms Table -->
+            <section class="admin-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-list"></i> Tous les symptômes</h2>
+                    <div class="section-actions">
+                        <button id="export-btn" class="btn-secondary">
+                            <i class="fas fa-download"></i> Exporter
+                        </button>
+                    </div>
+                </div>
+
+                {% if symptomes is empty %}
+                    <div id="no-data" class="no-data-message">
+                        <i class="fas fa-stethoscope"></i>
+                        <p>Aucun symptôme enregistré pour le moment.</p>
+                    </div>
+                {% else %}
+                    <div class="admin-table-container">
+                        <table class="admin-table" id="symptoms-table">
+                            <thead>
+                                <tr>
+                                    <th>Nom</th>
+                                    <th>Catégorie</th>
+                                    <th>Description</th>
+                                    <th>Créé le</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="symptoms-tbody">
+                                {% for symptome in symptomes %}
+                                    <tr>
+                                        <td>{{ symptome.nom }}</td>
+                                        <td>
+                                            {% if symptome.categorie %}
+                                                <span class="category-badge category-{{ symptome.categorie|lower|replace({' ':'-'}) }}">
+                                                    {{ symptome.categorie }}
+                                                </span>
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ symptome.description ?: '-' }}</td>
+                                        <td>{{ symptome.createdAt|date('d/m/Y') }}</td>
+                                        <td>
+                                            <a href="{{ path('app_symptome_liste_edit', {'id': symptome.id}) }}" class="action-btn edit-btn">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <form method="post" action="{{ path('app_symptome_liste_delete', {'id': symptome.id}) }}" onsubmit="return confirm('Vraiment supprimer ce symptôme ?');" style="display:inline;">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ symptome.id) }}">
+                                                <button type="submit" class="action-btn delete-btn">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="edit-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Modifier le symptôme</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+
+            <form id="edit-form" class="modal-form">
+                <input type="hidden" id="edit-id">
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="edit-name">Nom du symptôme *</label>
+                        <input type="text" id="edit-name" name="name" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="edit-category">Catégorie *</label>
+                        <select id="edit-category" name="category" required>
+                            <option value="Douleur">Douleur</option>
+                            <option value="Digestif">Digestif</option>
+                            <option value="Respiratoire">Respiratoire</option>
+                            <option value="Neurologique">Neurologique</option>
+                            <option value="Cardiovasculaire">Cardiovasculaire</option>
+                            <option value="Dermatologique">Dermatologique</option>
+                            <option value="Général">Général</option>
+                            <option value="Autre">Autre</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit-description">Description</label>
+                    <textarea id="edit-description" name="description" rows="3"></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="edit-intensity">Intensité (1-10)</label>
+                        <input type="range" id="edit-intensity" name="intensity" min="1" max="10" value="5">
+                        <div class="intensity-display">
+                            <span>Faible</span>
+                            <span id="edit-intensity-value">5</span>
+                            <span>Sévère</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="edit-location">Localisation</label>
+                        <input type="text" id="edit-location" name="location">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="edit-duration">Durée</label>
+                        <input type="text" id="edit-duration" name="duration">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="edit-treatment">Traitement</label>
+                        <input type="text" id="edit-treatment" name="treatment">
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="closeEditModal()">Annuler</button>
+                    <button type="submit" class="btn-primary">Mettre à jour</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block javascripts %}
+<script>
+    // Initialize when DOM is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        setupEventListeners();
+        updateStats();
+    });
+
+    // Setup event listeners
+    function setupEventListeners() {
+        // Intensity slider display
+        const intensitySlider = document.getElementById('symptom_intensity');
+        if (intensitySlider) {
+            intensitySlider.addEventListener('input', function() {
+                document.getElementById('intensity-value').textContent = this.value;
+            });
+        }
+
+        // Export button
+        const exportBtn = document.getElementById('export-btn');
+        if (exportBtn) {
+            exportBtn.addEventListener('click', exportSymptoms);
+        }
+
+        // Modal close
+        const modalClose = document.querySelector('.modal-close');
+        if (modalClose) {
+            modalClose.addEventListener('click', closeEditModal);
+        }
+
+        const editModal = document.getElementById('edit-modal');
+        if (editModal) {
+            editModal.addEventListener('click', function(e) {
+                if (e.target === editModal) closeEditModal();
+            });
+        }
+
+        // Edit intensity slider
+        const editIntensitySlider = document.getElementById('edit-intensity');
+        if (editIntensitySlider) {
+            editIntensitySlider.addEventListener('input', function() {
+                document.getElementById('edit-intensity-value').textContent = this.value;
+            });
+        }
+    }
+
+    // Update statistics
+    function updateStats() {
+        const symptoms = {{ symptomes|json_encode|raw }};
+        const categories = {{ categories|json_encode|raw }};
+
+        // Weekly symptoms (last 7 days)
+        const weekAgo = new Date();
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        const weeklyCount = symptoms.filter(s => new Date(s.createdAt) > weekAgo).length;
+
+        // Active symptoms (assuming intensity > 7 or recent)
+        const activeCount = symptoms.filter(s => new Date(s.createdAt) > weekAgo).length;
+
+        document.getElementById('weekly-symptoms').textContent = weeklyCount;
+        document.getElementById('active-symptoms').textContent = activeCount;
+    }
+
+    // Export symptoms
+    function exportSymptoms() {
+        const symptoms = {{ symptomes|json_encode|raw }};
+
+        const csvContent = [
+            ['Nom', 'Catégorie', 'Description', 'Créé le'],
+            ...symptoms.map(s => [
+                s.nom,
+                s.categorie || '',
+                s.description || '',
+                new Date(s.createdAt).toLocaleDateString('fr-FR')
+            ])
+        ].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `symptomes-${new Date().toISOString().split('T')[0]}.csv`;
+        link.click();
+
+        showToast('Export terminé!', 'success');
+    }
+
+    // Close edit modal
+    function closeEditModal() {
+        const editModal = document.getElementById('edit-modal');
+        if (editModal) {
+            editModal.style.display = 'none';
+        }
+    }
+
+    // Toast notification
+    function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.textContent = message;
+        toast.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${type === 'success' ? '#4CAF50' : '#FF5722'};
+            color: white;
+            padding: 12px 20px;
+            border-radius: 4px;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        `;
+
+        document.body.appendChild(toast);
+        setTimeout(() => {
+            toast.style.animation = 'fadeOut 0.3s ease';
+            setTimeout(() => document.body.removeChild(toast), 300);
+        }, 3000);
+    }
+</script>
+{% endblock %}
+        <main class="admin-main">
+
+            <!-- Top Header -->
+            <header class="admin-header">
+                <div class="admin-header-left">
+                    <h1>Gestion des Symptômes</h1>
+                    <p class="header-subtitle">Administration des données de symptômes des utilisateurs</p>
+                </div>
+                <div class="admin-header-right">
+                    <button class="admin-icon-btn">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge">2</span>
+                    </button>
+                    <div class="admin-user-avatar">
+                        <img src="https://i.pravatar.cc/150?img=12" alt="Admin">
+                    </div>
+                </div>
+            </header>
+
+            <!-- Privacy Notice -->
+            <section class="privacy-notice">
+                <i class="fas fa-shield-alt"></i>
+                <div>
+                    <strong>Conformité RGPD & confidentialité</strong>
+                    <p>Les données de symptômes sont anonymisées et utilisées uniquement pour l'administration du système.</p>
+                </div>
+            </section>
+
+            <!-- Stats -->
+            <section class="admin-stats">
+                <div class="stat-card-admin">
+                    <div class="stat-icon-box" style="background: linear-gradient(135deg, #FF6B6B, #EE5A52);">
+                        <i class="fas fa-stethoscope"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Total symptômes</span>
+                        <span class="stat-value">{{ symptomes|length }}</span>
+                        <span class="stat-change">Enregistrés dans le système</span>
+                    </div>
+                </div>
+
+                <div class="stat-card-admin">
+                    <div class="stat-icon-box" style="background: linear-gradient(135deg, #4ECDC4, #44A08D);">
+                        <i class="fas fa-tags"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Catégories</span>
+                        <span class="stat-value">{{ categories|length }}</span>
+                        <span class="stat-change">Catégories différentes</span>
+                    </div>
+                </div>
+
+                <!-- Tu peux ajouter d'autres stats dynamiques plus tard -->
+            </section>
+
+            <!-- Add/Edit Symptom Form -->
+            <section class="admin-section">
+                <div class="section-header">
+                    <h2>
+                        <i class="fas fa-plus-circle"></i>
+                        {% if edit_mode is defined and edit_mode %}
+                            Modifier le symptôme "{{ current_symptome.nom }}"
+                        {% else %}
+                            Ajouter un nouveau symptôme
+                        {% endif %}
+                    </h2>
+                </div>
+
+                <div class="admin-form-container">
+                    {{ form_start(form, {'attr': {'class': 'admin-form', 'novalidate': 'novalidate'}}) }}
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            {{ form_label(form.nom) }}
+                            {{ form_widget(form.nom) }}
+                            {{ form_errors(form.nom) }}
+                            {{ form_help(form.nom) }}
+                        </div>
+
+                        <div class="form-group">
+                            {{ form_label(form.categorie) }}
+                            {{ form_widget(form.categorie) }}
+                            {{ form_errors(form.categorie) }}
+                            {{ form_help(form.categorie) }}
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        {{ form_label(form.description) }}
+                        {{ form_widget(form.description) }}
+                        {{ form_errors(form.description) }}
+                        {{ form_help(form.description) }}
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-save"></i>
+                            {% if edit_mode is defined and edit_mode %}
+                                Modifier le symptôme
+                            {% else %}
+                                Enregistrer le symptôme
+                            {% endif %}
+                        </button>
+                        {% if edit_mode is defined and edit_mode %}
+                            <a href="{{ path('app_symptome_liste_index') }}" class="btn-secondary">
+                                <i class="fas fa-times"></i> Annuler
+                            </a>
+                        {% endif %}
+                    </div>
+
+                    {{ form_end(form) }}
+                </div>
+            </section>
+
+            <!-- Symptoms Table -->
+            <section class="admin-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-list"></i> Tous les symptômes</h2>
+                    <div class="section-actions">
+                        <a href="#" class="btn-secondary">
+                            <i class="fas fa-download"></i> Exporter
+                        </a>
+                    </div>
+                </div>
+
+                {% if symptomes is empty %}
+                    <div id="no-data" class="no-data-message">
+                        <i class="fas fa-stethoscope"></i>
+                        <p>Aucun symptôme enregistré pour le moment.</p>
+                    </div>
+                {% else %}
+                    <div class="admin-table-container">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Nom</th>
+                                    <th>Catégorie</th>
+                                    <th>Description</th>
+                                    <th>Créé le</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for symptome in symptomes %}
+                                    <tr>
+                                        <td>{{ symptome.nom }}</td>
+                                        <td>
+                                            {% if symptome.categorie %}
+                                                <span class="category-badge category-{{ symptome.categorie|lower|replace({' ':'-'}) }}">
+                                                    {{ symptome.categorie }}
+                                                </span>
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ symptome.description ?: '-' }}</td>
+                                        <td>{{ symptome.createdAt|date('d/m/Y') }}</td>
+                                        <td>
+                                            <a href="{{ path('app_symptome_liste_edit', {'id': symptome.id}) }}" class="action-btn edit-btn">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <form method="post" action="{{ path('app_symptome_liste_delete', {'id': symptome.id}) }}" onsubmit="return confirm('Vraiment supprimer ce symptôme ?');" style="display:inline;">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ symptome.id) }}">
+                                                <button type="submit" class="action-btn delete-btn">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+            </section>
+
+        </main>
+    </div>
+
+{% endblock %}

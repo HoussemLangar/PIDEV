@@ -1,0 +1,43 @@
+{% extends 'front/base.html.twig' %}
+
+{% block title %}Mes réservations{% endblock %}
+
+{% block body %}
+<section class="content-page">
+    <div class="content-hero">
+        <div class="content-header">
+            <div>
+                <div class="profile-badge">Réservations</div>
+                <h1>Mes réservations</h1>
+                <p>Suivez l’état de vos demandes.</p>
+            </div>
+            <div>
+                <a href="{{ path('front_pharmacy_index') }}" class="btn btn-secondary">Retour</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-section">
+        <div class="content-grid">
+            {% for r in reservations %}
+                <div class="content-card">
+                    <div class="content-meta">
+                        <span class="content-pill">{{ r.statut }}</span>
+                        <span>{{ r.createdAt|date('d/m/Y H:i') }}</span>
+                    </div>
+                    <h3>{{ r.medicament.nom }}</h3>
+                    <p>{{ r.pharmacie.nom }} • {{ r.pharmacie.adresse }}</p>
+                    <div class="content-actions">
+                        <span>Qté: {{ r.quantite }}</span>
+                        <form method="post" action="{{ path('api_pharmacies_reservation_cancel', {id: r.id}) }}" data-ajax="1">
+                            <button class="btn btn-secondary btn-xs" type="submit">Annuler</button>
+                        </form>
+                    </div>
+                </div>
+            {% else %}
+                <p>Aucune réservation.</p>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

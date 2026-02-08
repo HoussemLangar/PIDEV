@@ -40,6 +40,9 @@ class Medicament
     #[ORM\Column(type: 'string', length: 100, nullable: true)]
     private ?string $laboratoire = null;
 
+    #[ORM\Column(type: 'string', length: 120, nullable: true)]
+    private ?string $codeBarre = null;
+
     #[ORM\Column(type: 'datetime', options: ['default' => 'CURRENT_TIMESTAMP'])]
     private \DateTimeInterface $createdAt;
 
@@ -55,8 +58,8 @@ class Medicament
 
     public function __construct()
     {
-        $this->createdAt = new \DateTimeImmutable();
-        $this->updatedAt = new \DateTimeImmutable();
+        $this->createdAt = new \DateTime();
+        $this->updatedAt = new \DateTime();
         $this->stockPharmacies = new ArrayCollection();
         $this->reponsesMedicaments = new ArrayCollection();
     }
@@ -78,6 +81,8 @@ class Medicament
     public function setStock(int $stock): void { $this->stock = $stock; }
     public function getLaboratoire(): ?string { return $this->laboratoire; }
     public function setLaboratoire(?string $laboratoire): void { $this->laboratoire = $laboratoire; }
+    public function getCodeBarre(): ?string { return $this->codeBarre; }
+    public function setCodeBarre(?string $codeBarre): void { $this->codeBarre = $codeBarre; }
     public function getCreatedAt(): \DateTimeInterface { return $this->createdAt; }
     public function setCreatedAt(\DateTimeInterface $createdAt): void { $this->createdAt = $createdAt; }
     public function getUpdatedAt(): \DateTimeInterface { return $this->updatedAt; }

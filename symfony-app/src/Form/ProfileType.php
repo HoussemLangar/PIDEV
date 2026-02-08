@@ -31,6 +31,10 @@ class ProfileType extends AbstractType
                 'widget' => 'single_text',
                 'required' => false,
             ])
+            ->add('reminderEnabled', null, [
+                'label' => 'Rappels de rendez-vous',
+                'required' => false,
+            ])
             ->add('avatarFile', FileType::class, [
                 'label' => 'Photo de profil',
                 'mapped' => false,

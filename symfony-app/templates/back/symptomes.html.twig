@@ -1,0 +1,392 @@
+{% extends 'back/base.html.twig' %}
+
+{% block title %}Gestion des Symptômes - SANTÉA Admin{% endblock %}
+
+{% block admin_content %}
+
+    <!-- Top Header -->
+    <header class="admin-header">
+        <div class="admin-header-left">
+            <h1>Gestion des Symptômes</h1>
+            <p class="header-subtitle">Administration des données de symptômes des utilisateurs</p>
+        </div>
+        <div class="admin-header-right">
+            <div class="admin-user-avatar">
+                <img src="https://i.pravatar.cc/150?img=12" alt="Admin">
+            </div>
+        </div>
+    </header>
+
+            <!-- Privacy Notice -->
+            <section class="privacy-notice">
+                <i class="fas fa-shield-alt"></i>
+                <div>
+                    <strong>Conformité RGPD & confidentialité</strong>
+                    <p>Les données de symptômes sont anonymisées et utilisées uniquement pour l'administration du système.</p>
+                </div>
+            </section>
+
+            <!-- Data Box -->
+            <section class="admin-stats">
+                <div class="stat-card-admin">
+                    <div class="stat-icon-box" style="background: linear-gradient(135deg, #FF6B6B, #EE5A52);">
+                        <i class="fas fa-stethoscope"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Total symptômes</span>
+                        <span class="stat-value">{{ stats.total }}</span>
+                        <span class="stat-change">Enregistrés dans le système</span>
+                    </div>
+                </div>
+
+                <div class="stat-card-admin">
+                    <div class="stat-icon-box" style="background: linear-gradient(135deg, #4ECDC4, #44A08D);">
+                        <i class="fas fa-tags"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Catégories</span>
+                        <span class="stat-value">{{ stats.categories }}</span>
+                        <span class="stat-change">Catégories différentes</span>
+                    </div>
+                </div>
+
+                <div class="stat-card-admin">
+                    <div class="stat-icon-box" style="background: linear-gradient(135deg, #45B7D1, #96CEB4);">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Cette semaine</span>
+                        <span class="stat-value">{{ stats.weekly }}</span>
+                        <span class="stat-change">Nouveaux symptômes</span>
+                    </div>
+                </div>
+
+                <div class="stat-card-admin">
+                    <div class="stat-icon-box" style="background: linear-gradient(135deg, #F7DC6F, #F39C12);">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Symptômes récents</span>
+                        <span class="stat-value">{{ stats.recent }}</span>
+                        <span class="stat-change">Ajoutés récemment</span>
+                    </div>
+                </div>
+
+                <div class="stat-card-admin">
+                    <div class="stat-icon-box" style="background: linear-gradient(135deg, #9B59B6, #8E44AD);">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Patients actifs</span>
+                        <span class="stat-value">{{ stats.active_patients }}</span>
+                        <span class="stat-change">Trackent leurs symptômes</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Add/Edit Symptom Form -->
+            <section class="admin-section">
+                <div class="section-header">
+                    <h2>
+                        <i class="fas fa-plus-circle"></i>
+                        {% if edit_mode is defined and edit_mode %}
+                            Modifier le symptôme "{{ current_symptome.nom }}"
+                        {% else %}
+                            Ajouter un nouveau symptôme
+                        {% endif %}
+                    </h2>
+                </div>
+
+                <div class="admin-form-container">
+                    {{ form_start(form, {'attr': {'class': 'admin-form'}, 'locale': 'fr'}) }}
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            {{ form_label(form.nom) }}
+                            {{ form_widget(form.nom) }}
+                            {{ form_errors(form.nom) }}
+                        </div>
+
+                        <div class="form-group">
+                            {{ form_label(form.categorie) }}
+                            {{ form_widget(form.categorie) }}
+                            {{ form_errors(form.categorie) }}
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-save"></i>
+                            {% if edit_mode is defined and edit_mode %}
+                                Modifier le symptôme
+                            {% else %}
+                                Enregistrer le symptôme
+                            {% endif %}
+                        </button>
+                        {% if edit_mode is defined and edit_mode %}
+                            <a href="{{ path('app_symptome_liste_index') }}" class="btn-secondary">
+                                <i class="fas fa-times"></i> Annuler
+                            </a>
+                        {% endif %}
+                    </div>
+
+                    {{ form_end(form) }}
+                </div>
+            </section>
+
+            <!-- Symptoms Table -->
+            <section class="admin-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-list"></i> Tous les symptômes</h2>
+                    <div class="section-actions">
+                        <!-- Simple Search Form -->
+                        <form method="GET" style="display: flex; gap: 10px; align-items: center; margin-right: 10px;">
+                            <input type="text" name="search" value="{{ app.request.query.get('search') }}" 
+                                   placeholder="Rechercher un symptôme..." 
+                                   class="form-control" style="width: 200px;">
+                            <select name="category" class="form-control" style="width: 180px;">
+                                <option value="">Toutes catégories</option>
+                                {% for category in categories %}
+                                    <option value="{{ category.categorie }}" {{ app.request.query.get('category') == category.categorie ? 'selected' : '' }}>
+                                        {{ category.categorie }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit" class="btn-secondary">
+                                <i class="fas fa-search"></i> Rechercher
+                            </button>
+                            {% if app.request.query.get('search') or app.request.query.get('category') %}
+                                <a href="{{ path('app_symptome_liste_index') }}" class="btn-secondary">
+                                    <i class="fas fa-times"></i> Effacer
+                                </a>
+                            {% endif %}
+                        </form>
+                        
+                        <a href="{{ path('app_symptome_liste_export') }}" class="btn-secondary">
+                            <i class="fas fa-download"></i> Exporter
+                        </a>
+                    </div>
+                </div>
+
+                {% if symptomes is empty %}
+                    <div class="no-data-message">
+                        <i class="fas fa-stethoscope"></i>
+                        <p>
+                            {% if app.request.query.get('search') and app.request.query.get('category') %}
+                                Aucun symptôme trouvé pour "{{ app.request.query.get('search') }}" dans la catégorie "{{ app.request.query.get('category') }}".
+                            {% elseif app.request.query.get('search') %}
+                                Aucun symptôme trouvé pour "{{ app.request.query.get('search') }}".
+                            {% elseif app.request.query.get('category') %}
+                                Aucun symptôme trouvé dans la catégorie "{{ app.request.query.get('category') }}".
+                            {% else %}
+                                Aucun symptôme enregistré pour le moment.
+                            {% endif %}
+                        </p>
+                    </div>
+                {% else %}
+                    <div class="admin-table-container" style="max-height: 500px; overflow-y: auto;">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Nom</th>
+                                    <th>Catégorie</th>
+                                    <th>Créé le</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for symptome in symptomes %}
+                                    <tr>
+                                        <td>{{ symptome.nom }}</td>
+                                        <td>
+                                            {% if symptome.categorie %}
+                                                <span class="category-badge category-{{ symptome.categorie|lower|replace({' ':'-'}) }}">
+                                                    {{ symptome.categorie }}
+                                                </span>
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ symptome.createdAt|date('d/m/Y') }}</td>
+                                        <td>
+                                            <a href="{{ path('app_symptome_liste_edit', {'id': symptome.id}) }}" class="action-btn edit-btn">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <form method="post" action="{{ path('app_symptome_liste_delete', {'id': symptome.id}) }}" onsubmit="return confirm('Vraiment supprimer ce symptôme ?');" style="display:inline;">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ symptome.id) }}">
+                                                <button type="submit" class="action-btn delete-btn">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+            </section>
+
+            <!-- Section Statistiques des patients -->
+            <section class="admin-section" style="margin-top: 30px;">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-chart-pie"></i>
+                        Symptômes les plus courants
+                    </h2>
+                </div>
+
+                {% if most_common_symptoms is defined and most_common_symptoms|length > 0 %}
+                    <div style="max-width: 600px; margin: 0 auto; padding: 30px;">
+                        <canvas id="symptomsChart"></canvas>
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-chart-pie" style="font-size: 3rem; color: #ccc; margin-bottom: 15px;"></i>
+                        <p>Aucun symptôme enregistré</p>
+                    </div>
+                {% endif %}
+            </section>
+
+            <!-- Section Statistiques des patients -->
+            <section class="admin-section" style="margin-top: 30px;">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-users"></i>
+                        Patients qui enregistrent des symptômes
+                    </h2>
+                    <div class="section-actions">
+                        <a href="{{ path('app_patient_stats_export') }}" class="btn-secondary">
+                            <i class="fas fa-download"></i> Exporter CSV
+                        </a>
+                    </div>
+                </div>
+
+                {% if user_stats is defined and user_stats|length > 0 %}
+                    <div class="table-container">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Patient</th>
+                                    <th>Email</th>
+                                    <th>Total symptômes</th>
+                                    <th>Jours de suivi</th>
+                                    <th>Intensité moyenne</th>
+                                    <th>Dernier enregistrement</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in user_stats %}
+                                    <tr>
+                                        <td><strong>{{ user.patient_name|default('N/A') }}</strong></td>
+                                        <td>{{ user.user_email }}</td>
+                                        <td>
+                                            <span class="badge" style="background: linear-gradient(135deg, #40C4FF, #0288D1); color: white; padding: 5px 10px; border-radius: 12px;">
+                                                {{ user.total_symptoms }}
+                                            </span>
+                                        </td>
+                                        <td>{{ user.days_tracked }} jours</td>
+                                        <td>
+                                            <span class="intensity-badge" style="background: {% if user.avg_intensity < 4 %}#4CAF50{% elseif user.avg_intensity < 7 %}#FF9800{% else %}#f44336{% endif %}; color: white; padding: 3px 8px; border-radius: 8px; font-size: 0.9rem;">
+                                                {{ user.avg_intensity|number_format(1) }}/10
+                                            </span>
+                                        </td>
+                                        <td>{{ user.last_symptom_date|date('d/m/Y') }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-user-slash" style="font-size: 3rem; color: #ccc; margin-bottom: 15px;"></i>
+                        <p>Aucun patient n'a encore enregistré de symptômes</p>
+                    </div>
+                {% endif %}
+            </section>
+
+        </main>
+    </div>
+
+    <script>
+        // Nettoyer le formulaire à l'actualisation de la page
+        window.addEventListener('load', function() {
+            // Vérifier si c'est une actualisation de page (pas une soumission de formulaire)
+            if (performance.navigation.type === performance.navigation.TYPE_RELOAD) {
+                // Nettoyer tous les champs input et select du formulaire d'ajout
+                const form = document.querySelector('.admin-form');
+                if (form) {
+                    const inputs = form.querySelectorAll('input[type="text"], input[type="email"], textarea');
+                    inputs.forEach(input => input.value = '');
+                    
+                    const selects = form.querySelectorAll('select');
+                    selects.forEach(select => select.selectedIndex = 0);
+                }
+                
+                // Supprimer les messages d'erreur affichés
+                const errorMessages = document.querySelectorAll('.form-error, .invalid-feedback, .help-block');
+                errorMessages.forEach(error => error.remove());
+            }
+        });
+
+        // Chart for most common symptoms
+        {% if most_common_symptoms is defined and most_common_symptoms|length > 0 %}
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('symptomsChart').getContext('2d');
+            
+            const symptomData = {
+                labels: [
+                    {% for symptom in most_common_symptoms %}
+                        '{{ symptom.symptom_name|e('js') }}'{{ loop.last ? '' : ',' }}
+                    {% endfor %}
+                ],
+                datasets: [{
+                    data: [
+                        {% for symptom in most_common_symptoms %}
+                            {{ symptom.count }}{{ loop.last ? '' : ',' }}
+                        {% endfor %}
+                    ],
+                    backgroundColor: [
+                        '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
+                        '#FF9F40', '#FF6384', '#C9CBCF', '#4BC0C0', '#FF6384'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            };
+
+            new Chart(ctx, {
+                type: 'pie',
+                data: symptomData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 15,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return label + ': ' + value + ' (' + percentage + '%)';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+        {% endif %}
+    </script>
+
+{% endblock %}

@@ -64,4 +64,15 @@ class NotificationRepository extends ServiceEntityRepository
     {
         $this->getEntityManager()->flush();
     }
+
+    public function findRecentForUser(int $userId, int $limit = 10): array
+    {
+        return $this->createQueryBuilder('n')
+            ->andWhere('n.user = :user')
+            ->setParameter('user', $userId)
+            ->orderBy('n.createdAt', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
 }

@@ -1,0 +1,90 @@
+{% extends 'front/base.html.twig' %}
+
+{% block title %}Pharmacies{% endblock %}
+
+{% block body %}
+<section class="content-page">
+    <div class="content-hero">
+        <div class="content-header">
+            <div>
+                <div class="profile-badge">Pharmacies</div>
+                <h1>Recherche & comparaison</h1>
+                <p>Trouvez une pharmacie, comparez les prix et réservez.</p>
+            </div>
+            <div>
+                <a href="{{ path('front_pharmacy_my_reservations') }}" class="btn btn-secondary">Mes réservations</a>
+            </div>
+        </div>
+        <div class="content-filters">
+            <input type="text" id="pharmacySearch" placeholder="Pharmacie ou adresse">
+            <input type="text" id="medSearch" placeholder="Médicament (nom ou code-barres)">
+            <button class="btn btn-primary btn-xs" id="searchBtn">Rechercher</button>
+            <button class="btn btn-secondary btn-xs" id="geoBtn">Autour de moi</button>
+        </div>
+    </div>
+
+    <div class="content-section">
+        <div class="content-section-header">
+            <div class="content-section-title">
+                <h3>Résultats</h3>
+                <p>Pharmacies actives triées par distance/prix.</p>
+            </div>
+            <span class="content-pill">Temps réel</span>
+        </div>
+        <div class="content-grid" id="pharmacyGrid"></div>
+    </div>
+</section>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        (function () {
+            const grid = document.getElementById('pharmacyGrid');
+            const searchInput = document.getElementById('pharmacySearch');
+            const medInput = document.getElementById('medSearch');
+            const searchBtn = document.getElementById('searchBtn');
+            const geoBtn = document.getElementById('geoBtn');
+            let geo = { lat: null, lng: null };
+            const apiFetch = (url, options = {}) => fetch(url, { ...options, loading: true });
+
+            const renderPharmacy = (p) => `
+                <div class="content-card">
+                    <div class="content-meta">
+                        <span class="content-pill">Pharmacie</span>
+                        <span>${p.distance ? p.distance.toFixed(2) + ' km' : 'Distance N/A'}</span>
+                    </div>
+                    <h3>${p.nom}</h3>
+                    <p>${p.adresse}</p>
+                    <div class="content-actions">
+                        <a class="btn btn-primary btn-xs" href="/pharmacies/${p.id}">Détails</a>
+                        <a class="btn btn-secondary btn-xs" href="/pharmacies/${p.id}#compareBox">Réserver</a>
+                    </div>
+                </div>
+            `;
+
+            const load = async () => {
+                const params = new URLSearchParams({ q: searchInput.value.trim() });
+                if (geo.lat && geo.lng) {
+                    params.set('lat', geo.lat);
+                    params.set('lng', geo.lng);
+                }
+                const res = await apiFetch(`/api/pharmacies/search?${params.toString()}`);
+                const data = await res.json();
+                grid.innerHTML = '';
+                (data.items || []).forEach(p => grid.insertAdjacentHTML('beforeend', renderPharmacy(p)));
+            };
+
+            searchBtn.addEventListener('click', load);
+            geoBtn.addEventListener('click', () => {
+                if (!navigator.geolocation) return;
+                navigator.geolocation.getCurrentPosition((pos) => {
+                    geo = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                    load();
+                });
+            });
+
+            load();
+        })();
+    </script>
+{% endblock %}

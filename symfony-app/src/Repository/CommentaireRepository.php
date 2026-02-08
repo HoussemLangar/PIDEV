@@ -34,6 +34,47 @@ class CommentaireRepository extends ServiceEntityRepository
     }
 
     /**
+     * @return Commentaire[]
+     */
+    public function findByContenu(int $contenuId): array
+    {
+        return $this->createQueryBuilder('c')
+            ->leftJoin('c.user', 'u')
+            ->addSelect('u')
+            ->andWhere('c.contenu = :cid')
+            ->setParameter('cid', $contenuId)
+            ->orderBy('c.createdAt', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * @return Commentaire[]
+     */
+    public function findRecentByContenu(int $contenuId, int $limit = 20): array
+    {
+        return $this->createQueryBuilder('c')
+            ->leftJoin('c.user', 'u')
+            ->addSelect('u')
+            ->andWhere('c.contenu = :cid')
+            ->setParameter('cid', $contenuId)
+            ->orderBy('c.createdAt', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function countByContenu(int $contenuId): int
+    {
+        return (int) $this->createQueryBuilder('c')
+            ->select('COUNT(c.id)')
+            ->andWhere('c.contenu = :cid')
+            ->setParameter('cid', $contenuId)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    /**
      * Save Commentaire entity
      */
     public function save(Commentaire $entity, bool $flush = true): void

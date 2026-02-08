@@ -4,8 +4,8 @@ namespace App\EventSubscriber;
 
 use App\Entity\User;
 use App\Entity\UserSession;
-use App\Repository\UserSessionRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
@@ -16,8 +16,8 @@ use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInt
 class UserSessionSubscriber
 {
     public function __construct(
-        private UserSessionRepository $userSessionRepository,
         private EntityManagerInterface $em,
+        private ManagerRegistry $registry,
         private TokenStorageInterface $tokenStorage,
         private UrlGeneratorInterface $urlGenerator
     ) {}
@@ -41,7 +41,12 @@ class UserSessionSubscriber
             return;
         }
 
-        $sessionEntity = $this->userSessionRepository->findBySessionId($sessionId);
+        if (!$this->em->isOpen()) {
+            $this->em = $this->registry->resetManager();
+        }
+
+        $sessionRepository = $this->registry->getRepository(UserSession::class);
+        $sessionEntity = $sessionRepository->findOneBy(['sessionId' => $sessionId]);
         if ($sessionEntity && $sessionEntity->isRevoked()) {
             $session->invalidate();
             $this->tokenStorage->setToken(null);

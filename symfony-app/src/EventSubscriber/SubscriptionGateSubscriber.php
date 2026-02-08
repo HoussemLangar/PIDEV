@@ -77,10 +77,22 @@ class SubscriptionGateSubscriber implements EventSubscriberInterface
             $this->em->flush();
         }
 
-        // Mode découverte: autoriser uniquement le front, pas l'admin
+        // Mode découverte: autoriser uniquement le front, pas l'admin ni le contenu premium
         if ($user->getSubscriptionStatus() === 'SKIPPED') {
-            if (str_starts_with($route, 'admin_')) {
-                $event->setResponse(new RedirectResponse($this->urlGenerator->generate('app_subscription')));
+            $restrictedInDiscovery = [
+                'front_content_',
+                'api_content_',
+                'front_pharmacy_',
+                'api_pharmacies_',
+                'front_pharmacien_',
+                'api_pharmacien_',
+                'admin_',
+            ];
+            foreach ($restrictedInDiscovery as $prefix) {
+                if (str_starts_with($route, $prefix)) {
+                    $event->setResponse(new RedirectResponse($this->urlGenerator->generate('app_subscription')));
+                    return;
+                }
             }
             return;
         }

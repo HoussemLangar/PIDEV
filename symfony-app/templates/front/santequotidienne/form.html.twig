@@ -1,0 +1,1592 @@
+{% extends 'front/base.html.twig' %}
+
+{% block title %}Tracker Santé - SANTÉA{% endblock %}
+
+{% block stylesheets %}
+  {{ parent() }}
+  <link rel="stylesheet" href="{{ asset('assets/css/santet.css') }}"/>
+  <style>
+    .health-tracker-page-neutral {
+      background: #f5f7fb;
+      padding-left: 0;
+    }
+    .health-tracker-page-neutral::before,
+    .health-tracker-page-neutral::after {
+      content: none;
+    }
+    body {
+      background: #f5f7fb;
+    }
+    .content-hero {
+      background: #f5f7fb;
+      border-color: #e5e7eb;
+      box-shadow: none;
+    }
+  </style>
+{% endblock %}
+
+{% block body %}
+  <main class="health-tracker-page-v2 health-tracker-page-neutral" style="position:relative; background:#f5f7fb; background-image:none;">
+    
+    <section class="content-page">
+    <div class="container-wide" style="position:relative; z-index:2;">
+      
+      <!-- Messages flash -->
+      {% for message in app.flashes('success') %}
+        <div class="alert alert-success flash-success" style="margin-bottom:15px; padding:12px; background:#d4edda; border:1px solid #c3e6cb; border-radius:4px; color:#155724;">
+          ✅ {{ message }}
+        </div>
+      {% endfor %}
+      <script>
+        document.addEventListener('DOMContentLoaded', function() {
+          const notif = document.querySelector('.flash-success');
+          if (notif) {
+            setTimeout(() => {
+              notif.style.transition = 'opacity 0.5s';
+              notif.style.opacity = 0;
+              setTimeout(() => notif.remove(), 600);
+            }, 2000);
+          }
+        });
+      </script>
+      {% for message in app.flashes('error') %}
+        <div class="alert alert-danger" style="margin-bottom:15px; padding:12px; background:#f8d7da; border:1px solid #f5c6cb; border-radius:4px; color:#721c24;">
+          ❌ {{ message }}
+        </div>
+      {% endfor %}
+
+      <section class="content-hero">
+        <div class="content-header">
+          <div>
+            <div class="profile-badge">Tracker Santé</div>
+            <h1>Mon Journal Santé</h1>
+            <p>Prenez soin de vous jour après jour.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Résumé rapide avec emojis -->
+      <div class="summary-cards">
+        <div class="summary-card card-pulse">
+          <div class="card-emoji">⚖️</div>
+          <div class="card-info">
+            <span class="card-label">Mon Poids</span>
+            <span class="card-value" id="current-weight">--</span>
+            <span class="card-unit">kg</span>
+          </div>
+        </div>
+
+        <div class="summary-card card-pulse">
+          <div class="card-emoji">😴</div>
+          <div class="card-info">
+            <span class="card-label">Sommeil</span>
+            <span class="card-value" id="avg-sleep">--</span>
+            <span class="card-unit">heures/nuit</span>
+          </div>
+        </div>
+
+        <div class="summary-card card-pulse">
+          <div class="card-emoji">🏃</div>
+          <div class="card-info">
+            <span class="card-label">Activité</span>
+            <span class="card-value" id="total-activity">--</span>
+            <span class="card-unit">min/semaine</span>
+          </div>
+        </div>
+
+        <div class="summary-card card-pulse">
+          <div class="card-emoji">💧</div>
+          <div class="card-info">
+            <span class="card-label">Hydratation</span>
+            <span class="card-value" id="total-water">--</span>
+            <span class="card-unit">L/jour</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contenu principal en 2 colonnes -->
+      <div class="main-content-grid" style="display:grid; grid-template-columns: 1fr 400px; gap:30px; align-items:stretch;">
+        <!-- Colonne gauche - Formulaire Symfony -->
+        <div class="form-section-beautiful" id="form-section" style="grid-column: 1; max-width:100%; margin-top:-135px;">
+          <div class="form-card-beautiful" style="max-width:1050px; width:100%; margin:0 auto;">
+            <div class="form-header-beautiful">
+              <h2>📝 Comment allez-vous aujourd'hui ?</h2>
+              <p style="font-size:0.9em; color:#666; margin-top:5px;">
+                <span style="color:#e74c3c; font-weight:bold;">*</span> = Champ obligatoire
+                <span style="margin-left:20px; color:#95a5a6;">○</span> = Optionnel
+              </p>
+            </div>
+            
+            {{ form_start(form, {'action': form.vars.data.id ? path('app_sante_quotidienne_edit', {'id': form.vars.data.id}) : path('app_sante_quotidienne_new'), 'method': 'POST', 'attr': {'class': 'form-beautiful', 'id': 'sante-form'}}) }}
+      <script>
+        console.log('Form action URL:', document.getElementById('sante-form') ? document.getElementById('sante-form').action : 'form not found');
+        document.getElementById('sante-form')?.addEventListener('submit', function(e) {
+          console.log('Form is being submitted!');
+          console.log('Form data:', new FormData(this));
+          const formData = new FormData(this);
+          for (let pair of formData.entries()) {
+            console.log(pair[0] + ': ' + pair[1]);
+          }
+        });
+      </script>
+      <script>
+        document.addEventListener('DOMContentLoaded', function() {
+          var form = document.getElementById('sante-form');
+          if (form) {
+            // Reset complet du formulaire à chaque chargement de page
+            form.reset();
+            
+            // Force la date d'aujourd'hui
+            var dateInput = form.querySelector('input[name*="[date]"]');
+            if (dateInput) {
+              var today = new Date();
+              var dd = String(today.getDate()).padStart(2, '0');
+              var mm = String(today.getMonth() + 1).padStart(2, '0');
+              var yyyy = today.getFullYear();
+              dateInput.value = yyyy + '-' + mm + '-' + dd;
+            }
+            
+            // Force tous les autres champs à être vides
+            var inputs = form.querySelectorAll('input[type="text"], input[type="number"], input[type="email"], textarea, select');
+            inputs.forEach(function(input) {
+              if (!input.name.includes('[date]')) {
+                input.value = '';
+              }
+            });
+            
+            // Décoche tous les radio/checkbox
+            var radios = form.querySelectorAll('input[type="radio"], input[type="checkbox"]');
+            radios.forEach(function(radio) {
+              radio.checked = false;
+            });
+          }
+        });
+      </script>
+
+              {# Affichage des erreurs globales du formulaire #}
+              {% if form.vars.errors|length > 0 %}
+                <div class="alert alert-danger" style="margin-bottom:15px; padding:14px; background:linear-gradient(135deg, #fff5f5 0%, #ffe0e0 100%); border-left:4px solid #e74c3c; border-radius:4px; color:#721c24;">
+                  <strong style="font-size:1.1em;">⚠️ Erreurs de validation</strong>
+                  <ul style="margin-top:10px; margin-bottom:0; padding-left:20px;">
+                    {% for error in form.vars.errors %}
+                      <li style="margin-bottom:5px;">{{ error.message }}</li>
+                    {% endfor %}
+                  </ul>
+                </div>
+              {% endif %}
+
+              {# Date & Poids côte à côte #}
+              <div class="form-row-beautiful">
+                <div class="form-group-beautiful">
+                  <label style="display:flex; align-items:center; gap:8px;">
+                    {{ form_label(form.date, '📅 Date', {'label_attr': {'class': ''}}) }}
+                    <span style="color:#e74c3c; font-weight:bold; font-size:1.2em;">*</span>
+                  </label>
+                  {{ form_widget(form.date, {'attr': {'class': 'form-control'}}) }}
+                  {{ form_errors(form.date) }}
+                </div>
+
+                <div class="form-group-beautiful">
+                  <label style="display:flex; align-items:center; gap:8px;">
+                    {{ form_label(form.poids, '⚖️ Poids (kg)', {'label_attr': {'class': ''}}) }}
+                    <span style="color:#e74c3c; font-weight:bold; font-size:1.2em;">*</span>
+                  </label>
+                  {{ form_widget(form.poids, {'attr': {'step': '0.1', 'placeholder': 'Ex: 70.5', 'class': 'form-control'}}) }}
+                  {{ form_errors(form.poids) }}
+                </div>
+              </div>
+
+              {# Taille & Tension côte à côte #}
+              <div class="form-row-beautiful">
+                <div class="form-group-beautiful">
+                  <label style="display:flex; align-items:center; gap:8px;">
+                    {{ form_label(form.taille, '📏 Taille (cm)', {'label_attr': {'class': ''}}) }}
+                    <span style="color:#e74c3c; font-weight:bold; font-size:1.2em;">*</span>
+                  </label>
+                  {{ form_widget(form.taille, {'attr': {'step': '0.1', 'placeholder': 'Ex: 175', 'class': 'form-control'}}) }}
+                  {{ form_errors(form.taille) }}
+                </div>
+
+                <div class="form-group-beautiful">
+                  <label style="display:flex; align-items:center; gap:8px;">
+                    {{ form_label(form.tensionArterielle, '❤️ Tension', {'label_attr': {'class': ''}}) }}
+                    <span style="color:#95a5a6; font-size:0.85em;">○ optionnel</span>
+                  </label>
+                  {{ form_widget(form.tensionArterielle, {'attr': {'placeholder': 'Ex: 120/80', 'class': 'form-control'}}) }}
+                  {{ form_errors(form.tensionArterielle) }}
+                </div>
+              </div>
+
+              {# IMC calculé côté serveur via l'entité; affichage client utilisant endpoint serveur #}
+              <div class="imc-summary" id="imc-summary" style="margin-top:10px; display:none; font-weight:600;">
+                IMC : <span id="server-imc">-</span>
+                &nbsp;•&nbsp;
+                <span id="server-imc-emoji">📊</span>
+                <span id="server-imc-status" style="margin-left:6px;">-</span>
+              </div>
+
+              {# Tension artérielle #}
+              {# (déplacée avec Taille ci-dessus) #}
+
+              {# Sommeil & Activité #}
+              <div class="form-row-beautiful">
+                <div class="form-group-beautiful">
+                  <label style="display:flex; align-items:center; gap:8px;">
+                    {{ form_label(form.sommeil, '😴 Sommeil (h)', {'label_attr': {'class': ''}}) }}
+                    <span style="color:#95a5a6; font-size:0.85em;">○ optionnel</span>
+                  </label>
+                  {{ form_widget(form.sommeil, {'attr': {'step': '0.5', 'placeholder': '8', 'class': 'form-control'}}) }}
+                  {{ form_errors(form.sommeil) }}
+                </div>
+                <div class="form-group-beautiful">
+                  <label style="display:flex; align-items:center; gap:8px;">
+                    {{ form_label(form.activitePhysique, '🏃 Sport', {'label_attr': {'class': ''}}) }}
+                    <span style="color:#95a5a6; font-size:0.85em;">○ optionnel</span>
+                  </label>
+                  {{ form_widget(form.activitePhysique, {'attr': {'class': 'form-control'}}) }}
+                  {{ form_errors(form.activitePhysique) }}
+                </div>
+              </div>
+
+              {# Humeur #}
+              <div class="form-group-beautiful">
+                <label style="display:flex; align-items:center; gap:8px;">
+                  😊 Comment vous sentez-vous ?
+                  <span style="color:#e74c3c; font-weight:bold; font-size:1.2em;">*</span>
+                </label>
+                <div class="mood-buttons" style="display:flex; flex-wrap:wrap; gap:8px;">
+                  {% for child in form.humeur %}
+                    {# Map enum values from App\\Enum\\Humeur to emojis #}
+                    {% set v = child.vars.value %}
+                    {% set moodEmoji = (
+                      v == 'excellente' ? '😄' :
+                      v == 'heureuse'   ? '🙂' :
+                      v == 'joyeuse'    ? '😊' :
+                      v == 'contente'   ? '😃' :
+                      v == 'calme'      ? '😌' :
+                      v == 'paisible'   ? '🌿' :
+                      v == 'neutre'     ? '😐' :
+                      v == 'fatiguee'   ? '😴' :
+                      v == 'ennuyee'    ? '😑' :
+                      v == 'stressee'   ? '😓' :
+                      v == 'anxieuse'   ? '😟' :
+                      v == 'irritee'    ? '😣' :
+                      v == 'frustree'   ? '😤' :
+                      v == 'triste'     ? '😔' :
+                      v == 'deprimee'   ? '😞' :
+                      v == 'en_colere'  ? '😠' : '🙂'
+                    ) %}
+
+                    <label class="mood-button-label" style="display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer;">
+                      {{ form_widget(child, {'attr': {'class': 'mood-button-input'}}) }}
+                      <span class="mood-button" data-value="{{ child.vars.value }}" style="display:flex; flex-direction:column; align-items:center; padding:8px; border-radius:8px; border:2px solid transparent; transition:all 0.2s;">
+                        <span class="mood-emoji" style="font-size:1.8em; line-height:1;">{{ moodEmoji }}</span>
+                        <span class="mood-label" style="font-size:0.75em; text-align:center; margin-top:4px; max-width:50px;">{{ child.vars.label }}</span>
+                      </span>
+                    </label>
+                  {% endfor %}
+                </div>
+                {{ form_errors(form.humeur) }}
+              </div>
+
+              {# Alimentation #}
+              <div class="form-group-beautiful">
+                <label style="display:flex; align-items:center; gap:8px;">
+                  {{ form_label(form.alimentation, '🍎 Alimentation', {'label_attr': {'class': ''}}) }}
+                  <span style="color:#95a5a6; font-size:0.85em;">○ optionnel</span>
+                </label>
+                {{ form_widget(form.alimentation, {'attr': {'class': 'form-control'}}) }}
+                {{ form_errors(form.alimentation) }}
+              </div>
+
+              {# Eau bue #}
+              <div class="form-group-beautiful">
+                <label style="display:flex; align-items:center; gap:8px;">
+                  {{ form_label(form.eauBue, '💧 Eau bue (litres)', {'label_attr': {'class': ''}}) }}
+                  <span style="color:#95a5a6; font-size:0.85em;">○ optionnel</span>
+                </label>
+                {{ form_widget(form.eauBue, {'attr': {'step': '0.1', 'placeholder': '2.0', 'class': 'form-control'}}) }}
+                {{ form_errors(form.eauBue) }}
+              </div>
+
+              <button type="submit" class="btn-save-beautiful">
+                {% if form.vars.data.id %}
+                  <span>✏️</span>
+                  <span>Mettre à jour</span>
+                {% else %}
+                  <span>💾</span>
+                  <span>Enregistrer ma journée</span>
+                {% endif %}
+              </button>
+
+            {{ form_end(form) }}
+            
+            
+          </div>
+        </div>
+
+        <!-- Colonne droite - Mes dernières journées -->
+        <div class="recent-entries-beautiful" style="grid-column: 2; height:13cm; display:flex; flex-direction:column; margin-top:-137px;">
+          <div class="section-header-beautiful">
+            <h3>📔 Mes dernières journées</h3>
+          </div>
+          <div class="mini-calendar-container" style="margin:10px 0 16px; display:flex; justify-content:center; align-items:center;">
+            <div id="mini-calendar" class="mini-calendar"></div>
+            <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+            <script>
+              document.addEventListener('DOMContentLoaded', function() {
+                var dates = [
+                  {% for item in santes %}
+                    "{{ item.date|date('Y-m-d') }}"{% if not loop.last %},{% endif %}
+                  {% endfor %}
+                ];
+                
+                const details = document.getElementById('entry-details-placeholder');
+                
+                flatpickr("#mini-calendar", {
+                  inline: true,
+                  locale: 'fr',
+                  disableMobile: true,
+                  onDayCreate: function(dObj, dStr, fp, dayElem) {
+                    // Format local YYYY-MM-DD sans UTC
+                    const pad = n => n < 10 ? '0'+n : n;
+                    const localDate = dayElem.dateObj.getFullYear() + '-' + pad(dayElem.dateObj.getMonth()+1) + '-' + pad(dayElem.dateObj.getDate());
+                    if (dates.includes(localDate)) {
+                      dayElem.classList.add('has-entry');
+                    }
+                  },
+                  onChange: function(selectedDates, dateStr, instance) {
+                    if (selectedDates.length === 0) return;
+                    
+                    const pad = n => n < 10 ? '0'+n : n;
+                    const selectedDate = selectedDates[0];
+                    const dateFormatted = selectedDate.getFullYear() + '-' + pad(selectedDate.getMonth()+1) + '-' + pad(selectedDate.getDate());
+                    
+                    // Vérifie si c'est une date enregistrée
+                    if (!dates.includes(dateFormatted)) {
+                      details.innerHTML = '<div class="empty-state"><p>Aucune donnée pour cette journée.</p></div>';
+                      return;
+                    }
+                    
+                    // Affiche un loader
+                    details.innerHTML = '<div class="empty-state"><span class="empty-emoji">⏳</span><p>Chargement...</p></div>';
+                    
+                    // Requête AJAX vers l'API
+                    fetch('{{ path('app_sante_quotidienne_by_date') }}?date=' + encodeURIComponent(dateFormatted))
+                      .then(response => {
+                        console.log('Statut réponse:', response.status);
+                        if (!response.ok) {
+                          throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                      })
+                      .then(data => {
+                        console.log('Données reçues:', data);
+                        if (data.ok) {
+                          details.innerHTML = `
+                            <div class="entry-item">
+                              <div class="entry-main">
+                                <div><strong>${data.date}</strong></div>
+                                <div>Poids: ${data.poids} kg — Taille: ${data.taille} cm — IMC: ${data.imc || '-'}</div>
+                              </div>
+                              <div class="entry-actions">
+                                <button class="btn-small btn-view" onclick='showEditModalByDate("${data.dateFormatted}", ${data.id})'>Voir</button>
+                              </div>
+                            </div>
+                          `;
+                        } else {
+                          details.innerHTML = '<div class="empty-state"><p>' + (data.message || 'Aucune donnée pour cette journée.') + '</p></div>';
+                        }
+                      })
+                      .catch(error => {
+                        console.error('Erreur détaillée:', error);
+                        details.innerHTML = '<div class="empty-state"><span class="empty-emoji">❌</span><p>Erreur de chargement: ' + error.message + '</p></div>';
+                      });
+                  }
+                });
+              });
+            </script>
+            <style>
+              .mini-calendar .flatpickr-calendar {
+                margin: 0 auto;
+                background: #fff;
+                border-radius: 12px;
+                box-shadow: 0 4px 24px rgba(0,0,0,0.10), 0 1.5px 6px rgba(0,0,0,0.08);
+                border: 1px solid #e0e0e0;
+                padding: 10px 0 0 0;
+                max-width: 320px;
+              }
+              .flatpickr-day {
+                color: #111 !important;
+                border-radius: 0 !important;
+                background: #fff !important;
+              }
+              .flatpickr-day.has-entry {
+                background: #1976d2 !important;
+                color: #fff !important;
+              }
+              .flatpickr-day.selected:not(.has-entry),
+              .flatpickr-day.today:not(.has-entry),
+              .flatpickr-day:focus:not(.has-entry),
+              .flatpickr-day:active:not(.has-entry) {
+                background: #fff !important;
+                color: #111 !important;
+                box-shadow: none !important;
+                outline: none !important;
+              }
+              .flatpickr-day.selected.has-entry,
+              .flatpickr-day.today.has-entry {
+                background: #1976d2 !important;
+                color: #fff !important;
+              }
+            </style>
+          </div>
+          <div class="entries-list" id="entries-list">
+            <div id="entry-details-placeholder">
+              <div class="empty-state">
+                <!-- emoji supprimé -->
+                <p>Sélectionnez une date pour voir les informations de cette journée.</p>
+              </div>
+            </div>
+          </div>
+          <div class="average-sleep-box" onclick="openSleepStatsModal()">
+            <span style="font-size:1.3em; color:#1976d2; font-weight:600;">😴 Moyenne de sommeil :</span>
+            <span style="font-size:1.3em; color:#222; font-weight:600; margin-left:8px;">
+              {{ averageSommeil is not null ? averageSommeil|number_format(1, '.', ' ') ~ ' h/nuit' : '--' }}
+            </span>
+            <div style="margin-top:8px; font-size:0.9em; color:#666;">Cliquez pour voir les détails</div>
+          </div>
+          
+          <div class="tips-beautiful" id="tips-section">
+            <h3>💡 Conseil du jour</h3>
+            <div class="tip-card" id="tip-content">
+              <p style="font-size: 0.9em;">Chargement du conseil...</p>
+            </div>
+          </div>
+          
+          <script>
+            document.addEventListener('DOMContentLoaded', function() {
+              const calendar = document.querySelector('#mini-calendar');
+              const details = document.getElementById('entry-details-placeholder');
+              
+              if (calendar && details) {
+                calendar.addEventListener('click', function(e) {
+                  const selected = document.querySelector('.flatpickr-day.selected.has-entry');
+                  if (!selected) return;
+                  
+                  const pad = n => n < 10 ? '0'+n : n;
+                  const dateStr = selected.dateObj.getFullYear() + '-' + pad(selected.dateObj.getMonth()+1) + '-' + pad(selected.dateObj.getDate());
+                  
+                  // Affiche un loader
+                  details.innerHTML = '<div class="empty-state"><span class="empty-emoji">⏳</span><p>Chargement...</p></div>';
+                  
+                  // Requête AJAX vers l'API
+                  fetch('{{ path('app_sante_quotidienne_by_date') }}?date=' + encodeURIComponent(dateStr))
+                    .then(response => response.json())
+                    .then(data => {
+                      if (data.ok) {
+                        details.innerHTML = `
+                          <div class="entry-item">
+                            <div class="entry-main">
+                              <div><strong>${data.date}</strong></div>
+                              <div>Poids: ${data.poids} kg — Taille: ${data.taille} cm — IMC: ${data.imc || '-'}</div>
+                            </div>
+                          </div>
+                        `;
+                      } else {
+                        details.innerHTML = '<div class="empty-state"><p>' + (data.message || 'Aucune donnée pour cette journée.') + '</p></div>';
+                      }
+                    })
+                    .catch(error => {
+                      console.error('Erreur:', error);
+                      details.innerHTML = '<div class="empty-state"><span class="empty-emoji">❌</span><p>Erreur de chargement.</p></div>';
+                    });
+                });
+              }
+            });
+          </script>
+        </div>
+      </div>
+
+      <!-- Section des recommandations personnalisées -->
+      <div class="recommendations-section" style="margin-top: 30px; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+        
+        {% if moodStats.showRecommendation %}
+        <div class="recommendation-box" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-top: 20px ; ">
+          <div class="box-header" style="display: flex; align-items: center; margin-bottom: 15px;">
+            <span style="font-size: 2em; margin-right: 10px;">🧠</span>
+            <div>
+              <h3 style="margin: 0; font-size: 1.2em;">Chatbot d'Humeur</h3>
+              <p style="margin: 5px 0 0 0; opacity: 0.9; font-size: 0.9em;">Vous semblez avoir des périodes difficiles</p>
+              <p style="margin: 3px 0 0 0; opacity: 0.8; font-size: 0.8em; font-weight: bold;">{{ moodStats.negative_percentage|round(1) }}% d'humeurs négatives ces derniers jours</p>
+            </div>
+          </div>
+          <p style="margin-bottom: 15px; line-height: 1.4;">
+            Notre chatbot IA peut vous aider à mieux gérer vos émotions et améliorer votre bien-être mental.
+          </p>
+          <button class="btn-chatbot" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 10px 20px; border-radius: 25px; cursor: pointer; transition: all 0.3s;">
+            💬 Démarrer une conversation
+          </button>
+        </div>
+        {% endif %}
+
+        {% if activityStats.total_entries > 0 %}
+        <div class="recommendation-box" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; margin-top: 20px ; padding: 12px 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+          <div class="box-header" style="display: flex; align-items: center; margin-bottom: 15px;">
+            <span style="font-size: 2em; margin-right: 10px;">🏃‍♀️</span>
+            <div>
+              <h3 style="margin: 0; font-size: 1.2em;">Programme Sportif</h3>
+              <p style="margin: 5px 0 0 0; opacity: 0.9; font-size: 0.9em;">
+                {% if activityStats.showRecommendation %}
+                  Votre activité physique pourrait être optimisée
+                {% else %}
+                  Suivez votre activité physique
+                {% endif %}
+              </p>
+              <p style="margin: 3px 0 0 0; opacity: 0.8; font-size: 0.8em; font-weight: bold;">{{ activityStats.sedentary_percentage|round(1) }}% d'activité sédentaire/légère</p>
+            </div>
+          </div>
+          <p style="margin-bottom: 15px; line-height: 1.4;">
+            {% if activityStats.showRecommendation %}
+              Découvrez nos programmes d'accompagnement sportif personnalisés pour booster votre forme physique.
+            {% else %}
+              Continuez à suivre votre activité physique pour maintenir une bonne forme.
+            {% endif %}
+          </p>
+          
+          <button class="btn-subscribe" style="background: rgba(255,255,255,0.9); color: #333; border: none; padding: 12px 24px; border-radius: 25px; cursor: pointer; transition: all 0.3s; font-weight: bold;">
+            📅 Abonnez-vous pour profiter d'un accompagnement personnalisé
+          </button>
+        </div>
+        {% endif %}
+
+        {% if nutritionStats.showRecommendation %}
+        <div class="recommendation-box" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 12px 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+          <div class="box-header" style="display: flex; align-items: center; margin-bottom: 15px;">
+            <span style="font-size: 2em; margin-right: 10px;">🥗</span>
+            <div>
+              <h3 style="margin: 0; font-size: 1.2em;">Conseils Nutrition</h3>
+              <p style="margin: 5px 0 0 0; opacity: 0.9; font-size: 0.9em;">Votre alimentation mérite plus d'attention</p>
+            </div>
+          </div>
+          <p style="margin-bottom: 15px; line-height: 1.4;">
+            Bénéficiez de conseils nutritionnels personnalisés et de plans alimentaires adaptés à vos besoins.
+          </p>
+          <button class="btn-nutrition" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 10px 20px; border-radius: 25px; cursor: pointer; transition: all 0.3s;">
+            🥕 Consulter un nutritionniste
+          </button>
+          <br><br>
+          <button class="btn-subscribe" style="background: rgba(255,255,255,0.9); color: #333; border: none; padding: 12px 24px; border-radius: 25px; cursor: pointer; transition: all 0.3s; font-weight: bold;">
+            📅 Abonnez-vous pour profiter d'un accompagnement personnalisé
+          </button>
+        </div>
+        {% endif %}
+        
+      </div>
+
+    </div>
+    </section>
+  </main>
+
+  <!-- Modal pour éditer/supprimer -->
+  <div id="editModal" class="modal-overlay" style="display:none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>📝 Modifier ma journée</h3>
+        <button class="modal-close" onclick="closeEditModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="editForm" method="POST">
+          <input type="hidden" name="_token" id="editCsrfToken" value="">
+          <input type="hidden" id="editDate" name="sante_quotidienne[date]" readonly>
+          <div class="form-row-beautiful">
+            <div class="form-group-beautiful">
+              <label>⚖️ Poids (kg)</label>
+              <input type="number" id="editPoids" name="sante_quotidienne[poids]" class="form-control" step="0.1" required>
+            </div>
+            <div class="form-group-beautiful">
+              <label>📏 Taille (cm)</label>
+              <input type="number" id="editTaille" name="sante_quotidienne[taille]" class="form-control" step="0.1" required>
+            </div>
+          </div>
+          <div class="form-row-beautiful">
+            <div class="form-group-beautiful">
+              <label>📊 IMC</label>
+              <input type="text" id="editImc" class="form-control" readonly>
+            </div>
+            <div class="form-group-beautiful">
+              <label>❤️ Tension</label>
+              <input type="text" id="editTension" name="sante_quotidienne[tensionArterielle]" class="form-control" placeholder="Ex: 120/80">
+            </div>
+          </div>
+          <div class="form-row-beautiful">
+            <div class="form-group-beautiful">
+              <label>😴 Sommeil (h)</label>
+              <input type="number" id="editSommeil" name="sante_quotidienne[sommeil]" class="form-control" step="0.5">
+            </div>
+            <div class="form-group-beautiful">
+              <label>🏃 Activité physique</label>
+              <select id="editActivite" name="sante_quotidienne[activitePhysique]" class="form-control">
+                <option value="">Sélectionner...</option>
+                <option value="sedentaire">Sédentaire</option>
+                <option value="leger">Léger</option>
+                <option value="modere">Modéré</option>
+                <option value="actif">Actif</option>
+                <option value="tres_actif">Très actif</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row-beautiful">
+            <div class="form-group-beautiful">
+              <label>😊 Humeur</label>
+              <div class="mood-buttons" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:8px;">
+                <label class="mood-button-label" style="display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer;">
+                  <input type="checkbox" name="sante_quotidienne[humeur][]" value="excellente" class="mood-button-input" style="display:none;">
+                  <span class="mood-button" style="display:flex; flex-direction:column; align-items:center; padding:8px; border-radius:8px; border:2px solid transparent; transition:all 0.2s;">
+                    <span class="mood-emoji" style="font-size:1.5em;">😄</span>
+                    <span class="mood-label" style="font-size:0.7em;">Excellente</span>
+                  </span>
+                </label>
+                <label class="mood-button-label" style="display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer;">
+                  <input type="checkbox" name="sante_quotidienne[humeur][]" value="heureuse" class="mood-button-input" style="display:none;">
+                  <span class="mood-button" style="display:flex; flex-direction:column; align-items:center; padding:8px; border-radius:8px; border:2px solid transparent; transition:all 0.2s;">
+                    <span class="mood-emoji" style="font-size:1.5em;">🙂</span>
+                    <span class="mood-label" style="font-size:0.7em;">Heureuse</span>
+                  </span>
+                </label>
+                <label class="mood-button-label" style="display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer;">
+                  <input type="checkbox" name="sante_quotidienne[humeur][]" value="joyeuse" class="mood-button-input" style="display:none;">
+                  <span class="mood-button" style="display:flex; flex-direction:column; align-items:center; padding:8px; border-radius:8px; border:2px solid transparent; transition:all 0.2s;">
+                    <span class="mood-emoji" style="font-size:1.5em;">😊</span>
+                    <span class="mood-label" style="font-size:0.7em;">Joyeuse</span>
+                  </span>
+                </label>
+                <label class="mood-button-label" style="display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer;">
+                  <input type="checkbox" name="sante_quotidienne[humeur][]" value="neutre" class="mood-button-input" style="display:none;">
+                  <span class="mood-button" style="display:flex; flex-direction:column; align-items:center; padding:8px; border-radius:8px; border:2px solid transparent; transition:all 0.2s;">
+                    <span class="mood-emoji" style="font-size:1.5em;">😐</span>
+                    <span class="mood-label" style="font-size:0.7em;">Neutre</span>
+                  </span>
+                </label>
+                <label class="mood-button-label" style="display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer;">
+                  <input type="checkbox" name="sante_quotidienne[humeur][]" value="fatiguee" class="mood-button-input" style="display:none;">
+                  <span class="mood-button" style="display:flex; flex-direction:column; align-items:center; padding:8px; border-radius:8px; border:2px solid transparent; transition:all 0.2s;">
+                    <span class="mood-emoji" style="font-size:1.5em;">😴</span>
+                    <span class="mood-label" style="font-size:0.7em;">Fatiguée</span>
+                  </span>
+                </label>
+                <label class="mood-button-label" style="display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer;">
+                  <input type="checkbox" name="sante_quotidienne[humeur][]" value="contente" class="mood-button-input" style="display:none;">
+                  <span class="mood-button" style="display:flex; flex-direction:column; align-items:center; padding:8px; border-radius:8px; border:2px solid transparent; transition:all 0.2s;">
+                    <span class="mood-emoji" style="font-size:1.5em;">😃</span>
+                    <span class="mood-label" style="font-size:0.7em;">Contente</span>
+                  </span>
+                </label>
+                <label class="mood-button-label" style="display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer;">
+                  <input type="checkbox" name="sante_quotidienne[humeur][]" value="calme" class="mood-button-input" style="display:none;">
+                  <span class="mood-button" style="display:flex; flex-direction:column; align-items:center; padding:8px; border-radius:8px; border:2px solid transparent; transition:all 0.2s;">
+                    <span class="mood-emoji" style="font-size:1.5em;">😌</span>
+                    <span class="mood-label" style="font-size:0.7em;">Calme</span>
+                  </span>
+                </label>
+                <label class="mood-button-label" style="display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer;">
+                  <input type="checkbox" name="sante_quotidienne[humeur][]" value="paisible" class="mood-button-input" style="display:none;">
+                  <span class="mood-button" style="display:flex; flex-direction:column; align-items:center; padding:8px; border-radius:8px; border:2px solid transparent; transition:all 0.2s;">
+                    <span class="mood-emoji" style="font-size:1.5em;">🌿</span>
+                    <span class="mood-label" style="font-size:0.7em;">Paisible</span>
+                  </span>
+                </label>
+                <label class="mood-button-label" style="display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer;">
+                  <input type="checkbox" name="sante_quotidienne[humeur][]" value="ennuyee" class="mood-button-input" style="display:none;">
+                  <span class="mood-button" style="display:flex; flex-direction:column; align-items:center; padding:8px; border-radius:8px; border:2px solid transparent; transition:all 0.2s;">
+                    <span class="mood-emoji" style="font-size:1.5em;">😑</span>
+                    <span class="mood-label" style="font-size:0.7em;">Ennuyée</span>
+                  </span>
+                </label>
+                <label class="mood-button-label" style="display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer;">
+                  <input type="checkbox" name="sante_quotidienne[humeur][]" value="stressee" class="mood-button-input" style="display:none;">
+                  <span class="mood-button" style="display:flex; flex-direction:column; align-items:center; padding:8px; border-radius:8px; border:2px solid transparent; transition:all 0.2s;">
+                    <span class="mood-emoji" style="font-size:1.5em;">😓</span>
+                    <span class="mood-label" style="font-size:0.7em;">Stressée</span>
+                  </span>
+                </label>
+                <label class="mood-button-label" style="display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer;">
+                  <input type="checkbox" name="sante_quotidienne[humeur][]" value="anxieuse" class="mood-button-input" style="display:none;">
+                  <span class="mood-button" style="display:flex; flex-direction:column; align-items:center; padding:8px; border-radius:8px; border:2px solid transparent; transition:all 0.2s;">
+                    <span class="mood-emoji" style="font-size:1.5em;">😟</span>
+                    <span class="mood-label" style="font-size:0.7em;">Anxieuse</span>
+                  </span>
+                </label>
+                <label class="mood-button-label" style="display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer;">
+                  <input type="checkbox" name="sante_quotidienne[humeur][]" value="irritee" class="mood-button-input" style="display:none;">
+                  <span class="mood-button" style="display:flex; flex-direction:column; align-items:center; padding:8px; border-radius:8px; border:2px solid transparent; transition:all 0.2s;">
+                    <span class="mood-emoji" style="font-size:1.5em;">😣</span>
+                    <span class="mood-label" style="font-size:0.7em;">Irritée</span>
+                  </span>
+                </label>
+                <label class="mood-button-label" style="display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer;">
+                  <input type="checkbox" name="sante_quotidienne[humeur][]" value="frustree" class="mood-button-input" style="display:none;">
+                  <span class="mood-button" style="display:flex; flex-direction:column; align-items:center; padding:8px; border-radius:8px; border:2px solid transparent; transition:all 0.2s;">
+                    <span class="mood-emoji" style="font-size:1.5em;">😤</span>
+                    <span class="mood-label" style="font-size:0.7em;">Frustrée</span>
+                  </span>
+                </label>
+                <label class="mood-button-label" style="display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer;">
+                  <input type="checkbox" name="sante_quotidienne[humeur][]" value="triste" class="mood-button-input" style="display:none;">
+                  <span class="mood-button" style="display:flex; flex-direction:column; align-items:center; padding:8px; border-radius:8px; border:2px solid transparent; transition:all 0.2s;">
+                    <span class="mood-emoji" style="font-size:1.5em;">😔</span>
+                    <span class="mood-label" style="font-size:0.7em;">Triste</span>
+                  </span>
+                </label>
+                <label class="mood-button-label" style="display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer;">
+                  <input type="checkbox" name="sante_quotidienne[humeur][]" value="deprimee" class="mood-button-input" style="display:none;">
+                  <span class="mood-button" style="display:flex; flex-direction:column; align-items:center; padding:8px; border-radius:8px; border:2px solid transparent; transition:all 0.2s;">
+                    <span class="mood-emoji" style="font-size:1.5em;">😞</span>
+                    <span class="mood-label" style="font-size:0.7em;">Déprimée</span>
+                  </span>
+                </label>
+                <label class="mood-button-label" style="display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer;">
+                  <input type="checkbox" name="sante_quotidienne[humeur][]" value="en_colere" class="mood-button-input" style="display:none;">
+                  <span class="mood-button" style="display:flex; flex-direction:column; align-items:center; padding:8px; border-radius:8px; border:2px solid transparent; transition:all 0.2s;">
+                    <span class="mood-emoji" style="font-size:1.5em;">😠</span>
+                    <span class="mood-label" style="font-size:0.7em;">En colère</span>
+                  </span>
+                </label>
+              </div>
+            </div>
+            <div class="form-group-beautiful">
+              <label>🍎 Alimentation</label>
+              <select id="editAlimentation" name="sante_quotidienne[alimentation]" class="form-control">
+                <option value="">Sélectionner...</option>
+                <option value="faible">Faible 😕</option>
+                <option value="moyenne">Moyenne 😐</option>
+                <option value="bonne">Bonne 🙂</option>
+                <option value="tres_bonne">Très bonne 😊</option>
+                <option value="excellente">Excellente 🔥</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group-beautiful">
+            <label>💧 Eau bue (litres)</label>
+            <input type="number" id="editEau" name="sante_quotidienne[eauBue]" class="form-control" step="0.1">
+          </div>
+          <div class="modal-actions">
+            <button type="submit" class="btn-save-beautiful">
+              <span>✏️</span>
+              <span>Modifier</span>
+            </button>
+            <button type="button" class="btn-danger" onclick="deleteEntry()">
+              <span>🗑️</span>
+              <span>Supprimer</span>
+            </button>
+            <button type="button" class="btn-secondary" onclick="closeEditModal()">Annuler</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal pour les statistiques de sommeil -->
+  <div id="sleepStatsModal" class="modal-overlay" style="display:none;">
+    <div class="modal-content" style="max-width: 600px;">
+      <div class="modal-header">
+        <h2>📊 Statistiques de sommeil</h2>
+        <button class="modal-close" onclick="closeSleepStatsModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="sleep-stats-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+          <div class="stat-card" style="background: #e8f4fd; padding: 15px; border-radius: 8px; text-align: center;">
+            <div style="font-size: 2em; margin-bottom: 5px;">😴</div>
+            <div style="font-size: 1.2em; font-weight: bold; color: #1976d2;">
+              {{ averageSommeil is not null ? averageSommeil|number_format(1, '.', ' ') : '--' }} h
+            </div>
+            <div style="color: #666; font-size: 0.9em;">Moyenne générale</div>
+          </div>
+          <div class="stat-card" style="background: #fff3cd; padding: 15px; border-radius: 8px; text-align: center;">
+            <div style="font-size: 2em; margin-bottom: 5px;">📈</div>
+            <div style="font-size: 1.2em; font-weight: bold; color: #856404;">
+              {{ santes|length > 0 ? (santes|reduce((carry, sante) => carry + (sante.sommeil ?? 0), 0) / santes|length)|number_format(1, '.', ' ') : '--' }} h
+            </div>
+            <div style="color: #666; font-size: 0.9em;">Derniers jours</div>
+          </div>
+        </div>
+        
+        <div class="sleep-history" style="margin-top: 20px;">
+          <h3 style="margin-bottom: 15px; color: #333;">Historique récent</h3>
+          <div class="sleep-entries" style="max-height: 300px; overflow-y: auto;">
+            {% for sante in santes|slice(0, 10) %}
+            <div class="sleep-entry" style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee;">
+              <div style="font-weight: 500;">{{ sante.date|date('d/m/Y') }}</div>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-weight: bold; color: #1976d2;">{{ sante.sommeil is not null ? sante.sommeil|number_format(1, '.', ' ') ~ 'h' : '--' }}</span>
+                {% if sante.sommeil is not null %}
+                  {% if sante.sommeil >= 8 %}
+                    <span style="color: #28a745;">😊</span>
+                  {% elseif sante.sommeil >= 6 %}
+                    <span style="color: #ffc107;">😐</span>
+                  {% else %}
+                    <span style="color: #dc3545;">😴</span>
+                  {% endif %}
+                {% endif %}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        
+        <div class="sleep-tips" style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #1976d2;">
+          <h4 style="margin: 0 0 10px 0; color: #1976d2;">💡 Conseils pour un meilleur sommeil</h4>
+          <ul style="margin: 0; padding-left: 20px; color: #555; line-height: 1.5;">
+            <li>Essayez de dormir entre 7-9 heures par nuit</li>
+            <li>Maintenir des horaires réguliers</li>
+            <li>Éviter les écrans 1h avant le coucher</li>
+            <li>Pratiquer une activité physique régulière</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .average-sleep-box {
+      margin: 20px auto !important;
+      background: #f8fafc !important;
+      border-radius: 12px !important;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+      padding: 18px 24px !important;
+      text-align: center !important;
+      cursor: pointer !important;
+      transition: all 0.3s ease !important;
+      max-width: 400px !important;
+      width: 100% !important;
+      display: block !important;
+      border: 1px solid #e1e8ed !important;
+    }
+    
+    .average-sleep-box:hover {
+      transform: translateY(-2px) !important;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+      background: #f0f4f8 !important;
+    }
+    
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-content {
+      background: white;
+      border-radius: 12px;
+      padding: 0;
+      max-width: 900px;
+      width: 98%;
+      min-width: 600px;
+      min-height: 600px;
+      max-height: 98vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px;
+      border-bottom: 1px solid #eee;
+    }
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+    }
+    
+    /* Styles pour les boutons d'humeur dans la modal */
+    .mood-button-label:hover .mood-button {
+      background: #ecf0f1;
+      transform: scale(1.05);
+    }
+    .mood-button-input:checked + .mood-button {
+      border: 2px solid #3498db !important;
+      background: #ecf0f1 !important;
+    }
+    .modal-body {
+      padding: 20px;
+    }
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .btn-view {
+      background: #1976d2;
+      color: white;
+      padding: 6px 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .btn-secondary {
+      background: #666;
+      color: white;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+  </style>
+
+  <script>
+    let currentEntryDate = '';
+    
+    function showEditModal(dataString) {
+      // Si on reçoit un ID au lieu de données complètes, charger les données depuis l'API
+      let data;
+      try {
+        data = JSON.parse(dataString);
+      } catch (e) {
+        console.error('Invalid data string:', dataString);
+        return;
+      }
+      
+      // Si on n'a qu'un ID, charger les données fraîches depuis l'API
+      if (data.id && !data.humeur) {
+        fetch(`/sante-quotidienne/api/by-date?date=${data.dateFormatted || data.date}`)
+          .then(response => response.json())
+          .then(apiData => {
+            if (apiData.ok) {
+              showEditModalWithData(apiData);
+            } else {
+              console.error('Failed to load fresh data');
+              showEditModalWithData(data); // Fallback
+            }
+          })
+          .catch(err => {
+            console.error('Error loading fresh data:', err);
+            showEditModalWithData(data); // Fallback
+          });
+      } else {
+        showEditModalWithData(data);
+      }
+    }
+    
+    function showEditModalByDate(date, entryId) {
+      console.log('showEditModalByDate called with:', date, entryId);
+      fetch(`/sante-quotidienne/api/by-date?date=${date}`)
+        .then(response => response.json())
+        .then(data => {
+          console.log('Data received from API:', data);
+          console.log('Humeur data type:', typeof data.humeur);
+          console.log('Humeur data:', data.humeur);
+          console.log('Is Array:', Array.isArray(data.humeur));
+          if (data.ok) {
+            showEditModalWithData(data);
+          } else {
+            alert('Aucune donnée trouvée pour cette date');
+          }
+        })
+        .catch(err => {
+          console.error('Error loading data:', err);
+          alert('Erreur lors du chargement des données');
+        });
+    }
+    
+    function showEditModalWithData(data) {
+      console.log('showEditModalWithData called with:', data);
+      window.currentEntryId = data.id;
+      window.currentEntryDate = data.dateFormatted || data.date;
+      if (data.deleteCsrf) {
+        window.csrfToken = data.deleteCsrf;
+      }
+      if (data.editCsrf) {
+        document.getElementById('editCsrfToken').value = data.editCsrf;
+      }
+      
+      // Réinitialiser tous les styles des boutons d'humeur
+      document.querySelectorAll('.mood-button').forEach(button => {
+        button.style.border = '2px solid transparent';
+        button.style.background = '';
+      });
+      document.querySelectorAll('input[name="sante_quotidienne[humeur][]"]').forEach(input => {
+        input.checked = false;
+      });
+      
+      // Remplir tous les champs
+      document.getElementById('editDate').value = data.dateFormatted || data.date;
+      document.getElementById('editPoids').value = data.poids || '';
+      document.getElementById('editTaille').value = data.taille || '';
+      document.getElementById('editImc').value = data.imc || '-';
+      
+      // Tension artérielle
+      document.getElementById('editTension').value = data.tensionArterielle || '';
+      
+      // Autres champs
+      document.getElementById('editSommeil').value = data.sommeil || '';
+      
+      // Activité physique (select)
+      const activiteSelect = document.getElementById('editActivite');
+      if(activiteSelect && data.activitePhysique) {
+        activiteSelect.value = data.activitePhysique;
+      }
+      
+      // Humeur (checkboxes multiples)
+      // Reset all mood buttons first - SEULEMENT dans le modal
+      const modalElement = document.getElementById('editModal');
+      modalElement.querySelectorAll('input[name="sante_quotidienne[humeur][]"]').forEach(input => {
+        input.checked = false;
+        input.closest('.mood-button-label').querySelector('.mood-button').style.border = '2px solid transparent';
+        input.closest('.mood-button-label').querySelector('.mood-button').style.background = '#ecf0f1';
+      });
+      
+      // Set selected moods
+      console.log('=== Setting humeurs ===');
+      console.log('data.humeur:', data.humeur);
+      console.log('Type:', typeof data.humeur);
+      console.log('Is Array:', Array.isArray(data.humeur));
+      
+      if(data.humeur) {
+        // Convertir en tableau si ce n'est pas déjà le cas
+        let humeursArray = Array.isArray(data.humeur) ? data.humeur : [data.humeur];
+        
+        console.log('humeursArray:', humeursArray);
+        
+        humeursArray.forEach((humeurValue, index) => {
+          console.log(`Processing humeur ${index}:`, humeurValue, 'Type:', typeof humeurValue);
+          // Chercher SEULEMENT dans le modal
+          const humeurInput = modalElement.querySelector(`input[name="sante_quotidienne[humeur][]"][value="${humeurValue}"]`);
+          console.log(`Looking for checkbox with value "${humeurValue}":`, humeurInput);
+          if (humeurInput) {
+            console.log('Found! Checking checkbox for:', humeurValue);
+            humeurInput.checked = true;
+            humeurInput.closest('.mood-button-label').querySelector('.mood-button').style.border = '2px solid #3498db';
+            humeurInput.closest('.mood-button-label').querySelector('.mood-button').style.background = '#e8f4fd';
+          } else {
+            console.log('NOT FOUND! Checkbox with value:', humeurValue);
+          }
+        });
+      } else {
+        console.log('No humeur data');
+      }
+      
+      // Alimentation (select)
+      const alimentationSelect = document.getElementById('editAlimentation');
+      if(alimentationSelect && data.alimentation) {
+        alimentationSelect.value = data.alimentation;
+      }
+      
+      document.getElementById('editEau').value = data.eauBue || '';
+        console.log('Affichage du modal avec données:', data);
+        const modal = document.getElementById('editModal');
+        modal.style.display = 'flex';
+        modal.style.zIndex = '9999';
+        modal.style.opacity = '1';
+    }
+    
+    // Système de rotation des conseils toutes les 2 minutes
+    const tips = [
+      "🌟 Buvez un grand verre d'eau au réveil pour bien commencer la journée !",
+      "🏃‍♂️ Marchez au moins 10 000 pas par jour pour rester en forme",
+      "😴 Dormez entre 7 et 9 heures par nuit pour récupérer",
+      "🥗 Mangez équilibré : légumes, protéines et glucides à chaque repas",
+      "🧘 Prenez 5 minutes par jour pour méditer et vous détendre",
+      "⚖️ Surveillez votre poids régulièrement pour une meilleure santé",
+      "💧 Buvez au moins 1,5 litre d'eau par jour",
+      "🏋️‍♀️ Pratiquez une activité physique 30 minutes par jour",
+      "🍎 Privilégiez les fruits et légumes frais dans votre alimentation",
+      "📱 Évitez les écrans 1 heure avant le coucher",
+      "🫁 Pratiquez des exercices de respiration profonde",
+      "🌞 Profitez de la lumière naturelle le matin",
+      "🛌 Respectez des horaires de sommeil réguliers",
+      "🥤 Limitez les boissons sucrées et caféinées en soirée",
+      "📝 Tenez un journal de vos habitudes pour mieux les suivre"
+    ];
+    
+    let currentTipIndex = 0;
+    
+    function changeTip() {
+      const tipContent = document.getElementById('tip-content');
+      console.log('changeTip appelé - tipContent trouvé:', tipContent);
+      if (tipContent) {
+        console.log('Changement de conseil, index actuel:', currentTipIndex);
+        // Animation de fade out
+        tipContent.style.opacity = '0';
+        
+        setTimeout(() => {
+          const newTip = tips[currentTipIndex];
+          console.log('Nouveau conseil:', newTip);
+          tipContent.innerHTML = `<p style="font-size: 0.9em;">${newTip}</p>`;
+          currentTipIndex = (currentTipIndex + 1) % tips.length;
+          
+          // Animation de fade in
+          tipContent.style.opacity = '1';
+          console.log('Conseil changé avec succès');
+        }, 500);
+      } else {
+        console.error('Element tip-content non trouvé dans changeTip !');
+      }
+    }
+    
+    // Initialiser la rotation des conseils
+    document.addEventListener('DOMContentLoaded', function() {
+      const tipContent = document.getElementById('tip-content');
+      console.log('Initialisation conseils - tipContent trouvé:', tipContent);
+      if (tipContent) {
+        tipContent.style.transition = 'opacity 0.5s ease';
+        // Afficher le premier conseil immédiatement
+        tipContent.innerHTML = `<p style="font-size: 0.9em;">${tips[0]}</p>`;
+        tipContent.style.opacity = '1';
+        console.log('Premier conseil affiché:', tips[0]);
+        
+        // Changer de conseil toutes les 2 minutes (120 000 ms)
+        setInterval(changeTip, 120000);
+        console.log('Timer démarré pour changer les conseils');
+      } else {
+        console.error('Element tip-content non trouvé !');
+      }
+    });
+    
+    function closeEditModal() {
+      document.getElementById('editModal').style.display = 'none';
+    }
+    
+    function openSleepStatsModal() {
+      document.getElementById('sleepStatsModal').style.display = 'flex';
+    }
+    
+    function closeSleepStatsModal() {
+      document.getElementById('sleepStatsModal').style.display = 'none';
+    }
+    
+    function deleteEntry() {
+      if (!window.currentEntryId) {
+        alert('Aucune entrée sélectionnée.');
+        return;
+      }
+      if (confirm('Êtes-vous sûr de vouloir supprimer cette entrée ?')) {
+        fetch(`/sante-quotidienne/${window.currentEntryId}`, {
+          method: 'POST',
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: `_token=${window.csrfToken || ''}`
+        })
+        .then(res => {
+          if (res.ok) {
+            location.reload();
+          } else {
+            alert('Erreur lors de la suppression.');
+          }
+        });
+      }
+    }
+
+    // Calcul automatique de l'IMC dans la modal
+    function updateModalImc() {
+      const poids = parseFloat(document.getElementById('editPoids').value);
+      const taille = parseFloat(document.getElementById('editTaille').value);
+      if (!isNaN(poids) && !isNaN(taille) && poids > 0 && taille > 0) {
+        const tm = taille / 100.0;
+        const imc = (poids / (tm * tm)).toFixed(2);
+        document.getElementById('editImc').value = imc;
+      } else {
+        document.getElementById('editImc').value = '-';
+      }
+    }
+
+    // Gestion du submit du formulaire modal
+    document.addEventListener('DOMContentLoaded', function() {
+      // Attach IMC calculators to modal inputs
+      const editPoids = document.getElementById('editPoids');
+      const editTaille = document.getElementById('editTaille');
+      if (editPoids) editPoids.addEventListener('input', updateModalImc);
+      if (editTaille) editTaille.addEventListener('input', updateModalImc);
+
+      // Permettre de cliquer sur les boutons d'humeur dans le modal pour cocher/décocher
+      document.addEventListener('click', function(e) {
+        // Vérifier si le clic est sur un bouton d'humeur dans le modal
+        const moodButton = e.target.closest('.mood-button');
+        if (!moodButton) return;
+        
+        const modal = moodButton.closest('#editModal');
+        if (!modal) return; // Seulement dans le modal d'édition
+        
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const label = moodButton.closest('.mood-button-label');
+        const checkbox = label.querySelector('input[type="checkbox"]');
+        
+        if (checkbox) {
+          console.log('Avant toggle:', checkbox.value, 'checked:', checkbox.checked);
+          // Toggle checkbox
+          checkbox.checked = !checkbox.checked;
+          console.log('Après toggle:', checkbox.value, 'checked:', checkbox.checked);
+          
+          // Update visual style
+          if (checkbox.checked) {
+            moodButton.style.border = '2px solid #3498db';
+            moodButton.style.background = '#e8f4fd';
+          } else {
+            moodButton.style.border = '2px solid transparent';
+            moodButton.style.background = '#ecf0f1';
+          }
+        }
+      });
+
+      // Handle modal form submit
+      const editForm = document.getElementById('editForm');
+      if (editForm) {
+        editForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          console.log('Form submit intercepted');
+          console.log('currentEntryId:', window.currentEntryId);
+          console.log('currentEntryDate:', window.currentEntryDate);
+          
+          if (!window.currentEntryId) {
+            alert('Aucune entrée sélectionnée.');
+            return;
+          }
+
+          // Collect all form data using FormData constructor
+          const formData = new FormData(editForm);
+          // Set the date separately since it's not visible
+          formData.set('sante_quotidienne[date]', window.currentEntryDate);
+          
+          // Collect all selected humeurs SEULEMENT du modal
+          const modalElement = document.getElementById('editModal');
+          const humeurs = modalElement.querySelectorAll('input[name="sante_quotidienne[humeur][]"]:checked');
+          console.log('Humeurs cochées dans le modal:', humeurs.length);
+          humeurs.forEach((humeur, index) => {
+            console.log('Ajout humeur:', humeur.value);
+            formData.append(`sante_quotidienne[humeur][${index}]`, humeur.value);
+          });
+
+          // Log form data for debugging
+          console.log('Form data being sent:');
+          for (let [key, value] of formData.entries()) {
+            console.log(key + ':', value);
+          }
+
+          const url = `/sante-quotidienne/${window.currentEntryId}/edit`;
+          console.log('Sending to URL:', url);
+
+          fetch(url, {
+            method: 'POST',
+            body: formData,
+            headers: {
+              'X-Requested-With': 'XMLHttpRequest'
+            }
+          })
+          .then(res => {
+            console.log('Response status:', res.status);
+            console.log('Response OK:', res.ok);
+            if (res.ok) {
+              // Au lieu de recharger la page, actualisons juste les données
+              closeEditModal();
+              // Mettre à jour les données dans la liste pour refléter les changements
+              location.reload(); // Temporaire, on peut optimiser plus tard
+            } else {
+              return res.text().then(text => {
+                console.error('Response text:', text);
+                alert('Erreur lors de la modification: ' + res.status);
+              });
+            }
+          })
+          .catch(err => {
+            console.error('Erreur détaillée:', err);
+            alert('Erreur de connexion: ' + err.message);
+          });
+        });
+      }
+    });
+  </script>
+      <p>2026 SANTÉA - All Rights Reserved</p>
+    </div>
+  </footer>
+
+  <script>
+    (function(){
+      const poids = document.querySelector('input[name*="[poids]"]');
+      const taille = document.querySelector('input[name*="[taille]"]');
+      const imcSummary = document.getElementById('imc-summary');
+      const serverImc = document.getElementById('server-imc');
+
+      let timer = null;
+      function fetchImc(){
+        const p = poids?.value;
+        const t = taille?.value;
+        if (!p || !t) {
+          if (imcSummary) imcSummary.style.display = 'none';
+          if (serverImc) serverImc.textContent = '-';
+          return;
+        }
+
+        const url = '{{ path('app_sante_quotidienne_calc_imc') }}?poids=' + encodeURIComponent(p) + '&taille=' + encodeURIComponent(t);
+        fetch(url, { headers: { 'Accept': 'application/json' } })
+          .then(res => res.json())
+          .then(data => {
+            if (data && data.ok) {
+              serverImc.textContent = data.imc;
+              // status
+              const statusEl = document.getElementById('server-imc-status');
+              const emojiEl = document.getElementById('server-imc-emoji');
+              if (statusEl) {
+                statusEl.textContent = data.label || '';
+                statusEl.style.color = data.color || '';
+              }
+              if (emojiEl) {
+                emojiEl.textContent = data.emoji || '📊';
+              }
+              imcSummary.style.display = 'block';
+            } else {
+              serverImc.textContent = '-';
+              imcSummary.style.display = 'none';
+            }
+          })
+          .catch(() => {
+            serverImc.textContent = '-';
+            imcSummary.style.display = 'none';
+          });
+      }
+
+      function schedule(){
+        clearTimeout(timer);
+        timer = setTimeout(fetchImc, 300);
+      }
+
+      ['input','change'].forEach(evt => {
+        poids?.addEventListener(evt, schedule);
+        taille?.addEventListener(evt, schedule);
+      });
+
+      document.addEventListener('DOMContentLoaded', fetchImc);
+    })();
+  </script>
+
+  <script>
+    // Build a JS array of the user's sante entries (JSON-encoded per entry to handle enums/objects)
+    const santeEntries = [
+      {% for item in santes %}
+        {% set canEdit = is_granted('SANTE_EDIT', item) %}
+        {% set canDelete = is_granted('SANTE_DELETE', item) %}
+        {% set actPhysique = 
+          (item.activitePhysique is iterable and item.activitePhysique.value is defined) ? item.activitePhysique.value
+          : (item.activitePhysique is iterable and item.activitePhysique[0] is defined) ? item.activitePhysique[0]
+          : (item.activitePhysique is not null and item.activitePhysique.value is defined) ? item.activitePhysique.value
+          : item.activitePhysique
+        %}
+        {% set humeurVal = 
+          (item.humeur is iterable and item.humeur is not empty) ? 
+            (item.humeur[0].value is defined ? (item.humeur|map(h => h.value)|join(', ')) : (item.humeur|join(', ')))
+          : (item.humeur is not null and item.humeur.value is defined) ? item.humeur.value
+          : item.humeur
+        %}
+        {{ ({
+          id: item.id,
+          date: item.date ? item.date|date('Y-m-d') : '',
+          poids: item.poids,
+          taille: item.taille,
+          imc: item.imc,
+          tensionArterielle: item.tensionArterielle,
+          sommeil: item.sommeil,
+          activitePhysique: actPhysique,
+          humeur: humeurVal,
+          alimentation: item.alimentation,
+          eauBue: item.eauBue,
+          editUrl: canEdit ? path('app_sante_quotidienne_edit', {'id': item.id}) : null,
+          deleteUrl: canDelete ? path('app_sante_quotidienne_delete', {'id': item.id}) : null,
+          deleteCsrf: canDelete ? csrf_token('delete' ~ item.id) : null
+        } )|json_encode() }}{{ not loop.last ? ',' : '' }}
+      {% endfor %}
+    ];
+
+    (function(){
+      const calendarEl = document.getElementById('mini-calendar');
+      const formEl = document.querySelector('form.form-beautiful');
+      const saveButton = formEl.querySelector('button[type="submit"]');
+
+      if (!calendarEl || !formEl) return;
+
+      function formatDate(d){
+        return d;
+      }
+
+      function clearSelection(){
+        const chips = calendarEl.querySelectorAll('.cal-chip');
+        chips.forEach(c => c.classList.remove('active'));
+        // reset form action to default new
+        formEl.action = '{{ path('app_sante_quotidienne_new') }}';
+        saveButton.textContent = '💾 Enregistrer ma journée';
+
+        // remove inline delete form if present
+        const existing = document.getElementById('inline-delete-form');
+        if (existing) existing.remove();
+      }
+
+      function renderCalendar(){
+        calendarEl.innerHTML = '';
+        if (!santeEntries || santeEntries.length === 0){
+          calendarEl.innerHTML = '<div class="cal-empty">Aucune entrée</div>';
+          return;
+        }
+
+        // Sort by date desc
+        const entries = santeEntries.slice().sort((a,b)=> a.date < b.date ? 1 : -1);
+
+        entries.forEach(e => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'cal-chip';
+          btn.title = e.date;
+          btn.innerHTML = '<div class="cal-date">' + e.date + '</div>' + (e.imc ? '<div class="cal-imc">IMC ' + e.imc + '</div>' : '');
+          btn.addEventListener('click', ()=> selectEntry(e, btn));
+          calendarEl.appendChild(btn);
+        });
+      }
+
+      function selectEntry(entry, chip){
+        // highlight
+        clearSelection();
+        chip.classList.add('active');
+
+        // populate form fields
+        const find = (selector) => document.querySelector(selector);
+
+        const dateInput = find('input[name*="[date]"]') || find('input[name*="[date]"]');
+        const poidsInput = find('input[name*="[poids]"]');
+        const tailleInput = find('input[name*="[taille]"]');
+        const tensionInput = find('input[name*="[tensionArterielle]"]');
+        const sommeilInput = find('input[name*="[sommeil]"]');
+        const activiteInput = find('input[name*="[activitePhysique]"]');
+        const alimentationInput = find('input[name*="[alimentation]") || find('textarea[name*="[alimentation]"]');
+        const eauInput = find('input[name*="[eauBue]"]');
+
+        if (dateInput) dateInput.value = entry.date || '';
+        if (poidsInput) poidsInput.value = entry.poids !== null ? entry.poids : '';
+        if (tailleInput) tailleInput.value = entry.taille !== null ? entry.taille : '';
+        if (tensionInput) tensionInput.value = entry.tensionArterielle || '';
+        if (sommeilInput) sommeilInput.value = entry.sommeil !== null ? entry.sommeil : '';
+        if (activiteInput) activiteInput.value = entry.activitePhysique || '';
+        if (alimentationInput) alimentationInput.value = entry.alimentation || '';
+        if (eauInput) eauInput.value = entry.eauBue !== null ? entry.eauBue : '';
+
+        // select humeur checkboxes if present
+        if (entry.humeur && Array.isArray(entry.humeur)){
+          entry.humeur.forEach(humeurValue => {
+            const moodInput = document.querySelector('input[type="checkbox"][name*="[humeur]"][value="' + humeurValue + '"]');
+            if (moodInput) moodInput.checked = true;
+          });
+        } else if (entry.humeur) {
+          // Si c'est une seule valeur (compatibilité)
+          const moodInput = document.querySelector('input[type="checkbox"][name*="[humeur]"][value="' + entry.humeur + '"]');
+          if (moodInput) moodInput.checked = true;
+        }
+
+        // change form action to edit URL
+        if (entry.editUrl){
+          formEl.action = entry.editUrl;
+          saveButton.textContent = '✏️ Mettre à jour';
+        }
+
+        // add delete inline button/form (only if allowed)
+        const existing = document.getElementById('inline-delete-form');
+        if (existing) existing.remove();
+
+        if (entry.deleteUrl) {
+          const delForm = document.createElement('form');
+          delForm.id = 'inline-delete-form';
+          delForm.method = 'post';
+          delForm.action = entry.deleteUrl;
+          delForm.style.display = 'inline-block';
+          delForm.style.marginLeft = '8px';
+
+          const tokenInput = document.createElement('input');
+          tokenInput.type = 'hidden';
+          tokenInput.name = '_token';
+          tokenInput.value = entry.deleteCsrf || '';
+          delForm.appendChild(tokenInput);
+
+          const delBtn = document.createElement('button');
+          delBtn.type = 'submit';
+          delBtn.className = 'btn-small btn-danger';
+          delBtn.textContent = 'Supprimer';
+          delBtn.addEventListener('click', function(e){
+            if (!confirm('Supprimer cette entrée ?')) e.preventDefault();
+          });
+          delForm.appendChild(delBtn);
+
+          // append next to save button
+          saveButton.parentNode.insertBefore(delForm, saveButton.nextSibling);
+        }
+
+        // scroll form into view
+        formEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+
+      // click outside to clear selection
+      document.addEventListener('click', function(e){
+        if (!calendarEl.contains(e.target) && !formEl.contains(e.target)){
+          // do not clear when clicking inside form
+          // keep selection
+        }
+      });
+
+      renderCalendar();
+    })();
+
+  </script>
+
+  <!-- JavaScript pour les boîtes de recommandations -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Gestionnaire pour le bouton chatbot
+      const chatbotBtn = document.querySelector('.btn-chatbot');
+      if (chatbotBtn) {
+        chatbotBtn.addEventListener('click', function() {
+          // Ici vous pouvez intégrer votre chatbot
+          alert('Fonctionnalité chatbot bientôt disponible !');
+          // Ou rediriger vers une page de chat
+        });
+      }
+
+      // Gestionnaire pour le bouton activité
+      const activityBtn = document.querySelector('.btn-activity');
+      if (activityBtn) {
+        activityBtn.addEventListener('click', function() {
+          // Rediriger vers la page des programmes sportifs
+          alert('Redirection vers les programmes sportifs - fonctionnalité en développement');
+        });
+      }
+
+      // Gestionnaire pour le bouton nutrition
+      const nutritionBtn = document.querySelector('.btn-nutrition');
+      if (nutritionBtn) {
+        nutritionBtn.addEventListener('click', function() {
+          // Rediriger vers la page des nutritionnistes
+          alert('Redirection vers les conseils nutritionnels - fonctionnalité en développement');
+        });
+      }
+
+      // Gestionnaire pour le bouton d'abonnement
+      const subscribeBtns = document.querySelectorAll('.btn-subscribe');
+      subscribeBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+          alert('Fonctionnalité d\'abonnement bientôt disponible ! Contactez-nous pour un accompagnement personnalisé.');
+        });
+      });
+    });
+  </script>
+{% endblock %}
+
+{% block javascripts %}
+  {{ parent() }}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+{% endblock %}

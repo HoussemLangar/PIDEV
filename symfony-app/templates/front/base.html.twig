@@ -1,18 +1,47 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="{{ app.request.locale }}" dir="{{ app.request.locale == 'ar' ? 'rtl' : 'ltr' }}">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <meta charset="UTF-8">
+
+    <!-- Responsive & Mobile -->
+    <meta name="format-detection" content="telephone=no">
+
+    <!-- SEO -->
     <title>{% block title %}SANTÉA - Healthcare Solutions{% endblock %}</title>
+    <meta name="description" content="SANTÉA est une plateforme de santé moderne reliant médecins, pharmaciens, coachs sportifs, nutritionnistes et patients.">
+    <meta name="keywords" content="santé, médecin, nutrition, pharmacie, coaching sportif, rendez-vous médical, abonnement santé">
+    <meta name="author" content="SANTÉA">
+    <meta name="robots" content="index, follow">
+
+    <!-- Theme & Browser UI -->
+    <meta name="theme-color" content="#0D8ABC">
+    <meta name="color-scheme" content="light dark">
+
+    <!-- Open Graph (Facebook, LinkedIn, WhatsApp…) -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="SANTÉA - Healthcare Solutions">
+    <meta property="og:description" content="Une solution complète pour la gestion de la santé et du bien-être.">
+    <meta property="og:image" content="{{ asset('logo.png') }}">
+    <meta property="og:url" content="{{ app.request.uri }}">
+    <meta property="og:site_name" content="SANTÉA">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="SANTÉA - Healthcare Solutions">
+    <meta name="twitter:description" content="Plateforme santé intelligente et sécurisée.">
+    <meta name="twitter:image" content="{{ asset('logo.png') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     {% block stylesheets %}
         <link rel="stylesheet" href="{{ asset('style.css') }}?v=9999">
+        <link rel="SHORTCUT ICON" type="image/x-icon" href="{{ asset('logo.png') }}">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     {% endblock %}
     
     {% block head_scripts %}{% endblock %}
 </head>
-<body{% block body_class %}{% endblock %}>
+{% set theme = app.user ? app.user.themePreference : (app.session ? app.session.get('theme') : 'light') %}
+<body data-theme="{{ theme ?: 'light' }}"{% block body_class %}{% endblock %}>
     
     {% block header %}
         <!-- Header / Navbar -->
@@ -21,72 +50,94 @@
                 <div class="logo">SANTÉA</div>
 
                 <ul class="nav-links">
-                    <li><a href="{{ path('app_home') }}">Accueil</a></li>
-                    <li><a href="#quick-info">À propos</a></li>
-                    <li><a href="#appointment-section">Services</a></li>
-                    <li><a href="#contact-section">Contact</a></li>
+                    <li><a href="{{ path('app_home') }}">{{ 'nav.home'|trans }}</a></li>
+                    <li><a href="#quick-info">{{ 'nav.about'|trans }}</a></li>
+                    <li><a href="#appointment-section">{{ 'nav.services'|trans }}</a></li>
+                    <li><a href="{{ path('front_content_index') }}">{{ 'nav.blog'|trans }}</a></li>
+                    <li><a href="{{ path('app_sante_quotidienne_index') }}">Mon journal santé</a></li>
+                    {% if app.user and (app.user.subscriptionType ?? app.user.role) == 'ROLE_PATIENT' %}
+                        <li><a href="{{ path('app_symptomes') }}">Mes symptômes</a></li>
+                        <li><a href="{{ path('front_pharmacy_index') }}">Pharmacies</a></li>
+                    {% endif %}
+                    {% if app.user and app.user.subscriptionStatus == 'ACTIVE' and (app.user.subscriptionType ?? app.user.role) == 'ROLE_PHARMACIEN' %}
+                        <li><a href="{{ path('front_pharmacien_dashboard') }}">Ma pharmacie</a></li>
+                    {% endif %}
+                    <li><a href="#contact-section">{{ 'nav.contact'|trans }}</a></li>
                 </ul>
 
                 {% if app.user %}
                 <div class="account-menu">
                     <button class="btn-appointment account-toggle" id="accountBtn">                   
-                        Mon compte <i class="fas fa-chevron-down"></i>
+                        {{ 'nav.account'|trans }} <i class="fas fa-chevron-down"></i>
                     </button>
 
                     <div class="account-dropdown" id="accountDropdown">
                         <div class="account-info">
-                            <img src="https://ui-avatars.com/api/?name={{ app.user.nom|url_encode }}+{{ app.user.prenom|url_encode }}&background=0D8ABC&color=fff&size=30" 
+                            <img src="{{ app.user.avatarDataUri ?: ('https://ui-avatars.com/api/?name=' ~ app.user.nom|url_encode ~ '+' ~ app.user.prenom|url_encode ~ '&background=0D8ABC&color=fff&size=30') }}" 
                                         alt="Avatar" class="account-avatar">     
                             <strong>{{ app.user.nom }} {{ app.user.prenom }}</strong>
                             <p>{{ app.user.email }}</p>
-                            <span class="role">{{ app.user.role }}</span>
                         </div>
 
                         <hr>
 
-                        <hr>
-
-                        {% if is_granted('ROLE_PATIENT') or is_granted('ROLE_MEDECIN') %}
-                            <a href="{{ path('app_message_index') }}" class="dropdown-item">
-                                <i class="fas fa-envelope"></i> Messages
-                            </a>
-                        {% endif %}
-
-                        {% if is_granted('ROLE_PATIENT') or is_granted('ROLE_MEDECIN') %}
-                            <a href="{{ path('app_document_index') }}" class="dropdown-item">
-                                <i class="fas fa-file"></i> Mes documents
-                            </a>
-                        {% endif %}
-
-                        {% if is_granted('ROLE_PATIENT') or is_granted('ROLE_MEDECIN') %}
-                            <a href="{{ path('app_teleconsultation_index') }}" class="dropdown-item">
-                                <i class="fas fa-video"></i> Consultations vidéo
-                            </a>
-                        {% endif %}
-
-                        {% if is_granted('ROLE_PATIENT') or is_granted('ROLE_COACH') %}
-                            <a href="{{ path('app_plan_index') }}" class="dropdown-item">
-                                <i class="fas fa-calendar-check"></i> Mes plans
-                            </a>
-                        {% endif %}
-
-                        <hr>
-
                         <a href="{{ path('profile_edit') }}" class="dropdown-item">
-                            <i class="fas fa-cog"></i> Paramètres
+                            <i class="fas fa-cog"></i> {{ 'nav.settings'|trans }}
+                        </a>
+                        <a href="{{ path('profile_notifications') }}" class="dropdown-item">
+                            <i class="fas fa-shield-alt"></i> {{ 'nav.notifications'|trans }}
+                        </a>
+                        <a href="{{ path('profile_mfa') }}" class="dropdown-item">
+                            <i class="fas fa-key"></i> {{ 'nav.mfa'|trans }}
                         </a>
 
-                        <a href="{{ path('app_subscription') }}" class="dropdown-item">
-                            <i class="fas fa-star"></i> Abonnement
+                        {% if app.user and (app.user.subscriptionType ?? app.user.role) == 'ROLE_PATIENT' %}
+                        <a href="{{ path('app_sante_quotidienne_index') }}" class="dropdown-item">
+                            <i class="fas fa-book-medical"></i> Mon journal santé
                         </a>
+                        <a href="{{ path('app_symptomes') }}" class="dropdown-item">
+                            <i class="fas fa-stethoscope"></i> Mes symptômes
+                        </a>
+                        {% endif %}
+
+                        <a href="{{ path('app_subscription_overview') }}" class="dropdown-item">
+                            <i class="fas fa-star"></i> {{ 'nav.subscription'|trans }}
+                        </a>
+                        <a href="{{ path('app_appointments') }}" class="dropdown-item">
+                            <i class="fas fa-calendar-check"></i> Rendez-vous
+                        </a>
+                        {% if app.user and (app.user.subscriptionType ?? app.user.role) == 'ROLE_PHARMACIEN' %}
+                        <a href="{{ path('front_pharmacien_dashboard') }}" class="dropdown-item">
+                            <i class="fas fa-clinic-medical"></i> Ma pharmacie
+                        </a>
+                        {% endif %}
+
+                        <div class="dropdown-divider"></div>
+
+                        <div class="dropdown-item dropdown-inline">
+                            <span>{{ 'nav.theme'|trans }}</span>
+                            <div class="inline-actions">
+                                <a href="{{ path('app_theme', {theme: 'light'}) }}" class="mini-pill">{{ 'theme.light'|trans }}</a>
+                                <a href="{{ path('app_theme', {theme: 'dark'}) }}" class="mini-pill">{{ 'theme.dark'|trans }}</a>
+                            </div>
+                        </div>
+                        <div class="dropdown-item dropdown-inline">
+                            <span>{{ 'nav.language'|trans }}</span>
+                            <div class="inline-actions">
+                                <a href="{{ path('app_locale', {_locale: 'fr'}) }}" class="mini-pill">FR</a>
+                                <a href="{{ path('app_locale', {_locale: 'en'}) }}" class="mini-pill">EN</a>
+                                <a href="{{ path('app_locale', {_locale: 'ar'}) }}" class="mini-pill">AR</a>
+                            </div>
+                        </div>
+
                         <a href="{{ path('app_logout') }}" class="dropdown-item danger">
-                            <i class="fas fa-sign-out-alt"></i> Déconnexion
+                            <i class="fas fa-sign-out-alt"></i> {{ 'nav.logout'|trans }}
                         </a>
                     </div>
                 </div>
                 
                 {% else %}
-                    <a href="{{ path('login') }}" class="btn-appointment">Se connecter</a>
+                    <a href="{{ path('login') }}" class="btn-appointment">{{ 'nav.login'|trans }}</a>
                 {% endif %}
 
                 <div class="menu-toggle">
@@ -97,43 +148,114 @@
 
     {% endblock %}
     
-    {% block body %}
-        <main class="content-area" style="padding: 20px;">
-            <!-- Flash Messages -->
-            {% for type, messages in app.flashes %}
-                {% if type == 'success' %}
-                    {% set alertClass = 'alert-success' %}
-                {% elseif type == 'error' %}
-                    {% set alertClass = 'alert-danger' %}
-                {% elseif type == 'warning' %}
-                    {% set alertClass = 'alert-warning' %}
-                {% else %}
-                    {% set alertClass = 'alert-info' %}
-                {% endif %}
-                {% for message in messages %}
-                    <div class="alert {{ alertClass }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                {% endfor %}
-            {% endfor %}
-            {% block content %}{% endblock %}
-        </main>
-    {% endblock %}
-    
-    {% block footer %}
-        <!-- Footer -->
-        <footer>
-            <div class="container">
-                <p>{{ 'now'|date('Y') }} SANTÉA - All Rights Reserved</p>
-            </div>
-        </footer>
-    {% endblock %}
-    
+    {% block body %}{% endblock %}
+
+    <div class="global-loader" id="globalLoader" aria-hidden="true">
+        <div class="loader-card">
+            <div class="loader-spinner"></div>
+            <div class="loader-text">Chargement…</div>
+        </div>
+    </div>
+
+    {% if app.user and app.user.subscriptionStatus == 'SKIPPED' %}
+        <div class="subscription-banner">
+            <span>Mode découverte actif. Certaines fonctionnalités nécessitent un abonnement.</span>
+            <a href="{{ path('app_subscription') }}" class="subscription-banner-btn">S'abonner</a>
+        </div>
+    {% endif %}
+
+    <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+
     {% block javascripts %}
-        <script src="{{ asset('js/script.js') }}"></script>
         <script>
-        document.addEventListener("DOMContentLoaded", () => {
+            (function () {
+                const container = document.getElementById('toastContainer');
+                const showToast = (type, message) => {
+                    if (!container || !message) return;
+                    const toast = document.createElement('div');
+                    toast.className = `toast toast-${type || 'info'}`;
+                    toast.innerHTML = `<span>${message}</span>`;
+                    container.appendChild(toast);
+                    requestAnimationFrame(() => toast.classList.add('show'));
+                    setTimeout(() => {
+                        toast.classList.remove('show');
+                        setTimeout(() => toast.remove(), 300);
+                    }, 3000);
+                };
+
+                window.showToast = showToast;
+
+                const originalFetch = window.fetch.bind(window);
+                window.fetch = async (...args) => {
+                    const options = args[1] || {};
+                    const method = (options.method || 'GET').toUpperCase();
+                    const skipToast = options.toast === false;
+                    const showLoader = options.loading === true && typeof window.setLoading === 'function';
+                    if (showLoader) window.setLoading(true);
+                    let response;
+                    try {
+                        response = await originalFetch(...args);
+                    } finally {
+                        if (showLoader) window.setLoading(false);
+                    }
+
+                    if (!skipToast && method !== 'GET') {
+                        const contentType = response.headers.get('content-type') || '';
+                        let payload = null;
+                        if (contentType.includes('application/json')) {
+                            try {
+                                payload = await response.clone().json();
+                            } catch (_) {}
+                        }
+                        if (response.ok) {
+                            const msg = payload?.message || 'Opération réussie.';
+                            showToast('success', msg);
+                        } else {
+                            const msg = payload?.message || payload?.error || response.statusText || 'Erreur.';
+                            showToast('error', msg);
+                        }
+                    }
+
+                    return response;
+                };
+            })();
+
+            (function () {
+                const loader = document.getElementById('globalLoader');
+                if (!loader) return;
+                const show = () => {
+                    loader.classList.add('show');
+                    loader.setAttribute('aria-hidden', 'false');
+                };
+                const hide = () => {
+                    loader.classList.remove('show');
+                    loader.setAttribute('aria-hidden', 'true');
+                };
+                window.setLoading = (on) => (on ? show() : hide());
+
+                document.querySelectorAll('form').forEach((form) => {
+                    if (form.dataset.ajax === '1') return;
+                    form.addEventListener('submit', () => {
+                        show();
+                    });
+                });
+
+                document.querySelectorAll('a[href]').forEach((link) => {
+                    if (link.target === '_blank' || link.hasAttribute('download')) return;
+                    link.addEventListener('click', (e) => {
+                        const href = link.getAttribute('href');
+                        if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
+                        show();
+                    });
+                });
+
+                window.addEventListener('pageshow', (e) => {
+                    if (e.persisted) hide();
+                });
+
+                window.addEventListener('load', hide);
+            })();
+            document.addEventListener("DOMContentLoaded", () => {
 
             const btn = document.getElementById("accountBtn");
             const dropdown = document.getElementById("accountDropdown");
@@ -154,6 +276,7 @@
         });
         
         const form = document.getElementById("registerForm");
+        if (form) {
         form.addEventListener("submit", async function(e) {
             e.preventDefault();
 
@@ -172,8 +295,8 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    alert(data.message);
-                    window.location.href = "/login";
+                    window.showToast?.('success', data.message || 'Inscription réussie.');
+                    window.location.href = data.redirect || "/";
                 }
 
             } catch (error) {
@@ -188,10 +311,20 @@
                         }
                     }
                 }
+                window.showToast?.('error', 'Erreur lors de l’inscription.');
             }
         });
+        }
         </script>
-
+    {% endblock %}
+    
+    {% block footer %}
+        <!-- Footer -->
+        <footer>
+            <div class="container">
+                <p>{{ 'now'|date('Y') }} SANTÉA - All Rights Reserved</p>
+            </div>
+        </footer>
     {% endblock %}
 
 </body>

@@ -1,0 +1,1145 @@
+﻿nom_symptome,categorie
+Céphalée,Neurologique
+Céphalée aiguë,Neurologique
+Céphalée chronique,Neurologique
+Céphalée sévère,Neurologique
+Céphalée modérée,Neurologique
+Céphalée légère,Neurologique
+Céphalée persistante,Neurologique
+Céphalée intermittente,Neurologique
+Céphalée récurrente,Neurologique
+Céphalée nocturne,Neurologique
+Céphalée diurne,Neurologique
+Céphalée soudaine,Neurologique
+Céphalée progressive,Neurologique
+Migraine,Neurologique
+Migraine aiguë,Neurologique
+Migraine chronique,Neurologique
+Migraine sévère,Neurologique
+Migraine modérée,Neurologique
+Migraine légère,Neurologique
+Migraine persistante,Neurologique
+Migraine intermittente,Neurologique
+Migraine récurrente,Neurologique
+Migraine nocturne,Neurologique
+Migraine diurne,Neurologique
+Migraine soudaine,Neurologique
+Migraine progressive,Neurologique
+Vertige,Neurologique
+Vertige aiguë,Neurologique
+Vertige chronique,Neurologique
+Vertige sévère,Neurologique
+Vertige modérée,Neurologique
+Vertige légère,Neurologique
+Vertige persistante,Neurologique
+Vertige intermittente,Neurologique
+Vertige récurrente,Neurologique
+Vertige nocturne,Neurologique
+Vertige diurne,Neurologique
+Vertige soudaine,Neurologique
+Vertige progressive,Neurologique
+Syncope,Neurologique
+Syncope aiguë,Neurologique
+Syncope chronique,Neurologique
+Syncope sévère,Neurologique
+Syncope modérée,Neurologique
+Syncope légère,Neurologique
+Syncope persistante,Neurologique
+Syncope intermittente,Neurologique
+Syncope récurrente,Neurologique
+Syncope nocturne,Neurologique
+Syncope diurne,Neurologique
+Syncope soudaine,Neurologique
+Syncope progressive,Neurologique
+Convulsion,Neurologique
+Convulsion aiguë,Neurologique
+Convulsion chronique,Neurologique
+Convulsion sévère,Neurologique
+Convulsion modérée,Neurologique
+Convulsion légère,Neurologique
+Convulsion persistante,Neurologique
+Convulsion intermittente,Neurologique
+Convulsion récurrente,Neurologique
+Convulsion nocturne,Neurologique
+Convulsion diurne,Neurologique
+Convulsion soudaine,Neurologique
+Convulsion progressive,Neurologique
+Tremblement,Neurologique
+Tremblement aiguë,Neurologique
+Tremblement chronique,Neurologique
+Tremblement sévère,Neurologique
+Tremblement modérée,Neurologique
+Tremblement légère,Neurologique
+Tremblement persistante,Neurologique
+Tremblement intermittente,Neurologique
+Tremblement récurrente,Neurologique
+Tremblement nocturne,Neurologique
+Tremblement diurne,Neurologique
+Tremblement soudaine,Neurologique
+Tremblement progressive,Neurologique
+Paresthésie,Neurologique
+Paresthésie aiguë,Neurologique
+Paresthésie chronique,Neurologique
+Paresthésie sévère,Neurologique
+Paresthésie modérée,Neurologique
+Paresthésie légère,Neurologique
+Paresthésie persistante,Neurologique
+Paresthésie intermittente,Neurologique
+Paresthésie récurrente,Neurologique
+Paresthésie nocturne,Neurologique
+Paresthésie diurne,Neurologique
+Paresthésie soudaine,Neurologique
+Paresthésie progressive,Neurologique
+Confusion,Neurologique
+Confusion aiguë,Neurologique
+Confusion chronique,Neurologique
+Confusion sévère,Neurologique
+Confusion modérée,Neurologique
+Confusion légère,Neurologique
+Confusion persistante,Neurologique
+Confusion intermittente,Neurologique
+Confusion récurrente,Neurologique
+Confusion nocturne,Neurologique
+Confusion diurne,Neurologique
+Confusion soudaine,Neurologique
+Confusion progressive,Neurologique
+Amnésie,Neurologique
+Amnésie aiguë,Neurologique
+Amnésie chronique,Neurologique
+Amnésie sévère,Neurologique
+Amnésie modérée,Neurologique
+Amnésie légère,Neurologique
+Amnésie persistante,Neurologique
+Amnésie intermittente,Neurologique
+Amnésie récurrente,Neurologique
+Amnésie nocturne,Neurologique
+Amnésie diurne,Neurologique
+Amnésie soudaine,Neurologique
+Amnésie progressive,Neurologique
+Perte de conscience,Neurologique
+Perte de conscience aiguë,Neurologique
+Perte de conscience chronique,Neurologique
+Perte de conscience sévère,Neurologique
+Perte de conscience modérée,Neurologique
+Perte de conscience légère,Neurologique
+Perte de conscience persistante,Neurologique
+Perte de conscience intermittente,Neurologique
+Perte de conscience récurrente,Neurologique
+Perte de conscience nocturne,Neurologique
+Perte de conscience diurne,Neurologique
+Perte de conscience soudaine,Neurologique
+Perte de conscience progressive,Neurologique
+Trouble de l’équilibre,Neurologique
+Trouble de l’équilibre aiguë,Neurologique
+Trouble de l’équilibre chronique,Neurologique
+Trouble de l’équilibre sévère,Neurologique
+Trouble de l’équilibre modérée,Neurologique
+Trouble de l’équilibre légère,Neurologique
+Trouble de l’équilibre persistante,Neurologique
+Trouble de l’équilibre intermittente,Neurologique
+Trouble de l’équilibre récurrente,Neurologique
+Trouble de l’équilibre nocturne,Neurologique
+Trouble de l’équilibre diurne,Neurologique
+Trouble de l’équilibre soudaine,Neurologique
+Trouble de l’équilibre progressive,Neurologique
+Somnolence,Neurologique
+Somnolence aiguë,Neurologique
+Somnolence chronique,Neurologique
+Somnolence sévère,Neurologique
+Somnolence modérée,Neurologique
+Somnolence légère,Neurologique
+Somnolence persistante,Neurologique
+Somnolence intermittente,Neurologique
+Somnolence récurrente,Neurologique
+Somnolence nocturne,Neurologique
+Somnolence diurne,Neurologique
+Somnolence soudaine,Neurologique
+Somnolence progressive,Neurologique
+Douleur thoracique,Cardiovasculaire
+Douleur thoracique aiguë,Cardiovasculaire
+Douleur thoracique chronique,Cardiovasculaire
+Douleur thoracique sévère,Cardiovasculaire
+Douleur thoracique modérée,Cardiovasculaire
+Douleur thoracique légère,Cardiovasculaire
+Douleur thoracique persistante,Cardiovasculaire
+Douleur thoracique intermittente,Cardiovasculaire
+Douleur thoracique récurrente,Cardiovasculaire
+Douleur thoracique nocturne,Cardiovasculaire
+Douleur thoracique diurne,Cardiovasculaire
+Douleur thoracique soudaine,Cardiovasculaire
+Douleur thoracique progressive,Cardiovasculaire
+Palpitations,Cardiovasculaire
+Palpitations aiguë,Cardiovasculaire
+Palpitations chronique,Cardiovasculaire
+Palpitations sévère,Cardiovasculaire
+Palpitations modérée,Cardiovasculaire
+Palpitations légère,Cardiovasculaire
+Palpitations persistante,Cardiovasculaire
+Palpitations intermittente,Cardiovasculaire
+Palpitations récurrente,Cardiovasculaire
+Palpitations nocturne,Cardiovasculaire
+Palpitations diurne,Cardiovasculaire
+Palpitations soudaine,Cardiovasculaire
+Palpitations progressive,Cardiovasculaire
+Tachycardie,Cardiovasculaire
+Tachycardie aiguë,Cardiovasculaire
+Tachycardie chronique,Cardiovasculaire
+Tachycardie sévère,Cardiovasculaire
+Tachycardie modérée,Cardiovasculaire
+Tachycardie légère,Cardiovasculaire
+Tachycardie persistante,Cardiovasculaire
+Tachycardie intermittente,Cardiovasculaire
+Tachycardie récurrente,Cardiovasculaire
+Tachycardie nocturne,Cardiovasculaire
+Tachycardie diurne,Cardiovasculaire
+Tachycardie soudaine,Cardiovasculaire
+Tachycardie progressive,Cardiovasculaire
+Bradycardie,Cardiovasculaire
+Bradycardie aiguë,Cardiovasculaire
+Bradycardie chronique,Cardiovasculaire
+Bradycardie sévère,Cardiovasculaire
+Bradycardie modérée,Cardiovasculaire
+Bradycardie légère,Cardiovasculaire
+Bradycardie persistante,Cardiovasculaire
+Bradycardie intermittente,Cardiovasculaire
+Bradycardie récurrente,Cardiovasculaire
+Bradycardie nocturne,Cardiovasculaire
+Bradycardie diurne,Cardiovasculaire
+Bradycardie soudaine,Cardiovasculaire
+Bradycardie progressive,Cardiovasculaire
+Hypertension,Cardiovasculaire
+Hypertension aiguë,Cardiovasculaire
+Hypertension chronique,Cardiovasculaire
+Hypertension sévère,Cardiovasculaire
+Hypertension modérée,Cardiovasculaire
+Hypertension légère,Cardiovasculaire
+Hypertension persistante,Cardiovasculaire
+Hypertension intermittente,Cardiovasculaire
+Hypertension récurrente,Cardiovasculaire
+Hypertension nocturne,Cardiovasculaire
+Hypertension diurne,Cardiovasculaire
+Hypertension soudaine,Cardiovasculaire
+Hypertension progressive,Cardiovasculaire
+Hypotension,Cardiovasculaire
+Hypotension aiguë,Cardiovasculaire
+Hypotension chronique,Cardiovasculaire
+Hypotension sévère,Cardiovasculaire
+Hypotension modérée,Cardiovasculaire
+Hypotension légère,Cardiovasculaire
+Hypotension persistante,Cardiovasculaire
+Hypotension intermittente,Cardiovasculaire
+Hypotension récurrente,Cardiovasculaire
+Hypotension nocturne,Cardiovasculaire
+Hypotension diurne,Cardiovasculaire
+Hypotension soudaine,Cardiovasculaire
+Hypotension progressive,Cardiovasculaire
+Œdème des membres,Cardiovasculaire
+Œdème des membres aiguë,Cardiovasculaire
+Œdème des membres chronique,Cardiovasculaire
+Œdème des membres sévère,Cardiovasculaire
+Œdème des membres modérée,Cardiovasculaire
+Œdème des membres légère,Cardiovasculaire
+Œdème des membres persistante,Cardiovasculaire
+Œdème des membres intermittente,Cardiovasculaire
+Œdème des membres récurrente,Cardiovasculaire
+Œdème des membres nocturne,Cardiovasculaire
+Œdème des membres diurne,Cardiovasculaire
+Œdème des membres soudaine,Cardiovasculaire
+Œdème des membres progressive,Cardiovasculaire
+Fatigue cardiaque,Cardiovasculaire
+Fatigue cardiaque aiguë,Cardiovasculaire
+Fatigue cardiaque chronique,Cardiovasculaire
+Fatigue cardiaque sévère,Cardiovasculaire
+Fatigue cardiaque modérée,Cardiovasculaire
+Fatigue cardiaque légère,Cardiovasculaire
+Fatigue cardiaque persistante,Cardiovasculaire
+Fatigue cardiaque intermittente,Cardiovasculaire
+Fatigue cardiaque récurrente,Cardiovasculaire
+Fatigue cardiaque nocturne,Cardiovasculaire
+Fatigue cardiaque diurne,Cardiovasculaire
+Fatigue cardiaque soudaine,Cardiovasculaire
+Fatigue cardiaque progressive,Cardiovasculaire
+Syncope cardiaque,Cardiovasculaire
+Syncope cardiaque aiguë,Cardiovasculaire
+Syncope cardiaque chronique,Cardiovasculaire
+Syncope cardiaque sévère,Cardiovasculaire
+Syncope cardiaque modérée,Cardiovasculaire
+Syncope cardiaque légère,Cardiovasculaire
+Syncope cardiaque persistante,Cardiovasculaire
+Syncope cardiaque intermittente,Cardiovasculaire
+Syncope cardiaque récurrente,Cardiovasculaire
+Syncope cardiaque nocturne,Cardiovasculaire
+Syncope cardiaque diurne,Cardiovasculaire
+Syncope cardiaque soudaine,Cardiovasculaire
+Syncope cardiaque progressive,Cardiovasculaire
+Toux,Respiratoire
+Toux aiguë,Respiratoire
+Toux chronique,Respiratoire
+Toux sévère,Respiratoire
+Toux modérée,Respiratoire
+Toux légère,Respiratoire
+Toux persistante,Respiratoire
+Toux intermittente,Respiratoire
+Toux récurrente,Respiratoire
+Toux nocturne,Respiratoire
+Toux diurne,Respiratoire
+Toux soudaine,Respiratoire
+Toux progressive,Respiratoire
+Dyspnée,Respiratoire
+Dyspnée aiguë,Respiratoire
+Dyspnée chronique,Respiratoire
+Dyspnée sévère,Respiratoire
+Dyspnée modérée,Respiratoire
+Dyspnée légère,Respiratoire
+Dyspnée persistante,Respiratoire
+Dyspnée intermittente,Respiratoire
+Dyspnée récurrente,Respiratoire
+Dyspnée nocturne,Respiratoire
+Dyspnée diurne,Respiratoire
+Dyspnée soudaine,Respiratoire
+Dyspnée progressive,Respiratoire
+Apnée,Respiratoire
+Apnée aiguë,Respiratoire
+Apnée chronique,Respiratoire
+Apnée sévère,Respiratoire
+Apnée modérée,Respiratoire
+Apnée légère,Respiratoire
+Apnée persistante,Respiratoire
+Apnée intermittente,Respiratoire
+Apnée récurrente,Respiratoire
+Apnée nocturne,Respiratoire
+Apnée diurne,Respiratoire
+Apnée soudaine,Respiratoire
+Apnée progressive,Respiratoire
+Respiration sifflante,Respiratoire
+Respiration sifflante aiguë,Respiratoire
+Respiration sifflante chronique,Respiratoire
+Respiration sifflante sévère,Respiratoire
+Respiration sifflante modérée,Respiratoire
+Respiration sifflante légère,Respiratoire
+Respiration sifflante persistante,Respiratoire
+Respiration sifflante intermittente,Respiratoire
+Respiration sifflante récurrente,Respiratoire
+Respiration sifflante nocturne,Respiratoire
+Respiration sifflante diurne,Respiratoire
+Respiration sifflante soudaine,Respiratoire
+Respiration sifflante progressive,Respiratoire
+Oppression thoracique,Respiratoire
+Oppression thoracique aiguë,Respiratoire
+Oppression thoracique chronique,Respiratoire
+Oppression thoracique sévère,Respiratoire
+Oppression thoracique modérée,Respiratoire
+Oppression thoracique légère,Respiratoire
+Oppression thoracique persistante,Respiratoire
+Oppression thoracique intermittente,Respiratoire
+Oppression thoracique récurrente,Respiratoire
+Oppression thoracique nocturne,Respiratoire
+Oppression thoracique diurne,Respiratoire
+Oppression thoracique soudaine,Respiratoire
+Oppression thoracique progressive,Respiratoire
+Expectoration,Respiratoire
+Expectoration aiguë,Respiratoire
+Expectoration chronique,Respiratoire
+Expectoration sévère,Respiratoire
+Expectoration modérée,Respiratoire
+Expectoration légère,Respiratoire
+Expectoration persistante,Respiratoire
+Expectoration intermittente,Respiratoire
+Expectoration récurrente,Respiratoire
+Expectoration nocturne,Respiratoire
+Expectoration diurne,Respiratoire
+Expectoration soudaine,Respiratoire
+Expectoration progressive,Respiratoire
+Essoufflement,Respiratoire
+Essoufflement aiguë,Respiratoire
+Essoufflement chronique,Respiratoire
+Essoufflement sévère,Respiratoire
+Essoufflement modérée,Respiratoire
+Essoufflement légère,Respiratoire
+Essoufflement persistante,Respiratoire
+Essoufflement intermittente,Respiratoire
+Essoufflement récurrente,Respiratoire
+Essoufflement nocturne,Respiratoire
+Essoufflement diurne,Respiratoire
+Essoufflement soudaine,Respiratoire
+Essoufflement progressive,Respiratoire
+Cyanose,Respiratoire
+Cyanose aiguë,Respiratoire
+Cyanose chronique,Respiratoire
+Cyanose sévère,Respiratoire
+Cyanose modérée,Respiratoire
+Cyanose légère,Respiratoire
+Cyanose persistante,Respiratoire
+Cyanose intermittente,Respiratoire
+Cyanose récurrente,Respiratoire
+Cyanose nocturne,Respiratoire
+Cyanose diurne,Respiratoire
+Cyanose soudaine,Respiratoire
+Cyanose progressive,Respiratoire
+Nausée,Digestif
+Nausée aiguë,Digestif
+Nausée chronique,Digestif
+Nausée sévère,Digestif
+Nausée modérée,Digestif
+Nausée légère,Digestif
+Nausée persistante,Digestif
+Nausée intermittente,Digestif
+Nausée récurrente,Digestif
+Nausée nocturne,Digestif
+Nausée diurne,Digestif
+Nausée soudaine,Digestif
+Nausée progressive,Digestif
+Vomissement,Digestif
+Vomissement aiguë,Digestif
+Vomissement chronique,Digestif
+Vomissement sévère,Digestif
+Vomissement modérée,Digestif
+Vomissement légère,Digestif
+Vomissement persistante,Digestif
+Vomissement intermittente,Digestif
+Vomissement récurrente,Digestif
+Vomissement nocturne,Digestif
+Vomissement diurne,Digestif
+Vomissement soudaine,Digestif
+Vomissement progressive,Digestif
+Diarrhée,Digestif
+Diarrhée aiguë,Digestif
+Diarrhée chronique,Digestif
+Diarrhée sévère,Digestif
+Diarrhée modérée,Digestif
+Diarrhée légère,Digestif
+Diarrhée persistante,Digestif
+Diarrhée intermittente,Digestif
+Diarrhée récurrente,Digestif
+Diarrhée nocturne,Digestif
+Diarrhée diurne,Digestif
+Diarrhée soudaine,Digestif
+Diarrhée progressive,Digestif
+Constipation,Digestif
+Constipation aiguë,Digestif
+Constipation chronique,Digestif
+Constipation sévère,Digestif
+Constipation modérée,Digestif
+Constipation légère,Digestif
+Constipation persistante,Digestif
+Constipation intermittente,Digestif
+Constipation récurrente,Digestif
+Constipation nocturne,Digestif
+Constipation diurne,Digestif
+Constipation soudaine,Digestif
+Constipation progressive,Digestif
+Douleur abdominale,Digestif
+Douleur abdominale aiguë,Digestif
+Douleur abdominale chronique,Digestif
+Douleur abdominale sévère,Digestif
+Douleur abdominale modérée,Digestif
+Douleur abdominale légère,Digestif
+Douleur abdominale persistante,Digestif
+Douleur abdominale intermittente,Digestif
+Douleur abdominale récurrente,Digestif
+Douleur abdominale nocturne,Digestif
+Douleur abdominale diurne,Digestif
+Douleur abdominale soudaine,Digestif
+Douleur abdominale progressive,Digestif
+Ballonnement,Digestif
+Ballonnement aiguë,Digestif
+Ballonnement chronique,Digestif
+Ballonnement sévère,Digestif
+Ballonnement modérée,Digestif
+Ballonnement légère,Digestif
+Ballonnement persistante,Digestif
+Ballonnement intermittente,Digestif
+Ballonnement récurrente,Digestif
+Ballonnement nocturne,Digestif
+Ballonnement diurne,Digestif
+Ballonnement soudaine,Digestif
+Ballonnement progressive,Digestif
+Reflux gastrique,Digestif
+Reflux gastrique aiguë,Digestif
+Reflux gastrique chronique,Digestif
+Reflux gastrique sévère,Digestif
+Reflux gastrique modérée,Digestif
+Reflux gastrique légère,Digestif
+Reflux gastrique persistante,Digestif
+Reflux gastrique intermittente,Digestif
+Reflux gastrique récurrente,Digestif
+Reflux gastrique nocturne,Digestif
+Reflux gastrique diurne,Digestif
+Reflux gastrique soudaine,Digestif
+Reflux gastrique progressive,Digestif
+Brûlure épigastrique,Digestif
+Brûlure épigastrique aiguë,Digestif
+Brûlure épigastrique chronique,Digestif
+Brûlure épigastrique sévère,Digestif
+Brûlure épigastrique modérée,Digestif
+Brûlure épigastrique légère,Digestif
+Brûlure épigastrique persistante,Digestif
+Brûlure épigastrique intermittente,Digestif
+Brûlure épigastrique récurrente,Digestif
+Brûlure épigastrique nocturne,Digestif
+Brûlure épigastrique diurne,Digestif
+Brûlure épigastrique soudaine,Digestif
+Brûlure épigastrique progressive,Digestif
+Perte d’appétit,Digestif
+Perte d’appétit aiguë,Digestif
+Perte d’appétit chronique,Digestif
+Perte d’appétit sévère,Digestif
+Perte d’appétit modérée,Digestif
+Perte d’appétit légère,Digestif
+Perte d’appétit persistante,Digestif
+Perte d’appétit intermittente,Digestif
+Perte d’appétit récurrente,Digestif
+Perte d’appétit nocturne,Digestif
+Perte d’appétit diurne,Digestif
+Perte d’appétit soudaine,Digestif
+Perte d’appétit progressive,Digestif
+Dysphagie,Digestif
+Dysphagie aiguë,Digestif
+Dysphagie chronique,Digestif
+Dysphagie sévère,Digestif
+Dysphagie modérée,Digestif
+Dysphagie légère,Digestif
+Dysphagie persistante,Digestif
+Dysphagie intermittente,Digestif
+Dysphagie récurrente,Digestif
+Dysphagie nocturne,Digestif
+Dysphagie diurne,Digestif
+Dysphagie soudaine,Digestif
+Dysphagie progressive,Digestif
+Fièvre,Général
+Fièvre aiguë,Général
+Fièvre chronique,Général
+Fièvre sévère,Général
+Fièvre modérée,Général
+Fièvre légère,Général
+Fièvre persistante,Général
+Fièvre intermittente,Général
+Fièvre récurrente,Général
+Fièvre nocturne,Général
+Fièvre diurne,Général
+Fièvre soudaine,Général
+Fièvre progressive,Général
+Fatigue,Général
+Fatigue aiguë,Général
+Fatigue chronique,Général
+Fatigue sévère,Général
+Fatigue modérée,Général
+Fatigue légère,Général
+Fatigue persistante,Général
+Fatigue intermittente,Général
+Fatigue récurrente,Général
+Fatigue nocturne,Général
+Fatigue diurne,Général
+Fatigue soudaine,Général
+Fatigue progressive,Général
+Asthénie,Général
+Asthénie aiguë,Général
+Asthénie chronique,Général
+Asthénie sévère,Général
+Asthénie modérée,Général
+Asthénie légère,Général
+Asthénie persistante,Général
+Asthénie intermittente,Général
+Asthénie récurrente,Général
+Asthénie nocturne,Général
+Asthénie diurne,Général
+Asthénie soudaine,Général
+Asthénie progressive,Général
+Frissons,Général
+Frissons aiguë,Général
+Frissons chronique,Général
+Frissons sévère,Général
+Frissons modérée,Général
+Frissons légère,Général
+Frissons persistante,Général
+Frissons intermittente,Général
+Frissons récurrente,Général
+Frissons nocturne,Général
+Frissons diurne,Général
+Frissons soudaine,Général
+Frissons progressive,Général
+Sueurs nocturnes,Général
+Sueurs nocturnes aiguë,Général
+Sueurs nocturnes chronique,Général
+Sueurs nocturnes sévère,Général
+Sueurs nocturnes modérée,Général
+Sueurs nocturnes légère,Général
+Sueurs nocturnes persistante,Général
+Sueurs nocturnes intermittente,Général
+Sueurs nocturnes récurrente,Général
+Sueurs nocturnes nocturne,Général
+Sueurs nocturnes diurne,Général
+Sueurs nocturnes soudaine,Général
+Sueurs nocturnes progressive,Général
+Perte de poids,Général
+Perte de poids aiguë,Général
+Perte de poids chronique,Général
+Perte de poids sévère,Général
+Perte de poids modérée,Général
+Perte de poids légère,Général
+Perte de poids persistante,Général
+Perte de poids intermittente,Général
+Perte de poids récurrente,Général
+Perte de poids nocturne,Général
+Perte de poids diurne,Général
+Perte de poids soudaine,Général
+Perte de poids progressive,Général
+Prise de poids,Général
+Prise de poids aiguë,Général
+Prise de poids chronique,Général
+Prise de poids sévère,Général
+Prise de poids modérée,Général
+Prise de poids légère,Général
+Prise de poids persistante,Général
+Prise de poids intermittente,Général
+Prise de poids récurrente,Général
+Prise de poids nocturne,Général
+Prise de poids diurne,Général
+Prise de poids soudaine,Général
+Prise de poids progressive,Général
+Malaise général,Général
+Malaise général aiguë,Général
+Malaise général chronique,Général
+Malaise général sévère,Général
+Malaise général modérée,Général
+Malaise général légère,Général
+Malaise général persistante,Général
+Malaise général intermittente,Général
+Malaise général récurrente,Général
+Malaise général nocturne,Général
+Malaise général diurne,Général
+Malaise général soudaine,Général
+Malaise général progressive,Général
+Déshydratation,Général
+Déshydratation aiguë,Général
+Déshydratation chronique,Général
+Déshydratation sévère,Général
+Déshydratation modérée,Général
+Déshydratation légère,Général
+Déshydratation persistante,Général
+Déshydratation intermittente,Général
+Déshydratation récurrente,Général
+Déshydratation nocturne,Général
+Déshydratation diurne,Général
+Déshydratation soudaine,Général
+Déshydratation progressive,Général
+Douleur articulaire,Musculo-squelettique
+Douleur articulaire aiguë,Musculo-squelettique
+Douleur articulaire chronique,Musculo-squelettique
+Douleur articulaire sévère,Musculo-squelettique
+Douleur articulaire modérée,Musculo-squelettique
+Douleur articulaire légère,Musculo-squelettique
+Douleur articulaire persistante,Musculo-squelettique
+Douleur articulaire intermittente,Musculo-squelettique
+Douleur articulaire récurrente,Musculo-squelettique
+Douleur articulaire nocturne,Musculo-squelettique
+Douleur articulaire diurne,Musculo-squelettique
+Douleur articulaire soudaine,Musculo-squelettique
+Douleur articulaire progressive,Musculo-squelettique
+Douleur musculaire,Musculo-squelettique
+Douleur musculaire aiguë,Musculo-squelettique
+Douleur musculaire chronique,Musculo-squelettique
+Douleur musculaire sévère,Musculo-squelettique
+Douleur musculaire modérée,Musculo-squelettique
+Douleur musculaire légère,Musculo-squelettique
+Douleur musculaire persistante,Musculo-squelettique
+Douleur musculaire intermittente,Musculo-squelettique
+Douleur musculaire récurrente,Musculo-squelettique
+Douleur musculaire nocturne,Musculo-squelettique
+Douleur musculaire diurne,Musculo-squelettique
+Douleur musculaire soudaine,Musculo-squelettique
+Douleur musculaire progressive,Musculo-squelettique
+Raideur,Musculo-squelettique
+Raideur aiguë,Musculo-squelettique
+Raideur chronique,Musculo-squelettique
+Raideur sévère,Musculo-squelettique
+Raideur modérée,Musculo-squelettique
+Raideur légère,Musculo-squelettique
+Raideur persistante,Musculo-squelettique
+Raideur intermittente,Musculo-squelettique
+Raideur récurrente,Musculo-squelettique
+Raideur nocturne,Musculo-squelettique
+Raideur diurne,Musculo-squelettique
+Raideur soudaine,Musculo-squelettique
+Raideur progressive,Musculo-squelettique
+Crampes,Musculo-squelettique
+Crampes aiguë,Musculo-squelettique
+Crampes chronique,Musculo-squelettique
+Crampes sévère,Musculo-squelettique
+Crampes modérée,Musculo-squelettique
+Crampes légère,Musculo-squelettique
+Crampes persistante,Musculo-squelettique
+Crampes intermittente,Musculo-squelettique
+Crampes récurrente,Musculo-squelettique
+Crampes nocturne,Musculo-squelettique
+Crampes diurne,Musculo-squelettique
+Crampes soudaine,Musculo-squelettique
+Crampes progressive,Musculo-squelettique
+Spasmes,Musculo-squelettique
+Spasmes aiguë,Musculo-squelettique
+Spasmes chronique,Musculo-squelettique
+Spasmes sévère,Musculo-squelettique
+Spasmes modérée,Musculo-squelettique
+Spasmes légère,Musculo-squelettique
+Spasmes persistante,Musculo-squelettique
+Spasmes intermittente,Musculo-squelettique
+Spasmes récurrente,Musculo-squelettique
+Spasmes nocturne,Musculo-squelettique
+Spasmes diurne,Musculo-squelettique
+Spasmes soudaine,Musculo-squelettique
+Spasmes progressive,Musculo-squelettique
+Faiblesse musculaire,Musculo-squelettique
+Faiblesse musculaire aiguë,Musculo-squelettique
+Faiblesse musculaire chronique,Musculo-squelettique
+Faiblesse musculaire sévère,Musculo-squelettique
+Faiblesse musculaire modérée,Musculo-squelettique
+Faiblesse musculaire légère,Musculo-squelettique
+Faiblesse musculaire persistante,Musculo-squelettique
+Faiblesse musculaire intermittente,Musculo-squelettique
+Faiblesse musculaire récurrente,Musculo-squelettique
+Faiblesse musculaire nocturne,Musculo-squelettique
+Faiblesse musculaire diurne,Musculo-squelettique
+Faiblesse musculaire soudaine,Musculo-squelettique
+Faiblesse musculaire progressive,Musculo-squelettique
+Gonflement articulaire,Musculo-squelettique
+Gonflement articulaire aiguë,Musculo-squelettique
+Gonflement articulaire chronique,Musculo-squelettique
+Gonflement articulaire sévère,Musculo-squelettique
+Gonflement articulaire modérée,Musculo-squelettique
+Gonflement articulaire légère,Musculo-squelettique
+Gonflement articulaire persistante,Musculo-squelettique
+Gonflement articulaire intermittente,Musculo-squelettique
+Gonflement articulaire récurrente,Musculo-squelettique
+Gonflement articulaire nocturne,Musculo-squelettique
+Gonflement articulaire diurne,Musculo-squelettique
+Gonflement articulaire soudaine,Musculo-squelettique
+Gonflement articulaire progressive,Musculo-squelettique
+Lombalgie,Musculo-squelettique
+Lombalgie aiguë,Musculo-squelettique
+Lombalgie chronique,Musculo-squelettique
+Lombalgie sévère,Musculo-squelettique
+Lombalgie modérée,Musculo-squelettique
+Lombalgie légère,Musculo-squelettique
+Lombalgie persistante,Musculo-squelettique
+Lombalgie intermittente,Musculo-squelettique
+Lombalgie récurrente,Musculo-squelettique
+Lombalgie nocturne,Musculo-squelettique
+Lombalgie diurne,Musculo-squelettique
+Lombalgie soudaine,Musculo-squelettique
+Lombalgie progressive,Musculo-squelettique
+Anxiété,Psychologique
+Anxiété aiguë,Psychologique
+Anxiété chronique,Psychologique
+Anxiété sévère,Psychologique
+Anxiété modérée,Psychologique
+Anxiété légère,Psychologique
+Anxiété persistante,Psychologique
+Anxiété intermittente,Psychologique
+Anxiété récurrente,Psychologique
+Anxiété nocturne,Psychologique
+Anxiété diurne,Psychologique
+Anxiété soudaine,Psychologique
+Anxiété progressive,Psychologique
+Dépression,Psychologique
+Dépression aiguë,Psychologique
+Dépression chronique,Psychologique
+Dépression sévère,Psychologique
+Dépression modérée,Psychologique
+Dépression légère,Psychologique
+Dépression persistante,Psychologique
+Dépression intermittente,Psychologique
+Dépression récurrente,Psychologique
+Dépression nocturne,Psychologique
+Dépression diurne,Psychologique
+Dépression soudaine,Psychologique
+Dépression progressive,Psychologique
+Stress,Psychologique
+Stress aiguë,Psychologique
+Stress chronique,Psychologique
+Stress sévère,Psychologique
+Stress modérée,Psychologique
+Stress légère,Psychologique
+Stress persistante,Psychologique
+Stress intermittente,Psychologique
+Stress récurrente,Psychologique
+Stress nocturne,Psychologique
+Stress diurne,Psychologique
+Stress soudaine,Psychologique
+Stress progressive,Psychologique
+Insomnie,Psychologique
+Insomnie aiguë,Psychologique
+Insomnie chronique,Psychologique
+Insomnie sévère,Psychologique
+Insomnie modérée,Psychologique
+Insomnie légère,Psychologique
+Insomnie persistante,Psychologique
+Insomnie intermittente,Psychologique
+Insomnie récurrente,Psychologique
+Insomnie nocturne,Psychologique
+Insomnie diurne,Psychologique
+Insomnie soudaine,Psychologique
+Insomnie progressive,Psychologique
+Irritabilité,Psychologique
+Irritabilité aiguë,Psychologique
+Irritabilité chronique,Psychologique
+Irritabilité sévère,Psychologique
+Irritabilité modérée,Psychologique
+Irritabilité légère,Psychologique
+Irritabilité persistante,Psychologique
+Irritabilité intermittente,Psychologique
+Irritabilité récurrente,Psychologique
+Irritabilité nocturne,Psychologique
+Irritabilité diurne,Psychologique
+Irritabilité soudaine,Psychologique
+Irritabilité progressive,Psychologique
+Crise de panique,Psychologique
+Crise de panique aiguë,Psychologique
+Crise de panique chronique,Psychologique
+Crise de panique sévère,Psychologique
+Crise de panique modérée,Psychologique
+Crise de panique légère,Psychologique
+Crise de panique persistante,Psychologique
+Crise de panique intermittente,Psychologique
+Crise de panique récurrente,Psychologique
+Crise de panique nocturne,Psychologique
+Crise de panique diurne,Psychologique
+Crise de panique soudaine,Psychologique
+Crise de panique progressive,Psychologique
+Trouble de concentration,Psychologique
+Trouble de concentration aiguë,Psychologique
+Trouble de concentration chronique,Psychologique
+Trouble de concentration sévère,Psychologique
+Trouble de concentration modérée,Psychologique
+Trouble de concentration légère,Psychologique
+Trouble de concentration persistante,Psychologique
+Trouble de concentration intermittente,Psychologique
+Trouble de concentration récurrente,Psychologique
+Trouble de concentration nocturne,Psychologique
+Trouble de concentration diurne,Psychologique
+Trouble de concentration soudaine,Psychologique
+Trouble de concentration progressive,Psychologique
+Fatigue mentale,Psychologique
+Fatigue mentale aiguë,Psychologique
+Fatigue mentale chronique,Psychologique
+Fatigue mentale sévère,Psychologique
+Fatigue mentale modérée,Psychologique
+Fatigue mentale légère,Psychologique
+Fatigue mentale persistante,Psychologique
+Fatigue mentale intermittente,Psychologique
+Fatigue mentale récurrente,Psychologique
+Fatigue mentale nocturne,Psychologique
+Fatigue mentale diurne,Psychologique
+Fatigue mentale soudaine,Psychologique
+Fatigue mentale progressive,Psychologique
+Anhédonie,Psychologique
+Anhédonie aiguë,Psychologique
+Anhédonie chronique,Psychologique
+Anhédonie sévère,Psychologique
+Anhédonie modérée,Psychologique
+Anhédonie légère,Psychologique
+Anhédonie persistante,Psychologique
+Anhédonie intermittente,Psychologique
+Anhédonie récurrente,Psychologique
+Anhédonie nocturne,Psychologique
+Anhédonie diurne,Psychologique
+Anhédonie soudaine,Psychologique
+Anhédonie progressive,Psychologique
+Éruption cutanée,Dermatologique
+Éruption cutanée aiguë,Dermatologique
+Éruption cutanée chronique,Dermatologique
+Éruption cutanée sévère,Dermatologique
+Éruption cutanée modérée,Dermatologique
+Éruption cutanée légère,Dermatologique
+Éruption cutanée persistante,Dermatologique
+Éruption cutanée intermittente,Dermatologique
+Éruption cutanée récurrente,Dermatologique
+Éruption cutanée nocturne,Dermatologique
+Éruption cutanée diurne,Dermatologique
+Éruption cutanée soudaine,Dermatologique
+Éruption cutanée progressive,Dermatologique
+Prurit,Dermatologique
+Prurit aiguë,Dermatologique
+Prurit chronique,Dermatologique
+Prurit sévère,Dermatologique
+Prurit modérée,Dermatologique
+Prurit légère,Dermatologique
+Prurit persistante,Dermatologique
+Prurit intermittente,Dermatologique
+Prurit récurrente,Dermatologique
+Prurit nocturne,Dermatologique
+Prurit diurne,Dermatologique
+Prurit soudaine,Dermatologique
+Prurit progressive,Dermatologique
+Rougeur cutanée,Dermatologique
+Rougeur cutanée aiguë,Dermatologique
+Rougeur cutanée chronique,Dermatologique
+Rougeur cutanée sévère,Dermatologique
+Rougeur cutanée modérée,Dermatologique
+Rougeur cutanée légère,Dermatologique
+Rougeur cutanée persistante,Dermatologique
+Rougeur cutanée intermittente,Dermatologique
+Rougeur cutanée récurrente,Dermatologique
+Rougeur cutanée nocturne,Dermatologique
+Rougeur cutanée diurne,Dermatologique
+Rougeur cutanée soudaine,Dermatologique
+Rougeur cutanée progressive,Dermatologique
+Sécheresse cutanée,Dermatologique
+Sécheresse cutanée aiguë,Dermatologique
+Sécheresse cutanée chronique,Dermatologique
+Sécheresse cutanée sévère,Dermatologique
+Sécheresse cutanée modérée,Dermatologique
+Sécheresse cutanée légère,Dermatologique
+Sécheresse cutanée persistante,Dermatologique
+Sécheresse cutanée intermittente,Dermatologique
+Sécheresse cutanée récurrente,Dermatologique
+Sécheresse cutanée nocturne,Dermatologique
+Sécheresse cutanée diurne,Dermatologique
+Sécheresse cutanée soudaine,Dermatologique
+Sécheresse cutanée progressive,Dermatologique
+Urticaire,Dermatologique
+Urticaire aiguë,Dermatologique
+Urticaire chronique,Dermatologique
+Urticaire sévère,Dermatologique
+Urticaire modérée,Dermatologique
+Urticaire légère,Dermatologique
+Urticaire persistante,Dermatologique
+Urticaire intermittente,Dermatologique
+Urticaire récurrente,Dermatologique
+Urticaire nocturne,Dermatologique
+Urticaire diurne,Dermatologique
+Urticaire soudaine,Dermatologique
+Urticaire progressive,Dermatologique
+Acné,Dermatologique
+Acné aiguë,Dermatologique
+Acné chronique,Dermatologique
+Acné sévère,Dermatologique
+Acné modérée,Dermatologique
+Acné légère,Dermatologique
+Acné persistante,Dermatologique
+Acné intermittente,Dermatologique
+Acné récurrente,Dermatologique
+Acné nocturne,Dermatologique
+Acné diurne,Dermatologique
+Acné soudaine,Dermatologique
+Acné progressive,Dermatologique
+Desquamation,Dermatologique
+Desquamation aiguë,Dermatologique
+Desquamation chronique,Dermatologique
+Desquamation sévère,Dermatologique
+Desquamation modérée,Dermatologique
+Desquamation légère,Dermatologique
+Desquamation persistante,Dermatologique
+Desquamation intermittente,Dermatologique
+Desquamation récurrente,Dermatologique
+Desquamation nocturne,Dermatologique
+Desquamation diurne,Dermatologique
+Desquamation soudaine,Dermatologique
+Desquamation progressive,Dermatologique
+Lésion cutanée,Dermatologique
+Lésion cutanée aiguë,Dermatologique
+Lésion cutanée chronique,Dermatologique
+Lésion cutanée sévère,Dermatologique
+Lésion cutanée modérée,Dermatologique
+Lésion cutanée légère,Dermatologique
+Lésion cutanée persistante,Dermatologique
+Lésion cutanée intermittente,Dermatologique
+Lésion cutanée récurrente,Dermatologique
+Lésion cutanée nocturne,Dermatologique
+Lésion cutanée diurne,Dermatologique
+Lésion cutanée soudaine,Dermatologique
+Lésion cutanée progressive,Dermatologique
+Mal de gorge,ORL
+Mal de gorge aiguë,ORL
+Mal de gorge chronique,ORL
+Mal de gorge sévère,ORL
+Mal de gorge modérée,ORL
+Mal de gorge légère,ORL
+Mal de gorge persistante,ORL
+Mal de gorge intermittente,ORL
+Mal de gorge récurrente,ORL
+Mal de gorge nocturne,ORL
+Mal de gorge diurne,ORL
+Mal de gorge soudaine,ORL
+Mal de gorge progressive,ORL
+Congestion nasale,ORL
+Congestion nasale aiguë,ORL
+Congestion nasale chronique,ORL
+Congestion nasale sévère,ORL
+Congestion nasale modérée,ORL
+Congestion nasale légère,ORL
+Congestion nasale persistante,ORL
+Congestion nasale intermittente,ORL
+Congestion nasale récurrente,ORL
+Congestion nasale nocturne,ORL
+Congestion nasale diurne,ORL
+Congestion nasale soudaine,ORL
+Congestion nasale progressive,ORL
+Rhinorrhée,ORL
+Rhinorrhée aiguë,ORL
+Rhinorrhée chronique,ORL
+Rhinorrhée sévère,ORL
+Rhinorrhée modérée,ORL
+Rhinorrhée légère,ORL
+Rhinorrhée persistante,ORL
+Rhinorrhée intermittente,ORL
+Rhinorrhée récurrente,ORL
+Rhinorrhée nocturne,ORL
+Rhinorrhée diurne,ORL
+Rhinorrhée soudaine,ORL
+Rhinorrhée progressive,ORL
+Éternuement,ORL
+Éternuement aiguë,ORL
+Éternuement chronique,ORL
+Éternuement sévère,ORL
+Éternuement modérée,ORL
+Éternuement légère,ORL
+Éternuement persistante,ORL
+Éternuement intermittente,ORL
+Éternuement récurrente,ORL
+Éternuement nocturne,ORL
+Éternuement diurne,ORL
+Éternuement soudaine,ORL
+Éternuement progressive,ORL
+Otalgie,ORL
+Otalgie aiguë,ORL
+Otalgie chronique,ORL
+Otalgie sévère,ORL
+Otalgie modérée,ORL
+Otalgie légère,ORL
+Otalgie persistante,ORL
+Otalgie intermittente,ORL
+Otalgie récurrente,ORL
+Otalgie nocturne,ORL
+Otalgie diurne,ORL
+Otalgie soudaine,ORL
+Otalgie progressive,ORL
+Bourdonnement,ORL
+Bourdonnement aiguë,ORL
+Bourdonnement chronique,ORL
+Bourdonnement sévère,ORL
+Bourdonnement modérée,ORL
+Bourdonnement légère,ORL
+Bourdonnement persistante,ORL
+Bourdonnement intermittente,ORL
+Bourdonnement récurrente,ORL
+Bourdonnement nocturne,ORL
+Bourdonnement diurne,ORL
+Bourdonnement soudaine,ORL
+Bourdonnement progressive,ORL
+Enrouement,ORL
+Enrouement aiguë,ORL
+Enrouement chronique,ORL
+Enrouement sévère,ORL
+Enrouement modérée,ORL
+Enrouement légère,ORL
+Enrouement persistante,ORL
+Enrouement intermittente,ORL
+Enrouement récurrente,ORL
+Enrouement nocturne,ORL
+Enrouement diurne,ORL
+Enrouement soudaine,ORL
+Enrouement progressive,ORL
+Perte auditive,ORL
+Perte auditive aiguë,ORL
+Perte auditive chronique,ORL
+Perte auditive sévère,ORL
+Perte auditive modérée,ORL
+Perte auditive légère,ORL
+Perte auditive persistante,ORL
+Perte auditive intermittente,ORL
+Perte auditive récurrente,ORL
+Perte auditive nocturne,ORL
+Perte auditive diurne,ORL
+Perte auditive soudaine,ORL
+Perte auditive progressive,ORL
+Vision floue,Ophtalmologique
+Vision floue aiguë,Ophtalmologique
+Vision floue chronique,Ophtalmologique
+Vision floue sévère,Ophtalmologique
+Vision floue modérée,Ophtalmologique
+Vision floue légère,Ophtalmologique
+Vision floue persistante,Ophtalmologique
+Vision floue intermittente,Ophtalmologique
+Vision floue récurrente,Ophtalmologique
+Vision floue nocturne,Ophtalmologique
+Vision floue diurne,Ophtalmologique
+Vision floue soudaine,Ophtalmologique
+Vision floue progressive,Ophtalmologique
+Douleur oculaire,Ophtalmologique
+Douleur oculaire aiguë,Ophtalmologique
+Douleur oculaire chronique,Ophtalmologique
+Douleur oculaire sévère,Ophtalmologique
+Douleur oculaire modérée,Ophtalmologique
+Douleur oculaire légère,Ophtalmologique
+Douleur oculaire persistante,Ophtalmologique
+Douleur oculaire intermittente,Ophtalmologique
+Douleur oculaire récurrente,Ophtalmologique
+Douleur oculaire nocturne,Ophtalmologique
+Douleur oculaire diurne,Ophtalmologique
+Douleur oculaire soudaine,Ophtalmologique
+Douleur oculaire progressive,Ophtalmologique
+Rougeur oculaire,Ophtalmologique
+Rougeur oculaire aiguë,Ophtalmologique
+Rougeur oculaire chronique,Ophtalmologique
+Rougeur oculaire sévère,Ophtalmologique
+Rougeur oculaire modérée,Ophtalmologique
+Rougeur oculaire légère,Ophtalmologique
+Rougeur oculaire persistante,Ophtalmologique
+Rougeur oculaire intermittente,Ophtalmologique
+Rougeur oculaire récurrente,Ophtalmologique
+Rougeur oculaire nocturne,Ophtalmologique
+Rougeur oculaire diurne,Ophtalmologique
+Rougeur oculaire soudaine,Ophtalmologique
+Rougeur oculaire progressive,Ophtalmologique
+Sécheresse oculaire,Ophtalmologique
+Sécheresse oculaire aiguë,Ophtalmologique
+Sécheresse oculaire chronique,Ophtalmologique
+Sécheresse oculaire sévère,Ophtalmologique
+Sécheresse oculaire modérée,Ophtalmologique
+Sécheresse oculaire légère,Ophtalmologique
+Sécheresse oculaire persistante,Ophtalmologique
+Sécheresse oculaire intermittente,Ophtalmologique
+Sécheresse oculaire récurrente,Ophtalmologique
+Sécheresse oculaire nocturne,Ophtalmologique
+Sécheresse oculaire diurne,Ophtalmologique
+Sécheresse oculaire soudaine,Ophtalmologique
+Sécheresse oculaire progressive,Ophtalmologique
+Larmoiement,Ophtalmologique
+Larmoiement aiguë,Ophtalmologique
+Larmoiement chronique,Ophtalmologique
+Larmoiement sévère,Ophtalmologique
+Larmoiement modérée,Ophtalmologique
+Larmoiement légère,Ophtalmologique
+Larmoiement persistante,Ophtalmologique
+Larmoiement intermittente,Ophtalmologique
+Larmoiement récurrente,Ophtalmologique
+Larmoiement nocturne,Ophtalmologique
+Larmoiement diurne,Ophtalmologique
+Larmoiement soudaine,Ophtalmologique
+Larmoiement progressive,Ophtalmologique
+Photophobie,Ophtalmologique
+Photophobie aiguë,Ophtalmologique
+Photophobie chronique,Ophtalmologique
+Photophobie sévère,Ophtalmologique
+Photophobie modérée,Ophtalmologique
+Photophobie légère,Ophtalmologique
+Photophobie persistante,Ophtalmologique
+Photophobie intermittente,Ophtalmologique
+Photophobie récurrente,Ophtalmologique
+Photophobie nocturne,Ophtalmologique
+Photophobie diurne,Ophtalmologique
+Photophobie soudaine,Ophtalmologique
+Photophobie progressive,Ophtalmologique
+Diplopie,Ophtalmologique
+Diplopie aiguë,Ophtalmologique
+Diplopie chronique,Ophtalmologique
+Diplopie sévère,Ophtalmologique
+Diplopie modérée,Ophtalmologique
+Diplopie légère,Ophtalmologique
+Diplopie persistante,Ophtalmologique
+Diplopie intermittente,Ophtalmologique
+Diplopie récurrente,Ophtalmologique
+Diplopie nocturne,Ophtalmologique
+Diplopie diurne,Ophtalmologique
+Diplopie soudaine,Ophtalmologique
+Diplopie progressive,Ophtalmologique
