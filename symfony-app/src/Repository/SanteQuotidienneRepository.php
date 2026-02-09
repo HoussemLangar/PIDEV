@@ -394,4 +394,41 @@ class SanteQuotidienneRepository extends ServiceEntityRepository
             'showRecommendation' => $poorPercentage > 30 // Plus de 30% faible/mauvaise
         ];
     }
+
+    public function getLatestGoogleFitMetrics(object $user): array
+    {
+        $result = $this->createQueryBuilder('s')
+            ->select('s.pas, s.calories, s.dureeActiviteMinutes, s.date')
+            ->where('s.user = :user')
+            ->andWhere('s.pas IS NOT NULL OR s.calories IS NOT NULL OR s.dureeActiviteMinutes IS NOT NULL')
+            ->setParameter('user', $user)
+            ->orderBy('s.date', 'DESC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+
+        return $result ?? [
+            'pas' => null,
+            'calories' => null,
+            'dureeActiviteMinutes' => null,
+            'date' => null,
+        ];
+    }
+
+    public function getAverageStepsLastDays(object $user, int $days = 7): ?float
+    {
+        $start = (new \DateTimeImmutable('today'))->modify(sprintf('-%d days', max(1, $days - 1)));
+
+        $result = $this->createQueryBuilder('s')
+            ->select('AVG(s.pas) as avg_steps')
+            ->where('s.user = :user')
+            ->andWhere('s.date >= :start')
+            ->andWhere('s.pas IS NOT NULL')
+            ->setParameter('user', $user)
+            ->setParameter('start', $start)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return $result ? (float) $result : null;
+    }
 }

@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use Scheb\TwoFactorBundle\Model\Google\TwoFactorInterface;
 use App\Repository\UserRepository;
+use App\Entity\GoogleFitAccount;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -223,6 +224,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     #[ORM\OneToOne(mappedBy: 'user', targetEntity: Nutritionniste::class, cascade: ['persist', 'remove'])]
     private ?Nutritionniste $nutritionniste = null;
 
+    #[ORM\OneToOne(mappedBy: 'user', targetEntity: GoogleFitAccount::class, cascade: ['persist', 'remove'])]
+    private ?GoogleFitAccount $googleFitAccount = null;
+
     #[ORM\OneToMany(mappedBy: 'auteur', targetEntity: Contenu::class)]
     #[Assert\Valid]
     private Collection $contenus;
@@ -438,6 +442,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     public function getCommentaires(): Collection { return $this->commentaires; }
     public function getReponsesMedicaments(): Collection { return $this->reponsesMedicaments; }
     public function getNotifications(): Collection { return $this->notifications; }
+
+    public function getGoogleFitAccount(): ?GoogleFitAccount { return $this->googleFitAccount; }
+    public function setGoogleFitAccount(?GoogleFitAccount $googleFitAccount): void { $this->googleFitAccount = $googleFitAccount; }
 
     // UserInterface
     public function getRoles(): array { return [$this->role]; }

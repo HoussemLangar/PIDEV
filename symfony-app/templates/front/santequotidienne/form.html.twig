@@ -62,6 +62,19 @@
             <h1>Mon Journal Santé</h1>
             <p>Prenez soin de vous jour après jour.</p>
           </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            {% if app.user and app.user.googleFitAccount %}
+              <form method="post" action="{{ path('google_fit_sync') }}" data-ajax="1">
+                <input type="hidden" name="days" value="7">
+                <button type="submit" class="btn btn-secondary">Synchroniser Google Fit</button>
+              </form>
+              <form method="post" action="{{ path('google_fit_disconnect') }}" data-ajax="1">
+                <button type="submit" class="btn btn-secondary">Déconnecter Google Fit</button>
+              </form>
+            {% else %}
+              <a href="{{ path('google_fit_connect') }}" class="btn btn-primary">Connecter Google Fit</a>
+            {% endif %}
+          </div>
         </div>
       </section>
 
@@ -104,6 +117,50 @@
         </div>
       </div>
 
+      {% if app.user and app.user.googleFitAccount %}
+      <div class="summary-cards">
+        <div class="summary-card card-pulse">
+          <div class="card-emoji">👣</div>
+          <div class="card-info">
+            <span class="card-label">Pas (Google Fit)</span>
+            <span class="card-value">{{ googleFitLatest.pas is not null ? googleFitLatest.pas : '--' }}</span>
+            <span class="card-unit">aujourd'hui</span>
+          </div>
+        </div>
+
+        <div class="summary-card card-pulse">
+          <div class="card-emoji">🔥</div>
+          <div class="card-info">
+            <span class="card-label">Calories</span>
+            <span class="card-value">{{ googleFitLatest.calories is not null ? googleFitLatest.calories|number_format(0) : '--' }}</span>
+            <span class="card-unit">kcal</span>
+          </div>
+        </div>
+
+        <div class="summary-card card-pulse">
+          <div class="card-emoji">⏱️</div>
+          <div class="card-info">
+            <span class="card-label">Minutes actives</span>
+            <span class="card-value">{{ googleFitLatest.dureeActiviteMinutes is not null ? googleFitLatest.dureeActiviteMinutes : '--' }}</span>
+            <span class="card-unit">min</span>
+          </div>
+        </div>
+
+        <div class="summary-card card-pulse">
+          <div class="card-emoji">📈</div>
+          <div class="card-info">
+            <span class="card-label">Moyenne 7j</span>
+            <span class="card-value">{{ googleFitAvgSteps is not null ? googleFitAvgSteps|number_format(0) : '--' }}</span>
+            <span class="card-unit">pas/jour</span>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:6px; color:#6b7280; font-size:0.85rem;">
+        Dernière synchronisation :
+        {{ app.user.googleFitAccount.lastSyncAt ? app.user.googleFitAccount.lastSyncAt|date('d/m/Y H:i') : '—' }}
+      </div>
+      {% endif %}
+
       <!-- Contenu principal en 2 colonnes -->
       <div class="main-content-grid" style="display:grid; grid-template-columns: 1fr 400px; gap:30px; align-items:stretch;">
         <!-- Colonne gauche - Formulaire Symfony -->
@@ -117,7 +174,15 @@
               </p>
             </div>
             
-            {{ form_start(form, {'action': form.vars.data.id ? path('app_sante_quotidienne_edit', {'id': form.vars.data.id}) : path('app_sante_quotidienne_new'), 'method': 'POST', 'attr': {'class': 'form-beautiful', 'id': 'sante-form'}}) }}
+            {{ form_start(form, {
+              'action': form.vars.data.id ? path('app_sante_quotidienne_edit', {'id': form.vars.data.id}) : path('app_sante_quotidienne_new'),
+              'method': 'POST',
+              'attr': {
+                'class': 'form-beautiful',
+                'id': 'sante-form',
+                'novalidate': 'novalidate'
+              }
+            }) }}
       <script>
         console.log('Form action URL:', document.getElementById('sante-form') ? document.getElementById('sante-form').action : 'form not found');
         document.getElementById('sante-form')?.addEventListener('submit', function(e) {
@@ -597,7 +662,8 @@
         <button class="modal-close" onclick="closeEditModal()">&times;</button>
       </div>
       <div class="modal-body">
-        <form id="editForm" method="POST">
+        <form id="editForm" method="POST" data-ajax="1">
+          <div id="editFormErrors" class="alert" style="display:none; margin-bottom:15px; border:1px solid #f5c6cb; background:#fbeaea; color:#721c24; border-radius:6px; padding:10px;"></div>
           <input type="hidden" name="_token" id="editCsrfToken" value="">
           <input type="hidden" id="editDate" name="sante_quotidienne[date]" readonly>
           <div class="form-row-beautiful">
@@ -1008,6 +1074,8 @@
       if (data.editCsrf) {
         document.getElementById('editCsrfToken').value = data.editCsrf;
       }
+
+      renderEditErrors(null);
       
       // Réinitialiser tous les styles des boutons d'humeur
       document.querySelectorAll('.mood-button').forEach(button => {
@@ -1163,6 +1231,35 @@
     function closeSleepStatsModal() {
       document.getElementById('sleepStatsModal').style.display = 'none';
     }
+
+    function renderEditErrors(errors) {
+      const container = document.getElementById('editFormErrors');
+      if (!container) {
+        return;
+      }
+
+      container.innerHTML = '';
+      if (!errors || Object.keys(errors).length === 0) {
+        container.style.display = 'none';
+        return;
+      }
+
+      const list = document.createElement('ul');
+      list.style.margin = '0';
+      list.style.paddingLeft = '18px';
+
+      Object.values(errors).forEach(messages => {
+        const msgs = Array.isArray(messages) ? messages : [messages];
+        msgs.forEach(message => {
+          const li = document.createElement('li');
+          li.textContent = message;
+          list.appendChild(li);
+        });
+      });
+
+      container.appendChild(list);
+      container.style.display = 'block';
+    }
     
     function deleteEntry() {
       if (!window.currentEntryId) {
@@ -1285,24 +1382,31 @@
               'X-Requested-With': 'XMLHttpRequest'
             }
           })
-          .then(res => {
-            console.log('Response status:', res.status);
-            console.log('Response OK:', res.ok);
-            if (res.ok) {
-              // Au lieu de recharger la page, actualisons juste les données
-              closeEditModal();
-              // Mettre à jour les données dans la liste pour refléter les changements
-              location.reload(); // Temporaire, on peut optimiser plus tard
-            } else {
-              return res.text().then(text => {
-                console.error('Response text:', text);
-                alert('Erreur lors de la modification: ' + res.status);
-              });
+          .then(async res => {
+            let payload = null;
+            try {
+              payload = await res.json();
+            } catch (jsonError) {
+              console.warn('Réponse non JSON:', jsonError);
             }
+
+            console.log('Response status:', res.status);
+            console.log('Response payload:', payload);
+
+            if (res.ok && payload && payload.ok) {
+              renderEditErrors(null);
+              closeEditModal();
+              location.reload();
+              return;
+            }
+
+            const fallbackMessage = payload && payload.message ? payload.message : 'Une erreur est survenue.';
+            const errors = payload && payload.errors ? payload.errors : { '_form': [fallbackMessage] };
+            renderEditErrors(errors);
           })
           .catch(err => {
             console.error('Erreur détaillée:', err);
-            alert('Erreur de connexion: ' + err.message);
+            renderEditErrors({ '_form': ['Erreur de connexion: ' + err.message] });
           });
         });
       }
@@ -1466,7 +1570,7 @@
         const tensionInput = find('input[name*="[tensionArterielle]"]');
         const sommeilInput = find('input[name*="[sommeil]"]');
         const activiteInput = find('input[name*="[activitePhysique]"]');
-        const alimentationInput = find('input[name*="[alimentation]") || find('textarea[name*="[alimentation]"]');
+        const alimentationInput = find('input[name*="[alimentation]"]') || find('textarea[name*="[alimentation]"]');
         const eauInput = find('input[name*="[eauBue]"]');
 
         if (dateInput) dateInput.value = entry.date || '';

@@ -16,7 +16,12 @@
             </div>
 
             <div class="form-card-beautiful" style="max-width:600px; margin:20px auto;">
-                {{ form_start(form, {'attr': {'class': 'form-beautiful'}}) }}
+                {{ form_start(form, {
+                    'attr': {
+                        'class': 'form-beautiful',
+                        'novalidate': 'novalidate'
+                    }
+                }) }}
                     {{ form_widget(form) }}
                     <button type="submit" class="btn-save-beautiful">
                         <span>✏️</span>

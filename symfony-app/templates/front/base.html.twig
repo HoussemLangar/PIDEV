@@ -315,6 +315,30 @@
             }
         });
         }
+        (function () {
+            const disableHtml5Validation = (root = document) => {
+                root.querySelectorAll('form').forEach((formEl) => {
+                    formEl.setAttribute('novalidate', 'novalidate');
+                    formEl.noValidate = true;
+                });
+            };
+            disableHtml5Validation();
+            document.addEventListener('invalid', (e) => e.preventDefault(), true);
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    mutation.addedNodes.forEach((node) => {
+                        if (!(node instanceof HTMLElement)) return;
+                        if (node.tagName === 'FORM') {
+                            node.setAttribute('novalidate', 'novalidate');
+                            node.noValidate = true;
+                        } else {
+                            disableHtml5Validation(node);
+                        }
+                    });
+                });
+            });
+            observer.observe(document.documentElement, { childList: true, subtree: true });
+        })();
         </script>
     {% endblock %}
     

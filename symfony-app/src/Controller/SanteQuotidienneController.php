@@ -10,6 +10,7 @@ use App\Enum\Humeur;
 use App\Enum\Alimentation;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -40,6 +41,8 @@ class SanteQuotidienneController extends AbstractController
         $moodStats = $repository->getMoodStatistics($this->getUser());
         $activityStats = $repository->getActivityStatistics($this->getUser());
         $nutritionStats = $repository->getNutritionStatistics($this->getUser());
+        $googleFitLatest = $repository->getLatestGoogleFitMetrics($this->getUser());
+        $googleFitAvgSteps = $repository->getAverageStepsLastDays($this->getUser(), 7);
 
         return $this->render('front/santequotidienne/form.html.twig', [
             'form' => $form->createView(),
@@ -48,6 +51,8 @@ class SanteQuotidienneController extends AbstractController
             'moodStats' => $moodStats,
             'activityStats' => $activityStats,
             'nutritionStats' => $nutritionStats,
+            'googleFitLatest' => $googleFitLatest,
+            'googleFitAvgSteps' => $googleFitAvgSteps,
         ]);
     }
 
@@ -76,6 +81,8 @@ class SanteQuotidienneController extends AbstractController
         $moodStats = $repository->getMoodStatistics($this->getUser());
         $activityStats = $repository->getActivityStatistics($this->getUser());
         $nutritionStats = $repository->getNutritionStatistics($this->getUser());
+        $googleFitLatest = $repository->getLatestGoogleFitMetrics($this->getUser());
+        $googleFitAvgSteps = $repository->getAverageStepsLastDays($this->getUser(), 7);
 
         return $this->render('front/santequotidienne/form.html.twig', [
             'form' => $form->createView(),
@@ -84,6 +91,8 @@ class SanteQuotidienneController extends AbstractController
             'moodStats' => $moodStats,
             'activityStats' => $activityStats,
             'nutritionStats' => $nutritionStats,
+            'googleFitLatest' => $googleFitLatest,
+            'googleFitAvgSteps' => $googleFitAvgSteps,
         ]);
     }
 
@@ -245,6 +254,8 @@ class SanteQuotidienneController extends AbstractController
         $moodStats = $repository->getMoodStatistics($this->getUser());
         $activityStats = $repository->getActivityStatistics($this->getUser());
         $nutritionStats = $repository->getNutritionStatistics($this->getUser());
+        $googleFitLatest = $repository->getLatestGoogleFitMetrics($this->getUser());
+        $googleFitAvgSteps = $repository->getAverageStepsLastDays($this->getUser(), 7);
 
         // Affiche le formulaire dans la page front avec les erreurs de validation
         return $this->render('front/santequotidienne/form.html.twig', [
@@ -254,6 +265,8 @@ class SanteQuotidienneController extends AbstractController
             'moodStats' => $moodStats,
             'activityStats' => $activityStats,
             'nutritionStats' => $nutritionStats,
+            'googleFitLatest' => $googleFitLatest,
+            'googleFitAvgSteps' => $googleFitAvgSteps,
         ]);
     }
 
@@ -280,46 +293,39 @@ class SanteQuotidienneController extends AbstractController
             throw $this->createAccessDeniedException();
         }
 
-        // Si c'est une requête AJAX, on gère manuellement les données
+        // Si c'est une requête AJAX, on renvoie un JSON avec les erreurs éventuelles
         if ($request->isXmlHttpRequest()) {
-            // Vérifier le token CSRF
             if (!$csrfTokenManager->isTokenValid(new \Symfony\Component\Security\Csrf\CsrfToken('edit' . $sante->getId(), $request->get('_token')))) {
                 return new JsonResponse(['ok' => false, 'message' => 'Token CSRF invalide'], 400);
             }
 
-            // Traiter les données manuellement
-            $poids = $request->get('sante_quotidienne')['poids'] ?? null;
-            $taille = $request->get('sante_quotidienne')['taille'] ?? null;
-            $tensionArterielle = $request->get('sante_quotidienne')['tensionArterielle'] ?? null;
-            $sommeil = $request->get('sante_quotidienne')['sommeil'] ?? null;
-            $activitePhysique = $request->get('sante_quotidienne')['activitePhysique'] ?? null;
-            $humeursArray = $request->get('sante_quotidienne')['humeur'] ?? [];
-            $alimentation = $request->get('sante_quotidienne')['alimentation'] ?? null;
-            $eauBue = $request->get('sante_quotidienne')['eauBue'] ?? null;
+            $form = $this->createForm(SanteQuotidienneType::class, $sante, [
+                'csrf_protection' => false,
+            ]);
+            $form->handleRequest($request);
 
-            // Debug logging
-            error_log("Received humeurs: " . json_encode($humeursArray));
-            error_log("Received tension: " . $tensionArterielle);
-
-            // Mettre à jour l'entité
-            if ($poids) $sante->setPoids((float) $poids);
-            if ($taille) $sante->setTaille((float) $taille);
-            if ($tensionArterielle) $sante->setTensionArterielle((float) $tensionArterielle);
-            if ($sommeil) $sante->setSommeil((float) $sommeil);
-            if ($activitePhysique) $sante->setActivitePhysique(NiveauActivite::from($activitePhysique));
-            if (!empty($humeursArray)) {
-                $humeursEnums = array_map(function($humeur) {
-                    return Humeur::from($humeur);
-                }, $humeursArray);
-                error_log("Setting humeurs enums: " . json_encode(array_map(fn($h) => $h->value, $humeursEnums)));
-                $sante->setHumeur($humeursEnums);
+            if ($form->isSubmitted() && $form->isValid()) {
+                $em->flush();
+                return new JsonResponse(['ok' => true, 'message' => 'Données modifiées avec succès.']);
             }
-            if ($alimentation) $sante->setAlimentation(Alimentation::from($alimentation));
-            if ($eauBue) $sante->setEauBue((float) $eauBue);
 
-            $em->flush();
-            
-            return new JsonResponse(['ok' => true, 'message' => 'Données modifiées avec succès.']);
+            $errors = [];
+            $firstErrorMessage = null;
+            foreach ($form->getErrors(true) as $error) {
+                $origin = $error->getOrigin();
+                $field = $origin instanceof FormInterface ? $origin->getName() : '_form';
+                $errors[$field][] = $error->getMessage();
+                if ($firstErrorMessage === null) {
+                    $humanField = $field === '_form' ? '' : ucfirst(str_replace('_', ' ', $field)) . ' : ';
+                    $firstErrorMessage = $humanField . $error->getMessage();
+                }
+            }
+
+            return new JsonResponse([
+                'ok' => false,
+                'message' => $firstErrorMessage ?? 'Formulaire invalide',
+                'errors' => $errors,
+            ], 422);
         }
 
         $form = $this->createForm(SanteQuotidienneType::class, $sante);
@@ -344,6 +350,8 @@ class SanteQuotidienneController extends AbstractController
         $moodStats = $repository->getMoodStatistics($this->getUser());
         $activityStats = $repository->getActivityStatistics($this->getUser());
         $nutritionStats = $repository->getNutritionStatistics($this->getUser());
+        $googleFitLatest = $repository->getLatestGoogleFitMetrics($this->getUser());
+        $googleFitAvgSteps = $repository->getAverageStepsLastDays($this->getUser(), 7);
 
         // Affiche le formulaire dans le template front
         return $this->render('front/santequotidienne/form.html.twig', [
@@ -353,6 +361,8 @@ class SanteQuotidienneController extends AbstractController
             'moodStats' => $moodStats,
             'activityStats' => $activityStats,
             'nutritionStats' => $nutritionStats,
+            'googleFitLatest' => $googleFitLatest,
+            'googleFitAvgSteps' => $googleFitAvgSteps,
         ]);
     }
 

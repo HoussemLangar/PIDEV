@@ -183,6 +183,141 @@
             </div>
         </div>
     </section>
+
+    {% set trackerEntries = recentActivity.trackerEntries ?? 0 %}
+    {% set trackerUsers = stats.activeUsers ?? 0 %}
+    {% set trackerCoverage = stats.totalUsers > 0 ? (trackerUsers / stats.totalUsers * 100)|round(1, 'floor') : 0 %}
+    {% set syncRate = trackerUsers > 0 ? min((trackerEntries / trackerUsers * 100)|round(1, 'floor'), 100) : 0 %}
+    {% set adoptionRate = stats.totalUsers > 0 ? (stats.activeSubscriptions / stats.totalUsers * 100)|round(1, 'floor') : 0 %}
+
+    <section class="tracker-stats-section">
+        <article class="admin-card tracker-hero-card">
+            <div class="tracker-hero-left">
+                <p class="tracker-badge">Tracker santé</p>
+                <h2>Suivi temps réel des indicateurs bien-être</h2>
+                <p class="tracker-hero-copy">
+                    Analysez la vitalité des modules connectés et priorisez les actions d'engagement ou de support quand un signal faiblit.
+                </p>
+                <ul class="tracker-hero-stats">
+                    <li>
+                        <span class="label">Entrées (24h)</span>
+                        <span class="value">{{ trackerEntries|number_format(0, ',', ' ') }}</span>
+                    </li>
+                    <li>
+                        <span class="label">Taux de synchro</span>
+                        <span class="value">{{ syncRate }}%</span>
+                    </li>
+                    <li>
+                        <span class="label">Couverture active</span>
+                        <span class="value">{{ trackerCoverage }}%</span>
+                    </li>
+                </ul>
+            </div>
+            <div class="tracker-hero-right">
+                <div class="tracker-hero-value">{{ trackerCoverage }}%</div>
+                <small>Utilisateurs actifs suivis</small>
+                <div class="tracker-hero-progress"><span style="width: {{ trackerCoverage }}%"></span></div>
+                <div class="tracker-sparkline" aria-hidden="true">
+                    <span></span>
+                </div>
+            </div>
+        </article>
+
+        <div class="tracker-metrics-grid">
+            <article class="admin-card tracker-metric-card accent-blue">
+                <div class="metric-icon"><i class="fas fa-heartbeat"></i></div>
+                <div>
+                    <p>Entrées synchronisées</p>
+                    <h3>{{ trackerEntries|number_format(0, ',', ' ') }}</h3>
+                    <small class="metric-trend {{ trackerEntries > 0 ? 'positive' : '' }}">
+                        {{ trackerEntries > 0 ? '+ Flux actif aujourd\'hui' : 'En attente de synchro' }}
+                    </small>
+                </div>
+            </article>
+            <article class="admin-card tracker-metric-card accent-green">
+                <div class="metric-icon"><i class="fas fa-signal"></i></div>
+                <div>
+                    <p>Taux de synchronisation</p>
+                    <h3>{{ syncRate }}%</h3>
+                    <small class="metric-trend">{{ trackerUsers|number_format(0, ',', ' ') }} utilisateurs actifs</small>
+                </div>
+            </article>
+            <article class="admin-card tracker-metric-card accent-gold">
+                <div class="metric-icon"><i class="fas fa-user-shield"></i></div>
+                <div>
+                    <p>Couverture globale</p>
+                    <h3>{{ trackerCoverage }}%</h3>
+                    <small class="metric-trend">{{ stats.totalUsers|number_format(0, ',', ' ') }} comptes existants</small>
+                </div>
+            </article>
+            <article class="admin-card tracker-metric-card accent-indigo">
+                <div class="metric-icon"><i class="fas fa-crown"></i></div>
+                <div>
+                    <p>Abonnés engagés</p>
+                    <h3>{{ adoptionRate }}%</h3>
+                    <small class="metric-trend">{{ stats.activeSubscriptions|number_format(0, ',', ' ') }} abonnements actifs</small>
+                </div>
+            </article>
+        </div>
+
+        <div class="tracker-detail-grid">
+            <article class="admin-card tracker-progress-card">
+                <header>
+                    <div>
+                        <p class="tracker-subtitle">Vue opérationnelle</p>
+                        <h4>Taux de synchronisation</h4>
+                    </div>
+                    <span>{{ syncRate }}%</span>
+                </header>
+                <div class="tracker-progress-bar"><span style="width: {{ syncRate }}%"></span></div>
+                <p class="tracker-progress-copy">
+                    Part des utilisateurs actifs ayant transmis une donnée dans les dernières 24 heures.
+                </p>
+                <ul class="tracker-progress-meta">
+                    <li>
+                        <span>Utilisateurs actifs</span>
+                        <strong>{{ trackerUsers|number_format(0, ',', ' ') }}</strong>
+                    </li>
+                    <li>
+                        <span>Population totale</span>
+                        <strong>{{ stats.totalUsers|number_format(0, ',', ' ') }}</strong>
+                    </li>
+                </ul>
+            </article>
+            <article class="admin-card tracker-insights-card">
+                <header>
+                    <div>
+                        <p class="tracker-subtitle">Insights</p>
+                        <h4>Actions à prioriser</h4>
+                    </div>
+                    <button class="tracker-action-btn">Voir les détails</button>
+                </header>
+                <ul class="tracker-insights-list">
+                    <li>
+                        <div>
+                            <span>Couverture globale</span>
+                            <p>{{ trackerCoverage }}% des comptes suivent au moins un indicateur connecté.</p>
+                        </div>
+                        <strong>{{ trackerCoverage }}%</strong>
+                    </li>
+                    <li>
+                        <div>
+                            <span>Adoption premium</span>
+                            <p>{{ adoptionRate }}% des abonnés actifs exploitent le tracker Santé Quotidienne.</p>
+                        </div>
+                        <strong>{{ adoptionRate }}%</strong>
+                    </li>
+                    <li>
+                        <div>
+                            <span>Nouveaux comptes</span>
+                            <p>Préparer un onboarding pour {{ recentActivity.newUsers|number_format(0, ',', ' ') }} nouvelles inscriptions (24h).</p>
+                        </div>
+                        <strong>{{ recentActivity.newUsers|number_format(0, ',', ' ') }}</strong>
+                    </li>
+                </ul>
+            </article>
+        </div>
+    </section>
     
 {% endblock %}
 

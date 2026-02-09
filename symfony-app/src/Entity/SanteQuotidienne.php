@@ -87,6 +87,18 @@ class SanteQuotidienne
     )]
     private ?float $eauBue = null;
 
+    #[ORM\Column(type: Types::INTEGER, nullable: true)]
+    private ?int $pas = null;
+
+    #[ORM\Column(type: Types::FLOAT, nullable: true)]
+    private ?float $calories = null;
+
+    #[ORM\Column(type: Types::INTEGER, nullable: true)]
+    private ?int $dureeActiviteMinutes = null;
+
+    #[ORM\Column(type: Types::STRING, length: 20)]
+    private string $sourceDonnees = 'manuel';
+
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     #[Assert\NotBlank(message: "La date est obligatoire")]
     #[Assert\LessThanOrEqual('today', message: 'Veuillez choisir une date valide (aujourd\'hui ou avant).')]
@@ -119,7 +131,7 @@ class SanteQuotidienne
         return $this->poids;
     }
 
-    public function setPoids(float $poids): static
+    public function setPoids(?float $poids): static
     {
         $this->poids = $poids;
         $this->calculateImc();
@@ -131,7 +143,7 @@ class SanteQuotidienne
         return $this->taille;
     }
 
-    public function setTaille(float $taille): static
+    public function setTaille(?float $taille): static
     {
         $this->taille = $taille;
         $this->calculateImc();
@@ -143,7 +155,7 @@ class SanteQuotidienne
         return $this->imc;
     }
 
-    public function setImc(float $imc): static
+    public function setImc(?float $imc): static
     {
         $this->imc = $imc;
         return $this;
@@ -217,6 +229,18 @@ class SanteQuotidienne
         $this->eauBue = $eauBue;
         return $this;
     }
+
+    public function getPas(): ?int { return $this->pas; }
+    public function setPas(?int $pas): static { $this->pas = $pas; return $this; }
+
+    public function getCalories(): ?float { return $this->calories; }
+    public function setCalories(?float $calories): static { $this->calories = $calories; return $this; }
+
+    public function getDureeActiviteMinutes(): ?int { return $this->dureeActiviteMinutes; }
+    public function setDureeActiviteMinutes(?int $dureeActiviteMinutes): static { $this->dureeActiviteMinutes = $dureeActiviteMinutes; return $this; }
+
+    public function getSourceDonnees(): string { return $this->sourceDonnees; }
+    public function setSourceDonnees(string $sourceDonnees): static { $this->sourceDonnees = $sourceDonnees; return $this; }
 
     public function getDate(): ?\DateTimeInterface
     {

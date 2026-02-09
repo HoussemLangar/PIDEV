@@ -165,6 +165,7 @@
     </div>
     
     {% block javascripts %}
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" integrity="sha384-e6nUZLBkQ86NJ6TVVKAeSaK8jWa3NhkYWZFomE39AvDbQWeie9PlQqM3pmYW5d1g" crossorigin="anonymous"></script>
         <script src="{{ asset('js/admin.js') }}"></script>
         <script>
             (function () {
@@ -200,6 +201,30 @@
                 });
 
                 window.addEventListener('load', hide);
+            })();
+            (function () {
+                const disableHtml5Validation = (root = document) => {
+                    root.querySelectorAll('form').forEach((formEl) => {
+                        formEl.setAttribute('novalidate', 'novalidate');
+                        formEl.noValidate = true;
+                    });
+                };
+                disableHtml5Validation();
+                document.addEventListener('invalid', (e) => e.preventDefault(), true);
+                const observer = new MutationObserver((mutations) => {
+                    mutations.forEach((mutation) => {
+                        mutation.addedNodes.forEach((node) => {
+                            if (!(node instanceof HTMLElement)) return;
+                            if (node.tagName === 'FORM') {
+                                node.setAttribute('novalidate', 'novalidate');
+                                node.noValidate = true;
+                            } else {
+                                disableHtml5Validation(node);
+                            }
+                        });
+                    });
+                });
+                observer.observe(document.documentElement, { childList: true, subtree: true });
             })();
         </script>
     {% endblock %}

@@ -127,13 +127,15 @@ final class AdminSymptomeController extends AbstractController
         }
 
         // Handle search
-        $search = $request->query->get('search', '');
-        if ($search) {
-            $symptomes = $this->symptomeRepository->searchSymptoms($search);
+        $search = $request->query->get('search', '') ?? '';
+        $category = $request->query->get('category', '') ?? '';
+
+        if ($search || $category) {
+            $symptomes = $this->symptomeRepository->searchSymptoms($search, $category);
         } else {
             $symptomes = $this->symptomeRepository->findAll();
         }
-        
+
         // Get statistics from repository
         $stats = [
             'total' => $this->symptomeRepository->getTotalCount(),
@@ -141,7 +143,11 @@ final class AdminSymptomeController extends AbstractController
             'weekly' => $this->symptomeRepository->getWeeklyCount(),
             'recent' => $this->symptomeRepository->getRecentCount(),
         ];
-        
+
+        $userStats = $this->symptomeQuotidienRepository->getUserSymptomStatistics();
+        $stats['active_patients'] = count($userStats);
+        $mostCommonSymptoms = $this->symptomeQuotidienRepository->getMostCommonSymptoms(10);
+
         // Convert categories array to format expected by template
         $categoriesForTemplate = [];
         foreach ($categories as $category) {
@@ -155,6 +161,8 @@ final class AdminSymptomeController extends AbstractController
             'form' => $form->createView(),
             'edit_mode' => true,
             'current_symptome' => $symptome,
+            'user_stats' => $userStats,
+            'most_common_symptoms' => $mostCommonSymptoms,
         ]);
     }
 

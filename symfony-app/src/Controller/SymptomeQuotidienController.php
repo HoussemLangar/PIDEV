@@ -13,6 +13,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class SymptomeQuotidienController extends AbstractController
@@ -222,7 +223,45 @@ class SymptomeQuotidienController extends AbstractController
             $symptome->setNotes(trim($data['notes']));
         }
 
-        // Validation avec le validator Symfony
+        // Validation avec le validator Symfony (données d'édition)
+        $dataConstraints = new Assert\Collection([
+            'intensite' => [
+                new Assert\NotBlank(message: 'Veuillez renseigner ce champ.'),
+                new Assert\Range(
+                    min: 1,
+                    max: 10,
+                    minMessage: 'L\'intensité doit être au moins {{ limit }}.',
+                    maxMessage: 'L\'intensité ne peut pas dépasser {{ limit }}.'
+                ),
+            ],
+            'duree' => [
+                new Assert\NotBlank(message: 'Veuillez renseigner ce champ.'),
+            ],
+            'notes' => [
+                new Assert\Length(max: 100, maxMessage: 'Les notes ne peuvent pas dépasser {{ limit }} caractères.'),
+            ],
+        ], allowExtraFields: true, allowMissingFields: false);
+
+        $dataViolations = $validator->validate($data, $dataConstraints);
+        if (count($dataViolations) > 0) {
+            $errors = [];
+            foreach ($dataViolations as $violation) {
+                $path = $violation->getPropertyPath();
+                $path = trim((string) $path, '[]');
+                if (!$path) {
+                    $path = 'form';
+                }
+                $errors[$path][] = $violation->getMessage();
+            }
+
+            return new JsonResponse([
+                'success' => false,
+                'errors' => $errors,
+                'error' => implode(', ', array_merge(...array_values($errors)))
+            ], 400);
+        }
+
+        // Validation entité Symfony
         $errors = $validator->validate($symptome);
 
         if (count($errors) > 0) {

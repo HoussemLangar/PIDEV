@@ -27,6 +27,16 @@
     padding-right: 0.15vw;
     width: 85%;
   }
+  .field-error {
+    display: block;
+  }
+  .input-error {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.15);
+  }
+  .global-loader {
+    z-index: 6000 !important;
+  }
 
 /* Reset CSS */
 * {
@@ -1033,8 +1043,11 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 3001;
 }
+  #globalLoader {
+    z-index: 4000;
+  }
 
 .modal-content {
   background: white;
@@ -1672,7 +1685,8 @@ footer {
         <h3 class="modal-title">✏️ Modifier le symptôme</h3>
         <button class="modal-close" onclick="closeEditModal()">&times;</button>
       </div>
-      <form id="edit-form" class="modal-form">
+      <div id="edit-form-error" class="field-error" style="color:#dc3545; font-size:0.95rem; margin:-10px 0 10px; display:none;"></div>
+      <form id="edit-form" class="modal-form" novalidate onsubmit="return false;" data-ajax="1">
         <input type="hidden" id="edit-symptom-id">
         <div class="form-group">
           <label for="edit-intensite">Intensité (1-10):</label>
@@ -1689,7 +1703,7 @@ footer {
         </div>
         <div class="modal-actions">
           <button type="button" class="btn-cancel" onclick="closeEditModal()">Annuler</button>
-          <button type="button" class="btn-save" onclick="saveSymptom()">Enregistrer</button>
+          <button type="button" class="btn-save" onclick="saveSymptom()" formnovalidate>Enregistrer</button>
         </div>
       </form>
     </div>
@@ -1704,6 +1718,27 @@ footer {
     const datesSymptomes = {{ dates_symptomes|json_encode|raw }};
     
     document.addEventListener('DOMContentLoaded', function() {
+      const editForm = document.getElementById('edit-form');
+      if (editForm) {
+        editForm.noValidate = true;
+        editForm.addEventListener('submit', (e) => e.preventDefault());
+      }
+      const disableHtml5ValidationForForm = (form) => {
+        if (!form) return;
+        form.setAttribute('novalidate', 'novalidate');
+        form.noValidate = true;
+        form.querySelectorAll('[required]').forEach((el) => el.removeAttribute('required'));
+        form.querySelectorAll('input, textarea, select').forEach((el) => {
+          if (typeof el.setCustomValidity === 'function') el.setCustomValidity('');
+        });
+      };
+      disableHtml5ValidationForForm(document.querySelector('form[name="symptome_quotidien"]'));
+      disableHtml5ValidationForForm(editForm);
+      document.addEventListener('invalid', (e) => {
+        if (e.target && e.target.closest && e.target.closest('#edit-form')) {
+          e.preventDefault();
+        }
+      }, true);
       // Vérifier s'il y a des messages de succès pour savoir s'il faut nettoyer
       const successMessage = document.querySelector('.alert-success');
       const hasFormErrors = document.querySelector('form .invalid-feedback, form .form-error, form ul li');
@@ -2108,6 +2143,24 @@ footer {
 
     // Fonction pour éditer un symptôme
     function editSymptom(id, nom, intensite, duree, notes) {
+      const editForm = document.getElementById('edit-form');
+      if (editForm) {
+        editForm.noValidate = true;
+        editForm.querySelectorAll('[required]').forEach((el) => el.removeAttribute('required'));
+        editForm.querySelectorAll('input, textarea, select').forEach((el) => {
+          if (typeof el.setCustomValidity === 'function') el.setCustomValidity('');
+        });
+      }
+      const globalLoader = document.getElementById('globalLoader');
+      if (globalLoader) {
+        globalLoader.classList.remove('show');
+        globalLoader.setAttribute('aria-hidden', 'true');
+      }
+      const formError = document.getElementById('edit-form-error');
+      if (formError) {
+        formError.textContent = '';
+        formError.style.display = 'none';
+      }
       document.getElementById('edit-symptom-id').value = id;
       document.getElementById('edit-intensite').value = intensite;
       document.getElementById('edit-intensite-value').textContent = intensite;
@@ -2130,9 +2183,60 @@ footer {
       const notes = document.getElementById('edit-notes').value;
       
       // Effacer les anciens messages d'erreur
-      const errorDiv = document.getElementById('edit-notes-error');
-      if (errorDiv) {
-        errorDiv.remove();
+      document.querySelectorAll('#edit-form .field-error').forEach((el) => el.remove());
+      document.querySelectorAll('#edit-form .input-error').forEach((el) => el.classList.remove('input-error'));
+      const formError = document.getElementById('edit-form-error');
+      if (formError) {
+        formError.textContent = '';
+        formError.style.display = 'none';
+      }
+      const addFieldError = (fieldId, message) => {
+        const target = document.getElementById(fieldId);
+        if (!target || !target.parentNode) return;
+        target.classList.add('input-error');
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'field-error';
+        errorDiv.style.cssText = 'color: #dc3545; font-size: 0.9rem; margin-top: 5px;';
+        errorDiv.textContent = message;
+        target.parentNode.appendChild(errorDiv);
+      };
+      const showFormError = (message) => {
+        if (formError) {
+          formError.textContent = message;
+          formError.style.display = 'block';
+        }
+      };
+
+      const validationMessages = [];
+      if (!intensite || Number(intensite) < 1 || Number(intensite) > 10) {
+        addFieldError('edit-intensite', 'Veuillez renseigner ce champ.');
+        validationMessages.push('Intensité');
+      }
+      if (!duree || !duree.trim()) {
+        addFieldError('edit-duree', 'Veuillez renseigner ce champ.');
+        validationMessages.push('Durée');
+      }
+      if (notes && notes.length > 100) {
+        addFieldError('edit-notes', 'Les notes ne peuvent pas dépasser 100 caractères.');
+        validationMessages.push('Notes');
+      }
+      if (validationMessages.length > 0) {
+        showFormError('Veuillez corriger les champs indiqués.');
+        if (typeof showNotification === 'function') {
+          showNotification('Veuillez corriger les champs indiqués.', 'error');
+        } else if (window.showToast) {
+          window.showToast('error', 'Veuillez corriger les champs indiqués.');
+        }
+        return;
+      }
+
+      if (typeof window.setLoading === 'function') {
+        window.setLoading(true);
+      }
+      const globalLoader = document.getElementById('globalLoader');
+      if (globalLoader) {
+        globalLoader.classList.add('show');
+        globalLoader.setAttribute('aria-hidden', 'false');
       }
       
       try {
@@ -2141,6 +2245,8 @@ footer {
           headers: {
             'Content-Type': 'application/json',
           },
+          toast: false,
+          loading: false,
           body: JSON.stringify({
             intensite: intensite,
             duree: duree,
@@ -2148,9 +2254,14 @@ footer {
           })
         });
         
-        const result = await response.json();
+        let result = {};
+        try {
+          result = await response.json();
+        } catch (_) {
+          result = { success: false, error: 'Erreur de validation.' };
+        }
         
-        if (result.success) {
+        if (response.ok && result.success) {
           closeEditModal();
           
           // Recharger les détails via AJAX si une date est affichée
@@ -2162,22 +2273,58 @@ footer {
             }
           }
         } else {
-          // Afficher l'erreur sous le champ notes
-          const notesField = document.getElementById('edit-notes');
-          const errorDiv = document.createElement('div');
-          errorDiv.id = 'edit-notes-error';
-          errorDiv.style.cssText = 'color: #dc3545; font-size: 0.9rem; margin-top: 5px;';
-          errorDiv.textContent = result.error;
-          notesField.parentNode.appendChild(errorDiv);
+          const message = result.error || result.message || 'Erreur de validation.';
+          showFormError(message);
+          if (typeof showNotification === 'function') {
+            showNotification(message, 'error');
+          } else if (window.showToast) {
+            window.showToast('error', message);
+          }
+
+          const fieldMap = {
+            intensite: 'edit-intensite',
+            duree: 'edit-duree',
+            notes: 'edit-notes',
+          };
+
+          if (result.errors) {
+            Object.keys(result.errors).forEach((field) => {
+              const targetId = fieldMap[field];
+              if (!targetId) return;
+              const target = document.getElementById(targetId);
+              if (!target || !target.parentNode) return;
+              result.errors[field].forEach((msg) => {
+                addFieldError(targetId, msg);
+              });
+            });
+          } else {
+            addFieldError('edit-notes', message);
+          }
         }
       } catch (error) {
         console.error('Erreur:', error);
         const notesField = document.getElementById('edit-notes');
         const errorDiv = document.createElement('div');
-        errorDiv.id = 'edit-notes-error';
+        errorDiv.className = 'field-error';
         errorDiv.style.cssText = 'color: #dc3545; font-size: 0.9rem; margin-top: 5px;';
         errorDiv.textContent = 'Erreur lors de la modification';
-        notesField.parentNode.appendChild(errorDiv);
+        if (notesField && notesField.parentNode) {
+          notesField.parentNode.appendChild(errorDiv);
+        }
+        if (typeof showNotification === 'function') {
+          showNotification('Erreur lors de la modification', 'error');
+        } else if (window.showToast) {
+          window.showToast('error', 'Erreur lors de la modification');
+        }
+      } finally {
+        if (typeof window.setLoading === 'function') {
+          window.setLoading(false);
+        }
+        const gl = document.getElementById('globalLoader');
+        if (gl) {
+          gl.classList.remove('show');
+          gl.setAttribute('aria-hidden', 'true');
+        }
       }
     }
 
