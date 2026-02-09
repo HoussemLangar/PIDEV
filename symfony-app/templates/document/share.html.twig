@@ -21,7 +21,7 @@
                     <div class="mb-3">
                         {{ form_label(form.sharedWith) }}
                         {{ form_widget(form.sharedWith, {'attr': {'class': 'form-control'}}) }}
-                        {% if form.sharedWith.vars.errors %}
+                        {% if form.sharedWith.vars.errors|length > 0 %}
                             <div class="alert alert-danger mt-2">
                                 {{ form_errors(form.sharedWith) }}
                             </div>

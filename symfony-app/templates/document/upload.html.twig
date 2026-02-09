@@ -13,7 +13,7 @@
                     </h4>
                 </div>
                 <div class="card-body">
-                    {% if form_errors(form) %}
+                    {% if form_errors(form)|length > 0 %}
                         <div class="alert alert-danger alert-dismissible fade show" role="alert">
                             <h5>Erreurs de validation:</h5>
                             {{ form_errors(form) }}
@@ -30,7 +30,7 @@
                             <i class="bi bi-info-circle"></i> Formats supportés: PDF, Word, Excel, Images
                             <br>Taille maximale: 50 MB
                         </small>
-                        {% if form.file.vars.errors %}
+                        {% if form.file.vars.errors|length > 0 %}
                             <div class="alert alert-danger mt-2">
                                 {{ form_errors(form.file) }}
                             </div>
@@ -40,7 +40,7 @@
                     <div class="mb-3">
                         {{ form_label(form.description) }}
                         {{ form_widget(form.description, {'attr': {'class': 'form-control'}}) }}
-                        {% if form.description.vars.errors %}
+                        {% if form.description.vars.errors|length > 0 %}
                             <div class="alert alert-danger mt-2">
                                 {{ form_errors(form.description) }}
                             </div>
@@ -50,7 +50,7 @@
                     <div class="mb-3">
                         {{ form_label(form.documentType) }}
                         {{ form_widget(form.documentType, {'attr': {'class': 'form-control'}}) }}
-                        {% if form.documentType.vars.errors %}
+                        {% if form.documentType.vars.errors|length > 0 %}
                             <div class="alert alert-danger mt-2">
                                 {{ form_errors(form.documentType) }}
                             </div>
@@ -63,7 +63,7 @@
                         <small class="text-muted d-block">
                             Si coché, ce document sera accessible au public
                         </small>
-                        {% if form.public.vars.errors %}
+                        {% if form.public.vars.errors|length > 0 %}
                             <div class="alert alert-danger mt-2">
                                 {{ form_errors(form.public) }}
                             </div>

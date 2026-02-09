@@ -6,6 +6,7 @@
 parameters:
     geoip_db_path: '%kernel.project_dir%/var/geoip/GeoLite2-Country.mmdb'
     geoip_api_url: '%env(resolve:GEOIP_API_URL)%'
+    jitsi_server_url: '%env(JITSI_SERVER_URL)%'
     content_forbidden_words:
         - spam
         - arnaque

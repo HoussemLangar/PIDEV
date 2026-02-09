@@ -18,7 +18,7 @@
                     <div class="mb-3">
                         {{ form_label(form.recipient) }}
                         {{ form_widget(form.recipient, {'attr': {'class': 'form-control'}}) }}
-                        {% if form.recipient.vars.errors %}
+                        {% if form.recipient.vars.errors|length > 0 %}
                             <div class="alert alert-danger mt-2">
                                 {{ form_errors(form.recipient) }}
                             </div>
@@ -31,7 +31,7 @@
                         <small class="text-muted d-block mt-2">
                             Vous pouvez rejoindre 5 minutes avant l'heure prévue
                         </small>
-                        {% if form.scheduledAt.vars.errors %}
+                        {% if form.scheduledAt.vars.errors|length > 0 %}
                             <div class="alert alert-danger mt-2">
                                 {{ form_errors(form.scheduledAt) }}
                             </div>

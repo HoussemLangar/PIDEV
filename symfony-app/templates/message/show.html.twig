@@ -55,7 +55,7 @@
                     
                     {{ form_widget(form.content, { 'attr': { 'class': 'form-control mb-3' } }) }}
                     
-                    {% if form.content.vars.errors %}
+                    {% if form.content.vars.errors|length > 0 %}
                         <div class="alert alert-danger">
                             {{ form_errors(form.content) }}
                         </div>
