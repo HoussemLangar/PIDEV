@@ -50,18 +50,30 @@ class BannedUserSubscriber implements EventSubscriberInterface
         $request = $event->getRequest();
         $route = $request->attributes->get('_route');
 
+        // Liste stricte des routes autorisées pour les utilisateurs bannis
         $excludedRoutes = [
-            'app_banned',
-            'app_logout',
-            'login',
+            'app_banned',              // Page d'information du bannissement
+            'app_logout',              // Déconnexion
+            'login',                   // Page de connexion (pour pouvoir se reconnecter plus tard)
+            'app_login',               // Alternative route de connexion
+            '_wdt',                    // Web Debug Toolbar (dev only)
+            '_profiler',               // Profiler (dev only)
+            '_profiler_search',        // Profiler search (dev only)
+            '_profiler_search_bar',    // Profiler search bar (dev only)
+            '_profiler_search_results',// Profiler search results (dev only)
+            '_profiler_router',        // Profiler router (dev only)
+            '_profiler_exception',     // Profiler exception (dev only)
+            '_profiler_exception_css', // Profiler exception CSS (dev only)
         ];
 
-        if ($route !== null && in_array($route, $excludedRoutes, true)) {
-            return;
+        // Bloquer toutes les autres routes
+        if ($route === null || !in_array($route, $excludedRoutes, true)) {
+            // Log l'accès bloqué pour traçabilité (optionnel)
+            // $this->logger->info('Blocked access for banned user', ['user' => $user->getEmail(), 'route' => $route]);
+            
+            $event->setResponse(new RedirectResponse(
+                $this->urlGenerator->generate('app_banned')
+            ));
         }
-
-        $event->setResponse(new RedirectResponse(
-            $this->urlGenerator->generate('app_banned')
-        ));
     }
 }

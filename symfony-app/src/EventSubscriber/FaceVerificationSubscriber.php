@@ -33,6 +33,12 @@ class FaceVerificationSubscriber implements EventSubscriberInterface
         $request = $event->getRequest();
         $session = $request->getSession();
         
+        // Vérifier si l'utilisateur est banni (géré par BannedUserSubscriber avec priorité plus haute)
+        $user = $this->security->getUser();
+        if ($user && method_exists($user, 'isBannedEffective') && $user->isBannedEffective()) {
+            return;
+        }
+        
         // Routes à exclure de la vérification
         $excludedRoutes = [
             'admin_face_verification',
@@ -40,6 +46,7 @@ class FaceVerificationSubscriber implements EventSubscriberInterface
             'admin_verify_face',
             'app_logout',
             'login',
+            'app_banned',
         ];
 
         $currentRoute = $request->attributes->get('_route');

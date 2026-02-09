@@ -3,92 +3,152 @@
 {% block title %}Mes documents{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row">
-        <div class="col-md-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1>Mes documents</h1>
+<div class="content-wrapper" style="padding: 30px 40px; max-width: 1400px; margin: 0 auto;">
+    <div class="page-header" style="margin-bottom: 32px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-file-medical" style="color: white; font-size: 24px;"></i>
+                </div>
                 <div>
-                    <span class="badge bg-info">{{ totalStorage }} utilisés</span>
-                    <a href="{{ path('app_document_upload') }}" class="btn btn-primary">
-                        <i class="bi bi-cloud-arrow-up"></i> Uploader un document
-                    </a>
+                    <h1 style="margin: 0; font-size: 28px; font-weight: 700; color: #1a1a2e;">Mes documents</h1>
+                    <p style="margin: 4px 0 0 0; color: #64748b; font-size: 14px;">Gérez et partagez vos documents médicaux</p>
                 </div>
             </div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <span style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; padding: 8px 16px; border-radius: 20px; font-weight: 600; font-size: 14px; box-shadow: 0 4px 12px rgba(59,130,246,0.3);">
+                    <i class="fas fa-database" style="margin-right: 6px;"></i>{{ totalStorage }} utilisés
+                </span>
+                <a href="{{ path('app_document_upload') }}" style="padding: 12px 24px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: 10px; font-weight: 600; text-decoration: none; transition: all 0.2s; box-shadow: 0 4px 12px rgba(16,185,129,0.3); display: inline-flex; align-items: center; gap: 8px;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 20px rgba(16,185,129,0.4)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(16,185,129,0.3)';">
+                    <i class="fas fa-cloud-upload-alt"></i> Uploader un document
+                </a>
+            </div>
+        </div>
+    </div>
 
-            <!-- Tabs -->
-            <ul class="nav nav-tabs mb-4" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="own-tab" data-bs-toggle="tab" data-bs-target="#own" 
-                            type="button" role="tab" aria-controls="own" aria-selected="true">
-                        Mes documents ({{ ownDocuments|length }})
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="shared-tab" data-bs-toggle="tab" data-bs-target="#shared" 
-                            type="button" role="tab" aria-controls="shared" aria-selected="false">
-                        Partagés avec moi ({{ sharedDocuments|length }})
-                    </button>
-                </li>
-            </ul>
+            <div style="background: white; border-radius: 14px; padding: 8px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(15,23,42,0.06); display: inline-flex; gap: 8px;" role="tablist">
+                <button class="nav-link active" id="own-tab" data-bs-toggle="tab" data-bs-target="#own" 
+                        type="button" role="tab" aria-controls="own" aria-selected="true"
+                        style="padding: 10px 20px; border: none; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                    <i class="fas fa-folder" style="margin-right: 8px;"></i>Mes documents ({{ ownDocuments|length }})
+                </button>
+                <button class="nav-link" id="shared-tab" data-bs-toggle="tab" data-bs-target="#shared" 
+                        type="button" role="tab" aria-controls="shared" aria-selected="false"
+                        style="padding: 10px 20px; border: none; background: transparent; color: #64748b; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                    <i class="fas fa-share-alt" style="margin-right: 8px;"></i>Partagés avec moi ({{ sharedDocuments|length }})
+                </button>
+            </div>
 
             <!-- Tab Content -->
             <div class="tab-content">
                 <!-- Own Documents Tab -->
                 <div class="tab-pane fade show active" id="own" role="tabpanel" aria-labelledby="own-tab">
                     {% if ownDocuments is empty %}
-                        <div class="alert alert-info">
-                            Vous n'avez pas encore uploadé de document.
-                            <a href="{{ path('app_document_upload') }}">Commencer maintenant</a>
+                        <div style="background: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%); border: 2px dashed #3b82f6; border-radius: 16px; padding: 48px; text-align: center;">
+                            <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px;">
+                                <i class="fas fa-cloud-upload-alt" style="color: white; font-size: 36px;"></i>
+                            </div>
+                            <h3 style="color: #1e293b; font-weight: 600; margin-bottom: 12px;">Aucun document trouvé</h3>
+                            <p style="color: #64748b; margin-bottom: 24px;">Vous n'avez pas encore uploadé de document.</p>
+                            <a href="{{ path('app_document_upload') }}" style="padding: 12px 32px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: 10px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(16,185,129,0.3);">
+                                <i class="fas fa-plus-circle"></i> Commencer maintenant
+                            </a>
                         </div>
                     {% else %}
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Nom</th>
-                                        <th>Type</th>
-                                        <th>Taille</th>
-                                        <th>Uploadé le</th>
-                                        <th>Partagé</th>
-                                        <th>Actions</th>
+                        <div style="background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(15,23,42,0.08); overflow: hidden;">
+                            <table style="width: 100%; border-collapse: separate; border-spacing: 0;">
+                                <thead>
+                                    <tr style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-bottom: 2px solid #e2e8f0;">
+                                        <th style="padding: 18px 24px; text-align: left; font-weight: 700; color: #1e293b; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">
+                                            <i class="fas fa-file-alt" style="margin-right: 8px; color: #64748b;"></i>Nom
+                                        </th>
+                                        <th style="padding: 18px 24px; text-align: left; font-weight: 700; color: #1e293b; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">
+                                            <i class="fas fa-tag" style="margin-right: 8px; color: #64748b;"></i>Type
+                                        </th>
+                                        <th style="padding: 18px 24px; text-align: left; font-weight: 700; color: #1e293b; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">
+                                            <i class="fas fa-hdd" style="margin-right: 8px; color: #64748b;"></i>Taille
+                                        </th>
+                                        <th style="padding: 18px 24px; text-align: left; font-weight: 700; color: #1e293b; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">
+                                            <i class="fas fa-clock" style="margin-right: 8px; color: #64748b;"></i>Uploadé le
+                                        </th>
+                                        <th style="padding: 18px 24px; text-align: left; font-weight: 700; color: #1e293b; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">
+                                            <i class="fas fa-share-alt" style="margin-right: 8px; color: #64748b;"></i>Statut
+                                        </th>
+                                        <th style="padding: 18px 24px; text-align: center; font-weight: 700; color: #1e293b; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">
+                                            <i class="fas fa-cog" style="margin-right: 8px; color: #64748b;"></i>Actions
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {% for document in ownDocuments %}
-                                        <tr>
-                                            <td>
-                                                <i class="bi {{ document.mimeType|mime_icon }}"></i>
-                                                {{ document.fileName }}
+                                        <tr style="border-bottom: 1px solid #f1f5f9; transition: all 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+                                            <td style="padding: 20px 24px;">
+                                                <div style="display: flex; align-items: center; gap: 12px;">
+                                                    <div style="width: 40px; height: 40px; border-radius: 10px; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                                        <i class="bi {{ document.mimeType|mime_icon }}" style="color: #3b82f6; font-size: 18px;"></i>
+                                                    </div>
+                                                    <div style="min-width: 0;">
+                                                        <div style="font-weight: 600; color: #1e293b; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ document.fileName }}</div>
+                                                    </div>
+                                                </div>
                                             </td>
-                                            <td>
-                                                <span class="badge bg-secondary">{{ document.documentType }}</span>
+                                            <td style="padding: 20px 24px;">
+                                                <span style="display: inline-flex; align-items: center; padding: 6px 14px; background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%); color: #7c3aed; border-radius: 8px; font-weight: 600; font-size: 12px;">
+                                                    <i class="fas fa-bookmark" style="margin-right: 6px; font-size: 10px;"></i>{{ document.documentType }}
+                                                </span>
                                             </td>
-                                            <td>{{ document.getFileSizeFormatted() }}</td>
-                                            <td>{{ document.uploadedAt|date('d/m/Y H:i') }}</td>
-                                            <td>
+                                            <td style="padding: 20px 24px;">
+                                                <span style="color: #64748b; font-weight: 500; font-size: 14px;">{{ document.getFileSizeFormatted() }}</span>
+                                            </td>
+                                            <td style="padding: 20px 24px;">
+                                                <span style="color: #64748b; font-weight: 500; font-size: 14px;">{{ document.uploadedAt|date('d/m/Y H:i') }}</span>
+                                            </td>
+                                            <td style="padding: 20px 24px;">
                                                 {% if document.isPublic %}
-                                                    <span class="badge bg-success">Public</span>
+                                                    <span style="display: inline-flex; align-items: center; padding: 6px 14px; background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); color: #059669; border-radius: 8px; font-weight: 600; font-size: 12px;">
+                                                        <i class="fas fa-globe" style="margin-right: 6px; font-size: 10px;"></i>Public
+                                                    </span>
                                                 {% else %}
-                                                    <span class="badge bg-warning">Privé</span>
+                                                    <span style="display: inline-flex; align-items: center; padding: 6px 14px; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); color: #d97706; border-radius: 8px; font-weight: 600; font-size: 12px;">
+                                                        <i class="fas fa-lock" style="margin-right: 6px; font-size: 10px;"></i>Privé
+                                                    </span>
                                                 {% endif %}
                                             </td>
-                                            <td>
-                                                <a href="{{ path('app_document_show', {id: document.id}) }}" class="btn btn-sm btn-info">
-                                                    <i class="bi bi-eye"></i>
-                                                </a>
-                                                <a href="{{ path('app_document_download', {id: document.id}) }}" class="btn btn-sm btn-success">
-                                                    <i class="bi bi-download"></i>
-                                                </a>
-                                                <a href="{{ path('app_document_share', {id: document.id}) }}" class="btn btn-sm btn-warning">
-                                                    <i class="bi bi-share"></i>
-                                                </a>
-                                                <form action="{{ path('app_document_delete', {id: document.id}) }}" method="POST" style="display: inline;">
-                                                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ document.id) }}">
-                                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Êtes-vous sûr?')">
-                                                        <i class="bi bi-trash"></i>
-                                                    </button>
-                                                </form>
+                                            <td style="padding: 20px 24px; text-align: center;">
+                                                <div style="display: inline-flex; gap: 6px; align-items: center;">
+                                                    <a href="{{ path('app_document_show', {id: document.id}) }}" 
+                                                       style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border-radius: 8px; text-decoration: none; transition: all 0.2s; box-shadow: 0 2px 8px rgba(59,130,246,0.3);"
+                                                       onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(59,130,246,0.4)';"
+                                                       onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(59,130,246,0.3)';"
+                                                       title="Voir">
+                                                        <i class="bi bi-eye" style="font-size: 14px;"></i>
+                                                    </a>
+                                                    <a href="{{ path('app_document_download', {id: document.id}) }}" 
+                                                       style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border-radius: 8px; text-decoration: none; transition: all 0.2s; box-shadow: 0 2px 8px rgba(16,185,129,0.3);"
+                                                       onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(16,185,129,0.4)';"
+                                                       onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(16,185,129,0.3)';"
+                                                       title="Télécharger">
+                                                        <i class="bi bi-download" style="font-size: 14px;"></i>
+                                                    </a>
+                                                    <a href="{{ path('app_document_share', {id: document.id}) }}" 
+                                                       style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; border-radius: 8px; text-decoration: none; transition: all 0.2s; box-shadow: 0 2px 8px rgba(245,158,11,0.3);"
+                                                       onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(245,158,11,0.4)';"
+                                                       onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(245,158,11,0.3)';"
+                                                       title="Partager">
+                                                        <i class="bi bi-share" style="font-size: 14px;"></i>
+                                                    </a>
+                                                    <form action="{{ path('app_document_delete', {id: document.id}) }}" method="POST" style="display: inline;">
+                                                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ document.id) }}">
+                                                        <button type="submit" 
+                                                                style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none; border-radius: 8px; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 8px rgba(239,68,68,0.3);"
+                                                                onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(239,68,68,0.4)';"
+                                                                onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(239,68,68,0.3)';"
+                                                                onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce document ?')"
+                                                                title="Supprimer">
+                                                            <i class="bi bi-trash" style="font-size: 14px;"></i>
+                                                        </button>
+                                                    </form>
+                                                </div>
                                             </td>
                                         </tr>
                                     {% endfor %}
@@ -101,42 +161,87 @@
                 <!-- Shared with me Tab -->
                 <div class="tab-pane fade" id="shared" role="tabpanel" aria-labelledby="shared-tab">
                     {% if sharedDocuments is empty %}
-                        <div class="alert alert-info">
-                            Aucun document n'a été partagé avec vous pour le moment.
+                        <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 2px dashed #f59e0b; border-radius: 16px; padding: 48px; text-align: center;">
+                            <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px;">
+                                <i class="fas fa-share-alt" style="color: white; font-size: 36px;"></i>
+                            </div>
+                            <h3 style="color: #1e293b; font-weight: 600; margin-bottom: 12px;">Aucun document partagé</h3>
+                            <p style="color: #64748b; margin-bottom: 0;">Aucun document n'a été partagé avec vous pour le moment.</p>
                         </div>
                     {% else %}
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Nom</th>
-                                        <th>Propriétaire</th>
-                                        <th>Type</th>
-                                        <th>Taille</th>
-                                        <th>Partagé le</th>
-                                        <th>Actions</th>
+                        <div style="background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(15,23,42,0.08); overflow: hidden;">
+                            <table style="width: 100%; border-collapse: separate; border-spacing: 0;">
+                                <thead>
+                                    <tr style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-bottom: 2px solid #e2e8f0;">
+                                        <th style="padding: 18px 24px; text-align: left; font-weight: 700; color: #1e293b; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">
+                                            <i class="fas fa-file-alt" style="margin-right: 8px; color: #64748b;"></i>Nom
+                                        </th>
+                                        <th style="padding: 18px 24px; text-align: left; font-weight: 700; color: #1e293b; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">
+                                            <i class="fas fa-user" style="margin-right: 8px; color: #64748b;"></i>Propriétaire
+                                        </th>
+                                        <th style="padding: 18px 24px; text-align: left; font-weight: 700; color: #1e293b; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">
+                                            <i class="fas fa-tag" style="margin-right: 8px; color: #64748b;"></i>Type
+                                        </th>
+                                        <th style="padding: 18px 24px; text-align: left; font-weight: 700; color: #1e293b; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">
+                                            <i class="fas fa-hdd" style="margin-right: 8px; color: #64748b;"></i>Taille
+                                        </th>
+                                        <th style="padding: 18px 24px; text-align: left; font-weight: 700; color: #1e293b; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">
+                                            <i class="fas fa-clock" style="margin-right: 8px; color: #64748b;"></i>Partagé le
+                                        </th>
+                                        <th style="padding: 18px 24px; text-align: center; font-weight: 700; color: #1e293b; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">
+                                            <i class="fas fa-cog" style="margin-right: 8px; color: #64748b;"></i>Actions
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {% for document in sharedDocuments %}
-                                        <tr>
-                                            <td>
-                                                <i class="bi {{ document.mimeType|mime_icon }}"></i>
-                                                {{ document.fileName }}
+                                        <tr style="border-bottom: 1px solid #f1f5f9; transition: all 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+                                            <td style="padding: 20px 24px;">
+                                                <div style="display: flex; align-items: center; gap: 12px;">
+                                                    <div style="width: 40px; height: 40px; border-radius: 10px; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                                        <i class="bi {{ document.mimeType|mime_icon }}" style="color: #f59e0b; font-size: 18px;"></i>
+                                                    </div>
+                                                    <div style="min-width: 0;">
+                                                        <div style="font-weight: 600; color: #1e293b; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ document.fileName }}</div>
+                                                    </div>
+                                                </div>
                                             </td>
-                                            <td>{{ document.owner.username }}</td>
-                                            <td>
-                                                <span class="badge bg-secondary">{{ document.documentType }}</span>
+                                            <td style="padding: 20px 24px;">
+                                                <div style="display: flex; align-items: center; gap: 10px;">
+                                                    <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 12px;">
+                                                        {{ document.owner.username|first|upper }}
+                                                    </div>
+                                                    <span style="color: #1e293b; font-weight: 500; font-size: 14px;">{{ document.owner.username }}</span>
+                                                </div>
                                             </td>
-                                            <td>{{ document.getFileSizeFormatted() }}</td>
-                                            <td>{{ document.uploadedAt|date('d/m/Y H:i') }}</td>
-                                            <td>
-                                                <a href="{{ path('app_document_show', {id: document.id}) }}" class="btn btn-sm btn-info">
-                                                    <i class="bi bi-eye"></i>
-                                                </a>
-                                                <a href="{{ path('app_document_download', {id: document.id}) }}" class="btn btn-sm btn-success">
-                                                    <i class="bi bi-download"></i>
-                                                </a>
+                                            <td style="padding: 20px 24px;">
+                                                <span style="display: inline-flex; align-items: center; padding: 6px 14px; background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%); color: #7c3aed; border-radius: 8px; font-weight: 600; font-size: 12px;">
+                                                    <i class="fas fa-bookmark" style="margin-right: 6px; font-size: 10px;"></i>{{ document.documentType }}
+                                                </span>
+                                            </td>
+                                            <td style="padding: 20px 24px;">
+                                                <span style="color: #64748b; font-weight: 500; font-size: 14px;">{{ document.getFileSizeFormatted() }}</span>
+                                            </td>
+                                            <td style="padding: 20px 24px;">
+                                                <span style="color: #64748b; font-weight: 500; font-size: 14px;">{{ document.uploadedAt|date('d/m/Y H:i') }}</span>
+                                            </td>
+                                            <td style="padding: 20px 24px; text-align: center;">
+                                                <div style="display: inline-flex; gap: 6px; align-items: center;">
+                                                    <a href="{{ path('app_document_show', {id: document.id}) }}" 
+                                                       style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border-radius: 8px; text-decoration: none; transition: all 0.2s; box-shadow: 0 2px 8px rgba(59,130,246,0.3);"
+                                                       onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(59,130,246,0.4)';"
+                                                       onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(59,130,246,0.3)';"
+                                                       title="Voir">
+                                                        <i class="bi bi-eye" style="font-size: 14px;"></i>
+                                                    </a>
+                                                    <a href="{{ path('app_document_download', {id: document.id}) }}" 
+                                                       style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border-radius: 8px; text-decoration: none; transition: all 0.2s; box-shadow: 0 2px 8px rgba(16,185,129,0.3);"
+                                                       onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(16,185,129,0.4)';"
+                                                       onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(16,185,129,0.3)';"
+                                                       title="Télécharger">
+                                                        <i class="bi bi-download" style="font-size: 14px;"></i>
+                                                    </a>
+                                                </div>
                                             </td>
                                         </tr>
                                     {% endfor %}

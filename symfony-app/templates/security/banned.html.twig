@@ -1,34 +1,108 @@
 {% extends 'front/base.html.twig' %}
 
-{% block title %}Compte suspendu{% endblock %}
+{% block title %}Compte Suspendu - SANTÉA{% endblock %}
 
 {% block body %}
 <div class="meme-popup" id="memePopup" data-images="{{ asset('images/carton1.gif') }},{{ asset('images/carton2.gif') }},{{ asset('images/arja3.gif') }}">
-    <img id="memePopupImg" src="" alt="Meme bannissement">
+    <div class="meme-popup-content">
+        <img id="memePopupImg" src="" alt="Meme bannissement">
+    </div>
 </div>
-<div class="banned-wrap">
-    <div class="banned-card">
-        <div class="banned-badge">Compte suspendu</div>
-        <h1>😄 Arja3 ghodwa</h1>
-        <p>Votre compte est temporairement suspendu. Veuillez réessayer plus tard.</p>
 
-        <div class="banned-details">
-            {% if user and user.banReason %}
-                <div class="banned-row">
-                    <span class="label">Raison</span>
-                    <span class="value">{{ user.banReason }}</span>
-                </div>
-            {% endif %}
-            {% if user and user.banUntil %}
-                <div class="banned-row">
-                    <span class="label">Fin de suspension</span>
-                    <span class="value">{{ user.banUntil|date('d/m/Y H:i') }}</span>
-                </div>
-            {% endif %}
-        </div>
+<div class="banned-container">
+    <div class="banned-background">
+        <div class="banned-shape banned-shape-1"></div>
+        <div class="banned-shape banned-shape-2"></div>
+        <div class="banned-shape banned-shape-3"></div>
+    </div>
 
-        <div class="banned-actions">
-            <a class="btn btn-primary" href="{{ path('app_logout') }}">Se déconnecter</a>
+    <div class="banned-content">
+        <div class="banned-card-modern">
+            <!-- Icon Section -->
+            <div class="banned-icon-wrapper">
+                <div class="banned-icon-circle">
+                    <div class="banned-icon-inner">
+                        <i class="fas fa-ban"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Badge -->
+            <div class="banned-status-badge">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>Compte Suspendu</span>
+            </div>
+
+            <!-- Title & Message -->
+            <div class="banned-header">
+                <h1>Accès Temporairement Restreint</h1>
+                <p class="banned-subtitle">Votre compte SANTÉA a été suspendu temporairement. Nous vous invitons à contacter notre support pour plus d'informations.</p>
+            </div>
+
+            <!-- Details Card -->
+            {% if user and (user.banReason or user.banUntil) %}
+            <div class="banned-info-card">
+                <div class="banned-info-header">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Informations sur la Suspension</span>
+                </div>
+                <div class="banned-info-body">
+                    {% if user.banReason %}
+                    <div class="banned-info-item">
+                        <div class="info-item-icon">
+                            <i class="fas fa-clipboard-list"></i>
+                        </div>
+                        <div class="info-item-content">
+                            <span class="info-label">Raison</span>
+                            <span class="info-value">{{ user.banReason }}</span>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if user.banUntil %}
+                    <div class="banned-info-item">
+                        <div class="info-item-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="info-item-content">
+                            <span class="info-label">Fin de Suspension</span>
+                            <span class="info-value">{{ user.banUntil|date('d/m/Y à H:i') }}</span>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Support Section -->
+            <div class="banned-support-card">
+                <div class="support-icon">
+                    <i class="fas fa-headset"></i>
+                </div>
+                <div class="support-content">
+                    <h3>Besoin d'aide ?</h3>
+                    <p>Contactez notre équipe de support pour discuter de votre situation</p>
+                    <div class="support-contacts">
+                        <a href="mailto:support@santea.tn" class="support-link">
+                            <i class="fas fa-envelope"></i>
+                            <span>support@santea.tn</span>
+                        </a>
+                        <a href="tel:+21650396182" class="support-link">
+                            <i class="fas fa-phone"></i>
+                            <span>+216 50 396 182</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="banned-actions-modern">
+                <a href="{{ path('app_logout') }}" class="btn-banned-logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Se Déconnecter</span>
+                </a>
+
+            </div>
         </div>
     </div>
 </div>
@@ -37,93 +111,448 @@
 {% block stylesheets %}
     {{ parent() }}
     <style>
-        nav, .navbar, footer {
+        /* Hide navigation and footer */
+        nav, .navbar, header, footer {
             display: none !important;
         }
-        .banned-wrap {
-            min-height: calc(100vh - 120px);
+
+        /* Main Container */
+        .banned-container {
+            min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 40px 20px;
-            background: radial-gradient(1000px 600px at 10% 10%, rgba(64, 196, 255, 0.15), transparent),
-                        radial-gradient(900px 500px at 90% 10%, rgba(2, 136, 209, 0.12), transparent);
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            position: relative;
+            overflow: hidden;
         }
-        .banned-card {
-            max-width: 520px;
+
+        /* Animated Background Shapes */
+        .banned-background {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .banned-shape {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .banned-shape-1 {
+            width: 400px;
+            height: 400px;
+            top: -100px;
+            right: -100px;
+            animation: float 20s infinite ease-in-out;
+        }
+
+        .banned-shape-2 {
+            width: 300px;
+            height: 300px;
+            bottom: -80px;
+            left: -80px;
+            animation: float 15s infinite ease-in-out reverse;
+        }
+
+        .banned-shape-3 {
+            width: 200px;
+            height: 200px;
+            top: 50%;
+            left: 10%;
+            animation: float 18s infinite ease-in-out;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-30px) rotate(180deg); }
+        }
+
+        /* Content Wrapper */
+        .banned-content {
+            position: relative;
+            z-index: 10;
+            max-width: 600px;
             width: 100%;
-            background: #ffffff;
-            border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
-            padding: 32px;
-            text-align: center;
         }
+
+        /* Main Card */
+        .banned-card-modern {
+            background: white;
+            border-radius: 24px;
+            padding: 48px 40px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.25);
+            animation: slideInUp 0.6s ease-out;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Icon Section */
+        .banned-icon-wrapper {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+
+        .banned-icon-circle {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 30px rgba(255, 107, 107, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 10px 30px rgba(255, 107, 107, 0.3); }
+            50% { transform: scale(1.05); box-shadow: 0 15px 40px rgba(255, 107, 107, 0.4); }
+        }
+
+        .banned-icon-inner {
+            width: 85px;
+            height: 85px;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .banned-icon-inner i {
+            font-size: 40px;
+            color: #ff6b6b;
+        }
+
+        /* Status Badge */
+        .banned-status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #ffebee, #ffcdd2);
+            border-radius: 50px;
+            color: #c62828;
+            font-weight: 700;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 12px rgba(198, 40, 40, 0.15);
+        }
+
+        .banned-status-badge i {
+            font-size: 16px;
+        }
+
+        /* Header */
+        .banned-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .banned-header h1 {
+            font-size: 32px;
+            font-weight: 800;
+            color: #1a1a1a;
+            margin: 0 0 16px 0;
+            line-height: 1.2;
+        }
+
+        .banned-subtitle {
+            font-size: 16px;
+            color: #666;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        /* Info Card */
+        .banned-info-card {
+            background: #f8f9fa;
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 24px;
+            border: 2px solid #e9ecef;
+        }
+
+        .banned-info-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 16px 20px;
+            font-weight: 700;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .banned-info-header i {
+            font-size: 18px;
+        }
+
+        .banned-info-body {
+            padding: 20px;
+        }
+
+        .banned-info-item {
+            display: flex;
+            gap: 16px;
+            padding: 16px;
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 12px;
+        }
+
+        .banned-info-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .info-item-icon {
+            flex-shrink: 0;
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+        }
+
+        .info-item-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .info-label {
+            font-size: 13px;
+            color: #888;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .info-value {
+            font-size: 16px;
+            color: #1a1a1a;
+            font-weight: 700;
+        }
+
+        /* Support Card */
+        .banned-support-card {
+            background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 32px;
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+
+        .support-icon {
+            flex-shrink: 0;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4CAF50, #388E3C);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 26px;
+            box-shadow: 0 8px 20px rgba(76, 175, 80, 0.3);
+        }
+
+        .support-content h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin: 0 0 8px 0;
+        }
+
+        .support-content p {
+            font-size: 14px;
+            color: #555;
+            margin: 0 0 16px 0;
+            line-height: 1.5;
+        }
+
+        .support-contacts {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .support-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            background: white;
+            border-radius: 10px;
+            text-decoration: none;
+            color: #388E3C;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .support-link:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
+        }
+
+        .support-link i {
+            font-size: 16px;
+        }
+
+        /* Actions */
+        .banned-actions-modern {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn-banned-logout,
+        .btn-banned-home {
+            flex: 1;
+            min-width: 180px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 15px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .btn-banned-logout {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-banned-logout:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-banned-home {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-banned-home:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-3px);
+        }
+
+        /* Meme Popup */
         .meme-popup {
             position: fixed;
             inset: 0;
-            display: grid;
-            place-items: center;
-            background: rgba(0, 0, 0, 0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.75);
             z-index: 9999;
-            animation: meme-fade-out 0.6s ease forwards;
+            animation: meme-fade-out 0.8s ease forwards;
             animation-delay: 4s;
+            backdrop-filter: blur(10px);
         }
-        .meme-popup img {
-            width: min(520px, 90vw);
-            border-radius: 14px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+
+        .meme-popup-content {
+            position: relative;
+            animation: meme-bounce 0.6s ease;
         }
+
+        @keyframes meme-bounce {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
         @keyframes meme-fade-out {
             to { opacity: 0; visibility: hidden; }
         }
-        .banned-badge {
-            display: inline-block;
-            padding: 6px 12px;
-            border-radius: 999px;
-            background: #ffecec;
-            color: #c62828;
-            font-weight: 600;
-            margin-bottom: 16px;
-            font-size: 0.85rem;
+
+        .meme-popup img {
+            max-width: min(560px, 90vw);
+            max-height: 90vh;
+            border-radius: 20px;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
         }
-        .banned-card h1 {
-            font-size: 2rem;
-            margin-bottom: 8px;
-        }
-        .banned-card p {
-            color: #5a6472;
-            margin-bottom: 24px;
-        }
-        .banned-details {
-            text-align: left;
-            border: 1px solid #eef2f6;
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 20px;
-            background: #fafbfd;
-        }
-        .banned-row {
-            display: flex;
-            justify-content: space-between;
-            gap: 12px;
-            margin-bottom: 10px;
-            font-size: 0.95rem;
-        }
-        .banned-row:last-child { margin-bottom: 0; }
-        .banned-row .label { color: #6b7280; }
-        .banned-row .value { font-weight: 600; color: #111827; }
-        .banned-actions .btn {
-            display: inline-block;
-            padding: 10px 20px;
-            border-radius: 10px;
-            text-decoration: none;
-            color: white;
-            background: #0288D1;
-            font-weight: 600;
-        }
-        @media (max-width: 600px) {
-            .banned-card { padding: 24px; }
-            .banned-card h1 { font-size: 1.6rem; }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            .banned-card-modern {
+                padding: 32px 24px;
+            }
+
+            .banned-header h1 {
+                font-size: 24px;
+            }
+
+            .banned-subtitle {
+                font-size: 14px;
+            }
+
+            .banned-icon-circle {
+                width: 80px;
+                height: 80px;
+            }
+
+            .banned-icon-inner {
+                width: 68px;
+                height: 68px;
+            }
+
+            .banned-icon-inner i {
+                font-size: 32px;
+            }
+
+            .banned-support-card {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .support-icon {
+                margin: 0 auto;
+            }
+
+            .banned-actions-modern {
+                flex-direction: column;
+            }
+
+            .btn-banned-logout,
+            .btn-banned-home {
+                width: 100%;
+            }
         }
     </style>
 {% endblock %}

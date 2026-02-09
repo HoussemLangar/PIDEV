@@ -124,6 +124,15 @@ class LoginSuccessListener
                 $this->urlGenerator->generate('admin_face_verification')
             );
             $event->setResponse($response);
+            return;
+        }
+        
+        // Rediriger les utilisateurs sans abonnement actif vers la page de souscription
+        if (!$user->isSubscriptionActive() && $user->getSubscriptionStatus() !== 'SKIPPED') {
+            $response = new RedirectResponse(
+                $this->urlGenerator->generate('app_subscription')
+            );
+            $event->setResponse($response);
         }
     }
 }

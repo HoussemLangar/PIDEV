@@ -1,0 +1,77 @@
+╔═══════════════════════════════════════════════════════════════╗
+║         🚀 GUIDE RAPIDE - REMPLISSAGE BASE DE DONNÉES        ║
+╚═══════════════════════════════════════════════════════════════╝
+
+📋 PRÉREQUIS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ Docker en cours d'exécution
+✅ Conteneur pidev-web démarré (docker-compose up -d)
+✅ Au moins quelques utilisateurs créés dans la base
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 MÉTHODES D'EXÉCUTION (choisissez-en UNE)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1️⃣  Script automatique (RECOMMANDÉ)
+   ./run_fill_database.sh
+   
+   ✓ Vérifie automatiquement les prérequis
+   ✓ Demande confirmation
+   ✓ Affiche la progression
+   ✓ Gère les erreurs
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+2️⃣  Exécution directe avec Docker
+   docker exec pidev-web php fill_database.php
+   
+   ✓ Simple et rapide
+   ✓ Affiche les statistiques en temps réel
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+3️⃣  Exécution locale (si PHP installé localement)
+   php fill_database.php
+   
+   ✓ Sans Docker
+   ✓ Plus rapide si PHP local >= 8.1
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 DONNÉES GÉNÉRÉES (exemples)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   5 cliniques
+  15 médicaments  
+   7 pharmacies avec stocks
+  1-3 abonnements + factures par patient
+  0-3 plans d'accompagnement par patient
+ 10-20 disponibilités par médecin
+  0-3 rendez-vous par patient
+  0-3 rapports médicaux par patient
+  3-10 entrées journal par patient
+  10 articles/vidéos de contenu
+  Likes, commentaires, messages, notifications, etc.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⏱️  DURÉE ESTIMÉE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   30-60 secondes (selon nombre d'utilisateurs)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📖 DOCUMENTATION COMPLÈTE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   Consultez: REMPLISSAGE_DATABASE.md
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🐛 EN CAS DE PROBLÈME
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   1. Vérifiez les logs: docker logs pidev-web
+   2. Consultez la section "Dépannage" dans REMPLISSAGE_DATABASE.md
+   3. Vérifiez que les migrations sont à jour:
+      docker exec pidev-web bin/console doctrine:migrations:status
+
+╚═══════════════════════════════════════════════════════════════╝

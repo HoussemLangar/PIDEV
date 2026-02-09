@@ -4,89 +4,194 @@
 
 {% block admin_content %}
     <!-- Header Section -->
-    <div class="admin-header">
-        <div class="admin-header-left">
-            <h1>Dashboard Admin</h1>
-            <p class="header-subtitle">Vue d'ensemble de la plateforme SANTÉA</p>
+    <div class="dashboard-header-modern">
+        <div class="dashboard-header-left">
+            <div class="dashboard-title-group">
+                <h1><i class="fas fa-chart-line"></i> Dashboard Admin</h1>
+                <p class="header-subtitle">Vue d'ensemble de la plateforme SANTÉA</p>
+            </div>
+            <div class="dashboard-quick-stats">
+                <span class="quick-stat-pill"><i class="fas fa-check-circle"></i> Système opérationnel</span>
+                <span class="quick-stat-pill"><i class="fas fa-clock"></i> {{ "now"|date("d/m/Y H:i") }}</span>
+            </div>
         </div>
-        <div class="admin-header-right">
-            <a class="btn-export" href="{{ path('admin_dashboard_export') }}">
-                <i class="fas fa-download"></i> Exporter les données
+        <div class="dashboard-header-actions">
+            <a href="{{ path('admin_validation') }}" class="btn-action-header" title="Validations en attente">
+                <i class="fas fa-user-check"></i>
+                {% if stats.adminPending > 0 %}
+                    <span class="badge-notification">{{ stats.adminPending }}</span>
+                {% endif %}
+            </a>
+            <a href="{{ path('admin_security_suspicious') }}" class="btn-action-header" title="Sécurité">
+                <i class="fas fa-shield-alt"></i>
+                {% if suspiciousCount > 0 %}
+                    <span class="badge-notification warning">{{ suspiciousCount }}</span>
+                {% endif %}
+            </a>
+            <a class="btn-export-modern" href="{{ path('admin_dashboard_export') }}">
+                <i class="fas fa-download"></i> Exporter
             </a>
         </div>
     </div>
     
     <!-- Statistics Cards -->
-    <section class="admin-stats">
-        <div class="stat-card-admin">
-            <div class="stat-icon-box" style="background: linear-gradient(135deg, #40C4FF, #0288D1);">
-                <i class="fas fa-users"></i>
+    <section class="dashboard-stats-modern">
+        <div class="stat-card-modern gradient-blue">
+            <div class="stat-card-header">
+                <div class="stat-icon-modern">
+                    <i class="fas fa-users"></i>
+                </div>
+                <span class="stat-trend-badge up"><i class="fas fa-arrow-up"></i> +12%</span>
             </div>
-            <div class="stat-content">
-                <span class="stat-label">Utilisateurs total</span>
-                <span class="stat-value">{{ stats.totalUsers|number_format(0, ',', ' ') }}</span>
-                <span class="stat-change positive">
-                    <i class="fas fa-user-check"></i> Actifs: {{ stats.activeUsers|number_format(0, ',', ' ') }}
-                </span>
+            <div class="stat-card-body">
+                <p class="stat-label-modern">Utilisateurs Total</p>
+                <h2 class="stat-value-modern">{{ stats.totalUsers|number_format(0, ',', ' ') }}</h2>
+                <div class="stat-details-row">
+                    <span class="stat-detail"><i class="fas fa-check-circle"></i> {{ stats.activeUsers }} actifs</span>
+                    <span class="stat-detail"><i class="fas fa-ban"></i> {{ stats.bannedUsers }} bannis</span>
+                </div>
             </div>
-        </div>
-
-        <div class="stat-card-admin">
-            <div class="stat-icon-box" style="background: linear-gradient(135deg, #4CAF50, #388E3C);">
-                <i class="fas fa-credit-card"></i>
-            </div>
-            <div class="stat-content">
-                <span class="stat-label">Abonnements actifs</span>
-                <span class="stat-value">{{ stats.activeSubscriptions|number_format(0, ',', ' ') }}</span>
-                <span class="stat-change positive">
-                    <i class="fas fa-sync"></i> Expirés: {{ stats.expiredSubscriptions|number_format(0, ',', ' ') }}
-                </span>
+            <div class="stat-card-footer">
+                <a href="{{ path('admin_users') }}"><i class="fas fa-arrow-right"></i> Gérer les utilisateurs</a>
             </div>
         </div>
 
-        <div class="stat-card-admin">
-            <div class="stat-icon-box" style="background: linear-gradient(135deg, #FF9800, #F57C00);">
-                <i class="fas fa-coins"></i>
+        <div class="stat-card-modern gradient-green">
+            <div class="stat-card-header">
+                <div class="stat-icon-modern">
+                    <i class="fas fa-credit-card"></i>
+                </div>
+                <span class="stat-trend-badge up"><i class="fas fa-arrow-up"></i> +8%</span>
             </div>
-            <div class="stat-content">
-                <span class="stat-label">Revenus du mois</span>
-                <span class="stat-value">{{ stats.monthlyRevenue|number_format(0, ',', ' ') }} TND</span>
-                <span class="stat-change positive">
-                    <i class="fas fa-file-invoice"></i> Factures: {{ stats.totalInvoices|number_format(0, ',', ' ') }}
-                </span>
+            <div class="stat-card-body">
+                <p class="stat-label-modern">Abonnements Actifs</p>
+                <h2 class="stat-value-modern">{{ stats.activeSubscriptions|number_format(0, ',', ' ') }}</h2>
+                <div class="stat-details-row">
+                    <span class="stat-detail"><i class="fas fa-hourglass-half"></i> {{ stats.expiredSubscriptions }} expirés</span>
+                    <span class="stat-detail"><i class="fas fa-times-circle"></i> {{ stats.cancelledSubscriptions }} annulés</span>
+                </div>
+            </div>
+            <div class="stat-card-footer">
+                <a href="{{ path('admin_subscriptions') }}"><i class="fas fa-arrow-right"></i> Voir les abonnements</a>
             </div>
         </div>
 
-        <div class="stat-card-admin">
-            <div class="stat-icon-box" style="background: linear-gradient(135deg, #9C27B0, #7B1FA2);">
-                <i class="fas fa-hourglass-half"></i>
+        <div class="stat-card-modern gradient-orange">
+            <div class="stat-card-header">
+                <div class="stat-icon-modern">
+                    <i class="fas fa-coins"></i>
+                </div>
+                <span class="stat-trend-badge up"><i class="fas fa-arrow-up"></i> +15%</span>
             </div>
-            <div class="stat-content">
-                <span class="stat-label">Paiements en attente</span>
-                <span class="stat-value">{{ stats.pendingPayments|number_format(0, ',', ' ') }}</span>
-                <span class="stat-change negative">
-                    <i class="fas fa-ban"></i> Bannies: {{ stats.bannedUsers|number_format(0, ',', ' ') }}
-                </span>
+            <div class="stat-card-body">
+                <p class="stat-label-modern">Revenus du Mois</p>
+                <h2 class="stat-value-modern">{{ stats.monthlyRevenue|number_format(0, ',', ' ') }} <small>TND</small></h2>
+                <div class="stat-details-row">
+                    <span class="stat-detail"><i class="fas fa-chart-line"></i> Total: {{ stats.totalRevenue|number_format(0, ',', ' ') }} TND</span>
+                </div>
+            </div>
+            <div class="stat-card-footer">
+                <a href="{{ path('admin_revenues') }}"><i class="fas fa-arrow-right"></i> Détails des revenus</a>
+            </div>
+        </div>
+
+        <div class="stat-card-modern gradient-purple">
+            <div class="stat-card-header">
+                <div class="stat-icon-modern">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                </div>
+                <span class="stat-trend-badge warning"><i class="fas fa-exclamation"></i> {{ stats.pendingPayments }}</span>
+            </div>
+            <div class="stat-card-body">
+                <p class="stat-label-modern">Paiements en Attente</p>
+                <h2 class="stat-value-modern">{{ stats.pendingPayments|number_format(0, ',', ' ') }}</h2>
+                <div class="stat-details-row">
+                    <span class="stat-detail"><i class="fas fa-file-invoice"></i> {{ stats.totalInvoices }} factures total</span>
+                </div>
+            </div>
+            <div class="stat-card-footer">
+                <a href="{{ path('admin_revenues') }}"><i class="fas fa-arrow-right"></i> Gérer les factures</a>
             </div>
         </div>
     </section>
 
-    <section class="admin-grid cards-4" style="margin-bottom: 30px;">
-        <div class="admin-card">
-            <div class="admin-badge">Email confirmés</div>
-            <h2>{{ stats.emailVerified|number_format(0, ',', ' ') }}</h2>
+    <!-- Charts Section -->
+    <section class="dashboard-charts-section">
+        <div class="chart-card-large">
+            <div class="chart-card-header">
+                <div>
+                    <h3><i class="fas fa-chart-area"></i> Inscriptions (30 derniers jours)</h3>
+                    <p>Évolution des nouvelles inscriptions sur le mois</p>
+                </div>
+                <div class="chart-legend">
+                    <span class="legend-item"><span class="legend-dot" style="background: #40C4FF;"></span> Inscriptions</span>
+                </div>
+            </div>
+            <div class="chart-card-body">
+                <canvas id="registrationsChart" height="80"></canvas>
+            </div>
         </div>
-        <div class="admin-card">
-            <div class="admin-badge warning">Admin en attente</div>
-            <h2>{{ stats.adminPending|number_format(0, ',', ' ') }}</h2>
+
+        <div class="chart-card-medium">
+            <div class="chart-card-header">
+                <div>
+                    <h3><i class="fas fa-chart-pie"></i> Revenus par Type</h3>
+                    <p>Répartition des revenus par rôle</p>
+                </div>
+            </div>
+            <div class="chart-card-body" style="display: flex; align-items: center; justify-content: center;">
+                <canvas id="revenueChart" height="200"></canvas>
+            </div>
+            <div class="chart-stats-grid">
+                <div class="chart-stat-item">
+                    <span class="chart-stat-label">Total</span>
+                    <span class="chart-stat-value">{{ stats.totalRevenue|number_format(0, ',', ' ') }} TND</span>
+                </div>
+                <div class="chart-stat-item">
+                    <span class="chart-stat-label">Ce mois</span>
+                    <span class="chart-stat-value">{{ stats.monthlyRevenue|number_format(0, ',', ' ') }} TND</span>
+                </div>
+            </div>
         </div>
-        <div class="admin-card">
-            <div class="admin-badge danger">Abonnements annulés</div>
-            <h2>{{ stats.cancelledSubscriptions|number_format(0, ',', ' ') }}</h2>
+    </section>
+
+    <!-- Mini Stats Grid -->
+    <section class="mini-stats-grid">
+        <div class="mini-stat-card">
+            <div class="mini-stat-icon success">
+                <i class="fas fa-envelope-circle-check"></i>
+            </div>
+            <div class="mini-stat-content">
+                <p>Emails Confirmés</p>
+                <h4>{{ stats.emailVerified|number_format(0, ',', ' ') }}</h4>
+            </div>
         </div>
-        <div class="admin-card">
-            <div class="admin-badge">Revenus total</div>
-            <h2>{{ stats.totalRevenue|number_format(0, ',', ' ') }} TND</h2>
+        <div class="mini-stat-card">
+            <div class="mini-stat-icon warning">
+                <i class="fas fa-user-clock"></i>
+            </div>
+            <div class="mini-stat-content">
+                <p>En Attente Validation</p>
+                <h4>{{ stats.adminPending|number_format(0, ',', ' ') }}</h4>
+            </div>
+        </div>
+        <div class="mini-stat-card">
+            <div class="mini-stat-icon danger">
+                <i class="fas fa-user-xmark"></i>
+            </div>
+            <div class="mini-stat-content">
+                <p>Abonnements Annulés</p>
+                <h4>{{ stats.cancelledSubscriptions|number_format(0, ',', ' ') }}</h4>
+            </div>
+        </div>
+        <div class="mini-stat-card">
+            <div class="mini-stat-icon info">
+                <i class="fas fa-wallet"></i>
+            </div>
+            <div class="mini-stat-content">
+                <p>Revenus Total</p>
+                <h4>{{ stats.totalRevenue|number_format(0, ',', ' ') }} TND</h4>
+            </div>
         </div>
     </section>
     

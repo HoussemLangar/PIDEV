@@ -6,6 +6,9 @@ use App\Entity\UserSession;
 use App\Form\AdminUserType;
 use App\Form\AdminUserResetPasswordType;
 use App\Entity\Facture;
+use App\Entity\AccompanimentPlan;
+use App\Entity\CoachSportif;
+use App\Entity\Nutritionniste;
 use App\Repository\AbonnementRepository;
 use App\Repository\ContenuRepository;
 use App\Repository\SuspiciousLoginRepository;
@@ -995,16 +998,245 @@ class AdminController extends AbstractController
     }
 
     #[Route('/revenues', name: 'admin_revenues')]
-    public function revenues(): Response
+    public function revenues(Request $request, EntityManagerInterface $em): Response
     {
-        return $this->render('admin/revenues/index.html.twig');
+        // Filtres
+        $search = trim((string) $request->query->get('q', ''));
+        $status = (string) $request->query->get('status', '');
+        $dateFrom = (string) $request->query->get('date_from', '');
+        $dateTo = (string) $request->query->get('date_to', '');
+        $minAmount = (string) $request->query->get('min_amount', '');
+        $maxAmount = (string) $request->query->get('max_amount', '');
+
+        // Query builder pour les factures
+        $qb = $em->getRepository(Facture::class)->createQueryBuilder('f')
+            ->leftJoin('f.user', 'u')->addSelect('u')
+            ->leftJoin('f.abonnement', 'a')->addSelect('a')
+            ->orderBy('f.createdAt', 'DESC');
+
+        if ($search) {
+            $qb->andWhere('f.numero LIKE :q OR u.email LIKE :q OR u.nom LIKE :q OR u.prenom LIKE :q')
+                ->setParameter('q', '%' . $search . '%');
+        }
+
+        if ($dateFrom) {
+            try {
+                $qb->andWhere('f.createdAt >= :from')
+                    ->setParameter('from', new \DateTime($dateFrom . ' 00:00:00'));
+            } catch (\Exception $e) {}
+        }
+
+        if ($dateTo) {
+            try {
+                $qb->andWhere('f.createdAt <= :to')
+                    ->setParameter('to', new \DateTime($dateTo . ' 23:59:59'));
+            } catch (\Exception $e) {}
+        }
+
+        if ($minAmount !== '') {
+            $qb->andWhere('f.montantTtc >= :min')->setParameter('min', (float)$minAmount);
+        }
+
+        if ($maxAmount !== '') {
+            $qb->andWhere('f.montantTtc <= :max')->setParameter('max', (float)$maxAmount);
+        }
+
+        $factures = $qb->setMaxResults(100)->getQuery()->getResult();
+
+        // Statistiques
+        $statsQb = $em->getRepository(Facture::class)->createQueryBuilder('f');
+        $totalRevenue = (float) $statsQb->select('COALESCE(SUM(f.montantTtc), 0)')
+            ->getQuery()->getSingleScalarResult();
+
+        $monthStart = new \DateTimeImmutable('first day of this month 00:00:00');
+        $monthEnd = $monthStart->modify('first day of next month 00:00:00');
+        $monthlyRevenue = (float) $em->createQueryBuilder()
+            ->select('COALESCE(SUM(f.montantTtc), 0)')
+            ->from(Facture::class, 'f')
+            ->where('f.createdAt >= :from')
+            ->andWhere('f.createdAt < :to')
+            ->setParameter('from', $monthStart)
+            ->setParameter('to', $monthEnd)
+            ->getQuery()->getSingleScalarResult();
+
+        $totalInvoices = (int) $em->createQueryBuilder()
+            ->select('COUNT(f.id)')
+            ->from(Facture::class, 'f')
+            ->getQuery()->getSingleScalarResult();
+
+        $avgInvoice = $totalInvoices > 0 ? $totalRevenue / $totalInvoices : 0;
+
+        // Revenus par type d'abonnement
+        $revenueByType = $em->createQueryBuilder()
+            ->select('a.typeAbonnement as type, COALESCE(SUM(f.montantTtc), 0) as total, COUNT(f.id) as count')
+            ->from(Facture::class, 'f')
+            ->leftJoin('f.abonnement', 'a')
+            ->groupBy('a.typeAbonnement')
+            ->getQuery()->getResult();
+
+        // Revenus mensuels (6 derniers mois)
+        $monthlyChart = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $start = new \DateTimeImmutable("first day of -$i month 00:00:00");
+            $end = $start->modify('first day of next month 00:00:00');
+            $revenue = (float) $em->createQueryBuilder()
+                ->select('COALESCE(SUM(f.montantTtc), 0)')
+                ->from(Facture::class, 'f')
+                ->where('f.createdAt >= :from')
+                ->andWhere('f.createdAt < :to')
+                ->setParameter('from', $start)
+                ->setParameter('to', $end)
+                ->getQuery()->getSingleScalarResult();
+            $monthlyChart[] = [
+                'month' => $start->format('M Y'),
+                'revenue' => $revenue
+            ];
+        }
+
+        return $this->render('admin/revenues/index.html.twig', [
+            'factures' => $factures,
+            'stats' => [
+                'total' => $totalRevenue,
+                'monthly' => $monthlyRevenue,
+                'count' => $totalInvoices,
+                'average' => $avgInvoice,
+            ],
+            'revenueByType' => $revenueByType,
+            'monthlyChart' => $monthlyChart,
+            'filters' => [
+                'search' => $search,
+                'status' => $status,
+                'date_from' => $dateFrom,
+                'date_to' => $dateTo,
+                'min_amount' => $minAmount,
+                'max_amount' => $maxAmount,
+            ],
+        ]);
     }
 
     // ========== SERVICES MÉDICAUX ==========
     #[Route('/accompaniments', name: 'admin_accompaniments')]
-    public function accompaniments(): Response
+    public function accompaniments(Request $request, EntityManagerInterface $em): Response
     {
-        return $this->render('admin/accompaniments/index.html.twig');
+        // Filtres
+        $search = trim((string) $request->query->get('q', ''));
+        $status = (string) $request->query->get('status', '');
+        $coachId = (int) $request->query->get('coach', 0);
+        $nutritionistId = (int) $request->query->get('nutritionist', 0);
+        $dateFrom = (string) $request->query->get('date_from', '');
+        $dateTo = (string) $request->query->get('date_to', '');
+
+        // Query builder pour les plans d'accompagnement
+        $qb = $em->getRepository(AccompanimentPlan::class)->createQueryBuilder('ap')
+            ->leftJoin('ap.patient', 'p')->addSelect('p')
+            ->leftJoin('p.user', 'u')->addSelect('u')
+            ->leftJoin('ap.coach', 'c')->addSelect('c')
+            ->leftJoin('ap.nutritionist', 'n')->addSelect('n')
+            ->orderBy('ap.createdAt', 'DESC');
+
+        if ($search) {
+            $qb->andWhere('ap.title LIKE :q OR u.nom LIKE :q OR u.prenom LIKE :q OR u.email LIKE :q')
+                ->setParameter('q', '%' . $search . '%');
+        }
+
+        if ($status) {
+            $qb->andWhere('ap.status = :status')->setParameter('status', $status);
+        }
+
+        if ($coachId) {
+            $qb->andWhere('c.id = :cid')->setParameter('cid', $coachId);
+        }
+
+        if ($nutritionistId) {
+            $qb->andWhere('n.id = :nid')->setParameter('nid', $nutritionistId);
+        }
+
+        if ($dateFrom) {
+            try {
+                $qb->andWhere('ap.startDate >= :from')
+                    ->setParameter('from', new \DateTimeImmutable($dateFrom));
+            } catch (\Exception $e) {}
+        }
+
+        if ($dateTo) {
+            try {
+                $qb->andWhere('ap.startDate <= :to')
+                    ->setParameter('to', new \DateTimeImmutable($dateTo));
+            } catch (\Exception $e) {}
+        }
+
+        $plans = $qb->setMaxResults(100)->getQuery()->getResult();
+
+        // Statistiques
+        $totalPlans = (int) $em->createQueryBuilder()
+            ->select('COUNT(ap.id)')
+            ->from(AccompanimentPlan::class, 'ap')
+            ->getQuery()->getSingleScalarResult();
+
+        $activePlans = (int) $em->createQueryBuilder()
+            ->select('COUNT(ap.id)')
+            ->from(AccompanimentPlan::class, 'ap')
+            ->where('ap.status = :status')
+            ->setParameter('status', 'active')
+            ->getQuery()->getSingleScalarResult();
+
+        $completedPlans = (int) $em->createQueryBuilder()
+            ->select('COUNT(ap.id)')
+            ->from(AccompanimentPlan::class, 'ap')
+            ->where('ap.status = :status')
+            ->setParameter('status', 'completed')
+            ->getQuery()->getSingleScalarResult();
+
+        $cancelledPlans = (int) $em->createQueryBuilder()
+            ->select('COUNT(ap.id)')
+            ->from(AccompanimentPlan::class, 'ap')
+            ->where('ap.status = :status')
+            ->setParameter('status', 'cancelled')
+            ->getQuery()->getSingleScalarResult();
+
+        // Plans par statut
+        $plansByStatus = $em->createQueryBuilder()
+            ->select('ap.status, COUNT(ap.id) as count')
+            ->from(AccompanimentPlan::class, 'ap')
+            ->groupBy('ap.status')
+            ->getQuery()->getResult();
+
+        // Liste des coaches pour le filtre
+        $coaches = $em->getRepository(CoachSportif::class)->createQueryBuilder('c')
+            ->leftJoin('c.user', 'u')->addSelect('u')
+            ->where('u.deletedAt IS NULL')
+            ->orderBy('u.nom', 'ASC')
+            ->setMaxResults(50)
+            ->getQuery()->getResult();
+
+        // Liste des nutritionnistes pour le filtre
+        $nutritionists = $em->getRepository(Nutritionniste::class)->createQueryBuilder('n')
+            ->leftJoin('n.user', 'u')->addSelect('u')
+            ->where('u.deletedAt IS NULL')
+            ->orderBy('u.nom', 'ASC')
+            ->setMaxResults(50)
+            ->getQuery()->getResult();
+
+        return $this->render('admin/accompaniments/index.html.twig', [
+            'plans' => $plans,
+            'stats' => [
+                'total' => $totalPlans,
+                'active' => $activePlans,
+                'completed' => $completedPlans,
+                'cancelled' => $cancelledPlans,
+            ],
+            'plansByStatus' => $plansByStatus,
+            'coaches' => $coaches,
+            'nutritionists' => $nutritionists,
+            'filters' => [
+                'search' => $search,
+                'status' => $status,
+                'coach' => $coachId,
+                'nutritionist' => $nutritionistId,
+                'date_from' => $dateFrom,
+                'date_to' => $dateTo,
+            ],
+        ]);
     }
 
     #[Route('/admin/appointments', name: 'admin_appointments')]

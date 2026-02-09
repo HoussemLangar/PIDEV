@@ -35,6 +35,11 @@ class AccountApprovalSubscriber implements EventSubscriberInterface
             return;
         }
 
+        // Les utilisateurs bannis sont gérés par BannedUserSubscriber (priorité plus haute)
+        if (method_exists($user, 'isBannedEffective') && $user->isBannedEffective()) {
+            return;
+        }
+
         if ($user->isEmailVerified() && $user->isAdminApproved()) {
             return;
         }
@@ -50,6 +55,7 @@ class AccountApprovalSubscriber implements EventSubscriberInterface
             'login',
             'app_logout',
             'app_register',
+            'app_banned',
         ];
 
         if (in_array($route, $allowedRoutes, true)) {

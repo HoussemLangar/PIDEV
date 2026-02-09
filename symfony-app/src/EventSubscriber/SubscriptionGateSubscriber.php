@@ -37,6 +37,11 @@ class SubscriptionGateSubscriber implements EventSubscriberInterface
             return;
         }
 
+        // Les utilisateurs bannis sont gérés par BannedUserSubscriber (priorité plus haute)
+        if (method_exists($user, 'isBannedEffective') && $user->isBannedEffective()) {
+            return;
+        }
+
         // Admins restent libres de l'abonnement
         if (in_array('ROLE_ADMIN', $user->getRoles(), true)) {
             return;

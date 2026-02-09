@@ -3,78 +3,94 @@
 {% block title %}Planifier une téléconsultation{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row">
-        <div class="col-md-8 mx-auto">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">
-                        <i class="bi bi-calendar-plus"></i> Planifier une téléconsultation
-                    </h4>
-                </div>
-                <div class="card-body">
-                    {{ form_start(form, {'attr': {'class': 'needs-validation', 'novalidate': true}}) }}
-
-                    <div class="mb-3">
-                        {{ form_label(form.recipient) }}
-                        {{ form_widget(form.recipient, {'attr': {'class': 'form-control'}}) }}
-                        {% if form.recipient.vars.errors|length > 0 %}
-                            <div class="alert alert-danger mt-2">
-                                {{ form_errors(form.recipient) }}
-                            </div>
-                        {% endif %}
-                    </div>
-
-                    <div class="mb-3">
-                        {{ form_label(form.scheduledAt) }}
-                        {{ form_widget(form.scheduledAt, {'attr': {'class': 'form-control'}}) }}
-                        <small class="text-muted d-block mt-2">
-                            Vous pouvez rejoindre 5 minutes avant l'heure prévue
-                        </small>
-                        {% if form.scheduledAt.vars.errors|length > 0 %}
-                            <div class="alert alert-danger mt-2">
-                                {{ form_errors(form.scheduledAt) }}
-                            </div>
-                        {% endif %}
-                    </div>
-
-                    <div class="mb-3">
-                        {{ form_label(form.type) }}
-                        {{ form_widget(form.type, {'attr': {'class': 'form-control'}}) }}
-                    </div>
-
-                    <div class="mb-3">
-                        {{ form_label(form.description) }}
-                        {{ form_widget(form.description, {'attr': {'class': 'form-control'}}) }}
-                        <small class="text-muted d-block mt-2">
-                            Décrivez brièvement la raison de cette consultation
-                        </small>
-                    </div>
-
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-calendar-check"></i> Planifier
-                        </button>
-                        <a href="{{ path('app_teleconsultation_index') }}" class="btn btn-secondary">
-                            Annuler
-                        </a>
-                    </div>
-
-                    {{ form_end(form) }}
-                </div>
+<div class="content-wrapper" style="padding: 30px 40px; max-width: 900px; margin: 0 auto;">
+    <div class="page-header" style="margin-bottom: 32px;">
+        <div style="display: flex; align-items: center; gap: 16px;">
+            <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-calendar-plus" style="color: white; font-size: 24px;"></i>
             </div>
-
-            <!-- Important Information -->
-            <div class="alert alert-info mt-4">
-                <h5><i class="bi bi-info-circle"></i> Informations importantes</h5>
-                <ul class="mb-0">
-                    <li>Assurez-vous d'avoir une bonne connexion Internet et une webcam/microphone fonctionnels</li>
-                    <li>La consultation se fera via Jitsi Meet (aucune installation requise)</li>
-                    <li>Vous recevrez une notification quand votre correspondant rejoindra</li>
-                    <li>Vous pouvez enregistrer la consultation si c'est autorisé</li>
-                </ul>
+            <div>
+                <h1 style="margin: 0; font-size: 28px; font-weight: 700; color: #1a1a2e;">Planifier une téléconsultation</h1>
+                <p style="margin: 4px 0 0 0; color: #64748b; font-size: 14px;">Programmez un rendez-vous vidéo avec votre médecin</p>
             </div>
         </div>
+    </div>
+
+    <div style="background: white; border-radius: 16px; padding: 32px; box-shadow: 0 2px 8px rgba(15,23,42,0.06); border: 1px solid #e2e8f0; margin-bottom: 24px;">
+        {{ form_start(form, {'attr': {'class': 'needs-validation', 'novalidate': true}}) }}
+
+        <div style="margin-bottom: 24px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #1e293b; font-size: 14px;">
+                <i class="fas fa-user-md" style="margin-right: 6px; color: #8b5cf6;"></i>
+                {{ form.recipient.vars.label }}
+            </label>
+            {{ form_widget(form.recipient, {'attr': {'style': 'width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 15px; transition: all 0.2s;'}}) }}
+            {% if form.recipient.vars.errors|length > 0 %}
+                <div style="background: #fee; border-left: 4px solid #ef4444; padding: 12px; border-radius: 8px; margin-top: 8px; color: #991b1b;">
+                    {{ form_errors(form.recipient) }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div style="margin-bottom: 24px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #1e293b; font-size: 14px;">
+                <i class="fas fa-clock" style="margin-right: 6px; color: #8b5cf6;"></i>
+                {{ form.scheduledAt.vars.label }}
+            </label>
+            {{ form_widget(form.scheduledAt, {'attr': {'style': 'width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 15px; transition: all 0.2s;'}}) }}
+            <small style="display: block; margin-top: 8px; color: #64748b; font-size: 13px;">
+                <i class="fas fa-info-circle" style="margin-right: 4px;"></i>
+                Vous pouvez rejoindre 5 minutes avant l'heure prévue
+            </small>
+            {% if form.scheduledAt.vars.errors|length > 0 %}
+                <div style="background: #fee; border-left: 4px solid #ef4444; padding: 12px; border-radius: 8px; margin-top: 8px; color: #991b1b;">
+                    {{ form_errors(form.scheduledAt) }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div style="margin-bottom: 24px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #1e293b; font-size: 14px;">
+                <i class="fas fa-tag" style="margin-right: 6px; color: #8b5cf6;"></i>
+                {{ form.type.vars.label }}
+            </label>
+            {{ form_widget(form.type, {'attr': {'style': 'width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 15px; transition: all 0.2s;'}}) }}
+        </div>
+
+        <div style="margin-bottom: 28px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #1e293b; font-size: 14px;">
+                <i class="fas fa-comment-medical" style="margin-right: 6px; color: #8b5cf6;"></i>
+                {{ form.description.vars.label }}
+            </label>
+            {{ form_widget(form.description, {'attr': {'style': 'width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 15px; transition: all 0.2s; min-height: 120px;'}}) }}
+            <small style="display: block; margin-top: 8px; color: #64748b; font-size: 13px;">
+                Décrivez brièvement la raison de cette consultation
+            </small>
+        </div>
+
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+            <button type="submit" style="padding: 12px 28px; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(139,92,246,0.3); display: inline-flex; align-items: center; gap: 8px;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 20px rgba(139,92,246,0.4)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(139,92,246,0.3)';">
+                <i class="fas fa-calendar-check"></i> Planifier la consultation
+            </button>
+            <a href="{{ path('app_teleconsultation_index') }}" style="padding: 12px 28px; background: #f1f5f9; color: #475569; border: none; border-radius: 10px; font-weight: 600; text-decoration: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px;" onmouseover="this.style.background='#e2e8f0';" onmouseout="this.style.background='#f1f5f9';">
+                <i class="fas fa-times"></i> Annuler
+            </a>
+        </div>
+
+        {{ form_end(form) }}
+    </div>
+
+    <div style="background: linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%); border-radius: 16px; padding: 24px; border: 1px solid #bfdbfe;">
+        <h3 style="margin: 0 0 16px 0; font-size: 18px; font-weight: 600; color: #1e40af; display: flex; align-items: center; gap: 10px;">
+            <i class="fas fa-info-circle"></i>
+            Informations importantes
+        </h3>
+        <ul style="margin: 0; padding-left: 24px; color: #1e40af; line-height: 1.8;">
+            <li>Assurez-vous d'avoir une bonne connexion Internet et une webcam/microphone fonctionnels</li>
+            <li>La consultation se fera via Jitsi Meet (aucune installation requise)</li>
+            <li>Vous recevrez une notification quand votre correspondant rejoindra</li>
+            <li>Vous pouvez enregistrer la consultation si c'est autorisé</li>
+        </ul>
     </div>
 </div>
 {% endblock %}

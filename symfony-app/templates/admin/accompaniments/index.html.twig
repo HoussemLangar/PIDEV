@@ -1,0 +1,304 @@
+{% extends 'back/base.html.twig' %}
+
+{% block title %}Gestion des Plans d'Accompagnement - SANTÉA{% endblock %}
+
+{% block admin_content %}
+    <!-- Header -->
+    <div class="admin-page-header">
+        <div class="admin-page-title">
+            <h1><i class="fas fa-hands-helping"></i> Plans d'Accompagnement</h1>
+            <p>Gestion des programmes de suivi personnalisés</p>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="admin-grid cards-4" style="margin-bottom: 30px;">
+        <div class="admin-card">
+            <div class="admin-badge">Total Plans</div>
+            <h2>{{ stats.total|number_format(0, ',', ' ') }}</h2>
+            <p style="font-size: 13px; color: #888; margin-top: 8px;">
+                <i class="fas fa-clipboard-list"></i> Tous statuts
+            </p>
+        </div>
+
+        <div class="admin-card">
+            <div class="admin-badge success">Plans Actifs</div>
+            <h2>{{ stats.active|number_format(0, ',', ' ') }}</h2>
+            <p style="font-size: 13px; color: #888; margin-top: 8px;">
+                <i class="fas fa-play-circle"></i> En cours
+            </p>
+        </div>
+
+        <div class="admin-card">
+            <div class="admin-badge">Plans Complétés</div>
+            <h2>{{ stats.completed|number_format(0, ',', ' ') }}</h2>
+            <p style="font-size: 13px; color: #888; margin-top: 8px;">
+                <i class="fas fa-check-circle"></i> Terminés
+            </p>
+        </div>
+
+        <div class="admin-card">
+            <div class="admin-badge danger">Plans Annulés</div>
+            <h2>{{ stats.cancelled|number_format(0, ',', ' ') }}</h2>
+            <p style="font-size: 13px; color: #888; margin-top: 8px;">
+                <i class="fas fa-times-circle"></i> Abandonnés
+            </p>
+        </div>
+    </div>
+
+    <!-- Status Distribution Chart -->
+    <div class="admin-card" style="margin-bottom: 30px;">
+        <div class="chart-card-header">
+            <div>
+                <h3><i class="fas fa-chart-bar"></i> Répartition des Plans par Statut</h3>
+                <p>Distribution des plans selon leur état</p>
+            </div>
+        </div>
+        <div class="chart-card-body">
+            <canvas id="statusChart" height="80"></canvas>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="admin-card" style="margin-bottom: 20px;">
+        <form method="get" action="{{ path('admin_accompaniments') }}">
+            <div class="filters-inline">
+                <div class="filter-field filter-search">
+                    <label><i class="fas fa-search"></i> Rechercher</label>
+                    <input type="text" name="q" class="admin-input" placeholder="Titre, nom patient..." value="{{ filters.search }}">
+                </div>
+
+                <div class="filter-field">
+                    <label><i class="fas fa-flag"></i> Statut</label>
+                    <select name="status" class="admin-input">
+                        <option value="">Tous les statuts</option>
+                        <option value="active" {{ filters.status == 'active' ? 'selected' : '' }}>Actif</option>
+                        <option value="completed" {{ filters.status == 'completed' ? 'selected' : '' }}>Complété</option>
+                        <option value="cancelled" {{ filters.status == 'cancelled' ? 'selected' : '' }}>Annulé</option>
+                        <option value="paused" {{ filters.status == 'paused' ? 'selected' : '' }}>En pause</option>
+                    </select>
+                </div>
+
+                <div class="filter-field">
+                    <label><i class="fas fa-dumbbell"></i> Coach</label>
+                    <select name="coach" class="admin-input">
+                        <option value="">Tous les coaches</option>
+                        {% for coach in coaches %}
+                            <option value="{{ coach.id }}" {{ filters.coach == coach.id ? 'selected' : '' }}>
+                                {{ coach.user.nom }} {{ coach.user.prenom }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-field">
+                    <label><i class="fas fa-apple-alt"></i> Nutritionniste</label>
+                    <select name="nutritionist" class="admin-input">
+                        <option value="">Tous les nutritionnistes</option>
+                        {% for nutritionist in nutritionists %}
+                            <option value="{{ nutritionist.id }}" {{ filters.nutritionist == nutritionist.id ? 'selected' : '' }}>
+                                {{ nutritionist.user.nom }} {{ nutritionist.user.prenom }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-field">
+                    <label><i class="fas fa-calendar-alt"></i> Date Début</label>
+                    <input type="date" name="date_from" class="admin-input" value="{{ filters.date_from }}">
+                </div>
+
+                <div class="filter-field">
+                    <label><i class="fas fa-calendar-alt"></i> Date Fin</label>
+                    <input type="date" name="date_to" class="admin-input" value="{{ filters.date_to }}">
+                </div>
+
+                <div class="filter-field" style="align-self: flex-end;">
+                    <button type="submit" class="admin-panel-toggle">
+                        <i class="fas fa-filter"></i> Filtrer
+                    </button>
+                </div>
+
+                {% if filters.search or filters.status or filters.coach or filters.nutritionist or filters.date_from or filters.date_to %}
+                    <div class="filter-field" style="align-self: flex-end;">
+                        <a href="{{ path('admin_accompaniments') }}" class="btn-settings-reset">
+                            <i class="fas fa-times"></i> Réinitialiser
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <!-- Plans Table -->
+    <div class="admin-card">
+        <div class="admin-panel-title">
+            <i class="fas fa-list"></i> Liste des Plans d'Accompagnement ({{ plans|length }})
+        </div>
+
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Patient</th>
+                    <th>Titre du Plan</th>
+                    <th>Coach / Nutritionniste</th>
+                    <th>Durée</th>
+                    <th>Progression</th>
+                    <th>Statut</th>
+                    <th>Dates</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for plan in plans %}
+                    <tr>
+                        <td><strong>#{{ plan.id }}</strong></td>
+                        <td>
+                            <div style="display: flex; flex-direction: column; gap: 3px;">
+                                <strong>{{ plan.patient.user.nom }} {{ plan.patient.user.prenom }}</strong>
+                                <small style="color: #888;">{{ plan.patient.user.email }}</small>
+                            </div>
+                        </td>
+                        <td>
+                            <div style="display: flex; flex-direction: column; gap: 3px;">
+                                <strong>{{ plan.title }}</strong>
+                                {% if plan.description %}
+                                    <small style="color: #888;">{{ plan.description|slice(0, 50) }}{{ plan.description|length > 50 ? '...' : '' }}</small>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            <div style="display: flex; flex-direction: column; gap: 3px;">
+                                {% if plan.coach %}
+                                    <span><i class="fas fa-dumbbell"></i> {{ plan.coach.user.nom }} {{ plan.coach.user.prenom }}</span>
+                                {% endif %}
+                                {% if plan.nutritionist %}
+                                    <span><i class="fas fa-apple-alt"></i> {{ plan.nutritionist.user.nom }} {{ plan.nutritionist.user.prenom }}</span>
+                                {% endif %}
+                                {% if not plan.coach and not plan.nutritionist %}
+                                    <small style="color: #888;">Non assigné</small>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>{{ plan.durationWeeks }} semaines</td>
+                        <td>
+                            <div style="display: flex; flex-direction: column; gap: 5px;">
+                                <div style="background: #f0f0f0; height: 8px; border-radius: 4px; overflow: hidden;">
+                                    <div style="background: linear-gradient(90deg, #4CAF50, #8BC34A); height: 100%; width: {{ plan.progressPercentage }}%;"></div>
+                                </div>
+                                <small style="color: #888; font-size: 11px;">{{ plan.progressPercentage }}%</small>
+                            </div>
+                        </td>
+                        <td>
+                            {% set statusColors = {
+                                'active': 'success',
+                                'completed': 'primary',
+                                'cancelled': 'danger',
+                                'paused': 'warning'
+                            } %}
+                            {% set statusLabels = {
+                                'active': 'Actif',
+                                'completed': 'Complété',
+                                'cancelled': 'Annulé',
+                                'paused': 'En pause'
+                            } %}
+                            <span class="admin-badge {{ statusColors[plan.status] ?? '' }}">
+                                {{ statusLabels[plan.status] ?? plan.status }}
+                            </span>
+                        </td>
+                        <td>
+                            <div style="display: flex; flex-direction: column; gap: 3px;">
+                                <span><i class="fas fa-calendar-plus"></i> {{ plan.startDate|date('d/m/Y') }}</span>
+                                {% if plan.endDate %}
+                                    <span><i class="fas fa-calendar-check"></i> {{ plan.endDate|date('d/m/Y') }}</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 5px;">
+                                <button class="btn-action-table" onclick="viewPlanDetails({{ plan.id }})" title="Voir détails">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn-action-table" onclick="editPlan({{ plan.id }})" title="Modifier">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                {% if plan.status == 'active' %}
+                                    <button class="btn-action-table" onclick="completePlan({{ plan.id }})" title="Marquer comme complété">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="9" style="text-align: center; padding: 40px; color: #888;">
+                            <i class="fas fa-inbox" style="font-size: 48px; margin-bottom: 15px; opacity: 0.3;"></i>
+                            <p>Aucun plan d'accompagnement trouvé</p>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Status Distribution Chart
+        const statusCtx = document.getElementById('statusChart');
+        if (statusCtx) {
+            const plansByStatus = {{ plansByStatus|json_encode|raw }};
+            const statusLabels = {
+                'active': 'Actif',
+                'completed': 'Complété',
+                'cancelled': 'Annulé',
+                'paused': 'En pause'
+            };
+            new Chart(statusCtx, {
+                type: 'bar',
+                data: {
+                    labels: plansByStatus.map(s => statusLabels[s.status] || s.status),
+                    datasets: [{
+                        label: 'Nombre de plans',
+                        data: plansByStatus.map(s => s.count),
+                        backgroundColor: ['#4CAF50', '#2196F3', '#f44336', '#FF9800'],
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function viewPlanDetails(id) {
+            alert('Détails du plan #' + id + ' (À implémenter - Afficher modal avec tous les détails du plan)');
+        }
+
+        function editPlan(id) {
+            alert('Modifier le plan #' + id + ' (À implémenter - Ouvrir formulaire d\'édition)');
+        }
+
+        function completePlan(id) {
+            if (confirm('Voulez-vous vraiment marquer ce plan comme complété ?')) {
+                alert('Plan #' + id + ' marqué comme complété (À implémenter - Appel AJAX)');
+            }
+        }
+    </script>
+{% endblock %}

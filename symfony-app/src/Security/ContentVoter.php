@@ -37,7 +37,7 @@ class ContentVoter extends Voter
         return match ($attribute) {
             self::VIEW, self::INTERACT => $user->isSubscriptionActive(),
             self::CREATE => $user->isSubscriptionActive()
-                && in_array($user->getRole(), ['ROLE_MEDECIN', 'ROLE_COACH', 'ROLE_NUTRITIONNISTE'], true),
+                && in_array($user->getRole(), ['ROLE_MEDECIN', 'ROLE_PHARMACIEN', 'ROLE_COACH', 'ROLE_NUTRITIONNISTE'], true),
             self::MODERATE => false,
             default => false,
         };

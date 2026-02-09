@@ -33,7 +33,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     {% block stylesheets %}
-        <link rel="stylesheet" href="{{ asset('style.css') }}?v=9999">
+        <link rel="stylesheet" href="{{ asset('style.css') }}?v=10002">
         <link rel="SHORTCUT ICON" type="image/x-icon" href="{{ asset('logo.png') }}">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     {% endblock %}
@@ -93,30 +93,52 @@
 
                         <hr>
 
-                        <a href="{{ path('app_message_index') }}" class="dropdown-item">
-                            <i class="fas fa-envelope"></i> Messages
-                        </a>
-                        <a href="{{ path('app_document_index') }}" class="dropdown-item">
-                            <i class="fas fa-file"></i> Documents
-                        </a>
-                        {% if is_granted('ROLE_PATIENT') or is_granted('ROLE_MEDECIN') %}
-                        <a href="{{ path('app_teleconsultation_index') }}" class="dropdown-item">
-                            <i class="fas fa-video"></i> Consultations vidéo
-                        </a>
-                        {% endif %}
-                        {% if is_granted('ROLE_PATIENT') or is_granted('ROLE_COACH') %}
-                        <a href="{{ path('app_plan_index') }}" class="dropdown-item">
-                            <i class="fas fa-calendar-check"></i> Mes plans
-                        </a>
-                        {% endif %}
+                        {% set canTeleconsult = is_granted('ROLE_PATIENT') or is_granted('ROLE_MEDECIN') %}
+                        {% set canPlan = is_granted('ROLE_PATIENT') or is_granted('ROLE_COACH') %}
+                        {% set isPatient = app.user and (app.user.subscriptionType ?? app.user.role) == 'ROLE_PATIENT' %}
 
-                        {% if app.user and (app.user.subscriptionType ?? app.user.role) == 'ROLE_PATIENT' %}
-                        <a href="{{ path('app_sante_quotidienne_index') }}" class="dropdown-item">
-                            <i class="fas fa-book-medical"></i> Mon journal santé
-                        </a>
-                        <a href="{{ path('app_symptomes') }}" class="dropdown-item">
-                            <i class="fas fa-stethoscope"></i> Mes symptômes
-                        </a>
+                        <div class="dropdown-section has-submenu">
+                            <button type="button" class="dropdown-section-toggle" data-submenu="accompagnement" aria-controls="submenu-accompagnement" aria-expanded="false">
+                                <i class="fas fa-hand-holding-heart"></i>
+                                <span>Accompagnement</span>
+                                <i class="fas fa-chevron-right toggle-indicator" aria-hidden="true"></i>
+                            </button>
+                            <div class="dropdown-submenu" id="submenu-accompagnement" role="menu" aria-hidden="true">
+                                <a href="{{ path('app_message_index') }}" class="dropdown-item">
+                                    <i class="fas fa-envelope"></i> Messages
+                                </a>
+                                <a href="{{ path('app_document_index') }}" class="dropdown-item">
+                                    <i class="fas fa-file"></i> Documents
+                                </a>
+                                {% if canTeleconsult %}
+                                <a href="{{ path('app_teleconsultation_index') }}" class="dropdown-item">
+                                    <i class="fas fa-video"></i> Consultations vidéo
+                                </a>
+                                {% endif %}
+                                {% if canPlan %}
+                                <a href="{{ path('app_plan_index') }}" class="dropdown-item">
+                                    <i class="fas fa-calendar-check"></i> Mes plans
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        {% if isPatient %}
+                        <div class="dropdown-section has-submenu">
+                            <button type="button" class="dropdown-section-toggle" data-submenu="sante" aria-controls="submenu-sante" aria-expanded="false">
+                                <i class="fas fa-heartbeat"></i>
+                                <span>Santé quotidienne</span>
+                                <i class="fas fa-chevron-right toggle-indicator" aria-hidden="true"></i>
+                            </button>
+                            <div class="dropdown-submenu" id="submenu-sante" role="menu" aria-hidden="true">
+                                <a href="{{ path('app_sante_quotidienne_index') }}" class="dropdown-item">
+                                    <i class="fas fa-book-medical"></i> Mon journal santé
+                                </a>
+                                <a href="{{ path('app_symptomes') }}" class="dropdown-item">
+                                    <i class="fas fa-stethoscope"></i> Mes symptômes
+                                </a>
+                            </div>
+                        </div>
                         {% endif %}
 
                         <a href="{{ path('app_subscription_overview') }}" class="dropdown-item">
@@ -302,15 +324,55 @@
 
             if(!btn || !dropdown) return;
 
+            const sectionsWithSubmenu = dropdown.querySelectorAll(".dropdown-section.has-submenu");
+            const submenuToggles = dropdown.querySelectorAll(".dropdown-section-toggle");
+            const submenuPanels = dropdown.querySelectorAll(".dropdown-submenu");
+
+            const closeAllSubmenus = () => {
+                sectionsWithSubmenu.forEach((section) => section.classList.remove("open"));
+                submenuToggles.forEach((toggle) => toggle.setAttribute("aria-expanded", "false"));
+                submenuPanels.forEach((panel) => panel.setAttribute("aria-hidden", "true"));
+            };
+            closeAllSubmenus();
+
             btn.addEventListener("click", (e) => {
                 e.stopPropagation();
-                dropdown.classList.toggle("show");
+                closeAllSubmenus();
+                const isOpen = dropdown.classList.toggle("show");
+                if(!isOpen){
+                    closeAllSubmenus();
+                }
             });
 
             document.addEventListener("click", (e) => {
                 if(!dropdown.contains(e.target) && !btn.contains(e.target)){
                     dropdown.classList.remove("show");
+                    closeAllSubmenus();
                 }
+            });
+
+            submenuToggles.forEach((toggle) => {
+                toggle.addEventListener("click", (event) => {
+                    event.stopPropagation();
+                    const section = toggle.closest(".dropdown-section");
+                    const isActive = section.classList.contains("open");
+                    closeAllSubmenus();
+                    if(!isActive){
+                        section.classList.add("open");
+                        toggle.setAttribute("aria-expanded", "true");
+                        const panelId = toggle.getAttribute("aria-controls");
+                        if(panelId){
+                            const panel = document.getElementById(panelId);
+                            if(panel){
+                                panel.setAttribute("aria-hidden", "false");
+                            }
+                        }
+                    }
+                });
+            });
+
+            submenuPanels.forEach((submenu) => {
+                submenu.addEventListener("click", (event) => event.stopPropagation());
             });
 
         });
