@@ -1,0 +1,144 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ document.fileName }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <!-- Document Header -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h3>
+                                <i class="bi {{ document.mimeType|mime_icon }}"></i>
+                                {{ document.fileName }}
+                            </h3>
+                            <p class="text-muted mb-2">
+                                Propriétaire: <strong>{{ document.owner.username }}</strong>
+                            </p>
+                        </div>
+                        <div>
+                            <span class="badge bg-secondary">{{ document.documentType }}</span>
+                            {% if document.isPublic %}
+                                <span class="badge bg-success">Public</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row text-center mb-3">
+                        <div class="col-4">
+                            <small class="text-muted">Taille</small>
+                            <p>{{ document.getFileSizeFormatted() }}</p>
+                        </div>
+                        <div class="col-4">
+                            <small class="text-muted">Uploadé</small>
+                            <p>{{ document.uploadedAt|date('d/m/Y H:i') }}</p>
+                        </div>
+                        <div class="col-4">
+                            <small class="text-muted">Type</small>
+                            <p>{{ document.mimeType }}</p>
+                        </div>
+                    </div>
+
+                    {% if document.description %}
+                        <div class="alert alert-light">
+                            <strong>Description:</strong><br>
+                            {{ document.description }}
+                        </div>
+                    {% endif %}
+
+                    <!-- Actions -->
+                    <div class="d-flex gap-2">
+                        <a href="{{ path('app_document_download', {id: document.id}) }}" class="btn btn-success">
+                            <i class="bi bi-download"></i> Télécharger
+                        </a>
+                        {% if isOwner %}
+                            <a href="{{ path('app_document_share', {id: document.id}) }}" class="btn btn-warning">
+                                <i class="bi bi-share"></i> Partager
+                            </a>
+                            <form action="{{ path('app_document_delete', {id: document.id}) }}" method="POST" style="display: inline;">
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ document.id) }}">
+                                <button type="submit" class="btn btn-danger" onclick="return confirm('Êtes-vous sûr?')">
+                                    <i class="bi bi-trash"></i> Supprimer
+                                </button>
+                            </form>
+                        {% endif %}
+                        <a href="{{ path('app_document_index') }}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Retour
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Owner View - Statistics & Sharing Info -->
+            {% if isOwner %}
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Informations de partage</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if stats %}
+                            <div class="row text-center mb-3">
+                                <div class="col-6">
+                                    <h4>{{ stats.sharedWith }}</h4>
+                                    <small class="text-muted">Personne(s) ayant accès</small>
+                                </div>
+                                <div class="col-6">
+                                    <h4>{{ stats.totalAccesses }}</h4>
+                                    <small class="text-muted">Téléchargement(s)</small>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        {% if accesses is empty %}
+                            <p class="text-muted text-center">Ce document n'a pas été partagé.</p>
+                        {% else %}
+                            <h6 class="mb-3">Historique d'accès:</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Utilisateur</th>
+                                            <th>Partagé le</th>
+                                            <th>Accès</th>
+                                            <th>Dernier accès</th>
+                                            <th>Expire</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for access in accesses %}
+                                            <tr class="{% if not access.isActive %}table-danger{% endif %}">
+                                                <td>{{ access.sharedWith.username }}</td>
+                                                <td>{{ access.sharedAt|date('d/m/Y H:i') }}</td>
+                                                <td>
+                                                    <span class="badge bg-info">{{ access.accessCount }}</span>
+                                                </td>
+                                                <td>
+                                                    {% if access.accessedAt %}
+                                                        {{ access.accessedAt|date('d/m/Y H:i') }}
+                                                    {% else %}
+                                                        <span class="text-muted">-</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {% if access.expiresAt %}
+                                                        {{ access.expiresAt|date('d/m/Y H:i') }}
+                                                    {% else %}
+                                                        <span class="text-muted">Jamais</span>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

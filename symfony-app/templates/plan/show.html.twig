@@ -1,0 +1,122 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ plan.title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-calendar-check"></i> {{ plan.title }}
+                        <span class="badge bg-light text-primary float-end">{{ plan.status }}</span>
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- Progress -->
+                    <div class="mb-4">
+                        <label class="form-label">Progression</label>
+                        <div class="progress" style="height: 25px;">
+                            <div class="progress-bar" style="width: {{ plan.progressPercentage }}%">
+                                {{ plan.progressPercentage }}%
+                            </div>
+                        </div>
+                        <small class="text-muted">
+                            Durée: {{ plan.durationWeeks }} semaines | Démarré: {{ plan.startDate|date('d/m/Y') }}
+                        </small>
+                    </div>
+
+                    <!-- Objectives -->
+                    <div class="mb-3">
+                        <h5>Objectifs</h5>
+                        <p>{{ plan.objectives }}</p>
+                    </div>
+
+                    {% if plan.description %}
+                        <div class="mb-3">
+                            <h5>Description</h5>
+                            <p>{{ plan.description }}</p>
+                        </div>
+                    {% endif %}
+
+                    <!-- Professionals -->
+                    <div class="row mb-3">
+                        {% if plan.coach %}
+                            <div class="col-md-6">
+                                <div class="card bg-light">
+                                    <div class="card-header">
+                                        <strong><i class="bi bi-person-badge"></i> Coach Sportif</strong>
+                                    </div>
+                                    <div class="card-body">
+                                        <p>{{ plan.coach.user.username }}</p>
+                                        <small class="text-muted">{{ plan.coach.user.email }}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        {% if plan.nutritionist %}
+                            <div class="col-md-6">
+                                <div class="card bg-light">
+                                    <div class="card-header">
+                                        <strong><i class="bi bi-person-badge"></i> Nutritionniste</strong>
+                                    </div>
+                                    <div class="card-body">
+                                        <p>{{ plan.nutritionist.user.username }}</p>
+                                        <small class="text-muted">{{ plan.nutritionist.user.email }}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Exercise Plans -->
+                    {% if plan.exercisePlans is not empty %}
+                        <div class="mb-3">
+                            <h5><i class="bi bi-lightning"></i> Plans d'exercice ({{ plan.exercisePlans|length }})</h5>
+                            <div class="list-group">
+                                {% for exercise in plan.exercisePlans %}
+                                    <a href="#" class="list-group-item list-group-item-action">
+                                        <h6 class="mb-1">{{ exercise.titre }}</h6>
+                                        <small>Fréquence: {{ exercise.frequence }} | Durée: {{ exercise.dureMinutes }} min</small>
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Diet Plans -->
+                    {% if plan.dietPlans is not empty %}
+                        <div class="mb-3">
+                            <h5><i class="bi bi-apple"></i> Plans nutritionnels ({{ plan.dietPlans|length }})</h5>
+                            <div class="list-group">
+                                {% for diet in plan.dietPlans %}
+                                    <a href="#" class="list-group-item list-group-item-action">
+                                        <h6 class="mb-1">{{ diet.titre }}</h6>
+                                        <small>Type: {{ diet.typeRegime }} {% if diet.caloriesJour %}| {{ diet.caloriesJour }} cal/jour{% endif %}</small>
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer d-flex gap-2">
+                    <a href="{{ path('app_plan_edit', {id: plan.id}) }}" class="btn btn-warning">
+                        <i class="bi bi-pencil"></i> Éditer
+                    </a>
+                    <form action="{{ path('app_plan_delete', {id: plan.id}) }}" method="POST" style="display:inline;">
+                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ plan.id) }}">
+                        <button type="submit" class="btn btn-danger" onclick="return confirm('Êtes-vous sûr?')">
+                            <i class="bi bi-trash"></i> Supprimer
+                        </button>
+                    </form>
+                    <a href="{{ path('app_plan_index') }}" class="btn btn-secondary ms-auto">
+                        <i class="bi bi-arrow-left"></i> Retour
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

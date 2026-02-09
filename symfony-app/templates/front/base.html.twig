@@ -91,6 +91,25 @@
                             <i class="fas fa-key"></i> {{ 'nav.mfa'|trans }}
                         </a>
 
+                        <hr>
+
+                        <a href="{{ path('app_message_index') }}" class="dropdown-item">
+                            <i class="fas fa-envelope"></i> Messages
+                        </a>
+                        <a href="{{ path('app_document_index') }}" class="dropdown-item">
+                            <i class="fas fa-file"></i> Documents
+                        </a>
+                        {% if is_granted('ROLE_PATIENT') or is_granted('ROLE_MEDECIN') %}
+                        <a href="{{ path('app_teleconsultation_index') }}" class="dropdown-item">
+                            <i class="fas fa-video"></i> Consultations vidéo
+                        </a>
+                        {% endif %}
+                        {% if is_granted('ROLE_PATIENT') or is_granted('ROLE_COACH') %}
+                        <a href="{{ path('app_plan_index') }}" class="dropdown-item">
+                            <i class="fas fa-calendar-check"></i> Mes plans
+                        </a>
+                        {% endif %}
+
                         {% if app.user and (app.user.subscriptionType ?? app.user.role) == 'ROLE_PATIENT' %}
                         <a href="{{ path('app_sante_quotidienne_index') }}" class="dropdown-item">
                             <i class="fas fa-book-medical"></i> Mon journal santé
@@ -148,7 +167,28 @@
 
     {% endblock %}
     
-    {% block body %}{% endblock %}
+    {% block body %}
+        <main class="content-area" style="padding: 20px;">
+            {% for type, messages in app.flashes %}
+                {% if type == 'success' %}
+                    {% set alertClass = 'alert-success' %}
+                {% elseif type == 'error' %}
+                    {% set alertClass = 'alert-danger' %}
+                {% elseif type == 'warning' %}
+                    {% set alertClass = 'alert-warning' %}
+                {% else %}
+                    {% set alertClass = 'alert-info' %}
+                {% endif %}
+                {% for message in messages %}
+                    <div class="alert {{ alertClass }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+            {% block content %}{% endblock %}
+        </main>
+    {% endblock %}
 
     <div class="global-loader" id="globalLoader" aria-hidden="true">
         <div class="loader-card">

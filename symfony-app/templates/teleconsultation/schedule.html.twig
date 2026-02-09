@@ -1,0 +1,80 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Planifier une téléconsultation{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-calendar-plus"></i> Planifier une téléconsultation
+                    </h4>
+                </div>
+                <div class="card-body">
+                    {{ form_start(form, {'attr': {'class': 'needs-validation', 'novalidate': true}}) }}
+
+                    <div class="mb-3">
+                        {{ form_label(form.recipient) }}
+                        {{ form_widget(form.recipient, {'attr': {'class': 'form-control'}}) }}
+                        {% if form.recipient.vars.errors|length > 0 %}
+                            <div class="alert alert-danger mt-2">
+                                {{ form_errors(form.recipient) }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form_label(form.scheduledAt) }}
+                        {{ form_widget(form.scheduledAt, {'attr': {'class': 'form-control'}}) }}
+                        <small class="text-muted d-block mt-2">
+                            Vous pouvez rejoindre 5 minutes avant l'heure prévue
+                        </small>
+                        {% if form.scheduledAt.vars.errors|length > 0 %}
+                            <div class="alert alert-danger mt-2">
+                                {{ form_errors(form.scheduledAt) }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form_label(form.type) }}
+                        {{ form_widget(form.type, {'attr': {'class': 'form-control'}}) }}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form_label(form.description) }}
+                        {{ form_widget(form.description, {'attr': {'class': 'form-control'}}) }}
+                        <small class="text-muted d-block mt-2">
+                            Décrivez brièvement la raison de cette consultation
+                        </small>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-calendar-check"></i> Planifier
+                        </button>
+                        <a href="{{ path('app_teleconsultation_index') }}" class="btn btn-secondary">
+                            Annuler
+                        </a>
+                    </div>
+
+                    {{ form_end(form) }}
+                </div>
+            </div>
+
+            <!-- Important Information -->
+            <div class="alert alert-info mt-4">
+                <h5><i class="bi bi-info-circle"></i> Informations importantes</h5>
+                <ul class="mb-0">
+                    <li>Assurez-vous d'avoir une bonne connexion Internet et une webcam/microphone fonctionnels</li>
+                    <li>La consultation se fera via Jitsi Meet (aucune installation requise)</li>
+                    <li>Vous recevrez une notification quand votre correspondant rejoindra</li>
+                    <li>Vous pouvez enregistrer la consultation si c'est autorisé</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

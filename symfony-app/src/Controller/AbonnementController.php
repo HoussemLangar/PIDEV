@@ -58,7 +58,7 @@ class AbonnementController extends AbstractController
     {
         $data = json_decode($request->getContent(), true);
 
-        if (!$data) {
+        if ($data === null && json_last_error() !== JSON_ERROR_NONE) {
             return new JsonResponse(['error' => 'Données JSON invalides'], Response::HTTP_BAD_REQUEST);
         }
 
@@ -85,7 +85,7 @@ class AbonnementController extends AbstractController
 
         $data = json_decode($request->getContent(), true);
 
-        if (!$data) {
+        if ($data === null && json_last_error() !== JSON_ERROR_NONE) {
             return new JsonResponse(['error' => 'Données JSON invalides'], Response::HTTP_BAD_REQUEST);
         }
 
@@ -95,7 +95,7 @@ class AbonnementController extends AbstractController
         return new JsonResponse($this->serializeEntity($entity));
     }
 
-    #[Route('/subscription', name: 'app_subscription')]
+    #[Route('/subscription', name: 'abonnement_subscription')]
     public function showAbonnement(): Response
     {
         return $this->render('user/subscription.html.twig');
@@ -116,7 +116,7 @@ class AbonnementController extends AbstractController
 
         $data = json_decode($request->getContent(), true);
 
-        if (!$data) {
+        if ($data === null && json_last_error() !== JSON_ERROR_NONE) {
             return new JsonResponse(['error' => 'Données JSON invalides'], Response::HTTP_BAD_REQUEST);
         }
 

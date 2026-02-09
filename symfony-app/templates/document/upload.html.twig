@@ -1,0 +1,103 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Uploader un document{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-cloud-arrow-up"></i> Uploader un document
+                    </h4>
+                </div>
+                <div class="card-body">
+                    {% if form_errors(form)|length > 0 %}
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <h5>Erreurs de validation:</h5>
+                            {{ form_errors(form) }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endif %}
+
+                    {{ form_start(form, {'attr': {'class': 'needs-validation', 'novalidate': true}, 'multipart': true}) }}
+
+                    <div class="mb-3">
+                        <label class="form-label">Sélectionner un fichier</label>
+                        {{ form_widget(form.file, {'attr': {'class': 'form-control'}}) }}
+                        <small class="text-muted d-block mt-2">
+                            <i class="bi bi-info-circle"></i> Formats supportés: PDF, Word, Excel, Images
+                            <br>Taille maximale: 50 MB
+                        </small>
+                        {% if form.file.vars.errors|length > 0 %}
+                            <div class="alert alert-danger mt-2">
+                                {{ form_errors(form.file) }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form_label(form.description) }}
+                        {{ form_widget(form.description, {'attr': {'class': 'form-control'}}) }}
+                        {% if form.description.vars.errors|length > 0 %}
+                            <div class="alert alert-danger mt-2">
+                                {{ form_errors(form.description) }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form_label(form.documentType) }}
+                        {{ form_widget(form.documentType, {'attr': {'class': 'form-control'}}) }}
+                        {% if form.documentType.vars.errors|length > 0 %}
+                            <div class="alert alert-danger mt-2">
+                                {{ form_errors(form.documentType) }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        {{ form_widget(form.public) }}
+                        {{ form_label(form.public) }}
+                        <small class="text-muted d-block">
+                            Si coché, ce document sera accessible au public
+                        </small>
+                        {% if form.public.vars.errors|length > 0 %}
+                            <div class="alert alert-danger mt-2">
+                                {{ form_errors(form.public) }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-upload"></i> Uploader
+                        </button>
+                        <a href="{{ path('app_document_index') }}" class="btn btn-secondary">
+                            Annuler
+                        </a>
+                    </div>
+
+                    {{ form_end(form) }}
+                </div>
+            </div>
+
+            <!-- Upload tips -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Conseils pour l'upload</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li>Utilisez des noms de fichier clairs et descriptifs</li>
+                        <li>Assurez-vous que le type de document est correctement sélectionné</li>
+                        <li>Vous pouvez rendre le document public pour le partager facilement</li>
+                        <li>Vous pourrez partager le document avec des utilisateurs spécifiques après l'upload</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

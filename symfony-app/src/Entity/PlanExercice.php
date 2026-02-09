@@ -22,6 +22,9 @@ class PlanExercice
     #[ORM\JoinColumn(name: 'accompagnement_id', nullable: true, onDelete: 'SET NULL')]
     private ?Accompagnement $accompagnement = null;
 
+    #[ORM\ManyToOne(targetEntity: AccompanimentPlan::class, inversedBy: 'exercisePlans')]
+    #[ORM\JoinColumn(name: 'accompaniment_plan_id', nullable: true, onDelete: 'SET NULL')]
+    private ?AccompanimentPlan $plan = null;
 
     #[ORM\Column(type: 'string', length: 255)]
     private string $titre;
@@ -58,6 +61,8 @@ class PlanExercice
     public function setPatient(Patient $patient): void { $this->patient = $patient; }
     public function getAccompagnement(): ?Accompagnement { return $this->accompagnement; }
     public function setAccompagnement(?Accompagnement $accompagnement): void { $this->accompagnement = $accompagnement; }
+    public function getPlan(): ?AccompanimentPlan { return $this->plan; }
+    public function setPlan(?AccompanimentPlan $plan): self { $this->plan = $plan; return $this; }
     public function getTitre(): string { return $this->titre; }
     public function setTitre(string $titre): void { $this->titre = $titre; }
     public function getDescription(): ?string { return $this->description; }

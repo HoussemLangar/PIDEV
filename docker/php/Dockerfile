@@ -39,6 +39,18 @@ RUN a2dissite 000-default.conf default-ssl.conf \
 # ServerName pour éviter warning
 RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
+# Configuration PHP pour les uploads de fichiers
+RUN echo "upload_max_filesize = 50M" > /usr/local/etc/php/conf.d/uploads.ini \
+    && echo "post_max_size = 50M" >> /usr/local/etc/php/conf.d/uploads.ini \
+    && echo "max_input_time = 300" >> /usr/local/etc/php/conf.d/uploads.ini \
+    && echo "max_execution_time = 300" >> /usr/local/etc/php/conf.d/uploads.ini \
+    && echo "default_socket_timeout = 300" >> /usr/local/etc/php/conf.d/uploads.ini \
+    && echo "memory_limit = 256M" >> /usr/local/etc/php/conf.d/uploads.ini \
+    && echo "session.gc_maxlifetime = 3600" >> /usr/local/etc/php/conf.d/uploads.ini
+
+# Configure Apache timeout for large file uploads
+RUN echo "TimeOut 300" >> /etc/apache2/apache2.conf
+
 # Permissions
 RUN chown -R www-data:www-data /var/www
 
