@@ -38,9 +38,9 @@ class ContentApiController extends AbstractController
 
         $page = (int) $request->query->get('page', 1);
         $limit = (int) $request->query->get('limit', 8);
-        $type = $request->query->get('type');
-        $search = $request->query->get('q');
-        $category = $request->query->get('category');
+        $type = $request->query->get('type') ?: null;
+        $search = $request->query->get('q') ?: null;
+        $category = $request->query->get('category') ?: null;
         $owner = $request->query->get('owner');
         $ownerId = null;
         $statuses = ['publie']; // Par défaut, n'afficher que les contenus publiés
