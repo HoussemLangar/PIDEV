@@ -206,9 +206,20 @@ class AccompanimentPlanController extends AbstractController
 
         $patients = $this->patientRepository->findAll();
 
+        // Calculate statistics
+        $activePlans = count(array_filter($plans, fn($p) => $p->getStatus() === 'active'));
+        $completedPlans = count(array_filter($plans, fn($p) => $p->getStatus() === 'completed'));
+        $uniquePatientIds = array_unique(array_map(fn($p) => $p->getPatient()->getId(), $plans));
+        $uniquePatients = count($uniquePatientIds);
+
         return $this->render('plan/professional_plans.html.twig', [
             'plans' => $plans,
             'patients' => $patients,
+            'stats' => [
+                'active' => $activePlans,
+                'completed' => $completedPlans,
+                'uniquePatients' => $uniquePatients,
+            ],
         ]);
     }
 }

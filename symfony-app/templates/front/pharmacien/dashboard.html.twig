@@ -35,8 +35,9 @@
                 <strong>{{ reservations|length }}</strong>
             </div>
         </div>
+        {% set pharmacyFormHasErrors = pharmacy_form is defined and pharmacy_form.vars.submitted and not pharmacy_form.vars.valid %}
         <div class="dash-actions">
-            <button class="btn btn-primary dash-nav" data-target="create-pharmacy">Créer pharmacie</button>
+            <button class="btn btn-primary dash-nav{{ pharmacyFormHasErrors ? ' is-active' : '' }}" data-target="create-pharmacy">Créer pharmacie</button>
             <button class="btn btn-secondary dash-nav" data-target="list-pharmacies">Mes pharmacies</button>
             <button class="btn btn-primary dash-nav" data-target="create-medicament">Ajouter médicament</button>
             <button class="btn btn-secondary dash-nav" data-target="list-medicaments">Mes médicaments</button>
@@ -49,25 +50,46 @@
         </div>
     </div>
 
-    <div class="content-section dash-panel" id="create-pharmacy">
+    <div class="content-section dash-panel{{ pharmacyFormHasErrors ? ' is-active' : '' }}" id="create-pharmacy">
         <div class="content-section-header">
             <div class="content-section-title">
                 <h3>Créer une pharmacie</h3>
                 <p>Renseignez les informations principales.</p>
             </div>
         </div>
+        {{ form_start(pharmacy_form, { attr: { novalidate: 'novalidate' } }) }}
+        {{ form_errors(pharmacy_form) }}
         <div class="dash-form-grid">
-            <input type="text" id="pharmacyName" placeholder="Nom pharmacie">
-            <input type="text" id="pharmacyAddress" placeholder="Adresse">
-            <input type="text" id="pharmacyPhone" placeholder="Téléphone">
-            <input type="email" id="pharmacyEmail" placeholder="Email">
-            <input type="hidden" id="pharmacyHours">
-            <input type="text" id="pharmacyLat" placeholder="Latitude">
-            <input type="text" id="pharmacyLng" placeholder="Longitude">
-            <select id="pharmacyActive">
-                <option value="1">Active</option>
-                <option value="0">Inactive</option>
-            </select>
+            <div>
+                {{ form_widget(pharmacy_form.nom) }}
+                {{ form_errors(pharmacy_form.nom) }}
+            </div>
+            <div>
+                {{ form_widget(pharmacy_form.adresse) }}
+                {{ form_errors(pharmacy_form.adresse) }}
+            </div>
+            <div>
+                {{ form_widget(pharmacy_form.telephone) }}
+                {{ form_errors(pharmacy_form.telephone) }}
+            </div>
+            <div>
+                {{ form_widget(pharmacy_form.email) }}
+                {{ form_errors(pharmacy_form.email) }}
+            </div>
+            {{ form_widget(pharmacy_form.horaires) }}
+            <div>
+                {{ form_widget(pharmacy_form.latitude) }}
+                {{ form_errors(pharmacy_form.latitude) }}
+            </div>
+            <div>
+                {{ form_widget(pharmacy_form.longitude) }}
+                {{ form_errors(pharmacy_form.longitude) }}
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+                {{ form_widget(pharmacy_form.isActive) }}
+                {{ form_label(pharmacy_form.isActive) }}
+                {{ form_errors(pharmacy_form.isActive) }}
+            </div>
         </div>
         <div class="dash-schedule">
             <div class="dash-map-header">
@@ -107,8 +129,9 @@
             <div id="pharmacyMap" class="dash-map-canvas"></div>
         </div>
         <div class="dash-actions-row">
-            <button class="btn btn-primary" id="pharmacyCreate">Créer pharmacie</button>
+            <button class="btn btn-primary" type="submit">Créer pharmacie</button>
         </div>
+        {{ form_end(pharmacy_form) }}
     </div>
 
     <div class="content-section dash-panel" id="list-pharmacies">
@@ -374,7 +397,7 @@
             const mapEl = document.getElementById('pharmacyMap');
             const latInput = document.getElementById('pharmacyLat');
             const lngInput = document.getElementById('pharmacyLng');
-            if (mapEl && window.L) {
+            if (mapEl && window.L && latInput && lngInput) {
                 const defaultLat = 36.8065;
                 const defaultLng = 10.1815;
                 const map = L.map(mapEl).setView([defaultLat, defaultLng], 12);
@@ -568,25 +591,6 @@
                     await apiFetch(`/api/pharmacien/medicaments/${card.dataset.id}/delete`, { method: 'POST' });
                     location.reload();
                 }
-            });
-
-            document.getElementById('pharmacyCreate')?.addEventListener('click', async () => {
-                const payload = {
-                    nom: document.getElementById('pharmacyName').value,
-                    adresse: document.getElementById('pharmacyAddress').value,
-                    telephone: document.getElementById('pharmacyPhone').value,
-                    email: document.getElementById('pharmacyEmail').value,
-                    horaires: document.getElementById('pharmacyHours').value,
-                    latitude: document.getElementById('pharmacyLat').value,
-                    longitude: document.getElementById('pharmacyLng').value,
-                    is_active: document.getElementById('pharmacyActive').value === '1',
-                };
-                await apiFetch('/api/pharmacien/pharmacies', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload),
-                });
-                location.reload();
             });
 
             document.getElementById('medCreate')?.addEventListener('click', async () => {

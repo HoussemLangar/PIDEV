@@ -70,6 +70,8 @@ class TeleconsultationController extends AbstractController
 
         $consultation = new Teleconsultation();
         $consultation->setInitiator($user);
+        // Set a default scheduled time to avoid null value
+        $consultation->setScheduledAt(new \DateTimeImmutable('+1 hour'));
 
         $recipientRole = $this->isGranted('ROLE_MEDECIN') ? 'ROLE_PATIENT' : 'ROLE_MEDECIN';
         $form = $this->createForm(TeleconsultationType::class, $consultation, [

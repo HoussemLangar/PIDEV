@@ -3,143 +3,246 @@
 {% block title %}Mes plans d'accompagnement{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row">
-        <div class="col-md-12">
-            <h2 class="mb-4"><i class="bi bi-person-badge"></i> Mes plans d'accompagnement</h2>
-
-            <!-- Statistics Cards -->
-            <div class="row mb-4">
-                <div class="col-md-4">
-                    <div class="card border-primary">
-                        <div class="card-body text-center">
-                            <h5 class="card-title">Plans actifs</h5>
-                            <h3 class="text-primary">0</h3>
-                        </div>
-                    </div>
+<div class="content-wrapper" style="padding: 30px 40px; max-width: 1400px; margin: 0 auto;">
+    <!-- Page Header -->
+    <div class="page-header" style="margin-bottom: 32px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-clipboard-list" style="color: white; font-size: 24px;"></i>
                 </div>
-                <div class="col-md-4">
-                    <div class="card border-success">
-                        <div class="card-body text-center">
-                            <h5 class="card-title">Patients</h5>
-                            <h3 class="text-success">0</h3>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card border-info">
-                        <div class="card-body text-center">
-                            <h5 class="card-title">Plans complétés</h5>
-                            <h3 class="text-info">0</h3>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Plans Table -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Créer un plan pour un patient</h5>
-                </div>
-                <div class="card-body">
-                    {% if patients is empty %}
-                        <div class="alert alert-info mb-0">
-                            Aucun patient disponible pour le moment.
-                        </div>
-                    {% else %}
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Patient</th>
-                                        <th>Email</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for patient in patients %}
-                                        <tr>
-                                            <td>{{ patient.user.username }}</td>
-                                            <td>{{ patient.user.email }}</td>
-                                            <td>
-                                                <a href="{{ path('app_plan_create', {patientId: patient.id}) }}" class="btn btn-sm btn-primary">
-                                                    <i class="bi bi-plus-circle"></i> Créer un plan
-                                                </a>
-                                            </td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="bi bi-list-ul"></i> Liste des plans</h5>
-                </div>
-                <div class="card-body">
-                    {% if plans is empty %}
-                        <div class="alert alert-info">
-                            <i class="bi bi-info-circle"></i>
-                            Vous n'avez pas encore créé de plans d'accompagnement.
-                        </div>
-                    {% else %}
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Patient</th>
-                                    <th>Plan</th>
-                                    <th>Statut</th>
-                                    <th>Progression</th>
-                                    <th>Fin prévue</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for plan in plans %}
-                                    <tr>
-                                        <td>
-                                            <strong>{{ plan.patient.user.username }}</strong><br>
-                                            <small class="text-muted">{{ plan.patient.user.email }}</small>
-                                        </td>
-                                        <td>{{ plan.title }}</td>
-                                        <td>
-                                            <span class="badge bg-{{ plan.status == 'active' ? 'success' : (plan.status == 'completed' ? 'info' : 'warning') }}">
-                                                {{ plan.status }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <div class="progress" style="height: 20px;">
-                                                <div class="progress-bar" style="width: {{ plan.progressPercentage }}%">
-                                                    {{ plan.progressPercentage }}%
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            {% if plan.endDate %}
-                                                {{ plan.endDate|date('d/m/Y') }}
-                                            {% else %}
-                                                <em class="text-muted">Non définie</em>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            <a href="{{ path('app_plan_show', {id: plan.id}) }}" class="btn btn-sm btn-info">
-                                                <i class="bi bi-eye"></i>
-                                            </a>
-                                            <a href="{{ path('app_plan_edit', {id: plan.id}) }}" class="btn btn-sm btn-warning">
-                                                <i class="bi bi-pencil"></i>
-                                            </a>
-                                        </td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    {% endif %}
+                <div>
+                    <h1 style="margin: 0; font-size: 28px; font-weight: 700; color: #1a1a2e;">Mes plans d'accompagnement</h1>
+                    <p style="margin: 4px 0 0 0; color: #64748b; font-size: 14px;">Gérez vos programmes personnalisés pour vos patients</p>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Statistics Cards -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 32px;">
+        <!-- Active Plans Card -->
+        <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 14px; padding: 24px; box-shadow: 0 4px 12px rgba(16,185,129,0.25);">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                <i class="fas fa-play-circle" style="font-size: 32px; color: rgba(255,255,255,0.9);"></i>
+                <span style="background: rgba(255,255,255,0.2); padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; color: white;">Actifs</span>
+            </div>
+            <h3 style="margin: 0; font-size: 32px; font-weight: 700; color: white;">{{ stats.active }}</h3>
+            <p style="margin: 4px 0 0 0; color: rgba(255,255,255,0.8); font-size: 14px;">Plans en cours</p>
+        </div>
+
+        <!-- Total Patients Card -->
+        <div style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); border-radius: 14px; padding: 24px; box-shadow: 0 4px 12px rgba(59,130,246,0.25);">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                <i class="fas fa-users" style="font-size: 32px; color: rgba(255,255,255,0.9);"></i>
+                <span style="background: rgba(255,255,255,0.2); padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; color: white;">Patients</span>
+            </div>
+            <h3 style="margin: 0; font-size: 32px; font-weight: 700; color: white;">{{ stats.uniquePatients }}</h3>
+            <p style="margin: 4px 0 0 0; color: rgba(255,255,255,0.8); font-size: 14px;">Patients suivis</p>
+        </div>
+
+        <!-- Completed Plans Card -->
+        <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border-radius: 14px; padding: 24px; box-shadow: 0 4px 12px rgba(245,158,11,0.25);">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                <i class="fas fa-check-circle" style="font-size: 32px; color: rgba(255,255,255,0.9);"></i>
+                <span style="background: rgba(255,255,255,0.2); padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; color: white;">Terminés</span>
+            </div>
+            <h3 style="margin: 0; font-size: 32px; font-weight: 700; color: white;">{{ stats.completed }}</h3>
+            <p style="margin: 4px 0 0 0; color: rgba(255,255,255,0.8); font-size: 14px;">Plans complétés</p>
+        </div>
+    </div>
+
+    <!-- Create New Plan Section -->
+    <div style="background: white; border-radius: 16px; padding: 24px; box-shadow: 0 2px 8px rgba(15,23,42,0.06); margin-bottom: 24px;">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+            <div style="width: 36px; height: 36px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-plus" style="color: white; font-size: 16px;"></i>
+            </div>
+            <h2 style="margin: 0; font-size: 20px; font-weight: 700; color: #1a1a2e;">Créer un nouveau plan</h2>
+        </div>
+
+        {% if patients is empty %}
+            <div style="background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%); border-radius: 12px; padding: 32px; text-align: center; border: 2px dashed #06b6d4;">
+                <i class="fas fa-user-slash" style="font-size: 48px; color: #06b6d4; opacity: 0.3; margin-bottom: 12px;"></i>
+                <h3 style="margin: 0 0 8px 0; font-size: 18px; font-weight: 600; color: #1a1a2e;">Aucun patient disponible</h3>
+                <p style="margin: 0; color: #64748b; font-size: 14px;">Il n'y a pas de patients enregistrés pour le moment</p>
+            </div>
+        {% else %}
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-bottom: 2px solid #e2e8f0;">
+                            <th style="padding: 14px 16px; text-align: left; font-weight: 600; color: #475569; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">
+                                <i class="fas fa-user" style="margin-right: 6px; color: #94a3b8;"></i>Patient
+                            </th>
+                            <th style="padding: 14px 16px; text-align: left; font-weight: 600; color: #475569; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">
+                                <i class="fas fa-envelope" style="margin-right: 6px; color: #94a3b8;"></i>Email
+                            </th>
+                            <th style="padding: 14px 16px; text-align: center; font-weight: 600; color: #475569; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">
+                                Action
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for patient in patients %}
+                            <tr style="border-bottom: 1px solid #f1f5f9; transition: background 0.2s;">
+                                <td style="padding: 16px; font-weight: 600; color: #1e293b;">
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <div style="width: 36px; height: 36px; background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 14px;">
+                                            {{ patient.user.username|slice(0, 2)|upper }}
+                                        </div>
+                                        {{ patient.user.username }}
+                                    </div>
+                                </td>
+                                <td style="padding: 16px; color: #64748b;">{{ patient.user.email }}</td>
+                                <td style="padding: 16px; text-align: center;">
+                                    <a href="{{ path('app_plan_create', {patientId: patient.id}) }}" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 13px; transition: all 0.2s;">
+                                        <i class="fas fa-plus-circle"></i>
+                                        Créer un plan
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Plans List Section -->
+    <div style="background: white; border-radius: 16px; padding: 24px; box-shadow: 0 2px 8px rgba(15,23,42,0.06);">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+            <div style="width: 36px; height: 36px; background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-list" style="color: white; font-size: 16px;"></i>
+            </div>
+            <h2 style="margin: 0; font-size: 20px; font-weight: 700; color: #1a1a2e;">Tous mes plans</h2>
+        </div>
+
+        {% if plans is empty %}
+            <div style="background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%); border-radius: 12px; padding: 48px; text-align: center; border: 2px dashed #06b6d4;">
+                <i class="fas fa-clipboard" style="font-size: 64px; color: #06b6d4; opacity: 0.3; margin-bottom: 16px;"></i>
+                <h3 style="margin: 0 0 8px 0; font-size: 20px; font-weight: 600; color: #1a1a2e;">Aucun plan d'accompagnement</h3>
+                <p style="margin: 0; color: #64748b;">Créez votre premier plan pour commencer à accompagner vos patients</p>
+            </div>
+        {% else %}
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-bottom: 2px solid #e2e8f0;">
+                            <th style="padding: 14px 16px; text-align: left; font-weight: 600; color: #475569; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Patient</th>
+                            <th style="padding: 14px 16px; text-align: left; font-weight: 600; color: #475569; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Plan</th>
+                            <th style="padding: 14px 16px; text-align: center; font-weight: 600; color: #475569; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Statut</th>
+                            <th style="padding: 14px 16px; text-align: left; font-weight: 600; color: #475569; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Progression</th>
+                            <th style="padding: 14px 16px; text-align: left; font-weight: 600; color: #475569; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Fin prévue</th>
+                            <th style="padding: 14px 16px; text-align: center; font-weight: 600; color: #475569; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for plan in plans %}
+                            <tr style="border-bottom: 1px solid #f1f5f9; transition: background 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+                                <td style="padding: 16px;">
+                                    <div>
+                                        <div style="font-weight: 600; color: #1e293b; margin-bottom: 2px;">{{ plan.patient.user.username }}</div>
+                                        <div style="font-size: 13px; color: #94a3b8;">{{ plan.patient.user.email }}</div>
+                                    </div>
+                                </td>
+                                <td style="padding: 16px;">
+                                    <div style="font-weight: 600; color: #1e293b;">{{ plan.title }}</div>
+                                </td>
+                                <td style="padding: 16px; text-align: center;">
+                                    {% if plan.status == 'active' %}
+                                        <span style="display: inline-flex; align-items: center; gap: 4px; padding: 5px 12px; background: #dcfce7; color: #166534; border-radius: 20px; font-size: 12px; font-weight: 600;">
+                                            <i class="fas fa-circle" style="font-size: 6px;"></i> Actif
+                                        </span>
+                                    {% elseif plan.status == 'completed' %}
+                                        <span style="display: inline-flex; align-items: center; gap: 4px; padding: 5px 12px; background: #dbeafe; color: #1e40af; border-radius: 20px; font-size: 12px; font-weight: 600;">
+                                            <i class="fas fa-check-circle" style="font-size: 10px;"></i> Terminé
+                                        </span>
+                                    {% else %}
+                                        <span style="display: inline-flex; align-items: center; gap: 4px; padding: 5px 12px; background: #fef3c7; color: #92400e; border-radius: 20px; font-size: 12px; font-weight: 600;">
+                                            <i class="fas fa-circle" style="font-size: 6px;"></i> {{ plan.status }}
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 16px;">
+                                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                                        <div style="background: #e2e8f0; border-radius: 10px; height: 8px; overflow: hidden;">
+                                            <div style="height: 100%; background: linear-gradient(90deg, #10b981, #059669); border-radius: 10px; width: {{ plan.progressPercentage }}%; transition: width 0.3s;"></div>
+                                        </div>
+                                        <span style="font-size: 12px; color: #64748b; font-weight: 600;">{{ plan.progressPercentage }}%</span>
+                                    </div>
+                                </td>
+                                <td style="padding: 16px;">
+                                    {% if plan.endDate %}
+                                        <div style="display: flex; align-items: center; gap: 6px; color: #64748b; font-size: 14px;">
+                                            <i class="fas fa-calendar-alt" style="color: #94a3b8;"></i>
+                                            {{ plan.endDate|date('d/m/Y') }}
+                                        </div>
+                                    {% else %}
+                                        <span style="color: #cbd5e1; font-style: italic; font-size: 13px;">Non définie</span>
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 16px; text-align: center;">
+                                    <div style="display: inline-flex; gap: 6px;">
+                                        <a href="{{ path('app_plan_show', {id: plan.id}) }}" title="Voir" style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: #dbeafe; color: #1e40af; border-radius: 8px; text-decoration: none; transition: all 0.2s;">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{{ path('app_plan_edit', {id: plan.id}) }}" title="Modifier" style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: #fef3c7; color: #92400e; border-radius: 8px; text-decoration: none; transition: all 0.2s;">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </div>
 </div>
+
+<style>
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.content-wrapper > div {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+table tbody tr:hover a {
+    transform: scale(1.1);
+}
+
+table tbody tr a:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    transform: scale(1.1);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .content-wrapper {
+        padding: 20px !important;
+    }
+    
+    .page-header h1 {
+        font-size: 22px !important;
+    }
+    
+    table {
+        font-size: 13px;
+    }
+    
+    table th, table td {
+        padding: 12px 8px !important;
+    }
+}
+</style>
 {% endblock %}

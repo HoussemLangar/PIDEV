@@ -3,88 +3,232 @@
 {% block title %}Créer un plan d'accompagnement{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row">
-        <div class="col-md-8 mx-auto">
-            <div class="card">
-                <div class="card-header bg-success text-white">
-                    <h4 class="mb-0"><i class="bi bi-plus-circle"></i> Nouveau plan d'accompagnement</h4>
+<div class="content-wrapper" style="padding: 30px 40px; max-width: 1000px; margin: 0 auto;">
+    <!-- Page Header -->
+    <div class="page-header" style="margin-bottom: 32px;">
+        <div style="display: flex; align-items: center; gap: 16px;">
+            <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-plus-circle" style="color: white; font-size: 24px;"></i>
+            </div>
+            <div>
+                <h1 style="margin: 0; font-size: 28px; font-weight: 700; color: #1a1a2e;">Nouveau plan d'accompagnement</h1>
+                <p style="margin: 4px 0 0 0; color: #64748b; font-size: 14px;">Créez un programme personnalisé pour {{ patient.user.username }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Patient Info Card -->
+    <div style="background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%); border-radius: 14px; padding: 20px 24px; margin-bottom: 24px; border: 1px solid #bae6fd;">
+        <div style="display: flex; align-items: center; gap: 16px;">
+            <div style="width: 56px; height: 56px; background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 20px;">
+                {{ patient.user.username|slice(0, 2)|upper }}
+            </div>
+            <div style="flex: 1;">
+                <div style="font-weight: 700; font-size: 18px; color: #1e293b; margin-bottom: 4px;">
+                    <i class="fas fa-user" style="color: #06b6d4; margin-right: 6px;"></i>
+                    {{ patient.user.nom }} {{ patient.user.prenom }}
                 </div>
-                <div class="card-body">
-                    <p class="text-muted">Créez un nouveau plan d'accompagnement personnalisé pour le patient.</p>
-                    
-                    {{ form_start(form) }}
-                    
-                    <div class="mb-3">
-                        {{ form_label(form.title) }}
-                        {{ form_widget(form.title, {'attr': {'class': 'form-control', 'placeholder': 'ex: Plan de remise en forme'}}) }}
-                        {{ form_errors(form.title) }}
-                    </div>
-
-                    <div class="mb-3">
-                        {{ form_label(form.objectives) }}
-                        {{ form_widget(form.objectives, {'attr': {'class': 'form-control', 'rows': '4', 'placeholder': 'Décrivez les objectifs du plan'}}) }}
-                        {{ form_errors(form.objectives) }}
-                    </div>
-
-                    <div class="mb-3">
-                        {{ form_label(form.description) }}
-                        {{ form_widget(form.description, {'attr': {'class': 'form-control', 'rows': '3', 'placeholder': 'Contexte médical ou notes additionnelles'}}) }}
-                        {{ form_errors(form.description) }}
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            {{ form_label(form.durationWeeks) }}
-                            {{ form_widget(form.durationWeeks, {'attr': {'class': 'form-control', 'value': '12'}}) }}
-                            {{ form_errors(form.durationWeeks) }}
-                            <small class="text-muted">Durée par défaut: 12 semaines</small>
-                        </div>
-
-                        <div class="col-md-6 mb-3">
-                            {{ form_label(form.status) }}
-                            {{ form_widget(form.status, {'attr': {'class': 'form-select'}}) }}
-                            {{ form_errors(form.status) }}
-                        </div>
-                    </div>
-
-                    <hr>
-                    <h5><i class="bi bi-person-badge"></i> Professionnels assignés</h5>
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            {{ form_label(form.coach) }}
-                            {{ form_widget(form.coach, {'attr': {'class': 'form-select'}}) }}
-                            {{ form_errors(form.coach) }}
-                            <small class="text-muted">Optionnel</small>
-                        </div>
-
-                        <div class="col-md-6 mb-3">
-                            {{ form_label(form.nutritionist) }}
-                            {{ form_widget(form.nutritionist, {'attr': {'class': 'form-select'}}) }}
-                            {{ form_errors(form.nutritionist) }}
-                            <small class="text-muted">Optionnel</small>
-                        </div>
-                    </div>
-
-                    <div class="alert alert-info" role="alert">
-                        <i class="bi bi-info-circle"></i>
-                        <strong>Conseil:</strong> Vous pourrez ajouter des plans d'exercice et des plans nutritionnels après création.
-                    </div>
-
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-success">
-                            <i class="bi bi-check-circle"></i> Créer le plan
-                        </button>
-                        <a href="{{ path('app_plan_index') }}" class="btn btn-secondary">
-                            <i class="bi bi-x-circle"></i> Annuler
-                        </a>
-                    </div>
-
-                    {{ form_end(form) }}
+                <div style="display: flex; gap: 20px; color: #64748b; font-size: 14px;">
+                    <span><i class="fas fa-envelope" style="color: #94a3b8; margin-right: 6px;"></i>{{ patient.user.email }}</span>
+                    {% if patient.user.telephone %}
+                        <span><i class="fas fa-phone" style="color: #94a3b8; margin-right: 6px;"></i>{{ patient.user.telephone }}</span>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Form Card -->
+    <div style="background: white; border-radius: 16px; padding: 32px; box-shadow: 0 2px 8px rgba(15,23,42,0.06);">
+        {{ form_start(form, { attr: { novalidate: 'novalidate' } }) }}
+        
+        {% if form.vars.errors|length > 0 %}
+            <div style="background: #fee2e2; border: 1px solid #fca5a5; border-radius: 10px; padding: 16px; margin-bottom: 24px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-exclamation-circle" style="color: #dc2626; font-size: 20px;"></i>
+                    <div>
+                        <div style="font-weight: 700; color: #991b1b; margin-bottom: 4px;">Erreurs de validation</div>
+                        {{ form_errors(form) }}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Information générale -->
+        <div style="margin-bottom: 32px;">
+            <h2 style="font-size: 18px; font-weight: 700; color: #1a1a2e; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-info-circle" style="color: white; font-size: 14px;"></i>
+                </div>
+                Informations générales
+            </h2>
+
+            <div style="margin-bottom: 20px;">
+                <label for="{{ form.title.vars.id }}" style="display: block; font-weight: 600; color: #334155; margin-bottom: 8px; font-size: 14px;">
+                    <i class="fas fa-heading" style="color: #94a3b8; margin-right: 6px;"></i>
+                    {{ form.title.vars.label }}
+                </label>
+                {{ form_widget(form.title, {'attr': {'class': 'form-control', 'placeholder': 'ex: Plan de remise en forme', 'style': 'padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 14px;'}}) }}
+                {{ form_errors(form.title) }}
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label for="{{ form.objectives.vars.id }}" style="display: block; font-weight: 600; color: #334155; margin-bottom: 8px; font-size: 14px;">
+                    <i class="fas fa-bullseye" style="color: #94a3b8; margin-right: 6px;"></i>
+                    {{ form.objectives.vars.label }}
+                </label>
+                {{ form_widget(form.objectives, {'attr': {'class': 'form-control', 'rows': '4', 'placeholder': 'Décrivez les objectifs principaux du plan...', 'style': 'padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 14px;'}}) }}
+                {{ form_errors(form.objectives) }}
+                <small style="color: #94a3b8; font-size: 12px; margin-top: 4px; display: block;">Définissez des objectifs clairs et mesurables</small>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label for="{{ form.description.vars.id }}" style="display: block; font-weight: 600; color: #334155; margin-bottom: 8px; font-size: 14px;">
+                    <i class="fas fa-file-alt" style="color: #94a3b8; margin-right: 6px;"></i>
+                    {{ form.description.vars.label }}
+                </label>
+                {{ form_widget(form.description, {'attr': {'class': 'form-control', 'rows': '3', 'placeholder': 'Contexte médical, notes additionnelles...', 'style': 'padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 14px;'}}) }}
+                {{ form_errors(form.description) }}
+            </div>
+        </div>
+
+        <!-- Configuration du plan -->
+        <div style="margin-bottom: 32px;">
+            <h2 style="font-size: 18px; font-weight: 700; color: #1a1a2e; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-cog" style="color: white; font-size: 14px;"></i>
+                </div>
+                Configuration
+            </h2>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <label for="{{ form.durationWeeks.vars.id }}" style="display: block; font-weight: 600; color: #334155; margin-bottom: 8px; font-size: 14px;">
+                        <i class="fas fa-calendar-week" style="color: #94a3b8; margin-right: 6px;"></i>
+                        {{ form.durationWeeks.vars.label }}
+                    </label>
+                    {{ form_widget(form.durationWeeks, {'attr': {'class': 'form-control', 'value': '12', 'style': 'padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 14px;'}}) }}
+                    {{ form_errors(form.durationWeeks) }}
+                    <small style="color: #94a3b8; font-size: 12px; margin-top: 4px; display: block;">Entre 1 et 52 semaines</small>
+                </div>
+
+                <div>
+                    <label for="{{ form.status.vars.id }}" style="display: block; font-weight: 600; color: #334155; margin-bottom: 8px; font-size: 14px;">
+                        <i class="fas fa-flag" style="color: #94a3b8; margin-right: 6px;"></i>
+                        {{ form.status.vars.label }}
+                    </label>
+                    {{ form_widget(form.status, {'attr': {'class': 'form-select', 'style': 'padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 14px;'}}) }}
+                    {{ form_errors(form.status) }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Professionnels assignés -->
+        <div style="margin-bottom: 32px;">
+            <h2 style="font-size: 18px; font-weight: 700; color: #1a1a2e; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-users" style="color: white; font-size: 14px;"></i>
+                </div>
+                Professionnels assignés
+            </h2>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <label for="{{ form.coach.vars.id }}" style="display: block; font-weight: 600; color: #334155; margin-bottom: 8px; font-size: 14px;">
+                        <i class="fas fa-dumbbell" style="color: #94a3b8; margin-right: 6px;"></i>
+                        {{ form.coach.vars.label }}
+                    </label>
+                    {{ form_widget(form.coach, {'attr': {'class': 'form-select', 'style': 'padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 14px;'}}) }}
+                    {{ form_errors(form.coach) }}
+                    <small style="color: #94a3b8; font-size: 12px; margin-top: 4px; display: block;">Optionnel - Coach sportif</small>
+                </div>
+
+                <div>
+                    <label for="{{ form.nutritionist.vars.id }}" style="display: block; font-weight: 600; color: #334155; margin-bottom: 8px; font-size: 14px;">
+                        <i class="fas fa-apple-alt" style="color: #94a3b8; margin-right: 6px;"></i>
+                        {{ form.nutritionist.vars.label }}
+                    </label>
+                    {{ form_widget(form.nutritionist, {'attr': {'class': 'form-select', 'style': 'padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 14px;'}}) }}
+                    {{ form_errors(form.nutritionist) }}
+                    <small style="color: #94a3b8; font-size: 12px; margin-top: 4px; display: block;">Optionnel - Nutritionniste</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Info message -->
+        <div style="background: linear-gradient(135deg, #dbeafe 0%, #e0f2fe 100%); border: 1px solid #93c5fd; border-radius: 12px; padding: 16px 20px; margin-bottom: 24px;">
+            <div style="display: flex; align-items: start; gap: 12px;">
+                <i class="fas fa-lightbulb" style="color: #1e40af; font-size: 20px; margin-top: 2px;"></i>
+                <div>
+                    <div style="font-weight: 700; color: #1e3a8a; margin-bottom: 4px;">Conseil professionnel</div>
+                    <p style="margin: 0; color: #1e40af; font-size: 14px; line-height: 1.5;">
+                        Vous pourrez ajouter des plans d'exercice détaillés et des plans nutritionnels personnalisés après la création du plan principal.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action buttons -->
+        <div style="display: flex; gap: 12px; padding-top: 8px;">
+            <button type="submit" style="flex: 1; padding: 14px 24px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;">
+                <i class="fas fa-check-circle"></i>
+                Créer le plan
+            </button>
+            <a href="{{ path('app_plan_professional_plans') }}" style="flex: 1; padding: 14px 24px; background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; border-radius: 10px; font-weight: 600; font-size: 15px; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;">
+                <i class="fas fa-times-circle"></i>
+                Annuler
+            </a>
+        </div>
+
+        {{ form_end(form) }}
+    </div>
 </div>
+
+<style>
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.content-wrapper {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+button[type="submit"]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+}
+
+a[href*="plan"]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+input:focus, textarea:focus, select:focus {
+    outline: none !important;
+    border-color: #06b6d4 !important;
+    box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1) !important;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .content-wrapper {
+        padding: 20px !important;
+    }
+    
+    .page-header h1 {
+        font-size: 22px !important;
+    }
+    
+    div[style*="grid-template-columns: 1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+    }
+}
+</style>
 {% endblock %}

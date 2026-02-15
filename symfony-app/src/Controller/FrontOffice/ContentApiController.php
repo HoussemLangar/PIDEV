@@ -43,13 +43,16 @@ class ContentApiController extends AbstractController
         $category = $request->query->get('category');
         $owner = $request->query->get('owner');
         $ownerId = null;
+        $statuses = ['publie']; // Par défaut, n'afficher que les contenus publiés
+        
         if ($owner === 'me') {
             /** @var User $user */
             $user = $this->getUser();
             $ownerId = $user->getId();
+            $statuses = null; // Si l'utilisateur regarde ses propres contenus, afficher tous les statuts
         }
 
-        $result = $this->contenuRepository->findPage($page, $limit, $type, $search, $category, null, $ownerId);
+        $result = $this->contenuRepository->findPage($page, $limit, $type, $search, $category, $statuses, $ownerId);
 
         /** @var User $user */
         $user = $this->getUser();
@@ -61,6 +64,8 @@ class ContentApiController extends AbstractController
                 $description = mb_substr(strip_tags($contenu->getContenu()), 0, 140);
             }
             $like = $this->likeRepository->findOneByUserAndContenu($user->getId(), $contenu->getId());
+            
+            $isOwner = $auteur && $user instanceof User && $auteur->getId() === $user->getId();
 
             return [
                 'id' => $contenu->getId(),
@@ -72,6 +77,8 @@ class ContentApiController extends AbstractController
                 'likes' => $contenu->getLikes()->count(),
                 'commentaires' => $contenu->getCommentaires()->count(),
                 'liked' => $like !== null,
+                'statut' => $isOwner ? $contenu->getStatut() : null,
+                'isOwner' => $isOwner,
             ];
         }, $result['items']);
 
@@ -117,11 +124,17 @@ class ContentApiController extends AbstractController
         if (!$this->isGranted(ContentVoter::VIEW)) {
             return new JsonResponse(['success' => false, 'message' => 'Accès refusé'], 403);
         }
-        if (!in_array($contenu->getStatut(), ['valide', 'publie'], true)) {
+        
+        /** @var User $user */
+        $user = $this->getUser();
+        $auteur = $contenu->getAuteur();
+        $isOwner = $user instanceof User && $auteur && $auteur->getId() === $user->getId();
+        
+        // Permettre à l'auteur de voir son propre contenu quel que soit le statut
+        if (!$isOwner && $contenu->getStatut() !== 'publie') {
             return new JsonResponse(['message' => 'Introuvable'], 404);
         }
 
-        $auteur = $contenu->getAuteur();
         return new JsonResponse([
             'id' => $contenu->getId(),
             'titre' => $contenu->getTitre(),
@@ -141,7 +154,14 @@ class ContentApiController extends AbstractController
         if (!$this->isGranted(ContentVoter::VIEW)) {
             return new JsonResponse(['items' => []], 403);
         }
-        if (!in_array($contenu->getStatut(), ['valide', 'publie'], true)) {
+        
+        /** @var User $user */
+        $user = $this->getUser();
+        $auteur = $contenu->getAuteur();
+        $isOwner = $user instanceof User && $auteur && $auteur->getId() === $user->getId();
+        
+        // Permettre à l'auteur de voir les commentaires de son propre contenu
+        if (!$isOwner && $contenu->getStatut() !== 'publie') {
             return new JsonResponse(['items' => []]);
         }
 
@@ -171,7 +191,13 @@ class ContentApiController extends AbstractController
             return new JsonResponse(['success' => false, 'message' => 'Accès refusé'], 403);
         }
 
-        if (!in_array($contenu->getStatut(), ['valide', 'publie'], true)) {
+        /** @var User $user */
+        $user = $this->getUser();
+        $auteur = $contenu->getAuteur();
+        $isOwner = $user instanceof User && $auteur && $auteur->getId() === $user->getId();
+        
+        // Permettre à l'auteur d'interagir avec son propre contenu
+        if (!$isOwner && $contenu->getStatut() !== 'publie') {
             return new JsonResponse(['success' => false, 'message' => 'Contenu indisponible'], 404);
         }
 
@@ -254,7 +280,14 @@ class ContentApiController extends AbstractController
         if (!$this->isGranted(ContentVoter::INTERACT)) {
             return new JsonResponse(['success' => false, 'message' => 'Accès refusé'], 403);
         }
-        if (!in_array($contenu->getStatut(), ['valide', 'publie'], true)) {
+        
+        /** @var User $user */
+        $user = $this->getUser();
+        $auteur = $contenu->getAuteur();
+        $isOwner = $user instanceof User && $auteur && $auteur->getId() === $user->getId();
+        
+        // Permettre à l'auteur d'interagir avec son propre contenu
+        if (!$isOwner && $contenu->getStatut() !== 'publie') {
             return new JsonResponse(['success' => false, 'message' => 'Contenu indisponible'], 404);
         }
         if (!$this->isCsrfTokenValid('content_action', (string) $request->headers->get('X-CSRF-TOKEN'))) {

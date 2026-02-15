@@ -68,6 +68,9 @@ class SharedDocumentType extends AbstractType
                 'attr' => [
                     'class' => 'form-control',
                 ],
+                'constraints' => [
+                    new Assert\NotBlank(message: 'Le type de document est obligatoire'),
+                ],
             ])
             ->add('public', CheckboxType::class, [
                 'label' => 'Rendre ce document accessible au public',

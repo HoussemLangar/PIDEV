@@ -2,6 +2,24 @@
 
 {% block title %}Forum & Contenus{% endblock %}
 
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .content-pill.status-pending {
+            background-color: #ffc107;
+            color: #000;
+        }
+        .content-pill.status-published {
+            background-color: #28a745;
+            color: #fff;
+        }
+        .content-pill.status-rejected {
+            background-color: #dc3545;
+            color: #fff;
+        }
+    </style>
+{% endblock %}
+
 {% block body %}
 <section class="content-page">
     <div class="content-hero">
@@ -44,9 +62,25 @@
         <div class="content-grid" id="recommendedGrid">
             {% for item in recommended %}
                 {% set isLiked = item.id in likedIds %}
+                {% set isOwner = item.auteur and app.user and item.auteur.id == app.user.id %}
                 <div class="content-card" data-content-id="{{ item.id }}">
                     <div class="content-meta">
                         <span class="content-pill">{{ item.type|upper }}</span>
+                        {% if isOwner %}
+                            {% set statutClass = 'content-pill' %}
+                            {% set statutLabel = '' %}
+                            {% if item.statut == 'en_attente' %}
+                                {% set statutClass = statutClass ~ ' status-pending' %}
+                                {% set statutLabel = 'En attente' %}
+                            {% elseif item.statut == 'publie' %}
+                                {% set statutClass = statutClass ~ ' status-published' %}
+                                {% set statutLabel = 'Publié' %}
+                            {% elseif item.statut == 'rejete' %}
+                                {% set statutClass = statutClass ~ ' status-rejected' %}
+                                {% set statutLabel = 'Rejeté' %}
+                            {% endif %}
+                            <span class="{{ statutClass }}">{{ statutLabel }}</span>
+                        {% endif %}
                         <span>{{ (item.datePublication ?? item.createdAt)|date('d/m/Y') }}</span>
                         <span>{{ item.auteur ? (item.auteur.fullName ?? item.auteur.email) : 'Anonyme' }}</span>
                     </div>
@@ -130,10 +164,35 @@
 
             const buildCard = (item) => {
                 const likedClass = item.liked ? 'active' : '';
+                
+                // Déterminer la couleur du badge de statut
+                let statutBadge = '';
+                if (item.isOwner && item.statut) {
+                    let statutClass = 'content-pill';
+                    let statutLabel = '';
+                    
+                    switch(item.statut) {
+                        case 'en_attente':
+                            statutClass += ' status-pending';
+                            statutLabel = 'En attente';
+                            break;
+                        case 'publie':
+                            statutClass += ' status-published';
+                            statutLabel = 'Publié';
+                            break;
+                        case 'rejete':
+                            statutClass += ' status-rejected';
+                            statutLabel = 'Rejeté';
+                            break;
+                    }
+                    statutBadge = `<span class="${statutClass}">${statutLabel}</span>`;
+                }
+                
                 return `
                 <div class="content-card" data-content-id="${item.id}">
                     <div class="content-meta">
                         <span class="content-pill">${item.type.toUpperCase()}</span>
+                        ${statutBadge}
                         <span>${item.date}</span>
                         <span>${item.auteur}</span>
                     </div>

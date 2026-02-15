@@ -39,12 +39,14 @@ class SharedDocument
     private $fileContent;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Assert\Length(max: 2000, maxMessage: "La description ne peut pas dépasser {{ limit }} caractères")]
     private ?string $description = null;
 
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     private \DateTimeImmutable $uploadedAt;
 
     #[ORM\Column(type: 'string', length: 50)]
+    #[Assert\NotBlank(message: "Le type de document est obligatoire")]
     private string $documentType = 'other'; // analysis, prescription, report, etc.
 
     #[ORM\Column(type: 'boolean', options: ['default' => 0], name: 'is_public')]

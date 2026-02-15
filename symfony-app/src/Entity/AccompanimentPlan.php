@@ -35,12 +35,16 @@ class AccompanimentPlan
     private string $title;
 
     #[ORM\Column(type: Types::TEXT)]
+    #[Assert\NotBlank(message: "Les objectifs sont obligatoires")]
+    #[Assert\Length(min: 10, minMessage: "Les objectifs doivent contenir au moins {{ limit }} caractères")]
     private string $objectives;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Assert\Length(max: 2000, maxMessage: "La description ne peut pas dépasser {{ limit }} caractères")]
     private ?string $description = null;
 
     #[ORM\Column(type: 'string', length: 50, options: ['default' => 'active'])]
+    #[Assert\Choice(choices: ['active', 'paused', 'completed', 'cancelled'], message: "Statut invalide")]
     private string $status = 'active'; // active, completed, cancelled, paused
 
     #[ORM\Column(type: Types::DATE_IMMUTABLE)]
@@ -50,6 +54,7 @@ class AccompanimentPlan
     private ?\DateTimeImmutable $endDate = null;
 
     #[ORM\Column(type: 'integer')]
+    #[Assert\Range(min: 1, max: 52, notInRangeMessage: "La durée doit être entre {{ min }} et {{ max }} semaines")]
     private int $durationWeeks = 12;
 
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]

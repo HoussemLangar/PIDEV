@@ -127,6 +127,80 @@ class ContentController extends AbstractController
         return new JsonResponse(['success' => true, 'status' => 'rejete']);
     }
 
+    #[Route('/content/{id}/toggle-status', name: 'content_toggle_status', methods: ['POST'])]
+    public function toggleStatus(Contenu $contenu, Request $request): JsonResponse
+    {
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+        if (!$this->isCsrfTokenValid('content_action_' . $contenu->getId(), (string) $request->request->get('_token'))) {
+            return new JsonResponse(['success' => false, 'message' => 'Token CSRF invalide.'], 403);
+        }
+
+        $currentStatus = $contenu->getStatut();
+        
+        // Basculer entre en_attente et publie
+        if ($currentStatus === 'publie') {
+            $contenu->setStatut('en_attente');
+            $newStatus = 'en_attente';
+            $statusLabel = 'En attente';
+        } else {
+            $contenu->setStatut('publie');
+            $newStatus = 'publie';
+            $statusLabel = 'Publié';
+            
+            // Définir la date de publication si ce n'est pas déjà fait
+            if ($contenu->getDatePublication() === null) {
+                $contenu->setDatePublication(new \DateTime());
+            }
+        }
+        
+        $contenu->setUpdatedAt(new \DateTime());
+        $this->em->flush();
+
+        return new JsonResponse([
+            'success' => true, 
+            'status' => $newStatus,
+            'statusLabel' => $statusLabel
+        ]);
+    }
+
+    #[Route('/content/{id}/update-status', name: 'content_update_status', methods: ['POST'])]
+    public function updateStatus(Contenu $contenu, Request $request): JsonResponse
+    {
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+        if (!$this->isCsrfTokenValid('content_action_' . $contenu->getId(), (string) $request->request->get('_token'))) {
+            return new JsonResponse(['success' => false, 'message' => 'Token CSRF invalide.'], 403);
+        }
+
+        $newStatus = $request->request->get('status');
+        
+        if (!in_array($newStatus, ['en_attente', 'publie', 'rejete', 'valide'], true)) {
+            return new JsonResponse(['success' => false, 'message' => 'Statut invalide.'], 400);
+        }
+        
+        $contenu->setStatut($newStatus);
+        
+        // Définir la date de publication si le statut est publie ou valide
+        if (in_array($newStatus, ['publie', 'valide'], true) && $contenu->getDatePublication() === null) {
+            $contenu->setDatePublication(new \DateTime());
+        }
+        
+        $contenu->setUpdatedAt(new \DateTime());
+        $this->em->flush();
+
+        $statusLabels = [
+            'en_attente' => 'En attente',
+            'publie' => 'Publié',
+            'rejete' => 'Rejeté',
+            'valide' => 'Validé',
+        ];
+
+        return new JsonResponse([
+            'success' => true, 
+            'status' => $newStatus,
+            'statusLabel' => $statusLabels[$newStatus]
+        ]);
+    }
+
     #[Route('/content/{id}/delete', name: 'content_delete', methods: ['POST'])]
     public function delete(Contenu $contenu, Request $request): JsonResponse
     {

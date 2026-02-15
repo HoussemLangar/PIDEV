@@ -20,7 +20,18 @@ class ContentRecommendationService
         $keywords = $this->buildKeywords($user);
 
         if ($keywords !== []) {
-            $qb = $this->contenuRepository->createValidatedQueryBuilder();
+            $qb = $this->contenuRepository->createQueryBuilder('c')
+                ->leftJoin('c.auteur', 'a')
+                ->addSelect('a');
+            
+            // Inclure les contenus publiés OU les contenus de l'utilisateur (peu importe le statut)
+            $orXMain = $qb->expr()->orX();
+            $orXMain->add('c.statut = :publie');
+            $orXMain->add('c.auteur = :userId');
+            $qb->andWhere($orXMain)
+                ->setParameter('publie', 'publie')
+                ->setParameter('userId', $user->getId());
+            
             $orX = $qb->expr()->orX();
             foreach ($keywords as $index => $keyword) {
                 $param = 'k' . $index;
@@ -42,7 +53,22 @@ class ContentRecommendationService
             }
         }
 
-        return $this->contenuRepository->findValidatedPage(1, $limit)['items'];
+        // Pour les résultats par défaut, afficher les contenus publiés + les contenus de l'utilisateur
+        $qb = $this->contenuRepository->createQueryBuilder('c')
+            ->leftJoin('c.auteur', 'a')
+            ->addSelect('a');
+        
+        $orXMain = $qb->expr()->orX();
+        $orXMain->add('c.statut = :publie');
+        $orXMain->add('c.auteur = :userId');
+        $qb->andWhere($orXMain)
+            ->setParameter('publie', 'publie')
+            ->setParameter('userId', $user->getId())
+            ->orderBy('c.datePublication', 'DESC')
+            ->addOrderBy('c.createdAt', 'DESC')
+            ->setMaxResults($limit);
+        
+        return $qb->getQuery()->getResult();
     }
 
     /**

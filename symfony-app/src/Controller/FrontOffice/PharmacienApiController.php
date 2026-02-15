@@ -216,12 +216,6 @@ class PharmacienApiController extends AbstractController
     public function updateMedicament(Medicament $med, Request $request): JsonResponse
     {
         $this->denyAccessUnlessGranted(PharmacyVoter::MANAGE);
-        /** @var User $user */
-        $user = $this->getUser();
-        $pharmacien = $user->getPharmacien();
-        if (!$this->pharmacienOwnsMedicament($pharmacien, $med)) {
-            return new JsonResponse(['success' => false, 'message' => 'Accès refusé'], 403);
-        }
 
         $payload = json_decode($request->getContent(), true) ?: [];
         if (isset($payload['nom'])) $med->setNom((string) $payload['nom']);
@@ -241,12 +235,6 @@ class PharmacienApiController extends AbstractController
     public function deleteMedicament(Medicament $med): JsonResponse
     {
         $this->denyAccessUnlessGranted(PharmacyVoter::MANAGE);
-        /** @var User $user */
-        $user = $this->getUser();
-        $pharmacien = $user->getPharmacien();
-        if (!$this->pharmacienOwnsMedicament($pharmacien, $med)) {
-            return new JsonResponse(['success' => false, 'message' => 'Accès refusé'], 403);
-        }
 
         $this->em->remove($med);
         $this->em->flush();

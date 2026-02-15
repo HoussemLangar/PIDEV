@@ -41,7 +41,7 @@ class ContenuRepository extends ServiceEntityRepository
         ?string $type = null,
         ?string $search = null,
         ?string $category = null,
-        array $statuses = ['valide', 'publie']
+        array $statuses = ['publie']
     ): QueryBuilder {
         $qb = $this->createQueryBuilder('c')
             ->leftJoin('c.auteur', 'a')
@@ -73,7 +73,7 @@ class ContenuRepository extends ServiceEntityRepository
         ?string $type = null,
         ?string $search = null,
         ?string $category = null,
-        array $statuses = ['valide', 'publie']
+        array $statuses = ['publie']
     ): array {
         $page = max(1, $page);
         $limit = max(1, min(50, $limit));
@@ -168,7 +168,7 @@ class ContenuRepository extends ServiceEntityRepository
         ?string $type = null,
         ?string $search = null,
         ?string $category = null,
-        array $statuses = ['valide', 'publie']
+        array $statuses = ['publie']
     ): int {
         $qb = $this->createValidatedQueryBuilder($type, $search, $category, $statuses)
             ->select('COUNT(DISTINCT c.id)');
