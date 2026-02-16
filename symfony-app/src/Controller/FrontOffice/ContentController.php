@@ -101,13 +101,15 @@ class ContentController extends AbstractController
     {
         $this->denyAccessUnlessGranted(ContentVoter::VIEW);
 
-        if (!in_array($contenu->getStatut(), ['valide', 'publie'], true)) {
-            throw $this->createNotFoundException('Contenu introuvable.');
-        }
-
         /** @var User $user */
         $user = $this->getUser();
         $isOwner = $user instanceof User && $contenu->getAuteur() && $contenu->getAuteur()->getId() === $user->getId();
+
+        // Permettre à l'auteur de voir son propre contenu quel que soit le statut
+        // Les autres utilisateurs ne peuvent voir que les contenus publiés
+        if (!$isOwner && $contenu->getStatut() !== 'publie') {
+            throw $this->createNotFoundException('Contenu introuvable.');
+        }
 
         return $this->render('front/content/show.html.twig', [
             'contenu' => $contenu,
@@ -133,11 +135,25 @@ class ContentController extends AbstractController
             if (!$isEdit) {
                 $contenu->setAuteur($user);
             }
+            
+            // Sauvegarder le contenu existant en cas de modification
+            $existingContenu = $isEdit ? $contenu->getContenu() : null;
+            
             $contenu->setStatut('en_attente');
             $contenu->setDatePublication(null);
 
             $type = $contenu->getType();
-            if ($type === 'lien') {
+            
+            // Pour les articles et liens, si le contenu est vide lors d'une modification, restaurer l'ancien
+            if ($isEdit && $type === 'article' && (!$contenu->getContenu() || trim($contenu->getContenu()) === '')) {
+                $contenu->setContenu($existingContenu);
+            }
+            
+            if ($isEdit && $type === 'lien' && (!$contenu->getContenu() || trim($contenu->getContenu()) === '')) {
+                $contenu->setContenu($existingContenu);
+            }
+            
+            if ($type === 'lien' && $contenu->getContenu()) {
                 $urlErrors = $validator->validate($contenu->getContenu(), new Url([
                     'message' => 'Le lien fourni est invalide.',
                 ]));
@@ -173,6 +189,9 @@ class ContentController extends AbstractController
                     }
                     $pdfFile->move($uploadDir, $newFilename);
                     $contenu->setContenu('/media/contenus/' . $newFilename);
+                } elseif ($isEdit && !$contenu->getContenu()) {
+                    // Restaurer le contenu existant si aucun nouveau fichier n'est uploadé
+                    $contenu->setContenu($existingContenu);
                 }
             }
 
@@ -193,6 +212,9 @@ class ContentController extends AbstractController
                         'isEdit' => $isEdit,
                         'contenu' => $contenu,
                     ]);
+                } elseif ($isEdit && !$contenu->getContenu()) {
+                    // Restaurer le contenu existant si aucun nouveau fichier n'est uploadé
+                    $contenu->setContenu($existingContenu);
                 }
             }
 

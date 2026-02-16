@@ -2,6 +2,24 @@
 
 {% block title %}Forum & Contenus{% endblock %}
 
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .content-pill.status-pending {
+            background-color: #ffc107;
+            color: #000;
+        }
+        .content-pill.status-published {
+            background-color: #28a745;
+            color: #fff;
+        }
+        .content-pill.status-rejected {
+            background-color: #dc3545;
+            color: #fff;
+        }
+    </style>
+{% endblock %}
+
 {% block body %}
 <section class="content-page">
     <div class="content-hero">
@@ -26,8 +44,37 @@
                 <option value="pdf">PDF</option>
                 <option value="lien">Lien</option>
             </select>
-            <input type="text" id="contentCategoryFilter" placeholder="Catégorie">
-            <button class="btn btn-secondary btn-xs" id="contentMine">Mon contenu</button>
+            <select id="contentCategoryFilter">
+                <option value="">Toutes les catégories</option>
+                <option value="Santé mentale">Santé mentale</option>
+                <option value="Général">Général</option>
+                <option value="Médicaments">Médicaments</option>
+                <option value="Sport">Sport</option>
+                <option value="Nutrition">Nutrition</option>
+                <option value="Bien-être">Bien-être</option>
+                <option value="Prévention">Prévention</option>
+                <option value="Maladies chroniques">Maladies chroniques</option>
+                <option value="Grossesse">Grossesse</option>
+                <option value="Pédiatrie">Pédiatrie</option>
+                <option value="Gériatrie">Gériatrie</option>
+                <option value="Urgences">Urgences</option>
+                <option value="Dermatologie">Dermatologie</option>
+                <option value="Cardiologie">Cardiologie</option>
+                <option value="Dentaire">Dentaire</option>
+                <option value="Ophtalmologie">Ophtalmologie</option>
+                <option value="Sexualité">Sexualité</option>
+                <option value="Addictions">Addictions</option>
+                <option value="Sommeil">Sommeil</option>
+                <option value="Stress">Stress</option>
+                <option value="Alimentation">Alimentation</option>
+                <option value="Vaccination">Vaccination</option>
+                <option value="Thérapies">Thérapies</option>
+                <option value="Médicaments génériques">Médicaments génériques</option>
+                <option value="Médecine douce">Médecine douce</option>
+            </select>
+            {% if app.user.role != 'ROLE_PATIENT' %}
+                <button class="btn btn-secondary btn-xs" id="contentMine">Mon contenu</button>
+            {% endif %}
             <button class="btn btn-secondary btn-xs" id="contentReset">Réinitialiser</button>
         </div>
     </div>
@@ -44,9 +91,30 @@
         <div class="content-grid" id="recommendedGrid">
             {% for item in recommended %}
                 {% set isLiked = item.id in likedIds %}
+                {% set isOwner = item.auteur and app.user and item.auteur.id == app.user.id %}
                 <div class="content-card" data-content-id="{{ item.id }}">
                     <div class="content-meta">
                         <span class="content-pill">{{ item.type|upper }}</span>
+                        {% if isOwner and item.statut %}
+                            {% set statutClass = 'content-pill' %}
+                            {% set statutLabel = '' %}
+                            {% if item.statut == 'en_attente' %}
+                                {% set statutClass = statutClass ~ ' status-pending' %}
+                                {% set statutLabel = 'En attente' %}
+                            {% elseif item.statut == 'publie' %}
+                                {% set statutClass = statutClass ~ ' status-published' %}
+                                {% set statutLabel = 'Publié' %}
+                            {% elseif item.statut == 'rejete' %}
+                                {% set statutClass = statutClass ~ ' status-rejected' %}
+                                {% set statutLabel = 'Rejeté' %}
+                            {% else %}
+                                {% set statutClass = statutClass ~ ' status-pending' %}
+                                {% set statutLabel = item.statut %}
+                            {% endif %}
+                            {% if statutLabel %}
+                                <span class="{{ statutClass }}">{{ statutLabel }}</span>
+                            {% endif %}
+                        {% endif %}
                         <span>{{ (item.datePublication ?? item.createdAt)|date('d/m/Y') }}</span>
                         <span>{{ item.auteur ? (item.auteur.fullName ?? item.auteur.email) : 'Anonyme' }}</span>
                     </div>
@@ -111,6 +179,21 @@
             const csrfToken = '{{ csrf_token('content_action') }}';
             const currentUserId = {{ app.user ? app.user.id : 'null' }};
             let onlyMine = false;
+            
+            // Vérification des éléments DOM
+            console.log('Éléments trouvés:', {
+                grid: !!grid,
+                searchInput: !!searchInput,
+                typeFilter: !!typeFilter,
+                categoryFilter: !!categoryFilter,
+                resetBtn: !!resetBtn,
+                mineBtn: !!mineBtn
+            });
+            
+            if (!grid || !searchInput || !typeFilter || !categoryFilter) {
+                console.error('Éléments manquants dans le DOM!');
+                return;
+            }
 
             let page = 1;
             let loading = false;
@@ -130,10 +213,42 @@
 
             const buildCard = (item) => {
                 const likedClass = item.liked ? 'active' : '';
+                
+                // Déterminer la couleur du badge de statut
+                let statutBadge = '';
+                if (item.isOwner && item.statut) {
+                    let statutClass = 'content-pill';
+                    let statutLabel = '';
+                    
+                    switch(item.statut) {
+                        case 'en_attente':
+                            statutClass += ' status-pending';
+                            statutLabel = 'En attente';
+                            break;
+                        case 'publie':
+                            statutClass += ' status-published';
+                            statutLabel = 'Publié';
+                            break;
+                        case 'rejete':
+                            statutClass += ' status-rejected';
+                            statutLabel = 'Rejeté';
+                            break;
+                        default:
+                            statutClass += ' status-pending';
+                            statutLabel = item.statut; // Afficher le statut brut si inconnu
+                            break;
+                    }
+                    
+                    if (statutLabel) {
+                        statutBadge = `<span class="${statutClass}">${statutLabel}</span>`;
+                    }
+                }
+                
                 return `
                 <div class="content-card" data-content-id="${item.id}">
                     <div class="content-meta">
                         <span class="content-pill">${item.type.toUpperCase()}</span>
+                        ${statutBadge}
                         <span>${item.date}</span>
                         <span>${item.auteur}</span>
                     </div>
@@ -183,11 +298,26 @@
                 if (onlyMine) {
                     params.set('owner', 'me');
                 }
+                
+                console.log('Filtres appliqués:', {
+                    search: searchInput.value.trim(),
+                    type: typeFilter.value,
+                    category: categoryFilter.value.trim(),
+                    onlyMine: onlyMine
+                });
+                console.log('URL de requête:', `{{ path('api_content_list') }}?${params.toString()}`);
 
                 try {
                     const res = await fetch(`{{ path('api_content_list') }}?${params.toString()}`);
                     const data = await res.json();
                     if (!data.items) throw new Error('Erreur');
+                    
+                    console.log('Résultats API:', {
+                        itemsCount: data.items.length,
+                        currentPage: data.page,
+                        totalPages: data.pages,
+                        totalItems: data.total
+                    });
 
                     data.items.forEach((item) => {
                         grid.insertAdjacentHTML('beforeend', buildCard(item));
@@ -342,17 +472,39 @@
                 typeFilter.value = '';
                 categoryFilter.value = '';
                 onlyMine = false;
-                mineBtn.classList.remove('active');
+                if (mineBtn) mineBtn.classList.remove('active');
                 loadContents(true);
             });
-            mineBtn.addEventListener('click', () => {
-                onlyMine = !onlyMine;
-                mineBtn.classList.toggle('active', onlyMine);
-                loadContents(true);
-            });
-            [searchInput, typeFilter, categoryFilter].forEach((el) => {
-                el.addEventListener('change', () => loadContents(true));
-            });
+            
+            if (mineBtn) {
+                mineBtn.addEventListener('click', () => {
+                    onlyMine = !onlyMine;
+                    mineBtn.classList.toggle('active', onlyMine);
+                    loadContents(true);
+                });
+            }
+            
+            // Recherche en temps réel avec 'input'
+            if (searchInput) {
+                searchInput.addEventListener('input', () => {
+                    console.log('Event input déclenché, valeur:', searchInput.value);
+                    loadContents(true);
+                });
+            }
+            
+            // Changement de filtres
+            if (typeFilter) {
+                typeFilter.addEventListener('change', () => {
+                    console.log('Event change type déclenché, valeur:', typeFilter.value);
+                    loadContents(true);
+                });
+            }
+            if (categoryFilter) {
+                categoryFilter.addEventListener('change', () => {
+                    console.log('Event change category déclenché, valeur:', categoryFilter.value);
+                    loadContents(true);
+                });
+            }
 
             loadContents(true);
         })();

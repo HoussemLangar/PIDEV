@@ -40,11 +40,18 @@ class TeleconsultationType extends AbstractType
             ->add('scheduledAt', DateTimeType::class, [
                 'label' => 'Date et heure prévues',
                 'widget' => 'single_text',
+                'input' => 'datetime_immutable',
+                'required' => true,
+                'empty_data' => (new \DateTimeImmutable('+1 hour'))->format('Y-m-d H:i'),
                 'attr' => [
                     'class' => 'form-control',
                     'min' => (new \DateTimeImmutable())->format('Y-m-d\TH:i'),
+                    'required' => 'required',
                 ],
                 'constraints' => [
+                    new Assert\NotBlank([
+                        'message' => 'La date et l\'heure sont obligatoires',
+                    ]),
                     new Assert\GreaterThan([
                         'value' => new \DateTimeImmutable(),
                         'message' => 'La date doit être dans le futur',

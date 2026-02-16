@@ -3,113 +3,312 @@
 {% block title %}Consultation avec {{ otherUser.username }}{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row">
-        <div class="col-md-8 mx-auto">
-            <div class="card">
-                <div class="card-header {% if consultation.ongoing %}bg-danger{% elseif consultation.pending %}bg-warning{% else %}bg-secondary{% endif %} text-white">
-                    <h4 class="mb-0">
-                        <i class="bi bi-camera-video"></i> Consultation
-                        <span class="float-end">
-                            {% if consultation.ongoing %}
-                                <span class="badge bg-light text-danger">EN COURS</span>
-                            {% elseif consultation.pending %}
-                                <span class="badge bg-light text-warning">EN ATTENTE</span>
-                            {% elseif consultation.completed %}
-                                <span class="badge bg-light text-success">COMPLÉTÉE</span>
-                            {% else %}
-                                <span class="badge bg-light text-dark">ANNULÉE</span>
-                            {% endif %}
-                        </span>
-                    </h4>
+<div class="content-wrapper" style="padding: 30px 40px; max-width: 1200px; margin: 0 auto;">
+    <!-- Page Header -->
+    <div class="page-header" style="margin-bottom: 32px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-video" style="color: white; font-size: 24px;"></i>
                 </div>
-                <div class="card-body">
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Avec</h6>
-                            <h5>{{ otherUser.username }}</h5>
-                            <small class="text-muted">{{ otherUser.prenom }} {{ otherUser.nom }}</small>
+                <div>
+                    <h1 style="margin: 0; font-size: 28px; font-weight: 700; color: #1a1a2e;">Téléconsultation</h1>
+                    <p style="margin: 4px 0 0 0; color: #64748b; font-size: 14px;">Consultation vidéo en ligne</p>
+                </div>
+            </div>
+            {% if consultation.ongoing %}
+                <span style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border-radius: 20px; font-size: 14px; font-weight: 600; animation: pulse 2s infinite;">
+                    <i class="fas fa-circle" style="font-size: 8px; animation: blink 1s infinite;"></i> EN COURS
+                </span>
+            {% elseif consultation.pending %}
+                <span style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: #fef3c7; color: #92400e; border-radius: 20px; font-size: 14px; font-weight: 600;">
+                    <i class="fas fa-clock"></i> EN ATTENTE
+                </span>
+            {% elseif consultation.completed %}
+                <span style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: #dcfce7; color: #166534; border-radius: 20px; font-size: 14px; font-weight: 600;">
+                    <i class="fas fa-check-circle"></i> COMPLÉTÉE
+                </span>
+            {% else %}
+                <span style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: #f1f5f9; color: #475569; border-radius: 20px; font-size: 14px; font-weight: 600;">
+                    <i class="fas fa-times-circle"></i> ANNULÉE
+                </span>
+            {% endif %}
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+        <!-- Main Content -->
+        <div>
+            <!-- Participant Info Card -->
+            <div style="background: white; border-radius: 16px; padding: 24px; box-shadow: 0 2px 8px rgba(15,23,42,0.06); margin-bottom: 24px;">
+                <h2 style="font-size: 18px; font-weight: 700; color: #1a1a2e; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-user" style="color: white; font-size: 14px;"></i>
+                    </div>
+                    Participant
+                </h2>
+
+                <div style="display: flex; align-items: center; gap: 16px;">
+                    <div style="width: 64px; height: 64px; background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 24px;">
+                        {{ otherUser.username|slice(0, 2)|upper }}
+                    </div>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 700; font-size: 20px; color: #1e293b; margin-bottom: 4px;">
+                            {{ otherUser.username }}
                         </div>
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Type</h6>
-                            <h5>
-                                {% if consultation.type == 'general' %}
-                                    Consultation générale
-                                {% elseif consultation.type == 'follow_up' %}
-                                    Suivi
-                                {% elseif consultation.type == 'emergency' %}
-                                    Urgence
-                                {% elseif consultation.type == 'diagnostic' %}
-                                    Diagnostic
-                                {% else %}
-                                    {{ consultation.type }}
-                                {% endif %}
-                            </h5>
+                        <div style="color: #64748b; font-size: 15px; margin-bottom: 6px;">
+                            {{ otherUser.prenom }} {{ otherUser.nom }}
+                        </div>
+                        <div style="display: flex; gap: 12px; font-size: 13px; color: #94a3b8;">
+                            <span><i class="fas fa-envelope" style="margin-right: 4px;"></i>{{ otherUser.email }}</span>
                         </div>
                     </div>
+                </div>
+            </div>
 
-                    <hr>
+            <!-- Type & Details Card -->
+            <div style="background: white; border-radius: 16px; padding: 24px; box-shadow: 0 2px 8px rgba(15,23,42,0.06); margin-bottom: 24px;">
+                <h2 style="font-size: 18px; font-weight: 700; color: #1a1a2e; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-info-circle" style="color: white; font-size: 14px;"></i>
+                    </div>
+                    Type de consultation
+                </h2>
 
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Programmée pour</h6>
-                            <p>
-                                <i class="bi bi-calendar"></i>
-                                {{ consultation.scheduledAt|date('d/m/Y') }}
-                            </p>
-                            <p>
-                                <i class="bi bi-clock"></i>
-                                {{ consultation.scheduledAt|date('H:i') }}
-                            </p>
+                {% set typeLabel = '' %}
+                {% set typeIcon = 'fa-stethoscope' %}
+                {% set typeColor = '#3b82f6' %}
+                
+                {% if consultation.type == 'general' %}
+                    {% set typeLabel = 'Consultation générale' %}
+                    {% set typeIcon = 'fa-stethoscope' %}
+                    {% set typeColor = '#3b82f6' %}
+                {% elseif consultation.type == 'follow_up' %}
+                    {% set typeLabel = 'Suivi' %}
+                    {% set typeIcon = 'fa-redo' %}
+                    {% set typeColor = '#10b981' %}
+                {% elseif consultation.type == 'emergency' %}
+                    {% set typeLabel = 'Urgence' %}
+                    {% set typeIcon = 'fa-exclamation-triangle' %}
+                    {% set typeColor = '#ef4444' %}
+                {% elseif consultation.type == 'diagnostic' %}
+                    {% set typeLabel = 'Diagnostic' %}
+                    {% set typeIcon = 'fa-clipboard-check' %}
+                    {% set typeColor = '#8b5cf6' %}
+                {% else %}
+                    {% set typeLabel = consultation.type %}
+                {% endif %}
+
+                <div style="display: flex; align-items: center; gap: 12px; padding: 16px; background: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0;">
+                    <div style="width: 48px; height: 48px; background: {{ typeColor }}22; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas {{ typeIcon }}" style="color: {{ typeColor }}; font-size: 20px;"></i>
+                    </div>
+                    <div>
+                        <div style="font-size: 13px; color: #94a3b8; margin-bottom: 2px;">Type</div>
+                        <div style="font-weight: 700; font-size: 16px; color: #1e293b;">{{ typeLabel }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Schedule Card -->
+            <div style="background: white; border-radius: 16px; padding: 24px; box-shadow: 0 2px 8px rgba(15,23,42,0.06); margin-bottom: 24px;">
+                <h2 style="font-size: 18px; font-weight: 700; color: #1a1a2e; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-calendar-alt" style="color: white; font-size: 14px;"></i>
+                    </div>
+                    Planification
+                </h2>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div style="background: #f8fafc; border-radius: 10px; padding: 16px; border: 1px solid #e2e8f0;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                            <i class="fas fa-calendar" style="color: #06b6d4; font-size: 16px;"></i>
+                            <span style="font-size: 12px; color: #94a3b8; font-weight: 600; text-transform: uppercase;">Date</span>
                         </div>
-                        {% if consultation.startedAt %}
-                            <div class="col-md-6">
-                                <h6 class="text-muted">Durée</h6>
-                                <p>
-                                    <strong>{{ consultation.durationFormatted }}</strong>
-                                </p>
+                        <div style="font-weight: 700; font-size: 18px; color: #1e293b;">{{ consultation.scheduledAt|date('d/m/Y') }}</div>
+                    </div>
+
+                    <div style="background: #f8fafc; border-radius: 10px; padding: 16px; border: 1px solid #e2e8f0;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                            <i class="fas fa-clock" style="color: #06b6d4; font-size: 16px;"></i>
+                            <span style="font-size: 12px; color: #94a3b8; font-weight: 600; text-transform: uppercase;">Heure</span>
+                        </div>
+                        <div style="font-weight: 700; font-size: 18px; color: #1e293b;">{{ consultation.scheduledAt|date('H:i') }}</div>
+                    </div>
+
+                    {% if consultation.startedAt %}
+                        <div style="background: #f8fafc; border-radius: 10px; padding: 16px; border: 1px solid #e2e8f0; grid-column: span 2;">
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                <i class="fas fa-hourglass-half" style="color: #10b981; font-size: 16px;"></i>
+                                <span style="font-size: 12px; color: #94a3b8; font-weight: 600; text-transform: uppercase;">Durée</span>
                             </div>
-                        {% endif %}
-                    </div>
-
-                    {% if consultation.description %}
-                        <div class="alert alert-light">
-                            <strong>Description:</strong><br>
-                            {{ consultation.description }}
+                            <div style="font-weight: 700; font-size: 18px; color: #1e293b;">{{ consultation.durationFormatted }}</div>
                         </div>
                     {% endif %}
                 </div>
-                <div class="card-footer d-flex gap-2">
+            </div>
+
+            <!-- Description Card -->
+            {% if consultation.description %}
+                <div style="background: white; border-radius: 16px; padding: 24px; box-shadow: 0 2px 8px rgba(15,23,42,0.06);">
+                    <h2 style="font-size: 18px; font-weight: 700; color: #1a1a2e; margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
+                        <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-file-alt" style="color: white; font-size: 14px;"></i>
+                        </div>
+                        Description
+                    </h2>
+                    <div style="background: #f8fafc; border-radius: 10px; padding: 16px; border: 1px solid #e2e8f0; color: #475569; line-height: 1.6;">
+                        {{ consultation.description }}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div>
+            <!-- Quick Actions Card -->
+            <div style="background: white; border-radius: 16px; padding: 24px; box-shadow: 0 2px 8px rgba(15,23,42,0.06); margin-bottom: 24px;">
+                <h3 style="font-size: 16px; font-weight: 700; color: #1a1a2e; margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-bolt" style="color: #f59e0b;"></i>
+                    Actions rapides
+                </h3>
+
+                <div style="display: flex; flex-direction: column; gap: 10px;">
                     {% if canStart %}
-                        <a href="{{ path('app_teleconsultation_join', {id: consultation.id}) }}" class="btn btn-success">
-                            <i class="bi bi-camera-video"></i> Rejoindre
+                        <a href="{{ path('app_teleconsultation_join', {id: consultation.id}) }}" style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 14px 20px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border-radius: 10px; text-decoration: none; font-weight: 600; font-size: 15px; transition: all 0.2s; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">
+                            <i class="fas fa-video"></i>
+                            Rejoindre la consultation
                         </a>
                     {% endif %}
 
                     {% if consultation.pending and isInitiator %}
-                        <form action="{{ path('app_teleconsultation_cancel', {id: consultation.id}) }}" method="POST" style="display:inline;">
+                        <form action="{{ path('app_teleconsultation_cancel', {id: consultation.id}) }}" method="POST" style="margin: 0;">
                             <input type="hidden" name="_token" value="{{ csrf_token('teleconsultation_cancel' ~ consultation.id) }}">
-                            <button type="submit" class="btn btn-danger" onclick="return confirm('Êtes-vous sûr?')">
-                                <i class="bi bi-x-circle"></i> Annuler
+                            <button type="submit" onclick="return confirm('Êtes-vous sûr de vouloir annuler cette consultation ?')" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 16px; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s;">
+                                <i class="fas fa-times-circle"></i>
+                                Annuler la consultation
                             </button>
                         </form>
                     {% endif %}
 
                     {% if consultation.ongoing %}
-                        <form action="{{ path('app_teleconsultation_end', {id: consultation.id}) }}" method="POST" style="display:inline;">
+                        <form action="{{ path('app_teleconsultation_end', {id: consultation.id}) }}" method="POST" style="margin: 0;">
                             <input type="hidden" name="_token" value="{{ csrf_token('teleconsultation_end' ~ consultation.id) }}">
-                            <button type="submit" class="btn btn-warning" onclick="return confirm('Terminer la consultation?')">
-                                <i class="bi bi-stop-circle"></i> Terminer
+                            <button type="submit" onclick="return confirm('Terminer la consultation ?')" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 16px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s;">
+                                <i class="fas fa-stop-circle"></i>
+                                Terminer la consultation
                             </button>
                         </form>
                     {% endif %}
 
-                    <a href="{{ path('app_teleconsultation_index') }}" class="btn btn-secondary ms-auto">
-                        <i class="bi bi-arrow-left"></i> Retour
+                    <a href="{{ path('app_teleconsultation_index') }}" style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 16px; background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; border-radius: 10px; text-decoration: none; font-weight: 600; font-size: 14px; transition: all 0.2s;">
+                        <i class="fas fa-arrow-left"></i>
+                        Retour à la liste
                     </a>
+                </div>
+            </div>
+
+            <!-- Status Info Card -->
+            <div style="background: white; border-radius: 16px; padding: 24px; box-shadow: 0 2px 8px rgba(15,23,42,0.06);">
+                <h3 style="font-size: 16px; font-weight: 700; color: #1a1a2e; margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-info-circle" style="color: #8b5cf6;"></i>
+                    Informations
+                </h3>
+
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <div style="padding: 12px; background: #f8fafc; border-radius: 8px; border-left: 3px solid #8b5cf6;">
+                        <div style="font-size: 12px; color: #94a3b8; margin-bottom: 4px;">Initiateur</div>
+                        <div style="font-weight: 600; color: #1e293b; font-size: 14px;">{{ consultation.initiator.username }}</div>
+                    </div>
+
+                    <div style="padding: 12px; background: #f8fafc; border-radius: 8px; border-left: 3px solid #06b6d4;">
+                        <div style="font-size: 12px; color: #94a3b8; margin-bottom: 4px;">Créée le</div>
+                        <div style="font-weight: 600; color: #1e293b; font-size: 14px;">{{ consultation.createdAt|date('d/m/Y à H:i') }}</div>
+                    </div>
+
+                    {% if consultation.startedAt %}
+                        <div style="padding: 12px; background: #f8fafc; border-radius: 8px; border-left: 3px solid #10b981;">
+                            <div style="font-size: 12px; color: #94a3b8; margin-bottom: 4px;">Démarrée le</div>
+                            <div style="font-weight: 600; color: #1e293b; font-size: 14px;">{{ consultation.startedAt|date('d/m/Y à H:i') }}</div>
+                        </div>
+                    {% endif %}
+
+                    {% if consultation.endedAt %}
+                        <div style="padding: 12px; background: #f8fafc; border-radius: 8px; border-left: 3px solid #ef4444;">
+                            <div style="font-size: 12px; color: #94a3b8; margin-bottom: 4px;">Terminée le</div>
+                            <div style="font-weight: 600; color: #1e293b; font-size: 14px;">{{ consultation.endedAt|date('d/m/Y à H:i') }}</div>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.8;
+    }
+}
+
+@keyframes blink {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.3;
+    }
+}
+
+.content-wrapper {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+a[style*="background: linear-gradient"]:hover,
+button[style*="background: linear-gradient"]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2) !important;
+}
+
+a[style*="background: #f1f5f9"]:hover {
+    background: #e2e8f0 !important;
+    transform: translateY(-2px);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .content-wrapper > div[style*="grid-template-columns: 2fr 1fr"] {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .content-wrapper {
+        padding: 20px !important;
+    }
+    
+    .page-header h1 {
+        font-size: 22px !important;
+    }
+    
+    div[style*="grid-template-columns: 1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+    }
+}
+</style>
 {% endblock %}

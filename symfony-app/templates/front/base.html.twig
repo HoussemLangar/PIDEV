@@ -268,11 +268,8 @@
                             try {
                                 payload = await response.clone().json();
                             } catch (_) {}
-                        }
-                        if (response.ok) {
-                            const msg = payload?.message || 'Opération réussie.';
-                            showToast('success', msg);
-                        } else {
+                        
+                            } else {
                             const msg = payload?.message || payload?.error || response.statusText || 'Erreur.';
                             showToast('error', msg);
                         }
