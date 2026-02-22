@@ -7,6 +7,7 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\RepeatedType;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
@@ -14,6 +15,7 @@ use Symfony\Component\Form\Extension\Core\Type\TelType;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Constraints\Length;
+use Symfony\Component\Validator\Constraints\IsTrue;
 
 class UsersType extends AbstractType
 {
@@ -100,6 +102,30 @@ class UsersType extends AbstractType
                 'attr' => [
                     'placeholder' => '+216 XX XXX XXX',
                     'class' => 'form-control'
+                ]
+            ])
+            ->add('captcha', TextType::class, [
+                'label' => 'Captcha',
+                'mapped' => false,
+                'required' => true,
+                'constraints' => [
+                    new NotBlank(['message' => 'Merci de compléter le captcha.']),
+                ],
+                'attr' => [
+                    'placeholder' => 'Tapez le résultat',
+                    'autocomplete' => 'off',
+                    'class' => 'form-control'
+                ]
+            ])
+            ->add('termsAccepted', CheckboxType::class, [
+                'label' => 'J\'accepte les conditions d\'utilisation',
+                'mapped' => false,
+                'required' => true,
+                'constraints' => [
+                    new IsTrue(['message' => 'Vous devez accepter les conditions pour continuer.'])
+                ],
+                'label_attr' => [
+                    'class' => 'required'
                 ]
             ]);
     }

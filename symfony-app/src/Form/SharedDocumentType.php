@@ -17,6 +17,21 @@ class SharedDocumentType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
+        $documentChoices = [
+            'Analyse médicale' => 'analysis',
+            'Rapport médical' => 'report',
+            'Résultats laboratoire' => 'lab_results',
+            'Imagerie médicale' => 'imaging',
+        ];
+
+        if (!$options['is_patient']) {
+            $documentChoices += [
+                'Ordonnance' => 'prescription',
+                'Facture' => 'invoice',
+                'Autre' => 'other',
+            ];
+        }
+
         $builder
             ->add('file', FileType::class, [
                 'label' => 'Fichier',
@@ -56,15 +71,7 @@ class SharedDocumentType extends AbstractType
             ->add('documentType', ChoiceType::class, [
                 'label' => 'Type de document',
                 'placeholder' => 'Sélectionnez un type de document',
-                'choices' => [
-                    'Analyse médicale' => 'analysis',
-                    'Ordonnance' => 'prescription',
-                    'Rapport médical' => 'report',
-                    'Résultats laboratoire' => 'lab_results',
-                    'Imagerie médicale' => 'imaging',
-                    'Facture' => 'invoice',
-                    'Autre' => 'other',
-                ],
+                'choices' => $documentChoices,
                 'attr' => [
                     'class' => 'form-control',
                 ],
@@ -85,6 +92,7 @@ class SharedDocumentType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => SharedDocument::class,
+            'is_patient' => false,
         ]);
     }
 }

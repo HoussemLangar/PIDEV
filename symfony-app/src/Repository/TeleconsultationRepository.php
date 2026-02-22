@@ -24,10 +24,10 @@ class TeleconsultationRepository extends ServiceEntityRepository
     {
         return $this->createQueryBuilder('t')
             ->where('(t.initiator = :user OR t.recipient = :user)')
-            ->andWhere('t.status = :status')
+            ->andWhere('t.status IN (:statuses)')
             ->andWhere('t.scheduledAt >= :now')
             ->setParameter('user', $user)
-            ->setParameter('status', 'pending')
+            ->setParameter('statuses', ['pending', 'requested'])
             ->setParameter('now', new \DateTimeImmutable())
             ->orderBy('t.scheduledAt', 'ASC')
             ->setMaxResults($limit)
@@ -74,7 +74,7 @@ class TeleconsultationRepository extends ServiceEntityRepository
     {
         $stats = $this->createQueryBuilder('t')
             ->select("SUM(CASE WHEN t.status = 'completed' THEN 1 ELSE 0 END) as completed")
-            ->addSelect("SUM(CASE WHEN t.status = 'pending' THEN 1 ELSE 0 END) as pending")
+            ->addSelect("SUM(CASE WHEN t.status IN ('pending', 'requested') THEN 1 ELSE 0 END) as pending")
             ->addSelect("SUM(CASE WHEN t.status = 'cancelled' THEN 1 ELSE 0 END) as cancelled")
             ->addSelect('AVG(t.durationSeconds) as avgDuration')
             ->addSelect('SUM(t.durationSeconds) as totalDuration')

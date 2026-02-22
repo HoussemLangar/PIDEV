@@ -30,9 +30,9 @@ class TeleconsultationType extends AbstractType
                 'query_builder' => function ($repo) use ($options) {
                     $qb = $repo->createQueryBuilder('u')
                         ->orderBy('u.username', 'ASC');
-                    if (!empty($options['recipient_role'])) {
-                        $qb->where('u.role = :role')
-                            ->setParameter('role', $options['recipient_role']);
+                    if (!empty($options['recipient_roles'])) {
+                        $qb->where('u.role IN (:roles)')
+                            ->setParameter('roles', $options['recipient_roles']);
                     }
                     return $qb;
                 },
@@ -85,7 +85,7 @@ class TeleconsultationType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => Teleconsultation::class,
-            'recipient_role' => null,
+            'recipient_roles' => [],
         ]);
     }
 }

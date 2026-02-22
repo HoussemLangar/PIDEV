@@ -5,35 +5,17 @@
 {% block stylesheets %}
   {{ parent() }}
   <link rel="stylesheet" href="{{ asset('assets/css/santet.css') }}"/>
-  <style>
-    .health-tracker-page-neutral {
-      background: #f5f7fb;
-      padding-left: 0;
-    }
-    .health-tracker-page-neutral::before,
-    .health-tracker-page-neutral::after {
-      content: none;
-    }
-    body {
-      background: #f5f7fb;
-    }
-    .content-hero {
-      background: #f5f7fb;
-      border-color: #e5e7eb;
-      box-shadow: none;
-    }
-  </style>
 {% endblock %}
 
 {% block body %}
-  <main class="health-tracker-page-v2 health-tracker-page-neutral" style="position:relative; background:#f5f7fb; background-image:none;">
+  <main class="health-tracker-page-v2">
     
     <section class="content-page">
-    <div class="container-wide" style="position:relative; z-index:2;">
+    <div class="container-wide">
       
       <!-- Messages flash -->
       {% for message in app.flashes('success') %}
-        <div class="alert alert-success flash-success" style="margin-bottom:15px; padding:12px; background:#d4edda; border:1px solid #c3e6cb; border-radius:4px; color:#155724;">
+        <div class="alert alert-success flash-success">
           ✅ {{ message }}
         </div>
       {% endfor %}
@@ -50,7 +32,7 @@
         });
       </script>
       {% for message in app.flashes('error') %}
-        <div class="alert alert-danger" style="margin-bottom:15px; padding:12px; background:#f8d7da; border:1px solid #f5c6cb; border-radius:4px; color:#721c24;">
+        <div class="alert alert-danger">
           ❌ {{ message }}
         </div>
       {% endfor %}
@@ -162,10 +144,10 @@
       {% endif %}
 
       <!-- Contenu principal en 2 colonnes -->
-      <div class="main-content-grid" style="display:grid; grid-template-columns: 1fr 400px; gap:30px; align-items:stretch;">
+      <div class="main-content-grid">
         <!-- Colonne gauche - Formulaire Symfony -->
-        <div class="form-section-beautiful" id="form-section" style="grid-column: 1; max-width:100%; margin-top:-135px;">
-          <div class="form-card-beautiful" style="max-width:1050px; width:100%; margin:0 auto;">
+        <div class="form-section-beautiful" id="form-section">
+          <div class="form-card-beautiful">
             <div class="form-header-beautiful">
               <h2>📝 Comment allez-vous aujourd'hui ?</h2>
               <p style="font-size:0.9em; color:#666; margin-top:5px;">
@@ -391,7 +373,7 @@
         </div>
 
         <!-- Colonne droite - Mes dernières journées -->
-        <div class="recent-entries-beautiful" style="grid-column: 2; height:13cm; display:flex; flex-direction:column; margin-top:-137px;">
+        <div class="recent-entries-beautiful">
           <div class="section-header-beautiful">
             <h3>📔 Mes dernières journées</h3>
           </div>

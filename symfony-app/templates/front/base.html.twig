@@ -36,6 +36,202 @@
         <link rel="stylesheet" href="{{ asset('style.css') }}?v=10002">
         <link rel="SHORTCUT ICON" type="image/x-icon" href="{{ asset('logo.png') }}">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+        <style>
+        /* ─── Nav Icons ─────────────────────────────────────────── */
+        .nav-icons { display:flex; align-items:center; gap:6px; }
+        .nav-icon-wrap { position:relative; }
+        .nav-icon-btn {
+            position:relative; width:40px; height:40px; border:none; border-radius:12px;
+            background:rgba(13,138,188,.08); cursor:pointer; display:flex; align-items:center;
+            justify-content:center; color:#0D8ABC; font-size:16px;
+            transition:background .2s,color .2s,transform .15s,box-shadow .2s;
+        }
+        .nav-icon-btn:hover { background:rgba(13,138,188,.18); transform:translateY(-1px); box-shadow:0 4px 12px rgba(13,138,188,.2); }
+        .nav-icon-btn:active { transform:translateY(0); }
+        .nav-avatar-btn { background:transparent; border:2px solid #e2e8f0; border-radius:50%; width:38px; height:38px; padding:0; overflow:hidden; }
+        .nav-avatar-btn:hover { border-color:#0D8ABC; box-shadow:0 0 0 3px rgba(13,138,188,.2); transform:none; }
+        .nav-avatar-img { width:100%; height:100%; object-fit:cover; border-radius:50%; display:block; }
+        .nav-badge {
+            position:absolute; top:-4px; right:-4px; min-width:18px; height:18px;
+            background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff; font-size:10px; font-weight:800;
+            border-radius:50px; display:flex; align-items:center; justify-content:center;
+            padding:0 4px; border:2px solid white; line-height:1; pointer-events:none;
+            box-shadow:0 2px 6px rgba(239,68,68,.4);
+        }
+
+        /* ─── Nav Dropdown – shared ──────────────────────────────── */
+        .nav-dropdown {
+            position:absolute; top:calc(100% + 12px); right:0; width:360px;
+            background:#fff; border-radius:18px;
+            box-shadow:0 20px 60px rgba(15,23,42,.18),0 4px 16px rgba(15,23,42,.08);
+            border:1px solid rgba(226,232,240,.8);
+            z-index:1000; opacity:0; visibility:hidden; transform:translateY(-10px) scale(.97);
+            transition:opacity .22s cubic-bezier(.4,0,.2,1),visibility .22s,transform .22s cubic-bezier(.4,0,.2,1);
+            /* overflow is NOT hidden so account submenu can open inline */
+        }
+        [data-theme="dark"] .nav-dropdown { background:#1e293b; border-color:#334155; }
+        .nav-dropdown.show { opacity:1; visibility:visible; transform:translateY(0) scale(1); }
+
+        /* Account dropdown needs scroll */
+        #accountDropdown { overflow-y:auto; max-height:calc(100vh - 100px); }
+
+        .nav-dropdown-header {
+            display:flex; align-items:center; justify-content:space-between;
+            padding:16px 20px 12px; border-bottom:1px solid #f1f5f9;
+        }
+        .nav-dropdown-title { font-weight:800; font-size:15px; color:#1a1a2e; display:flex; align-items:center; gap:8px; }
+        [data-theme="dark"] .nav-dropdown-title { color:#e2e8f0; }
+        [data-theme="dark"] .nav-dropdown-header { border-color:#334155; }
+        .nav-dropdown-action {
+            font-size:12px; color:#0D8ABC; cursor:pointer; background:rgba(13,138,188,.1); border:none;
+            padding:4px 10px; border-radius:20px; font-weight:600; text-decoration:none; transition:all .2s;
+        }
+        .nav-dropdown-action:hover { background:rgba(13,138,188,.2); color:#0a6d96; }
+
+        /* ─── Notification list ──────────────────────────────────── */
+        .notif-list { max-height:360px; overflow-y:auto; }
+        .conv-list  { max-height:360px; overflow-y:auto; }
+        .notif-list::-webkit-scrollbar,.conv-list::-webkit-scrollbar { width:4px; }
+        .notif-list::-webkit-scrollbar-thumb,.conv-list::-webkit-scrollbar-thumb { background:#e2e8f0; border-radius:4px; }
+        .notif-item {
+            display:flex; align-items:flex-start; gap:12px; padding:12px 20px;
+            border-bottom:1px solid #f8fafc; text-decoration:none; color:inherit; transition:background .15s;
+        }
+        .notif-item:last-child { border-bottom:none; }
+        .notif-item:hover { background:#f8fafc; }
+        .notif-item.unread { background:linear-gradient(to right,#eff6ff,#f8faff); border-left:3px solid #3b82f6; padding-left:17px; }
+        [data-theme="dark"] .notif-item:hover { background:#0f172a; }
+        [data-theme="dark"] .notif-item.unread { background:linear-gradient(to right,#1e3a5f,#1e293b); border-color:#3b82f6; }
+        .notif-icon {
+            width:38px; height:38px; border-radius:10px;
+            background:linear-gradient(135deg,#dbeafe,#bfdbfe);
+            display:flex; align-items:center; justify-content:center;
+            flex-shrink:0; color:#3b82f6; font-size:14px;
+        }
+        .notif-body { flex:1; min-width:0; }
+        .notif-title { font-weight:700; font-size:13px; color:#1a1a2e; margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        [data-theme="dark"] .notif-title { color:#e2e8f0; }
+        .notif-msg { font-size:12px; color:#64748b; line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+        .notif-time { font-size:11px; color:#94a3b8; white-space:nowrap; flex-shrink:0; margin-top:2px; background:#f1f5f9; padding:2px 6px; border-radius:50px; }
+        .notif-empty,.conv-empty { padding:36px 20px; text-align:center; color:#94a3b8; font-size:13px; }
+        .notif-empty i,.conv-empty i { font-size:32px; opacity:.3; margin-bottom:10px; display:block; }
+
+        /* ─── Conversation list ──────────────────────────────────── */
+        .conv-item {
+            display:flex; align-items:center; gap:12px; padding:12px 20px;
+            border-bottom:1px solid #f8fafc; cursor:pointer; transition:background .15s;
+        }
+        .conv-item:last-child { border-bottom:none; }
+        .conv-item:hover { background:#f8fafc; }
+        [data-theme="dark"] .conv-item:hover { background:#0f172a; }
+        .conv-avatar { width:42px; height:42px; border-radius:50%; object-fit:cover; flex-shrink:0; border:2px solid #e2e8f0; }
+        .conv-info { flex:1; min-width:0; }
+        .conv-name { font-weight:700; font-size:13px; color:#1a1a2e; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        [data-theme="dark"] .conv-name { color:#e2e8f0; }
+        .conv-time { font-size:11px; color:#94a3b8; margin-top:2px; }
+        .conv-arrow { color:#cbd5e1; font-size:12px; flex-shrink:0; transition:transform .15s; }
+        .conv-item:hover .conv-arrow { transform:translateX(3px); color:#0D8ABC; }
+
+        /* ─── Override submenu to be accordion (fixes overflow:hidden clipping) ── */
+        #accountDropdown .dropdown-section.has-submenu { margin:0; }
+        #accountDropdown .dropdown-submenu {
+            position:static !important;
+            width:100% !important;
+            right:auto !important; top:auto !important;
+            box-shadow:none !important;
+            transform:none !important;
+            max-height:0;
+            overflow:hidden !important;
+            opacity:1 !important;
+            visibility:visible !important;
+            padding:0 0 0 24px !important;
+            margin:0 !important;
+            border-radius:0 0 8px 8px !important;
+            background:rgba(13,138,188,.04) !important;
+            border-left:3px solid rgba(13,138,188,.25) !important;
+            transition:max-height .25s ease, padding .25s ease !important;
+            pointer-events:none;
+        }
+        #accountDropdown .dropdown-section.has-submenu.open > .dropdown-submenu {
+            max-height:300px !important;
+            padding:6px 0 6px 24px !important;
+            pointer-events:auto;
+        }
+        [data-theme="dark"] #accountDropdown .dropdown-submenu { background:rgba(13,138,188,.06) !important; border-color:rgba(13,138,188,.3) !important; }
+
+        /* ─── Messenger popup ────────────────────────────────────── */
+        #messengerContainer {
+            position:fixed; bottom:0; right:24px;
+            display:flex; align-items:flex-end; gap:10px;
+            z-index:2000; pointer-events:none;
+            max-width:calc(100vw - 48px);
+        }
+        #messengerSliderBtn {
+            display:none; position:fixed; bottom:16px; right:0;
+            width:32px; height:54px; background:rgba(13,138,188,.9); color:white;
+            border:none; cursor:pointer; z-index:2001; border-radius:8px 0 0 8px;
+            font-size:14px; pointer-events:all; transition:background .15s;
+        }
+        #messengerSliderBtn:hover { background:#0D8ABC; }
+        .chat-popup {
+            width:360px; background:#fff; border-radius:16px 16px 0 0;
+            box-shadow:0 -4px 40px rgba(15,23,42,.18),0 0 0 1px rgba(15,23,42,.05);
+            display:flex; flex-direction:column; overflow:hidden;
+            height:500px; transition:height .25s cubic-bezier(.4,0,.2,1); pointer-events:all;
+        }
+        [data-theme="dark"] .chat-popup { background:#1e293b; }
+        .chat-popup.minimized { height:52px; }
+        .chat-popup-header {
+            background:linear-gradient(135deg,#0D8ABC 0%,#0862a0 100%);
+            padding:12px 14px; display:flex; align-items:center; gap:10px;
+            cursor:pointer; flex-shrink:0; user-select:none;
+        }
+        .chat-popup-avatar { width:32px; height:32px; border-radius:50%; object-fit:cover; border:2px solid rgba(255,255,255,.4); flex-shrink:0; }
+        .chat-popup-name { flex:1; font-weight:700; font-size:13px; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .chat-popup-status { font-size:11px; color:rgba(255,255,255,.7); display:block; margin-top:1px; }
+        .chat-popup-actions { display:flex; gap:3px; flex-shrink:0; }
+        .chat-popup-btn {
+            width:28px; height:28px; border:none; background:rgba(255,255,255,.15); border-radius:8px;
+            color:#fff; cursor:pointer; font-size:12px; display:flex; align-items:center; justify-content:center;
+            transition:background .15s; text-decoration:none;
+        }
+        .chat-popup-btn:hover { background:rgba(255,255,255,.3); color:#fff; }
+        .chat-popup-messages {
+            flex:1; overflow-y:auto; padding:14px 12px 8px; display:flex; flex-direction:column;
+            gap:8px; background:#f8fafc; min-height:0;
+        }
+        [data-theme="dark"] .chat-popup-messages { background:#0f172a; }
+        .chat-popup-messages::-webkit-scrollbar { width:4px; }
+        .chat-popup-messages::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:4px; }
+        .popup-msg {
+            max-width:78%; padding:9px 13px; border-radius:16px; font-size:13px;
+            line-height:1.45; word-break:break-word;
+        }
+        .popup-msg.own { background:linear-gradient(135deg,#0D8ABC,#0862a0); color:#fff; align-self:flex-end; border-bottom-right-radius:4px; }
+        .popup-msg.other { background:#fff; color:#1a1a2e; align-self:flex-start; border-bottom-left-radius:4px; border:1px solid #e2e8f0; box-shadow:0 1px 4px rgba(15,23,42,.06); }
+        [data-theme="dark"] .popup-msg.other { background:#1e293b; color:#e2e8f0; border-color:#334155; }
+        .popup-msg-time { font-size:10px; opacity:.6; margin-top:3px; display:block; }
+        .popup-date-sep { text-align:center; font-size:11px; color:#94a3b8; padding:4px 0; }
+        .chat-popup-footer {
+            padding:10px 12px; background:#fff; border-top:1px solid #f1f5f9;
+            display:flex; gap:8px; flex-shrink:0; align-items:center;
+        }
+        [data-theme="dark"] .chat-popup-footer { background:#1e293b; border-color:#334155; }
+        .chat-popup-input {
+            flex:1; padding:9px 14px; border:1.5px solid #e2e8f0; border-radius:22px;
+            font-size:13px; outline:none; transition:border-color .2s,background .2s; background:#f8fafc; resize:none;
+        }
+        [data-theme="dark"] .chat-popup-input { background:#0f172a; color:#e2e8f0; border-color:#334155; }
+        .chat-popup-input:focus { border-color:#0D8ABC; background:#fff; }
+        .chat-popup-send {
+            width:36px; height:36px; flex-shrink:0; border:none; border-radius:50%;
+            background:linear-gradient(135deg,#0D8ABC,#0862a0); color:#fff;
+            cursor:pointer; font-size:13px; display:flex; align-items:center; justify-content:center;
+            transition:transform .15s,box-shadow .15s;
+        }
+        .chat-popup-send:hover { transform:scale(1.1); box-shadow:0 4px 14px rgba(13,138,188,.4); }
+        .popup-loading { display:flex; align-items:center; justify-content:center; padding:32px; color:#94a3b8; font-size:13px; gap:8px; }
+        </style>
     {% endblock %}
     
     {% block head_scripts %}{% endblock %}
@@ -54,10 +250,11 @@
                     <li><a href="#quick-info">{{ 'nav.about'|trans }}</a></li>
                     <li><a href="#appointment-section">{{ 'nav.services'|trans }}</a></li>
                     <li><a href="{{ path('front_content_index') }}">{{ 'nav.blog'|trans }}</a></li>
-                    <li><a href="{{ path('app_sante_quotidienne_index') }}">Mon journal santé</a></li>
                     {% if app.user and (app.user.subscriptionType ?? app.user.role) == 'ROLE_PATIENT' %}
+                        <li><a href="{{ path('app_sante_quotidienne_index') }}">Mon journal santé</a></li>
                         <li><a href="{{ path('app_symptomes') }}">Mes symptômes</a></li>
                         <li><a href="{{ path('front_pharmacy_index') }}">Pharmacies</a></li>
+                        <li><a href="{{ path('app_appointments') }}">Rendez-Vous</a></li>
                     {% endif %}
                     {% if app.user and app.user.subscriptionStatus == 'ACTIVE' and (app.user.subscriptionType ?? app.user.role) == 'ROLE_PHARMACIEN' %}
                         <li><a href="{{ path('front_pharmacien_dashboard') }}">Ma pharmacie</a></li>
@@ -66,117 +263,161 @@
                 </ul>
 
                 {% if app.user %}
-                <div class="account-menu">
-                    <button class="btn-appointment account-toggle" id="accountBtn">                   
-                        {{ 'nav.account'|trans }} <i class="fas fa-chevron-down"></i>
-                    </button>
+                {% set _avatarUrl = app.user.avatarDataUri ?: ('https://ui-avatars.com/api/?name=' ~ app.user.nom|url_encode ~ '+' ~ app.user.prenom|url_encode ~ '&background=0D8ABC&color=fff&size=40') %}
+                <div class="nav-icons">
 
-                    <div class="account-dropdown" id="accountDropdown">
-                        <div class="account-info">
-                            <img src="{{ app.user.avatarDataUri ?: ('https://ui-avatars.com/api/?name=' ~ app.user.nom|url_encode ~ '+' ~ app.user.prenom|url_encode ~ '&background=0D8ABC&color=fff&size=30') }}" 
-                                        alt="Avatar" class="account-avatar">     
-                            <strong>{{ app.user.nom }} {{ app.user.prenom }}</strong>
-                            <p>{{ app.user.email }}</p>
-                        </div>
-
-                        <hr>
-
-                        <a href="{{ path('profile_edit') }}" class="dropdown-item">
-                            <i class="fas fa-cog"></i> {{ 'nav.settings'|trans }}
-                        </a>
-                        <a href="{{ path('profile_notifications') }}" class="dropdown-item">
-                            <i class="fas fa-shield-alt"></i> {{ 'nav.notifications'|trans }}
-                        </a>
-                        <a href="{{ path('profile_mfa') }}" class="dropdown-item">
-                            <i class="fas fa-key"></i> {{ 'nav.mfa'|trans }}
-                        </a>
-
-                        <hr>
-
-                        {% set canTeleconsult = is_granted('ROLE_PATIENT') or is_granted('ROLE_MEDECIN') %}
-                        {% set canPlan = is_granted('ROLE_PATIENT') or is_granted('ROLE_COACH') %}
-                        {% set isPatient = app.user and (app.user.subscriptionType ?? app.user.role) == 'ROLE_PATIENT' %}
-
-                        <div class="dropdown-section has-submenu">
-                            <button type="button" class="dropdown-section-toggle" data-submenu="accompagnement" aria-controls="submenu-accompagnement" aria-expanded="false">
-                                <i class="fas fa-hand-holding-heart"></i>
-                                <span>Accompagnement</span>
-                                <i class="fas fa-chevron-right toggle-indicator" aria-hidden="true"></i>
-                            </button>
-                            <div class="dropdown-submenu" id="submenu-accompagnement" role="menu" aria-hidden="true">
-                                <a href="{{ path('app_message_index') }}" class="dropdown-item">
-                                    <i class="fas fa-envelope"></i> Messages
-                                </a>
-                                <a href="{{ path('app_document_index') }}" class="dropdown-item">
-                                    <i class="fas fa-file"></i> Documents
-                                </a>
-                                {% if canTeleconsult %}
-                                <a href="{{ path('app_teleconsultation_index') }}" class="dropdown-item">
-                                    <i class="fas fa-video"></i> Consultations vidéo
-                                </a>
-                                {% endif %}
-                                {% if canPlan %}
-                                <a href="{{ path('app_plan_index') }}" class="dropdown-item">
-                                    <i class="fas fa-calendar-check"></i> Mes plans
-                                </a>
-                                {% endif %}
+                    <!-- ① Bell — Notifications -->
+                    <div class="nav-icon-wrap">
+                        <button class="nav-icon-btn" id="notifBtn" aria-label="Notifications" aria-expanded="false">
+                            <i class="fas fa-bell"></i>
+                            <span class="nav-badge" id="notifBadge" hidden>0</span>
+                        </button>
+                        <div class="nav-dropdown" id="notifDropdown" role="menu">
+                            <div class="nav-dropdown-header">
+                                <span><i class="fas fa-bell" style="color:#0D8ABC;margin-right:8px;"></i>Notifications</span>
+                                <button id="markAllReadBtn" class="nav-dropdown-action" type="button">Tout lire</button>
+                            </div>
+                            <div id="notifList" class="notif-list">
+                                <div class="notif-empty"><i class="fas fa-bell-slash" style="font-size:22px;display:block;margin-bottom:8px;opacity:.4;"></i>Aucune notification</div>
                             </div>
                         </div>
-
-                        {% if isPatient %}
-                        <div class="dropdown-section has-submenu">
-                            <button type="button" class="dropdown-section-toggle" data-submenu="sante" aria-controls="submenu-sante" aria-expanded="false">
-                                <i class="fas fa-heartbeat"></i>
-                                <span>Santé quotidienne</span>
-                                <i class="fas fa-chevron-right toggle-indicator" aria-hidden="true"></i>
-                            </button>
-                            <div class="dropdown-submenu" id="submenu-sante" role="menu" aria-hidden="true">
-                                <a href="{{ path('app_sante_quotidienne_index') }}" class="dropdown-item">
-                                    <i class="fas fa-book-medical"></i> Mon journal santé
-                                </a>
-                                <a href="{{ path('app_symptomes') }}" class="dropdown-item">
-                                    <i class="fas fa-stethoscope"></i> Mes symptômes
-                                </a>
-                            </div>
-                        </div>
-                        {% endif %}
-
-                        <a href="{{ path('app_subscription_overview') }}" class="dropdown-item">
-                            <i class="fas fa-star"></i> {{ 'nav.subscription'|trans }}
-                        </a>
-                        <a href="{{ path('app_appointments') }}" class="dropdown-item">
-                            <i class="fas fa-calendar-check"></i> Rendez-vous
-                        </a>
-                        {% if app.user and (app.user.subscriptionType ?? app.user.role) == 'ROLE_PHARMACIEN' %}
-                        <a href="{{ path('front_pharmacien_dashboard') }}" class="dropdown-item">
-                            <i class="fas fa-clinic-medical"></i> Ma pharmacie
-                        </a>
-                        {% endif %}
-
-                        <div class="dropdown-divider"></div>
-
-                        <div class="dropdown-item dropdown-inline">
-                            <span>{{ 'nav.theme'|trans }}</span>
-                            <div class="inline-actions">
-                                <a href="{{ path('app_theme', {theme: 'light'}) }}" class="mini-pill">{{ 'theme.light'|trans }}</a>
-                                <a href="{{ path('app_theme', {theme: 'dark'}) }}" class="mini-pill">{{ 'theme.dark'|trans }}</a>
-                            </div>
-                        </div>
-                        <div class="dropdown-item dropdown-inline">
-                            <span>{{ 'nav.language'|trans }}</span>
-                            <div class="inline-actions">
-                                <a href="{{ path('app_locale', {_locale: 'fr'}) }}" class="mini-pill">FR</a>
-                                <a href="{{ path('app_locale', {_locale: 'en'}) }}" class="mini-pill">EN</a>
-                                <a href="{{ path('app_locale', {_locale: 'ar'}) }}" class="mini-pill">AR</a>
-                            </div>
-                        </div>
-
-                        <a href="{{ path('app_logout') }}" class="dropdown-item danger">
-                            <i class="fas fa-sign-out-alt"></i> {{ 'nav.logout'|trans }}
-                        </a>
                     </div>
+
+                    <!-- ② Messages -->
+                    <div class="nav-icon-wrap">
+                        <button class="nav-icon-btn" id="msgNavBtn" aria-label="Messages" aria-expanded="false">
+                            <i class="fas fa-comment-dots"></i>
+                            <span class="nav-badge" id="msgBadge" hidden>0</span>
+                        </button>
+                        <div class="nav-dropdown" id="msgDropdown" role="menu">
+                            <div class="nav-dropdown-header">
+                                <span><i class="fas fa-comments" style="color:#0D8ABC;margin-right:8px;"></i>Messages</span>
+                                <a href="{{ path('app_message_index') }}" class="nav-dropdown-action">Voir tout</a>
+                            </div>
+                            <div id="convList" class="conv-list">
+                                <div class="conv-empty"><i class="fas fa-comments" style="font-size:22px;display:block;margin-bottom:8px;opacity:.4;"></i>Aucune conversation</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ③ Mon compte (avatar) -->
+                    <div class="nav-icon-wrap account-menu">
+                        <button class="nav-icon-btn nav-avatar-btn" id="accountBtn" aria-label="Mon compte" aria-expanded="false">
+                            <img src="{{ _avatarUrl }}" alt="Avatar" class="nav-avatar-img">
+                        </button>
+
+                        <div class="account-dropdown nav-dropdown" id="accountDropdown">
+                            <div class="account-info">
+                                <img src="{{ _avatarUrl }}"
+                                            alt="Avatar" class="account-avatar">
+                                <strong>{{ app.user.nom }} {{ app.user.prenom }}</strong>
+                                <p>{{ app.user.email }}</p>
+                            </div>
+
+                            <hr>
+
+                            <a href="{{ path('profile_edit') }}" class="dropdown-item">
+                                <i class="fas fa-cog"></i> {{ 'nav.settings'|trans }}
+                            </a>
+                            <a href="{{ path('profile_mfa') }}" class="dropdown-item">
+                                <i class="fas fa-key"></i> {{ 'nav.mfa'|trans }}
+                            </a>
+
+                            <hr>
+
+                            {% set canTeleconsult = is_granted('ROLE_PATIENT') or is_granted('ROLE_MEDECIN') %}
+                            {% set canPlan = is_granted('ROLE_PATIENT') or is_granted('ROLE_COACH') %}
+                            {% set isPatient = app.user and (app.user.subscriptionType ?? app.user.role) == 'ROLE_PATIENT' %}
+
+                            <div class="dropdown-section has-submenu">
+                                <button type="button" class="dropdown-section-toggle" data-submenu="accompagnement" aria-controls="submenu-accompagnement" aria-expanded="false">
+                                    <i class="fas fa-hand-holding-heart"></i>
+                                    <span>Accompagnement</span>
+                                    <i class="fas fa-chevron-right toggle-indicator" aria-hidden="true"></i>
+                                </button>
+                                <div class="dropdown-submenu" id="submenu-accompagnement" role="menu" aria-hidden="true">
+                                    <a href="{{ path('app_message_index') }}" class="dropdown-item">
+                                        <i class="fas fa-envelope"></i> Messages
+                                    </a>
+                                    <a href="{{ path('app_document_index') }}" class="dropdown-item">
+                                        <i class="fas fa-file"></i> Documents
+                                    </a>
+                                    {% if canTeleconsult %}
+                                    <a href="{{ path('app_teleconsultation_index') }}" class="dropdown-item">
+                                        <i class="fas fa-video"></i> Consultations vidéo
+                                    </a>
+                                    {% endif %}
+                                    {% if canPlan %}
+                                    <a href="{{ path('app_plan_index') }}" class="dropdown-item">
+                                        <i class="fas fa-calendar-check"></i> Mes plans
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            {% if isPatient %}
+                            <div class="dropdown-section has-submenu">
+                                <button type="button" class="dropdown-section-toggle" data-submenu="sante" aria-controls="submenu-sante" aria-expanded="false">
+                                    <i class="fas fa-heartbeat"></i>
+                                    <span>Santé quotidienne</span>
+                                    <i class="fas fa-chevron-right toggle-indicator" aria-hidden="true"></i>
+                                </button>
+                                <div class="dropdown-submenu" id="submenu-sante" role="menu" aria-hidden="true">
+                                    <a href="{{ path('app_sante_quotidienne_index') }}" class="dropdown-item">
+                                        <i class="fas fa-book-medical"></i> Mon journal santé
+                                    </a>
+                                    <a href="{{ path('app_symptomes') }}" class="dropdown-item">
+                                        <i class="fas fa-stethoscope"></i> Mes symptômes
+                                    </a>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <a href="{{ path('app_subscription_overview') }}" class="dropdown-item">
+                                <i class="fas fa-star"></i> {{ 'nav.subscription'|trans }}
+                            </a>
+                            {% if isPatient %}
+                            <a href="{{ path('app_appointments') }}" class="dropdown-item">
+                                <i class="fas fa-calendar-check"></i> Rendez-vous
+                            </a>
+                            {% endif %}
+                            {% if app.user and (app.user.subscriptionType ?? app.user.role) == 'ROLE_MEDECIN' %}
+                            <a href="{{ path('app_appointments') }}" class="dropdown-item">
+                                <i class="fas fa-calendar-check"></i> Rendez-vous
+                            </a>
+                            {% endif %}
+                            {% if app.user and (app.user.subscriptionType ?? app.user.role) == 'ROLE_PHARMACIEN' %}
+                            <a href="{{ path('front_pharmacien_dashboard') }}" class="dropdown-item">
+                                <i class="fas fa-clinic-medical"></i> Ma pharmacie
+                            </a>
+                            {% endif %}
+
+                            <div class="dropdown-divider"></div>
+
+                            <div class="dropdown-item dropdown-inline">
+                                <span>{{ 'nav.theme'|trans }}</span>
+                                <div class="inline-actions">
+                                    <a href="{{ path('app_theme', {theme: 'light'}) }}" class="mini-pill">{{ 'theme.light'|trans }}</a>
+                                    <a href="{{ path('app_theme', {theme: 'dark'}) }}" class="mini-pill">{{ 'theme.dark'|trans }}</a>
+                                </div>
+                            </div>
+                            <div class="dropdown-item dropdown-inline">
+                                <span>{{ 'nav.language'|trans }}</span>
+                                <div class="inline-actions">
+                                    <a href="{{ path('app_locale', {_locale: 'fr'}) }}" class="mini-pill">FR</a>
+                                    <a href="{{ path('app_locale', {_locale: 'en'}) }}" class="mini-pill">EN</a>
+                                    <a href="{{ path('app_locale', {_locale: 'ar'}) }}" class="mini-pill">AR</a>
+                                </div>
+                            </div>
+
+                            <a href="{{ path('app_logout') }}" class="dropdown-item danger">
+                                <i class="fas fa-sign-out-alt"></i> {{ 'nav.logout'|trans }}
+                            </a>
+                        </div>
+                    </div>
+
                 </div>
-                
+
                 {% else %}
                     <a href="{{ path('login') }}" class="btn-appointment">{{ 'nav.login'|trans }}</a>
                 {% endif %}
@@ -227,6 +468,11 @@
     {% endif %}
 
     <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+    {% if app.user %}
+    <!-- Messenger popup container (Messenger desktop style) -->
+    <div id="messengerContainer"></div>
+    {% endif %}
 
     {% block javascripts %}
         <script>
@@ -316,61 +562,304 @@
             })();
             document.addEventListener("DOMContentLoaded", () => {
 
-            const btn = document.getElementById("accountBtn");
-            const dropdown = document.getElementById("accountDropdown");
+            // ─── Generic dropdown helpers ─────────────────────────────────────────
+            const allDropdowns = [];
 
-            if(!btn || !dropdown) return;
+            function closeAllDropdowns(except) {
+                allDropdowns.forEach(({ btn, dropdown }) => {
+                    if (dropdown === except) return;
+                    dropdown.classList.remove('show');
+                    btn.setAttribute('aria-expanded', 'false');
+                });
+            }
 
-            const sectionsWithSubmenu = dropdown.querySelectorAll(".dropdown-section.has-submenu");
-            const submenuToggles = dropdown.querySelectorAll(".dropdown-section-toggle");
-            const submenuPanels = dropdown.querySelectorAll(".dropdown-submenu");
+            function setupDropdown(btnId, dropdownId, onOpen) {
+                const btn      = document.getElementById(btnId);
+                const dropdown = document.getElementById(dropdownId);
+                if (!btn || !dropdown) return;
+                allDropdowns.push({ btn, dropdown });
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const isOpen = dropdown.classList.contains('show');
+                    closeAllDropdowns();
+                    closeAllSubmenus();
+                    if (!isOpen) {
+                        dropdown.classList.add('show');
+                        btn.setAttribute('aria-expanded', 'true');
+                        if (onOpen) onOpen();
+                    }
+                });
+                dropdown.addEventListener('click', (e) => e.stopPropagation());
+            }
 
-            const closeAllSubmenus = () => {
-                sectionsWithSubmenu.forEach((section) => section.classList.remove("open"));
-                submenuToggles.forEach((toggle) => toggle.setAttribute("aria-expanded", "false"));
-                submenuPanels.forEach((panel) => panel.setAttribute("aria-hidden", "true"));
-            };
+            document.addEventListener('click', () => {
+                closeAllDropdowns();
+                closeAllSubmenus();
+            });
+
+            // ─── Account dropdown submenus ─────────────────────────────────────
+            const accountDropdown      = document.getElementById('accountDropdown');
+            const sectionsWithSubmenu  = accountDropdown ? accountDropdown.querySelectorAll('.dropdown-section.has-submenu') : [];
+            const submenuToggles       = accountDropdown ? accountDropdown.querySelectorAll('.dropdown-section-toggle') : [];
+            const submenuPanels        = accountDropdown ? accountDropdown.querySelectorAll('.dropdown-submenu') : [];
+
+            function closeAllSubmenus() {
+                sectionsWithSubmenu.forEach(s => s.classList.remove('open'));
+                submenuToggles.forEach(t  => t.setAttribute('aria-expanded', 'false'));
+                submenuPanels.forEach(p   => p.setAttribute('aria-hidden', 'true'));
+            }
             closeAllSubmenus();
 
-            btn.addEventListener("click", (e) => {
-                e.stopPropagation();
-                closeAllSubmenus();
-                const isOpen = dropdown.classList.toggle("show");
-                if(!isOpen){
-                    closeAllSubmenus();
-                }
-            });
-
-            document.addEventListener("click", (e) => {
-                if(!dropdown.contains(e.target) && !btn.contains(e.target)){
-                    dropdown.classList.remove("show");
-                    closeAllSubmenus();
-                }
-            });
-
             submenuToggles.forEach((toggle) => {
-                toggle.addEventListener("click", (event) => {
+                toggle.addEventListener('click', (event) => {
                     event.stopPropagation();
-                    const section = toggle.closest(".dropdown-section");
-                    const isActive = section.classList.contains("open");
+                    const section  = toggle.closest('.dropdown-section');
+                    const isActive = section.classList.contains('open');
                     closeAllSubmenus();
-                    if(!isActive){
-                        section.classList.add("open");
-                        toggle.setAttribute("aria-expanded", "true");
-                        const panelId = toggle.getAttribute("aria-controls");
-                        if(panelId){
-                            const panel = document.getElementById(panelId);
-                            if(panel){
-                                panel.setAttribute("aria-hidden", "false");
-                            }
-                        }
+                    if (!isActive) {
+                        section.classList.add('open');
+                        toggle.setAttribute('aria-expanded', 'true');
+                        const panelId = toggle.getAttribute('aria-controls');
+                        const panel   = panelId ? document.getElementById(panelId) : null;
+                        if (panel) panel.setAttribute('aria-hidden', 'false');
                     }
                 });
             });
+            submenuPanels.forEach(s => s.addEventListener('click', e => e.stopPropagation()));
 
-            submenuPanels.forEach((submenu) => {
-                submenu.addEventListener("click", (event) => event.stopPropagation());
-            });
+            // ─── Utility ──────────────────────────────────────────────────────────
+            function timeAgo(dateStr) {
+                const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
+                if (diff < 60)    return 'À l\'instant';
+                if (diff < 3600)  return Math.floor(diff / 60) + ' min';
+                if (diff < 86400) return Math.floor(diff / 3600) + ' h';
+                return Math.floor(diff / 86400) + ' j';
+            }
+
+            function notifTypeIcon(type) {
+                const map = { message:'fa-envelope', appointment:'fa-calendar-check', document:'fa-file-medical', system:'fa-bell', alert:'fa-exclamation-triangle' };
+                return map[type] || 'fa-bell';
+            }
+
+            // ─── Notifications ─────────────────────────────────────────────────
+            const notifBadge = document.getElementById('notifBadge');
+            const notifList  = document.getElementById('notifList');
+            const markAllBtn = document.getElementById('markAllReadBtn');
+
+            async function loadNotifications() {
+                try {
+                    const res  = await fetch('/api/notification/mine', { toast: false });
+                    const data = await res.json();
+                    const count = data.unread || 0;
+                    if (notifBadge) {
+                        notifBadge.textContent = count > 9 ? '9+' : count;
+                        notifBadge.hidden = count === 0;
+                    }
+                    if (!notifList) return;
+                    if (!data.notifications || data.notifications.length === 0) {
+                        notifList.innerHTML = '<div class="notif-empty"><i class="fas fa-bell-slash" style="font-size:22px;display:block;margin-bottom:8px;opacity:.4;"></i>Aucune notification</div>';
+                        return;
+                    }
+                    notifList.innerHTML = data.notifications.map(n => {
+                        const tag  = n.lien ? `a href="${n.lien}"` : 'div';
+                        const end  = n.lien ? 'a' : 'div';
+                        return `<${tag} class="notif-item ${n.lu ? '' : 'unread'}">
+                            <div class="notif-icon"><i class="fas ${notifTypeIcon(n.type)}"></i></div>
+                            <div class="notif-body">
+                                <div class="notif-title">${n.titre}</div>
+                                <div class="notif-msg">${n.message}</div>
+                            </div>
+                            <div class="notif-time">${timeAgo(n.createdAt)}</div>
+                        </${end}>`;
+                    }).join('');
+                } catch (_) {}
+            }
+
+            if (markAllBtn) {
+                markAllBtn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    try {
+                        await fetch('/api/notification/read-all', { method: 'POST', toast: false });
+                        await loadNotifications();
+                    } catch (_) {}
+                });
+            }
+
+            setupDropdown('notifBtn', 'notifDropdown', loadNotifications);
+            loadNotifications();
+            setInterval(loadNotifications, 60000);
+
+            // ─── Messages ──────────────────────────────────────────────────────
+            const msgBadge = document.getElementById('msgBadge');
+            const convList = document.getElementById('convList');
+
+            async function loadConversations() {
+                try {
+                    const res  = await fetch('/messages/api/conversations', { toast: false });
+                    const data = await res.json();
+                    const count = data.unread || 0;
+                    if (msgBadge) {
+                        msgBadge.textContent = count > 9 ? '9+' : count;
+                        msgBadge.hidden = count === 0;
+                    }
+                    if (!convList) return;
+                    if (!data.conversations || data.conversations.length === 0) {
+                        convList.innerHTML = '<div class="conv-empty"><i class="fas fa-comments" style="font-size:22px;display:block;margin-bottom:8px;opacity:.4;"></i>Aucune conversation</div>';
+                        return;
+                    }
+                    convList.innerHTML = data.conversations.map(c => `
+                        <div class="conv-item" data-conv-id="${c.id}" data-user-id="${c.otherUserId}"
+                             data-user-name="${c.otherUserName.replace(/"/g,'&quot;')}" data-user-avatar="${c.otherUserAvatar}">
+                            <img src="${c.otherUserAvatar}" alt="" class="conv-avatar"
+                                 onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent('User')}&background=0D8ABC&color=fff&size=40'">
+                            <div class="conv-info">
+                                <div class="conv-name">${c.otherUserName}</div>
+                                <div class="conv-time">${c.lastMessageAt ? timeAgo(c.lastMessageAt) : ''}</div>
+                            </div>
+                            <i class="fas fa-chevron-right" style="color:#cbd5e1;font-size:12px;flex-shrink:0;"></i>
+                        </div>
+                    `).join('');
+                    convList.querySelectorAll('.conv-item').forEach(item => {
+                        item.addEventListener('click', () => {
+                            openChatPopup(item.dataset.convId, item.dataset.userId, item.dataset.userName, item.dataset.userAvatar);
+                            closeAllDropdowns();
+                        });
+                    });
+                } catch (_) {}
+            }
+
+            setupDropdown('msgNavBtn', 'msgDropdown', loadConversations);
+            loadConversations();
+            setInterval(loadConversations, 30000);
+
+            // ─── Account button ─────────────────────────────────────────────────
+            setupDropdown('accountBtn', 'accountDropdown');
+
+            // ─── Messenger Popup ────────────────────────────────────────────────
+            const messengerContainer = document.getElementById('messengerContainer');
+            const openPopups = new Map();
+
+            function openChatPopup(convId, recipientId, recipientName, avatarUrl) {
+                if (openPopups.has(convId)) {
+                    const existing = openPopups.get(convId);
+                    existing.classList.remove('minimized');
+                    existing.querySelector('.chat-popup-input')?.focus();
+                    return;
+                }
+                if (!messengerContainer) return;
+
+                const safeAvatar = avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(recipientName)}&background=0D8ABC&color=fff&size=40`;
+
+                const popup = document.createElement('div');
+                popup.className = 'chat-popup';
+                popup.dataset.convId = convId;
+                popup.innerHTML = `
+                    <div class="chat-popup-header">
+                        <img src="${safeAvatar}" alt="" class="chat-popup-avatar"
+                             onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(recipientName)}&background=0D8ABC&color=fff&size=40'">
+                        <span class="chat-popup-name">${recipientName}</span>
+                        <div class="chat-popup-actions">
+                            <button class="chat-popup-btn" title="Minimiser" data-action="minimize"><i class="fas fa-minus"></i></button>
+                            <a href="/messages/conversation/${convId}" class="chat-popup-btn" title="Ouvrir" style="text-decoration:none;"><i class="fas fa-external-link-alt"></i></a>
+                            <button class="chat-popup-btn" title="Fermer" data-action="close"><i class="fas fa-times"></i></button>
+                        </div>
+                    </div>
+                    <div class="chat-popup-messages" id="popupMessages-${convId}">
+                        <div class="popup-loading"><i class="fas fa-spinner fa-spin"></i>&nbsp;Chargement…</div>
+                    </div>
+                    <div class="chat-popup-footer">
+                        <input type="text" class="chat-popup-input" placeholder="Écrire un message…" id="popupInput-${convId}" autocomplete="off">
+                        <button class="chat-popup-send" id="popupSend-${convId}"><i class="fas fa-paper-plane"></i></button>
+                    </div>
+                `;
+                messengerContainer.appendChild(popup);
+                openPopups.set(convId, popup);
+
+                popup.querySelector('.chat-popup-header').addEventListener('click', (e) => {
+                    if (e.target.closest('[data-action]') || e.target.closest('a')) return;
+                    popup.classList.toggle('minimized');
+                });
+                popup.querySelector('[data-action="minimize"]').addEventListener('click', (e) => {
+                    e.stopPropagation(); popup.classList.toggle('minimized');
+                });
+                popup.querySelector('[data-action="close"]').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    clearInterval(pollInterval);
+                    popup.remove();
+                    openPopups.delete(convId);
+                });
+
+                const msgArea = popup.querySelector(`#popupMessages-${convId}`);
+                const input   = popup.querySelector(`#popupInput-${convId}`);
+                const sendBtn = popup.querySelector(`#popupSend-${convId}`);
+
+                function renderMessages(messages) {
+                    if (!messages || messages.length === 0) {
+                        msgArea.innerHTML = '<div class="conv-empty" style="font-size:12px;padding:20px;">Aucun message encore.</div>';
+                    } else {
+                        // Sort oldest → newest so conversation reads top-to-bottom
+                        const sorted = [...messages].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+                        let lastDate = null;
+                        const html = sorted.map(m => {
+                            let dateSep = '';
+                            const d = m.createdAt ? m.createdAt.slice(0, 10) : null;
+                            if (d && d !== lastDate) {
+                                lastDate = d;
+                                dateSep = `<div class="popup-date-sep">${d}</div>`;
+                            }
+                            return dateSep + `<div class="popup-msg ${m.isOwn ? 'own' : 'other'}">
+                                ${m.content.replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+                                <span class="popup-msg-time">${m.createdAt ? m.createdAt.slice(11,16) : ''}</span>
+                            </div>`;
+                        }).join('');
+                        msgArea.innerHTML = html;
+                        msgArea.scrollTop = msgArea.scrollHeight;
+                    }
+                }
+
+                let lastMsgCount = 0;
+                async function fetchHistory() {
+                    try {
+                        const res  = await fetch('/messages/history/' + recipientId + '?page=1', { toast: false });
+                        const data = await res.json();
+                        const msgs = data.messages || [];
+                        if (msgs.length !== lastMsgCount) {
+                            lastMsgCount = msgs.length;
+                            renderMessages(msgs);
+                        }
+                    } catch (_) {}
+                }
+                fetchHistory();
+
+                const pollInterval = setInterval(() => {
+                    if (!openPopups.has(convId)) { clearInterval(pollInterval); return; }
+                    fetchHistory();
+                }, 5000);
+
+                async function sendMessage() {
+                    const content = input.value.trim();
+                    if (!content) return;
+                    input.value = '';
+                    try {
+                        await fetch('/messages/send', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ recipientId: parseInt(recipientId), content }),
+                            toast: false,
+                        });
+                        lastMsgCount = 0; // force re-render
+                        await fetchHistory();
+                    } catch (_) {}
+                }
+
+                sendBtn.addEventListener('click', sendMessage);
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+                });
+                setTimeout(() => input.focus(), 100);
+            }
+
+            window.openChatPopup = openChatPopup;
 
         });
         

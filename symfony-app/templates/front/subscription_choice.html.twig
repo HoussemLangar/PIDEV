@@ -1,38 +1,112 @@
 {% extends 'front/base.html.twig' %}
 
-{% block title %}Choix d'abonnement{% endblock %}
+{% block title %}Choisir un abonnement — SANTÉA{% endblock %}
 
 {% block body %}
-<section class="subscription-wrap">
-    <div class="subscription-header">
-        <h1>Choisissez votre abonnement</h1>
-        <p>Accès complet aux fonctionnalités premium. 10 DT / mois, renouvellement mensuel.</p>
+<section style="min-height:calc(100vh - 140px); padding: 48px 24px 80px; background: linear-gradient(160deg, #f0f9ff 0%, #e0f2fe 40%, #f8fafc 100%);">
+
+    <!-- Header -->
+    <div style="text-align:center; max-width:680px; margin:0 auto 56px;">
+        <div style="display:inline-flex;align-items:center;gap:8px;background:#dbeafe;color:#1d4ed8;padding:6px 16px;border-radius:50px;font-size:13px;font-weight:600;margin-bottom:20px;">
+            <i class="fas fa-crown"></i> Abonnement Premium
+        </div>
+        <h1 style="margin:0 0 16px;font-size:clamp(28px,5vw,44px);font-weight:800;color:#0f172a;line-height:1.15;">
+            Accédez à tout SANTÉA
+        </h1>
+        <p style="margin:0;font-size:17px;color:#475569;line-height:1.6;">
+            Un seul abonnement · toutes les fonctionnalités · accès immédiat.<br>
+            Si vous n'êtes pas satisfait, résiliez à tout moment.
+        </p>
+        <div style="display:inline-flex;align-items:center;gap:24px;margin-top:28px;padding:16px 28px;background:white;border-radius:16px;box-shadow:0 4px 20px rgba(15,23,42,.08);border:1px solid #e2e8f0;">
+            <div style="text-align:center;">
+                <div style="font-size:28px;font-weight:800;color:#0D8ABC;">10 DT</div>
+                <div style="font-size:12px;color:#64748b;font-weight:500;">par mois</div>
+            </div>
+            <div style="width:1px;height:40px;background:#e2e8f0;"></div>
+            <div style="text-align:center;">
+                <div style="font-size:28px;font-weight:800;color:#0D8ABC;">1</div>
+                <div style="font-size:12px;color:#64748b;font-weight:500;">mois renouvelable</div>
+            </div>
+            <div style="width:1px;height:40px;background:#e2e8f0;"></div>
+            <div style="text-align:center;">
+                <div style="font-size:28px;font-weight:800;color:#0D8ABC;">∞</div>
+                <div style="font-size:12px;color:#64748b;font-weight:500;">fonctionnalités</div>
+            </div>
+        </div>
     </div>
 
-    <div class="subscription-grid">
+    <!-- Plan cards -->
+    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 auto 48px;">
+    <div style="display:grid;grid-template-columns:repeat(5,minmax(200px,1fr));gap:20px;min-width:1000px;">
+        {% set planColors = {
+            'ROLE_MEDECIN':       {from:'#0D8ABC', to:'#0a6d96',  icon:'fas fa-user-md',           features:['Consultations vidéo','Gestion rendez-vous','Dossiers patients','Ordonnances numériques']},
+            'ROLE_PHARMACIEN':    {from:'#10b981', to:'#059669',  icon:'fas fa-prescription-bottle',features:['Gestion stock','Ordonnances','Pharmacie en ligne','Alertes médicaments']},
+            'ROLE_COACH':         {from:'#f59e0b', to:'#d97706',  icon:'fas fa-dumbbell',           features:['Plans d\'entraînement','Suivi clients','Programmes personnalisés','Vidéo coaching']},
+            'ROLE_NUTRITIONNISTE':{from:'#8b5cf6', to:'#7c3aed',  icon:'fas fa-apple-alt',          features:['Plans nutritionnels','Bilan alimentaire','Recettes santé','Suivi poids']},
+            'ROLE_PATIENT':       {from:'#ef4444', to:'#dc2626',  icon:'fas fa-heartbeat',          features:['Journal santé','Rendez-vous facile','Téléconsultation','Suivi symptômes']}
+        } %}
+
         {% for plan in plans %}
-            <div class="subscription-card">
-                <div class="plan-icon">{{ plan.icon }}</div>
-                <h3>{{ plan.label }}</h3>
-                <div class="plan-price">10 DT <span>/ mois</span></div>
-                <ul>
-                    <li>Durée 1 mois</li>
-                    <li>Renouvellement mensuel</li>
-                    <li>Accès premium</li>
+        {% set cfg = planColors[plan.role] %}
+        <div style="background:white;border-radius:20px;box-shadow:0 4px 24px rgba(15,23,42,.07);border:1.5px solid #f1f5f9;overflow:hidden;transition:transform .2s,box-shadow .2s;display:flex;flex-direction:column;"
+             onmouseover="this.style.transform='translateY(-6px)';this.style.boxShadow='0 16px 40px rgba(15,23,42,.14)';"
+             onmouseout="this.style.transform='';this.style.boxShadow='0 4px 24px rgba(15,23,42,.07)';">
+
+            <!-- Card header -->
+            <div style="background:linear-gradient(135deg,{{ cfg.from }} 0%,{{ cfg.to }} 100%);padding:28px 24px 24px;">
+                <div style="width:56px;height:56px;background:rgba(255,255,255,.2);border-radius:16px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;">
+                    <i class="{{ cfg.icon }}" style="color:white;font-size:26px;"></i>
+                </div>
+                <div style="font-size:22px;font-weight:800;color:white;margin-bottom:4px;">{{ plan.label }}</div>
+                <div style="font-size:26px;font-weight:800;color:white;">10 <span style="font-size:15px;font-weight:500;opacity:.85;">DT / mois</span></div>
+            </div>
+
+            <!-- Features -->
+            <div style="padding:24px;flex:1;">
+                <ul style="list-style:none;margin:0 0 24px;padding:0;display:flex;flex-direction:column;gap:10px;">
+                    {% if cfg.features is defined %}
+                    {% for feat in cfg.features %}
+                    <li style="display:flex;align-items:center;gap:10px;font-size:14px;color:#374151;">
+                        <span style="width:20px;height:20px;background:{{ cfg.from }}22;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                            <i class="fas fa-check" style="font-size:10px;color:{{ cfg.from }};"></i>
+                        </span>
+                        {{ feat }}
+                    </li>
+                    {% endfor %}
+                    {% else %}
+                    <li style="display:flex;align-items:center;gap:10px;font-size:14px;color:#374151;"><span style="width:20px;height:20px;background:#e0f2fe;border-radius:50%;display:flex;align-items:center;justify-content:center;"><i class="fas fa-check" style="font-size:10px;color:#0D8ABC;"></i></span>Durée 1 mois</li>
+                    <li style="display:flex;align-items:center;gap:10px;font-size:14px;color:#374151;"><span style="width:20px;height:20px;background:#e0f2fe;border-radius:50%;display:flex;align-items:center;justify-content:center;"><i class="fas fa-check" style="font-size:10px;color:#0D8ABC;"></i></span>Renouvellement mensuel</li>
+                    <li style="display:flex;align-items:center;gap:10px;font-size:14px;color:#374151;"><span style="width:20px;height:20px;background:#e0f2fe;border-radius:50%;display:flex;align-items:center;justify-content:center;"><i class="fas fa-check" style="font-size:10px;color:#0D8ABC;"></i></span>Accès premium</li>
+                    {% endif %}
                 </ul>
+
                 <form method="post" action="{{ path('app_subscription_checkout') }}">
                     <input type="hidden" name="subscription_type" value="{{ plan.role }}">
-                    <button class="btn-appointment" type="submit">✅ S'abonner maintenant</button>
+                    <button type="submit"
+                            style="width:100%;padding:13px;background:linear-gradient(135deg,{{ cfg.from }} 0%,{{ cfg.to }} 100%);color:white;border:none;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer;transition:opacity .2s,transform .15s;"
+                            onmouseover="this.style.opacity='.9';this.style.transform='scale(1.02)';"
+                            onmouseout="this.style.opacity='1';this.style.transform='';">
+                        <i class="fas fa-bolt" style="margin-right:8px;"></i>S'abonner
+                    </button>
                 </form>
             </div>
+        </div>
         {% endfor %}
     </div>
-
-    <div class="subscription-skip">
-        <form method="post" action="{{ path('app_subscription_skip') }}">
-            <button class="btn-ghost" type="submit">⏭️ Skip temporaire</button>
-        </form>
-        <p class="subscription-note">Certaines fonctionnalités nécessitent un abonnement actif.</p>
     </div>
+
+    <!-- Skip -->
+    <div style="text-align:center;">
+        <form method="post" action="{{ path('app_subscription_skip') }}" style="display:inline;">
+            <button type="submit"
+                    style="background:transparent;border:2px solid #e2e8f0;color:#64748b;padding:12px 28px;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;"
+                    onmouseover="this.style.borderColor='#0D8ABC';this.style.color='#0D8ABC';"
+                    onmouseout="this.style.borderColor='#e2e8f0';this.style.color='#64748b';">
+                <i class="fas fa-forward" style="margin-right:8px;"></i>Continuer sans abonnement
+            </button>
+        </form>
+        <p style="margin:12px 0 0;font-size:13px;color:#94a3b8;">Certaines fonctionnalités nécessitent un abonnement actif. Vous pourrez vous abonner plus tard.</p>
+    </div>
+
 </section>
 {% endblock %}

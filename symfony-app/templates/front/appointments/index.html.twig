@@ -1,6 +1,30 @@
 {% extends 'front/base.html.twig' %}
 
-{% block title %}Rendez-vous{% endblock %}
+{% block title %}Rendez-vous — SANTÉA{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+    .appt-hero { background:linear-gradient(135deg,#0D8ABC 0%,#0a6d96 55%,#1e40af 100%); padding:40px 32px 48px; border-radius:20px; margin-bottom:28px; position:relative; overflow:hidden; }
+    .appt-hero::before { content:''; position:absolute; top:-40px; right:-40px; width:200px; height:200px; background:rgba(255,255,255,.06); border-radius:50%; }
+    .appt-hero::after  { content:''; position:absolute; bottom:-60px; right:80px; width:150px; height:150px; background:rgba(255,255,255,.04); border-radius:50%; }
+    .appt-hero h1 { color:white; font-size:clamp(22px,4vw,34px); font-weight:800; margin:0 0 10px; position:relative; }
+    .appt-hero p  { color:rgba(255,255,255,.8); margin:0 0 24px; font-size:15px; position:relative; }
+    .appt-hero-badge { display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,.2); color:white; padding:5px 14px; border-radius:50px; font-size:12px; font-weight:700; margin-bottom:14px; backdrop-filter:blur(4px); }
+    .appt-hero-actions { display:flex; gap:12px; flex-wrap:wrap; position:relative; }
+    .appt-hero-btn { display:inline-flex; align-items:center; gap:8px; padding:10px 20px; border-radius:10px; font-weight:600; font-size:14px; cursor:pointer; border:none; transition:all .2s; }
+    .appt-hero-btn-primary { background:white; color:#0D8ABC; box-shadow:0 4px 14px rgba(0,0,0,.2); }
+    .appt-hero-btn-primary:hover { transform:translateY(-2px); box-shadow:0 8px 20px rgba(0,0,0,.25); }
+    .appt-hero-btn-ghost { background:rgba(255,255,255,.15); color:white; border:1.5px solid rgba(255,255,255,.3); }
+    .appt-hero-btn-ghost:hover { background:rgba(255,255,255,.25); }
+    .appt-hero-search { display:flex; align-items:center; gap:10px; }
+    .appt-hero-search input { height:40px; padding:0 14px; border-radius:10px; border:none; background:rgba(255,255,255,.15); color:white; font-size:14px; outline:none; backdrop-filter:blur(4px); }
+    .appt-hero-search input::placeholder { color:rgba(255,255,255,.65); }
+    .appt-hero-search input:focus { background:rgba(255,255,255,.25); }
+    .appt-step-label { display:flex; align-items:center; gap:10px; font-size:16px; font-weight:700; color:#1a1a2e; margin:0 0 16px; }
+    .appt-step-num { width:28px; height:28px; background:linear-gradient(135deg,#0D8ABC,#0a6d96); color:white; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; flex-shrink:0; }
+    </style>
+{% endblock %}
 
 {% set userRole = app.user ? (app.user.subscriptionType ?? app.user.role) : null %}
 {% set isPatient = app.user and app.user.subscriptionStatus == 'ACTIVE' and userRole == 'ROLE_PATIENT' %}
@@ -9,26 +33,31 @@
 {% block body %}
 
 <section class="appointment-page">
-    <div class="appointment-header">
-        <div>
-            <div class="profile-badge">Rendez-vous</div>
-            <h1>Réserver un rendez-vous</h1>
-            <p>Choisissez un médecin, une date et un créneau disponible.</p>
-        </div>
+
+    <!-- Enhanced hero header -->
+    <div class="appt-hero">
+        <div class="appt-hero-badge"><i class="fas fa-calendar-check"></i> Rendez-vous médicaux</div>
+        <h1>{% if isMedecin %}Gérer mes rendez-vous{% else %}Réserver un rendez-vous{% endif %}</h1>
+        <p>{% if isMedecin %}Consultez et gérez les demandes de vos patients en temps réel.{% else %}Choisissez un médecin, une date et un créneau disponible en quelques clics.{% endif %}</p>
         {% if isPatient %}
-            <div class="appointment-header-actions">
-                <button class="btn btn-secondary" type="button" id="locateBtn">Utiliser ma position</button>
-                <div class="appointment-city">
-                    <input type="text" id="cityInput" placeholder="Ville (ex: Tunis)">
-                    <button class="btn btn-primary" type="button" id="searchCity">Rechercher</button>
-                </div>
+        <div class="appt-hero-actions">
+            <button class="appt-hero-btn appt-hero-btn-ghost" type="button" id="locateBtn">
+                <i class="fas fa-map-marker-alt"></i> Ma position
+            </button>
+            <div class="appt-hero-search">
+                <i class="fas fa-city" style="color:rgba(255,255,255,.7);"></i>
+                <input type="text" id="cityInput" placeholder="Ville (ex: Tunis)">
+                <button class="appt-hero-btn appt-hero-btn-primary" type="button" id="searchCity">
+                    <i class="fas fa-search"></i> Rechercher
+                </button>
             </div>
+        </div>
         {% endif %}
     </div>
 
     {% if not isPatient and not isMedecin %}
         <div class="appointment-card appointment-lock">
-            <h3>Accès réservé</h3>
+            <h3 style="display:flex;align-items:center;gap:10px;"><i class="fas fa-lock" style="color:#0D8ABC;"></i> Accès réservé</h3>
             <p>Ce module est réservé aux abonnés patient ou médecin.</p>
             <p class="appointment-hint">Activez un abonnement pour débloquer la prise ou la gestion des rendez-vous.</p>
             <a href="{{ path('app_subscription') }}" class="btn btn-primary">Choisir un abonnement</a>
@@ -39,18 +68,18 @@
         {% if isPatient %}
         <div class="appointment-grid">
             <div class="appointment-card">
-                <h3>1. Trouver un médecin</h3>
+                <div class="appt-step-label"><div class="appt-step-num">1</div> Trouver un médecin</div>
                 <div id="map" class="appointment-map"></div>
                 <p class="appointment-hint">Cliquez sur un médecin pour voir ses créneaux.</p>
             </div>
 
             <div class="appointment-card">
-                <h3>2. Prendre un créneau</h3>
+                <div class="appt-step-label"><div class="appt-step-num">2</div> Prendre un créneau</div>
                 <form id="appointmentForm" class="appointment-form" data-ajax="1">
                     <label>Médecin</label>
-                    <select id="doctorSelect" name="medecin_id" required>
-                        <option value="">Choisir un médecin</option>
-                    </select>
+                    <input type="text" id="doctorSelect" list="doctorOptions" placeholder="Tapez nom, prénom ou spécialité" autocomplete="off" required>
+                    <datalist id="doctorOptions"></datalist>
+                    <input type="hidden" id="doctorIdInput" name="medecin_id" required>
 
                     <label>Date</label>
                     <input type="date" id="dateInput" name="date" required>
@@ -74,7 +103,7 @@
         <div class="appointment-card">
             <div class="appointment-card-header">
                 <div>
-                    <h3>3. Replanifier ou annuler</h3>
+                    <div class="appt-step-label"><div class="appt-step-num">3</div> Replanifier ou annuler</div>
                     <p class="appointment-hint">Gérez vos rendez-vous à venir.</p>
                 </div>
                 <div class="appointment-help-badge">Actions rapides</div>
@@ -145,6 +174,8 @@
             }
 
             const doctorSelect = document.getElementById('doctorSelect');
+            const doctorOptions = document.getElementById('doctorOptions');
+            const doctorIdInput = document.getElementById('doctorIdInput');
             const dateInput = document.getElementById('dateInput');
             const slotsWrap = document.getElementById('slotsWrap');
             const alertBox = document.getElementById('appointmentAlert');
@@ -160,6 +191,26 @@
             const patientFiltersReset = document.getElementById('patientFiltersReset');
 
             let doctors = [];
+            const doctorLabelToId = new Map();
+
+            const buildDoctorLabel = (doc) => `${doc.nom} ${doc.prenom} · ${doc.specialite}`;
+            const normalizeSearch = (value) => (value || '').replace(/·/g, ' ').replace(/\s+/g, ' ').trim();
+
+            const syncSelectedDoctorId = () => {
+                const label = (doctorSelect.value || '').trim();
+                const normalizedLabel = label.replace(/\s+/g, ' ').toLowerCase();
+                let id = doctorLabelToId.get(label) || '';
+
+                if (!id && normalizedLabel) {
+                    const matched = doctors.find((doc) => buildDoctorLabel(doc).replace(/\s+/g, ' ').toLowerCase() === normalizedLabel);
+                    if (matched) {
+                        id = String(matched.id);
+                    }
+                }
+
+                doctorIdInput.value = id;
+                return id;
+            };
 
             const showLoader = () => {
                 const loader = document.getElementById('globalLoader');
@@ -183,36 +234,43 @@
                 setTimeout(() => { if (alertBox) alertBox.hidden = true; }, 4000);
             };
 
-            const loadDoctors = async (params = '') => {
+            const loadDoctors = async (params = '', withLoader = true) => {
                 if (!canBook) return;
-                showLoader();
-                const res = await fetch(`/api/appointments/doctors${params}`);
+                if (withLoader) showLoader();
+                const selectedId = syncSelectedDoctorId();
+                const search = selectedId ? '' : normalizeSearch(doctorSelect ? doctorSelect.value : '');
+                const separator = params && params.includes('?') ? '&' : '?';
+                const withSearch = search ? `${params}${separator}q=${encodeURIComponent(search)}` : params;
+                const res = await fetch(`/api/appointments/doctors${withSearch}`);
                 const data = await res.json();
                 doctors = data || [];
-                doctorSelect.innerHTML = '<option value="">Choisir un médecin</option>';
+                doctorOptions.innerHTML = '';
+                doctorLabelToId.clear();
                 doctors.forEach(doc => {
+                    const label = buildDoctorLabel(doc);
                     const opt = document.createElement('option');
-                    opt.value = doc.id;
-                    opt.textContent = `${doc.nom} ${doc.prenom} · ${doc.specialite}`;
-                    doctorSelect.appendChild(opt);
+                    opt.value = label;
+                    doctorOptions.appendChild(opt);
+                    doctorLabelToId.set(label, String(doc.id));
 
                     if (doc.lat && doc.lng) {
                         const marker = L.marker([doc.lat, doc.lng]).addTo(map);
                         marker.bindPopup(`<strong>${doc.nom} ${doc.prenom}</strong><br>${doc.specialite}<br>${doc.ville || ''}`);
                         marker.on('click', () => {
-                            doctorSelect.value = doc.id;
+                            doctorSelect.value = label;
+                            doctorIdInput.value = String(doc.id);
                             fetchSlots();
                         });
                     }
                 });
-                hideLoader();
+                if (withLoader) hideLoader();
             };
 
             const fetchSlots = async () => {
                 if (!canBook) return;
                 showLoader();
                 slotsWrap.innerHTML = '<div class="slot-empty">Chargement...</div>';
-                const medecinId = doctorSelect.value;
+                const medecinId = syncSelectedDoctorId();
                 const date = dateInput.value;
                 if (!medecinId || !date) {
                     slotsWrap.innerHTML = '<div class="slot-empty">Sélectionnez un médecin et une date.</div>';
@@ -370,14 +428,35 @@
             }
 
             if (canBook) {
-                doctorSelect.addEventListener('change', fetchSlots);
+                let doctorSearchTimeout;
+
+                doctorSelect.addEventListener('change', () => {
+                    clearTimeout(doctorSearchTimeout);
+                    const selectedId = syncSelectedDoctorId();
+                    if (selectedId) {
+                        fetchSlots();
+                    } else {
+                        slotsWrap.innerHTML = '<div class="slot-empty">Sélectionnez un médecin valide et une date.</div>';
+                    }
+                });
                 dateInput.addEventListener('change', fetchSlots);
+                doctorSelect.addEventListener('input', () => {
+                    const selectedId = syncSelectedDoctorId();
+                    if (selectedId && dateInput.value) {
+                        fetchSlots();
+                        return;
+                    }
+                    clearTimeout(doctorSearchTimeout);
+                    doctorSearchTimeout = setTimeout(() => {
+                        loadDoctors('', false);
+                    }, 250);
+                });
             }
 
             if (canBook) {
                 document.getElementById('appointmentForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const medecinId = doctorSelect.value;
+                const medecinId = syncSelectedDoctorId();
                 const date = dateInput.value;
                 const dispoId = slotsWrap.dataset.selected;
                 const motif = document.getElementById('motifInput').value;

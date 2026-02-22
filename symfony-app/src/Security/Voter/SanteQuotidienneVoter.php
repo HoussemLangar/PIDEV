@@ -3,6 +3,7 @@
 namespace App\Security\Voter;
 
 use App\Entity\SanteQuotidienne;
+use App\Entity\User;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
@@ -63,8 +64,19 @@ class SanteQuotidienneVoter extends Voter
 
     private function canView(SanteQuotidienne $sante, UserInterface $user): bool
     {
-        // L'utilisateur peut voir sa propre entrée
-        return $sante->getUser() === $user;
+        if ($sante->getUser() === $user) {
+            return true;
+        }
+
+        if (!$user instanceof User) {
+            return false;
+        }
+
+        $viewerRole = $user->getSubscriptionType() ?? $user->getRole();
+        $owner = $sante->getUser();
+        $ownerRole = $owner instanceof User ? ($owner->getSubscriptionType() ?? $owner->getRole()) : null;
+
+        return $viewerRole === 'ROLE_MEDECIN' && $ownerRole === 'ROLE_PATIENT';
     }
 
     private function canDelete(SanteQuotidienne $sante, UserInterface $user): bool

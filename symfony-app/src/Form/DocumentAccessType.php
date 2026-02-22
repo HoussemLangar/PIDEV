@@ -15,6 +15,8 @@ class DocumentAccessType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
+        $targetRoles = $options['target_roles'];
+
         $builder
             ->add('sharedWith', EntityType::class, [
                 'class' => User::class,
@@ -26,10 +28,10 @@ class DocumentAccessType extends AbstractType
                     'class' => 'form-control',
                     'placeholder' => 'Sélectionnez un utilisateur...',
                 ],
-                'query_builder' => function ($repo) {
+                'query_builder' => function ($repo) use ($targetRoles) {
                     return $repo->createQueryBuilder('u')
-                        ->where('u.role = :role')
-                        ->setParameter('role', 'ROLE_PATIENT')
+                        ->where('u.role IN (:roles)')
+                        ->setParameter('roles', $targetRoles)
                         ->orderBy('u.username', 'ASC');
                 },
             ])
@@ -58,6 +60,7 @@ class DocumentAccessType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => DocumentAccess::class,
+            'target_roles' => ['ROLE_PATIENT'],
         ]);
     }
 }

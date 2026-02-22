@@ -20,6 +20,61 @@ class NotificationController extends AbstractController
     ) {}
 
     /**
+     * GET /api/notification/mine
+     * Retourne les notifications de l'utilisateur connecté
+     */
+    #[Route('/mine', name: 'mine', methods: ['GET'])]
+    public function mine(): JsonResponse
+    {
+        $user = $this->getUser();
+        if (!$user) {
+            return new JsonResponse(['error' => 'Non authentifié'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $notifications = $this->repository->findBy(
+            ['user' => $user],
+            ['createdAt' => 'DESC'],
+            20
+        );
+
+        $unreadCount = $this->repository->count(['user' => $user, 'lu' => false]);
+
+        return new JsonResponse([
+            'unread' => $unreadCount,
+            'notifications' => array_map(fn (Notification $n) => [
+                'id'        => $n->getId(),
+                'type'      => $n->getType(),
+                'titre'     => $n->getTitre(),
+                'message'   => $n->getMessage(),
+                'lu'        => $n->isLu(),
+                'lien'      => $n->getLien(),
+                'createdAt' => $n->getCreatedAt()->format('Y-m-d H:i:s'),
+            ], $notifications),
+        ]);
+    }
+
+    /**
+     * POST /api/notification/read-all
+     * Marque toutes les notifications de l'utilisateur comme lues
+     */
+    #[Route('/read-all', name: 'read_all', methods: ['POST'])]
+    public function readAll(): JsonResponse
+    {
+        $user = $this->getUser();
+        if (!$user) {
+            return new JsonResponse(['error' => 'Non authentifié'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $notifications = $this->repository->findBy(['user' => $user, 'lu' => false]);
+        foreach ($notifications as $n) {
+            $n->setLu(true);
+        }
+        $this->entityManager->flush();
+
+        return new JsonResponse(['success' => true]);
+    }
+
+    /**
      * GET /api/notification
      * Liste toutes les entités Notification
      */

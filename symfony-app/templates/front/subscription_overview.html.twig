@@ -1,44 +1,106 @@
 {% extends 'front/base.html.twig' %}
 
-{% block title %}Mon abonnement{% endblock %}
+{% block title %}Mon abonnement — SANTÉA{% endblock %}
 
 {% block body %}
-<section class="subscription-wrap">
-    <div class="subscription-hero">
-        <h2>Mon abonnement</h2>
-        <p>Plan actif et informations de facturation.</p>
-        <div class="plan-price">{{ abonnement.prix }} DT <span>/ mois</span></div>
-    </div>
+<section style="min-height:calc(100vh - 140px);padding:48px 24px 80px;background:linear-gradient(160deg,#f0f9ff 0%,#e0f2fe 35%,#f8fafc 100%);">
+<div style="max-width:860px;margin:0 auto;">
 
-    <div class="subscription-details">
-        <div class="subscription-detail-card">
-            <strong>Plan</strong>
-            <div>{{ abonnement.nom }}</div>
+    <!-- Page header -->
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:40px;flex-wrap:wrap;">
+        <div style="width:56px;height:56px;background:linear-gradient(135deg,#0D8ABC,#0a6d96);border-radius:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i class="fas fa-crown" style="color:white;font-size:24px;"></i>
         </div>
-        <div class="subscription-detail-card">
-            <strong>Type</strong>
-            <div>{{ abonnement.typeAbonnement }}</div>
-        </div>
-        <div class="subscription-detail-card">
-            <strong>Date début</strong>
-            <div>{{ abonnement.dateDebut|date('d/m/Y') }}</div>
-        </div>
-        <div class="subscription-detail-card">
-            <strong>Date fin</strong>
-            <div>{{ abonnement.dateFin|date('d/m/Y') }}</div>
-        </div>
-        <div class="subscription-detail-card">
-            <strong>Statut</strong>
-            <div>{{ abonnement.statut }}</div>
+        <div>
+            <h1 style="margin:0;font-size:28px;font-weight:800;color:#0f172a;">Mon abonnement</h1>
+            <p style="margin:4px 0 0;color:#64748b;font-size:15px;">Gérez votre plan actif et vos informations de facturation.</p>
         </div>
     </div>
 
-    <div class="subscription-actions">
-        <a class="btn-appointment" href="{{ path('app_subscription') }}">Changer d'abonnement</a>
-        <form method="post" action="{{ path('app_subscription_cancel') }}" onsubmit="return confirm('Annuler votre abonnement ?');">
-            <button class="btn-ghost" type="submit">Annuler l'abonnement</button>
+    <!-- Status banner -->
+    {% set isActive = abonnement.statut == 'ACTIVE' or abonnement.statut == 'active' %}
+    <div style="background:{{ isActive ? 'linear-gradient(135deg,#d1fae5,#a7f3d0)' : 'linear-gradient(135deg,#fee2e2,#fecaca)' }};border-radius:16px;padding:20px 28px;margin-bottom:32px;display:flex;align-items:center;gap:16px;border:1.5px solid {{ isActive ? '#6ee7b7' : '#f87171' }};">
+        <div style="width:44px;height:44px;background:{{ isActive ? '#10b981' : '#ef4444' }};border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i class="fas fa-{{ isActive ? 'check-circle' : 'times-circle' }}" style="color:white;font-size:20px;"></i>
+        </div>
+        <div style="flex:1;">
+            <div style="font-weight:700;font-size:16px;color:{{ isActive ? '#065f46' : '#991b1b' }};">
+                Abonnement {{ isActive ? 'Actif' : abonnement.statut }}
+            </div>
+            <div style="font-size:13px;color:{{ isActive ? '#047857' : '#b91c1c' }};margin-top:2px;">
+                {% if isActive %}Votre accès premium est pleinement opérationnel.{% else %}Votre abonnement nécessite une attention.{% endif %}
+            </div>
+        </div>
+        <div style="font-size:28px;font-weight:800;color:{{ isActive ? '#065f46' : '#991b1b' }};">
+            {{ abonnement.prix }} DT<span style="font-size:14px;font-weight:500;opacity:.7;"> /mois</span>
+        </div>
+    </div>
+
+    <!-- Details grid -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:20px;margin-bottom:32px;">
+        {% set details = [
+            {icon:'fas fa-tag',         label:'Plan',        value:abonnement.nom,                              color:'#0D8ABC'},
+            {icon:'fas fa-id-badge',    label:'Type',        value:abonnement.typeAbonnement,                   color:'#8b5cf6'},
+            {icon:'fas fa-calendar-plus',label:'Début',      value:abonnement.dateDebut|date('d/m/Y'),          color:'#10b981'},
+            {icon:'fas fa-calendar-times',label:'Échéance',  value:abonnement.dateFin|date('d/m/Y'),            color:'#f59e0b'},
+        ] %}
+        {% for d in details %}
+        <div style="background:white;border-radius:16px;padding:24px;box-shadow:0 2px 12px rgba(15,23,42,.06);border:1.5px solid #f1f5f9;display:flex;align-items:center;gap:16px;">
+            <div style="width:44px;height:44px;background:{{ d.color }}18;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i class="{{ d.icon }}" style="color:{{ d.color }};font-size:18px;"></i>
+            </div>
+            <div>
+                <div style="font-size:12px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">{{ d.label }}</div>
+                <div style="font-size:16px;font-weight:700;color:#1a1a2e;">{{ d.value }}</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Features included -->
+    <div style="background:white;border-radius:20px;padding:32px;box-shadow:0 2px 12px rgba(15,23,42,.06);border:1.5px solid #f1f5f9;margin-bottom:32px;">
+        <h3 style="margin:0 0 24px;font-size:18px;font-weight:700;color:#1a1a2e;display:flex;align-items:center;gap:10px;">
+            <i class="fas fa-star" style="color:#f59e0b;"></i> Inclus dans votre abonnement
+        </h3>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;">
+            {% set features = [
+                {icon:'fas fa-video',          label:'Téléconsultation',    color:'#3b82f6'},
+                {icon:'fas fa-comments',       label:'Messagerie sécurisée',color:'#10b981'},
+                {icon:'fas fa-file-medical',   label:'Partage de documents',color:'#8b5cf6'},
+                {icon:'fas fa-calendar-check', label:'Rendez-vous en ligne', color:'#f59e0b'},
+                {icon:'fas fa-heartbeat',      label:'Journal santé',        color:'#ef4444'},
+                {icon:'fas fa-pills',          label:'Pharmacies partenaires',color:'#0D8ABC'},
+            ] %}
+            {% for f in features %}
+            <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:#f8fafc;border-radius:10px;border:1px solid #f1f5f9;">
+                <div style="width:32px;height:32px;background:{{ f.color }}18;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <i class="{{ f.icon }}" style="color:{{ f.color }};font-size:14px;"></i>
+                </div>
+                <span style="font-size:13px;font-weight:500;color:#374151;">{{ f.label }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;">
+        <a href="{{ path('app_subscription') }}"
+           style="display:inline-flex;align-items:center;gap:10px;padding:14px 28px;background:linear-gradient(135deg,#0D8ABC,#0a6d96);color:white;border-radius:12px;font-weight:700;font-size:15px;text-decoration:none;transition:all .2s;box-shadow:0 4px 14px rgba(13,138,188,.3);"
+           onmouseover="this.style.opacity='.9';this.style.transform='translateY(-2px)';"
+           onmouseout="this.style.opacity='1';this.style.transform='';">
+            <i class="fas fa-exchange-alt"></i> Changer d'abonnement
+        </a>
+        <form method="post" action="{{ path('app_subscription_cancel') }}"
+              onsubmit="return confirm('Êtes-vous sûr de vouloir annuler votre abonnement ?');">
+            <button type="submit"
+                    style="display:inline-flex;align-items:center;gap:10px;padding:14px 28px;background:white;color:#ef4444;border:2px solid #fecaca;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer;transition:all .2s;"
+                    onmouseover="this.style.background='#fee2e2';this.style.borderColor='#ef4444';"
+                    onmouseout="this.style.background='white';this.style.borderColor='#fecaca';">
+                <i class="fas fa-times-circle"></i> Annuler l'abonnement
+            </button>
         </form>
     </div>
 
+</div>
 </section>
 {% endblock %}

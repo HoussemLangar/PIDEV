@@ -19,6 +19,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_USER')]
 class TeleconsultationController extends AbstractController
 {
+    private const PROFESSIONAL_ROLES = ['ROLE_MEDECIN', 'ROLE_COACH', 'ROLE_NUTRITIONNISTE'];
+
     public function __construct(
         private TeleconsultationRepository $repository,
         private JitsiService $jitsiService,
@@ -61,7 +63,7 @@ class TeleconsultationController extends AbstractController
     #[Route('/schedule', name: 'schedule', methods: ['GET', 'POST'])]
     public function schedule(Request $request): Response
     {
-        if (!$this->isGranted('ROLE_MEDECIN') && !$this->isGranted('ROLE_PATIENT')) {
+        if (!$this->isPatient() && !$this->isProfessional()) {
             throw $this->createAccessDeniedException();
         }
 
@@ -73,24 +75,23 @@ class TeleconsultationController extends AbstractController
         // Set a default scheduled time to avoid null value
         $consultation->setScheduledAt(new \DateTimeImmutable('+1 hour'));
 
-        $recipientRole = $this->isGranted('ROLE_MEDECIN') ? 'ROLE_PATIENT' : 'ROLE_MEDECIN';
+        $recipientRoles = $this->isPatient() ? self::PROFESSIONAL_ROLES : ['ROLE_PATIENT'];
         $form = $this->createForm(TeleconsultationType::class, $consultation, [
-            'recipient_role' => $recipientRole,
+            'recipient_roles' => $recipientRoles,
         ]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
             $recipient = $consultation->getRecipient();
-            if (!$recipient || !in_array($recipientRole, $recipient->getRoles(), true)) {
+            if (!$recipient || !in_array($this->getEffectiveRole($recipient), $recipientRoles, true)) {
                 $this->addFlash('error', 'Vous devez sélectionner un utilisateur valide.');
                 return $this->render('teleconsultation/schedule.html.twig', [
                     'form' => $form,
                 ]);
             }
 
-            $doctor = $this->isGranted('ROLE_MEDECIN') ? $user : $recipient;
-            if (!$this->repository->isDoctorAvailable($doctor, $consultation->getScheduledAt())) {
-                $this->addFlash('error', 'Le médecin n\'est pas disponible à cette date et heure.');
+            if (!$this->repository->isDoctorAvailable($recipient, $consultation->getScheduledAt()) && $this->isPatient()) {
+                $this->addFlash('error', 'Le professionnel n\'est pas disponible à cette date et heure.');
                 return $this->render('teleconsultation/schedule.html.twig', [
                     'form' => $form,
                 ]);
@@ -99,7 +100,7 @@ class TeleconsultationController extends AbstractController
             // Generate room name
             $roomName = $this->jitsiService->generateRoomName($user, $recipient);
             $consultation->setRoomName($roomName);
-            $consultation->setStatus('pending');
+            $consultation->setStatus($this->isPatient() ? 'requested' : 'pending');
 
             $this->em->persist($consultation);
             $this->em->flush();
@@ -260,6 +261,103 @@ class TeleconsultationController extends AbstractController
         return $this->redirectToRoute('app_teleconsultation_index');
     }
 
+    #[Route('/{id}/approve', name: 'approve', methods: ['POST'])]
+    public function approve(Request $request, Teleconsultation $consultation): Response
+    {
+        $this->denyAccessUnlessTeleconsultationRole();
+
+        $user = $this->getUser();
+        assert($user instanceof User);
+
+        if (!$this->isCsrfTokenValid('teleconsultation_approve' . $consultation->getId(), $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Jeton CSRF invalide.');
+        }
+
+        if ($consultation->getRecipient() !== $user || !$this->isProfessional() || !$consultation->isRequested()) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $consultation->setStatus('pending');
+        $this->em->flush();
+
+        $this->addFlash('success', 'Demande de téléconsultation approuvée.');
+        return $this->redirectToRoute('app_teleconsultation_show', ['id' => $consultation->getId()]);
+    }
+
+    #[Route('/{id}/reject', name: 'reject', methods: ['POST'])]
+    public function reject(Request $request, Teleconsultation $consultation): Response
+    {
+        $this->denyAccessUnlessTeleconsultationRole();
+
+        $user = $this->getUser();
+        assert($user instanceof User);
+
+        if (!$this->isCsrfTokenValid('teleconsultation_reject' . $consultation->getId(), $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Jeton CSRF invalide.');
+        }
+
+        if ($consultation->getRecipient() !== $user || !$this->isProfessional() || !$consultation->isRequested()) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $consultation->setStatus('cancelled');
+        $consultation->setEndedAt(new \DateTimeImmutable());
+        $this->em->flush();
+
+        $this->addFlash('success', 'Demande de téléconsultation refusée.');
+        return $this->redirectToRoute('app_teleconsultation_index');
+    }
+
+    #[Route('/{id}/reschedule', name: 'reschedule', methods: ['POST'])]
+    public function reschedule(Request $request, Teleconsultation $consultation): Response
+    {
+        $this->denyAccessUnlessTeleconsultationRole();
+
+        $user = $this->getUser();
+        assert($user instanceof User);
+
+        if ($consultation->getInitiator() !== $user && $consultation->getRecipient() !== $user) {
+            throw $this->createAccessDeniedException();
+        }
+
+        if (!$this->isCsrfTokenValid('teleconsultation_reschedule' . $consultation->getId(), $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Jeton CSRF invalide.');
+        }
+
+        $scheduledAtRaw = (string) $request->request->get('scheduled_at', '');
+        if ($scheduledAtRaw === '') {
+            $this->addFlash('error', 'Veuillez indiquer une nouvelle date.');
+            return $this->redirectToRoute('app_teleconsultation_show', ['id' => $consultation->getId()]);
+        }
+
+        try {
+            $newScheduledAt = new \DateTimeImmutable($scheduledAtRaw);
+        } catch (\Exception) {
+            $this->addFlash('error', 'Date invalide.');
+            return $this->redirectToRoute('app_teleconsultation_show', ['id' => $consultation->getId()]);
+        }
+
+        if ($newScheduledAt <= new \DateTimeImmutable()) {
+            $this->addFlash('error', 'La date doit être dans le futur.');
+            return $this->redirectToRoute('app_teleconsultation_show', ['id' => $consultation->getId()]);
+        }
+
+        $professional = $this->isProfessionalRole($consultation->getInitiator()) ? $consultation->getInitiator() : $consultation->getRecipient();
+        if (!$this->repository->isDoctorAvailable($professional, $newScheduledAt)) {
+            $this->addFlash('error', 'Le professionnel n\'est pas disponible sur ce créneau.');
+            return $this->redirectToRoute('app_teleconsultation_show', ['id' => $consultation->getId()]);
+        }
+
+        $consultation->setScheduledAt($newScheduledAt);
+        if ($consultation->isRequested() && $this->isProfessionalRole($user)) {
+            $consultation->setStatus('pending');
+        }
+
+        $this->em->flush();
+        $this->addFlash('success', 'Téléconsultation replanifiée.');
+        return $this->redirectToRoute('app_teleconsultation_show', ['id' => $consultation->getId()]);
+    }
+
     /**
      * API: Get upcoming consultations
      */
@@ -309,8 +407,38 @@ class TeleconsultationController extends AbstractController
 
     private function denyAccessUnlessTeleconsultationRole(): void
     {
-        if (!$this->isGranted('ROLE_PATIENT') && !$this->isGranted('ROLE_MEDECIN')) {
+        if (!$this->isPatient() && !$this->isProfessional()) {
             throw $this->createAccessDeniedException();
         }
+    }
+
+    private function isPatient(): bool
+    {
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            return false;
+        }
+
+        return $this->getEffectiveRole($user) === 'ROLE_PATIENT';
+    }
+
+    private function isProfessional(): bool
+    {
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            return false;
+        }
+
+        return $this->isProfessionalRole($user);
+    }
+
+    private function isProfessionalRole(User $user): bool
+    {
+        return in_array($this->getEffectiveRole($user), self::PROFESSIONAL_ROLES, true);
+    }
+
+    private function getEffectiveRole(User $user): string
+    {
+        return $user->getSubscriptionType() ?: $user->getRole();
     }
 }

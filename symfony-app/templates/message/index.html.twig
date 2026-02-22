@@ -34,21 +34,109 @@
                 Aucun destinataire disponible pour le moment.
             </div>
         {% else %}
-            <form id="startConversationForm" style="display: flex; gap: 12px; flex-wrap: wrap;">
-                <div style="flex: 1; min-width: 280px;">
-                    <select id="recipientSelect" style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 15px; transition: all 0.2s; background: white;" required>
-                        <option value="" selected disabled>Choisir un destinataire</option>
-                        {% for recipient in availableRecipients %}
-                            <option value="{{ recipient.id }}">
-                                {{ recipient.prenom }} {{ recipient.nom }} ({{ recipient.email }})
-                            </option>
-                        {% endfor %}
-                    </select>
+            <form id="startConversationForm" style="display: flex; gap: 12px; flex-wrap: wrap;" data-ajax="1">
+                <div style="flex: 1; min-width: 280px; position: relative;" id="recipientWrapper">
+                    <div style="position: relative;">
+                        <i class="fas fa-search" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:14px;pointer-events:none;"></i>
+                        <input type="text" id="recipientSearch" placeholder="Rechercher par nom, prénom ou rôle…"
+                               autocomplete="off"
+                               style="width:100%;padding:12px 16px 12px 40px;border:2px solid #e2e8f0;border-radius:10px;font-size:15px;transition:all .2s;background:white;box-sizing:border-box;"
+                               onfocus="this.style.borderColor='#0D8ABC'" onblur="setTimeout(()=>this.style.borderColor='#e2e8f0',200)">
+                    </div>
+                    <div id="recipientDropdown" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:white;border:1.5px solid #e2e8f0;border-radius:10px;box-shadow:0 8px 24px rgba(15,23,42,.1);z-index:100;max-height:220px;overflow-y:auto;"></div>
+                    <input type="hidden" id="recipientId" required>
+                    <div id="recipientSelected" style="display:none;margin-top:8px;background:#eff6ff;border-radius:8px;padding:8px 12px;font-size:13px;display:none;align-items:center;gap:8px;">
+                        <i class="fas fa-user-check" style="color:#0D8ABC;"></i>
+                        <span id="recipientSelectedLabel"></span>
+                        <button type="button" id="recipientClear" style="margin-left:auto;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:16px;line-height:1;">&times;</button>
+                    </div>
                 </div>
                 <button type="submit" style="padding: 12px 28px; background: linear-gradient(135deg, #0D8ABC 0%, #0a6d96 100%); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(13,138,188,0.25);">
                     <i class="fas fa-paper-plane" style="margin-right: 8px;"></i>Démarrer
                 </button>
             </form>
+
+            <script>
+            (function () {
+                const recipients = [
+                    {% for recipient in availableRecipients %}
+                    {
+                        id: {{ recipient.id }},
+                        label: "{{ recipient.prenom|e('js') }} {{ recipient.nom|e('js') }}",
+                        role: "{{ recipient.role == 'ROLE_MEDECIN' ? 'Médecin' : (recipient.role == 'ROLE_PHARMACIEN' ? 'Pharmacien' : (recipient.role == 'ROLE_COACH' ? 'Coach' : (recipient.role == 'ROLE_NUTRITIONNISTE' ? 'Nutritionniste' : recipient.role))) }}",
+                        email: "{{ recipient.email|e('js') }}"
+                    }{% if not loop.last %},{% endif %}
+                    {% endfor %}
+                ];
+
+                const searchInput  = document.getElementById('recipientSearch');
+                const dropdown     = document.getElementById('recipientDropdown');
+                const hiddenInput  = document.getElementById('recipientId');
+                const selectedBox  = document.getElementById('recipientSelected');
+                const selectedLbl  = document.getElementById('recipientSelectedLabel');
+                const clearBtn     = document.getElementById('recipientClear');
+
+                function renderOptions(query) {
+                    const q = query.toLowerCase().trim();
+                    const filtered = q ? recipients.filter(r =>
+                        r.label.toLowerCase().includes(q) ||
+                        r.role.toLowerCase().includes(q) ||
+                        r.email.toLowerCase().includes(q)
+                    ) : recipients;
+
+                    if (filtered.length === 0) {
+                        dropdown.innerHTML = '<div style="padding:16px;text-align:center;color:#94a3b8;font-size:13px;"><i class="fas fa-user-slash" style="display:block;font-size:20px;margin-bottom:6px;opacity:.5;"></i>Aucun résultat</div>';
+                    } else {
+                        dropdown.innerHTML = filtered.map(r => `
+                            <div class="recipient-opt" data-id="${r.id}" data-label="${r.label} · ${r.role}"
+                                 style="display:flex;align-items:center;gap:12px;padding:10px 14px;cursor:pointer;transition:background .15s;border-bottom:1px solid #f8fafc;">
+                                <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#e0f2fe,#bae6fd);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                    <i class="fas fa-user" style="color:#0D8ABC;font-size:13px;"></i>
+                                </div>
+                                <div style="flex:1;min-width:0;">
+                                    <div style="font-weight:600;font-size:14px;color:#1a1a2e;">${r.label}</div>
+                                    <div style="font-size:12px;color:#64748b;">${r.role} · ${r.email}</div>
+                                </div>
+                            </div>
+                        `).join('');
+                        dropdown.querySelectorAll('.recipient-opt').forEach(opt => {
+                            opt.addEventListener('mouseenter', () => opt.style.background = '#f0f9ff');
+                            opt.addEventListener('mouseleave', () => opt.style.background = '');
+                            opt.addEventListener('mousedown', (e) => {
+                                e.preventDefault();
+                                selectRecipient(opt.dataset.id, opt.dataset.label);
+                            });
+                        });
+                    }
+                    dropdown.style.display = 'block';
+                }
+
+                function selectRecipient(id, label) {
+                    hiddenInput.value = id;
+                    searchInput.value = '';
+                    searchInput.placeholder = 'Destinataire sélectionné ✓';
+                    selectedLbl.textContent = label;
+                    selectedBox.style.display = 'flex';
+                    dropdown.style.display = 'none';
+                }
+
+                if (clearBtn) {
+                    clearBtn.addEventListener('click', () => {
+                        hiddenInput.value = '';
+                        searchInput.placeholder = 'Rechercher par nom, prénom ou rôle…';
+                        selectedBox.style.display = 'none';
+                        searchInput.value = '';
+                        searchInput.focus();
+                    });
+                }
+
+                searchInput.addEventListener('input', () => renderOptions(searchInput.value));
+                searchInput.addEventListener('focus', () => renderOptions(searchInput.value));
+                document.addEventListener('click', (e) => {
+                    if (!e.target.closest('#recipientWrapper')) dropdown.style.display = 'none';
+                });
+            })();
+            </script>
         {% endif %}
     </div>
 
@@ -92,12 +180,15 @@
     {{ parent() }}
     <script>
         const startForm = document.getElementById('startConversationForm');
-        const recipientSelect = document.getElementById('recipientSelect');
-        if (startForm && recipientSelect) {
+        const recipientHiddenInput = document.getElementById('recipientId');
+        if (startForm && recipientHiddenInput) {
             startForm.addEventListener('submit', (e) => {
                 e.preventDefault();
-                const recipientId = recipientSelect.value;
-                if (!recipientId) return;
+                const recipientId = recipientHiddenInput.value;
+                if (!recipientId) {
+                    window.showToast?.('error', 'Veuillez sélectionner un destinataire.');
+                    return;
+                }
                 window.location.href = "{{ path('app_message_start', { recipient: 'RECIPIENT_ID' }) }}".replace('RECIPIENT_ID', recipientId);
             });
         }

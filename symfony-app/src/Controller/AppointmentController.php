@@ -40,7 +40,18 @@ class AppointmentController extends AbstractController
     public function doctors(Request $request): JsonResponse
     {
         $city = $request->query->get('city');
+        $q = trim((string) $request->query->get('q', ''));
         $medecins = $this->medecinRepository->findByCity($city);
+
+        if ($q !== '') {
+            $qLower = mb_strtolower($q);
+            $medecins = array_values(array_filter($medecins, function (Medecin $medecin) use ($qLower) {
+                $user = $medecin->getUser();
+                $haystack = mb_strtolower(trim(($user->getNom() ?? '') . ' ' . ($user->getPrenom() ?? '') . ' ' . ($medecin->getSpecialite() ?? '')));
+                return str_contains($haystack, $qLower);
+            }));
+        }
+
         $data = [];
         foreach ($medecins as $medecin) {
             $user = $medecin->getUser();

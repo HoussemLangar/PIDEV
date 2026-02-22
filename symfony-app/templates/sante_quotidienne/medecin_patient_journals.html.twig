@@ -1,0 +1,24 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Journaux de santé des patients{% endblock %}
+
+{% block content %}
+<div class="content-wrapper" style="padding: 24px; max-width: 1200px; margin: 0 auto;">
+    <h1 style="margin-bottom: 16px;">Journaux de santé des patients</h1>
+
+    {% if entries is empty %}
+        <p>Aucune entrée disponible.</p>
+    {% else %}
+        <div style="display: grid; gap: 10px;">
+            {% for sante in entries %}
+                <a href="{{ path('app_sante_quotidienne_show', {id: sante.id}) }}" style="display: block; text-decoration: none; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; color: #1e293b;">
+                    <strong>{{ sante.user.prenom }} {{ sante.user.nom }}</strong>
+                    <span style="margin-left: 12px; color: #64748b;">{{ sante.date|date('d/m/Y') }}</span>
+                    <span style="margin-left: 12px; color: #64748b;">Poids: {{ sante.poids }} kg</span>
+                    <span style="margin-left: 12px; color: #64748b;">IMC: {{ sante.imc }}</span>
+                </a>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -38,8 +38,8 @@ class AccompanimentPlanController extends AbstractController
         $user = $this->getUser();
         assert($user instanceof User);
 
-        if (!$this->isGranted('ROLE_PATIENT')) {
-            if ($this->isGranted('ROLE_COACH')) {
+        if (!$this->isPatientRole($user)) {
+            if ($this->isProfessionalRole($user)) {
                 return $this->redirectToRoute('app_plan_professional_plans');
             }
 
@@ -74,9 +74,10 @@ class AccompanimentPlanController extends AbstractController
 
         $isPatient = $plan->getPatient()->getUser() === $user;
         $isCoach = $plan->getCoach() && $plan->getCoach()->getUser() === $user;
+        $isNutritionist = $plan->getNutritionist() && $plan->getNutritionist()->getUser() === $user;
 
         // Verify access (patient or assigned professional)
-        if (!$isPatient && !$isCoach) {
+        if (!$isPatient && !$isCoach && !$isNutritionist) {
             throw $this->createAccessDeniedException();
         }
 
@@ -91,9 +92,10 @@ class AccompanimentPlanController extends AbstractController
     #[Route('/create/{patientId}', name: 'create', methods: ['GET', 'POST'])]
     public function create(Request $request, int $patientId): Response
     {
-        if (
-            !$this->isGranted('ROLE_COACH')
-        ) {
+        $user = $this->getUser();
+        assert($user instanceof User);
+
+        if (!$this->isProfessionalRole($user)) {
             throw $this->createAccessDeniedException();
         }
 
@@ -110,6 +112,16 @@ class AccompanimentPlanController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            if ($this->isCoachRole($user)) {
+                $coach = $this->coachRepository->findOneBy(['user' => $user]);
+                $plan->setCoach($coach);
+                $plan->setNutritionist(null);
+            } elseif ($this->isNutritionnisteRole($user)) {
+                $nutritionniste = $user->getNutritionniste();
+                $plan->setNutritionist($nutritionniste);
+                $plan->setCoach(null);
+            }
+
             $this->em->persist($plan);
             $this->em->flush();
 
@@ -134,9 +146,9 @@ class AccompanimentPlanController extends AbstractController
 
         // Verify access - creator or patient can edit
         $isCreator = ($plan->getCoach() && $plan->getCoach()->getUser() === $user);
-        $isPatient = $plan->getPatient()->getUser() === $user;
+        $isNutritionCreator = ($plan->getNutritionist() && $plan->getNutritionist()->getUser() === $user);
 
-        if (!$isCreator && !$isPatient) {
+        if (!$isCreator && !$isNutritionCreator) {
             throw $this->createAccessDeniedException();
         }
 
@@ -168,9 +180,9 @@ class AccompanimentPlanController extends AbstractController
 
         // Only creator or patient can delete
         $isCreator = ($plan->getCoach() && $plan->getCoach()->getUser() === $user);
-        $isPatient = $plan->getPatient()->getUser() === $user;
+        $isNutritionCreator = ($plan->getNutritionist() && $plan->getNutritionist()->getUser() === $user);
 
-        if (!$isCreator && !$isPatient) {
+        if (!$isCreator && !$isNutritionCreator) {
             throw $this->createAccessDeniedException();
         }
 
@@ -187,18 +199,23 @@ class AccompanimentPlanController extends AbstractController
     #[Route('/professional/my-plans', name: 'professional_plans', methods: ['GET'])]
     public function professionalPlans(): Response
     {
-        if (!$this->isGranted('ROLE_COACH')) {
-            throw $this->createAccessDeniedException();
-        }
-
         $user = $this->getUser();
         assert($user instanceof User);
+
+        if (!$this->isProfessionalRole($user)) {
+            throw $this->createAccessDeniedException();
+        }
 
         $plans = [];
 
         $coach = $this->coachRepository->findOneBy(['user' => $user]);
         if ($coach) {
             $plans = array_merge($plans, $this->planRepository->findByCoach($coach));
+        }
+
+        $nutritionniste = $user->getNutritionniste();
+        if ($nutritionniste) {
+            $plans = array_merge($plans, $this->planRepository->findByNutritionist($nutritionniste));
         }
 
         // Sort by most recent first
@@ -221,5 +238,30 @@ class AccompanimentPlanController extends AbstractController
                 'uniquePatients' => $uniquePatients,
             ],
         ]);
+    }
+
+    private function getEffectiveRole(User $user): string
+    {
+        return $user->getSubscriptionType() ?: $user->getRole();
+    }
+
+    private function isPatientRole(User $user): bool
+    {
+        return $this->getEffectiveRole($user) === 'ROLE_PATIENT';
+    }
+
+    private function isCoachRole(User $user): bool
+    {
+        return $this->getEffectiveRole($user) === 'ROLE_COACH';
+    }
+
+    private function isNutritionnisteRole(User $user): bool
+    {
+        return $this->getEffectiveRole($user) === 'ROLE_NUTRITIONNISTE';
+    }
+
+    private function isProfessionalRole(User $user): bool
+    {
+        return in_array($this->getEffectiveRole($user), ['ROLE_COACH', 'ROLE_NUTRITIONNISTE'], true);
     }
 }

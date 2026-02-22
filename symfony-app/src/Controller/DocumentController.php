@@ -13,9 +13,11 @@ use App\Service\DocumentStorageService;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Mime\Email;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -29,6 +31,7 @@ class DocumentController extends AbstractController
         private DocumentStorageService $storageService,
         private EntityManagerInterface $em,
         private LoggerInterface $logger,
+        private MailerInterface $mailer,
     ) {
     }
 
@@ -60,9 +63,12 @@ class DocumentController extends AbstractController
     {
         $user = $this->getUser();
         assert($user instanceof User);
+        $isPatient = $this->isPatientRole($user);
 
         $document = new SharedDocument();
-        $form = $this->createForm(SharedDocumentType::class, $document);
+        $form = $this->createForm(SharedDocumentType::class, $document, [
+            'is_patient' => $isPatient,
+        ]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted()) {
@@ -87,6 +93,13 @@ class DocumentController extends AbstractController
 
             if ($file) {
                 try {
+                    if ($isPatient && !in_array($document->getDocumentType(), ['analysis', 'report', 'lab_results', 'imaging'], true)) {
+                        $this->addFlash('error', 'Les patients peuvent uploader uniquement des analyses, rapports médicaux, résultats de laboratoire ou imagerie médicale.');
+                        return $this->render('document/upload.html.twig', [
+                            'form' => $form,
+                        ]);
+                    }
+
                     $validationErrors = $this->storageService->validateFile($file);
                     if (!empty($validationErrors)) {
                         $message = implode(' | ', $validationErrors);
@@ -243,14 +256,25 @@ class DocumentController extends AbstractController
         }
 
         $documentAccess = new DocumentAccess($document, $user);
-        $form = $this->createForm(DocumentAccessType::class, $documentAccess);
+        $targetRoles = $this->isPatientRole($user)
+            ? ['ROLE_MEDECIN', 'ROLE_PHARMACIEN', 'ROLE_COACH', 'ROLE_NUTRITIONNISTE']
+            : ['ROLE_PATIENT'];
+
+        $form = $this->createForm(DocumentAccessType::class, $documentAccess, [
+            'target_roles' => $targetRoles,
+        ]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $recipient = $documentAccess->getSharedWith();
+            if ($this->isPatientRole($user) && !$this->isProfessionalRole($recipient)) {
+                throw $this->createAccessDeniedException('Un patient peut partager uniquement avec un professionnel de santé.');
+            }
+
             // Check if already shared with this user
             $existing = $this->accessRepository->findOneBy([
                 'document' => $document,
-                'sharedWith' => $documentAccess->getSharedWith(),
+                'sharedWith' => $recipient,
             ]);
 
             if ($existing) {
@@ -264,6 +288,21 @@ class DocumentController extends AbstractController
             }
 
             $this->em->flush();
+
+            if ($this->isProfessionalRole($recipient)) {
+                $email = (new Email())
+                    ->from('noreply@santea.local')
+                    ->to($recipient->getEmail())
+                    ->subject('Nouveau document patient partagé')
+                    ->text(sprintf(
+                        "%s %s a partagé un document (%s) avec vous.",
+                        $user->getPrenom(),
+                        $user->getNom(),
+                        $document->getFileName()
+                    ));
+                $this->mailer->send($email);
+            }
+
             $this->addFlash('success', 'Document partagé avec succès!');
 
             return $this->redirectToRoute('app_document_show', ['id' => $document->getId()]);
@@ -408,5 +447,15 @@ class DocumentController extends AbstractController
         }, $documents);
 
         return $this->json(['results' => $results]);
+    }
+
+    private function isPatientRole(User $user): bool
+    {
+        return ($user->getSubscriptionType() ?: $user->getRole()) === 'ROLE_PATIENT';
+    }
+
+    private function isProfessionalRole(User $user): bool
+    {
+        return in_array($user->getSubscriptionType() ?: $user->getRole(), ['ROLE_MEDECIN', 'ROLE_PHARMACIEN', 'ROLE_COACH', 'ROLE_NUTRITIONNISTE'], true);
     }
 }

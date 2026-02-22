@@ -21,6 +21,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_USER')]
 class MessageController extends AbstractController
 {
+    private const PROFESSIONAL_ROLES = ['ROLE_MEDECIN', 'ROLE_PHARMACIEN', 'ROLE_COACH', 'ROLE_NUTRITIONNISTE'];
+
     public function __construct(
         private ConversationRepository $conversationRepository,
         private MessageRepository $messageRepository,
@@ -42,10 +44,10 @@ class MessageController extends AbstractController
         $unreadCount = $this->conversationRepository->getUnreadCount($user);
 
         $availableRecipients = [];
-        if ($this->isGranted('ROLE_PATIENT')) {
+        if ($this->isPatientRole($user)) {
             $availableRecipients = array_filter(
                 $this->userRepository->findAll(),
-                fn (User $u) => $u->getId() !== $user->getId()
+                fn (User $u) => $u->getId() !== $user->getId() && $this->isProfessionalRole($u)
             );
         } else {
             $availableRecipients = $this->userRepository->findByRole('ROLE_PATIENT');
@@ -168,6 +170,32 @@ class MessageController extends AbstractController
     }
 
     /**
+     * API: Get conversations summary (for navbar dropdown)
+     */
+    #[Route('/api/conversations', name: 'api_conversations', methods: ['GET'])]
+    public function apiConversations(): JsonResponse
+    {
+        $user = $this->getUser();
+        assert($user instanceof User);
+
+        $conversations = $this->conversationRepository->findUserConversations($user);
+        $unreadCount   = $this->conversationRepository->getUnreadCount($user);
+
+        $data = array_map(function (Conversation $conv) use ($user) {
+            $other = $conv->getOtherUser($user);
+            return [
+                'id'              => $conv->getId(),
+                'otherUserId'     => $other->getId(),
+                'otherUserName'   => $other->getPrenom() . ' ' . $other->getNom(),
+                'otherUserAvatar' => $other->getAvatarDataUri() ?: ('https://ui-avatars.com/api/?name=' . urlencode($other->getNom() . '+' . $other->getPrenom()) . '&background=0D8ABC&color=fff&size=40'),
+                'lastMessageAt'   => $conv->getLastMessageAt()?->format('Y-m-d H:i:s'),
+            ];
+        }, $conversations);
+
+        return $this->json(['conversations' => $data, 'unread' => $unreadCount]);
+    }
+
+    /**
      * API: Get unread messages for a conversation
      */
     #[Route('/unread/{id}', name: 'unread', methods: ['GET'])]
@@ -271,11 +299,36 @@ class MessageController extends AbstractController
 
     private function denyIfInvalidMessagingPair(User $sender, User $recipient): void
     {
-        $senderIsPatient = $this->isGranted('ROLE_PATIENT');
-        $recipientIsPatient = in_array('ROLE_PATIENT', $recipient->getRoles(), true);
+        $senderIsPatient = $this->isPatientRole($sender);
+        $recipientIsPatient = $this->isPatientRole($recipient);
+        $senderIsProfessional = $this->isProfessionalRole($sender);
+        $recipientIsProfessional = $this->isProfessionalRole($recipient);
 
-        if (!$senderIsPatient && !$recipientIsPatient) {
-            throw $this->createAccessDeniedException('Vous ne pouvez contacter que des patients.');
+        if ($senderIsPatient && !$recipientIsProfessional) {
+            throw $this->createAccessDeniedException('Vous pouvez contacter uniquement des professionnels de santé.');
         }
+
+        if ($senderIsProfessional && !$recipientIsPatient) {
+            throw $this->createAccessDeniedException('Vous pouvez contacter uniquement des patients.');
+        }
+
+        if (!$senderIsPatient && !$senderIsProfessional) {
+            throw $this->createAccessDeniedException('Rôle non autorisé pour la messagerie d\'accompagnement.');
+        }
+    }
+
+    private function isPatientRole(User $user): bool
+    {
+        return $this->getEffectiveRole($user) === 'ROLE_PATIENT';
+    }
+
+    private function isProfessionalRole(User $user): bool
+    {
+        return in_array($this->getEffectiveRole($user), self::PROFESSIONAL_ROLES, true);
+    }
+
+    private function getEffectiveRole(User $user): string
+    {
+        return $user->getSubscriptionType() ?: $user->getRole();
     }
 }

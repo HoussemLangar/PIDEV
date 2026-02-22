@@ -185,6 +185,11 @@ class Teleconsultation
         return $this->status === 'pending';
     }
 
+    public function isRequested(): bool
+    {
+        return $this->status === 'requested';
+    }
+
     public function isCompleted(): bool
     {
         return $this->status === 'completed';

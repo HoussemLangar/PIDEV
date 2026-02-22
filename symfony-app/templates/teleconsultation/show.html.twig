@@ -20,6 +20,10 @@
                 <span style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border-radius: 20px; font-size: 14px; font-weight: 600; animation: pulse 2s infinite;">
                     <i class="fas fa-circle" style="font-size: 8px; animation: blink 1s infinite;"></i> EN COURS
                 </span>
+            {% elseif consultation.requested %}
+                <span style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: #fee2e2; color: #991b1b; border-radius: 20px; font-size: 14px; font-weight: 600;">
+                    <i class="fas fa-user-clock"></i> EN ATTENTE D'APPROBATION
+                </span>
             {% elseif consultation.pending %}
                 <span style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: #fef3c7; color: #92400e; border-radius: 20px; font-size: 14px; font-weight: 600;">
                     <i class="fas fa-clock"></i> EN ATTENTE
@@ -179,6 +183,35 @@
                             <i class="fas fa-video"></i>
                             Rejoindre la consultation
                         </a>
+                    {% endif %}
+
+                    {% set effectiveRole = app.user.subscriptionType ?? app.user.role %}
+                    {% if consultation.requested and consultation.recipient == app.user and effectiveRole in ['ROLE_MEDECIN', 'ROLE_COACH', 'ROLE_NUTRITIONNISTE'] %}
+                        <form action="{{ path('app_teleconsultation_approve', {id: consultation.id}) }}" method="POST" style="margin: 0;">
+                            <input type="hidden" name="_token" value="{{ csrf_token('teleconsultation_approve' ~ consultation.id) }}">
+                            <button type="submit" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 16px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s;">
+                                <i class="fas fa-check-circle"></i>
+                                Approuver la demande
+                            </button>
+                        </form>
+                        <form action="{{ path('app_teleconsultation_reject', {id: consultation.id}) }}" method="POST" style="margin: 0;">
+                            <input type="hidden" name="_token" value="{{ csrf_token('teleconsultation_reject' ~ consultation.id) }}">
+                            <button type="submit" onclick="return confirm('Refuser cette demande ?')" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 16px; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s;">
+                                <i class="fas fa-times-circle"></i>
+                                Refuser la demande
+                            </button>
+                        </form>
+                    {% endif %}
+
+                    {% if consultation.pending or consultation.requested %}
+                        <form action="{{ path('app_teleconsultation_reschedule', {id: consultation.id}) }}" method="POST" style="margin: 0; display: grid; gap: 8px;">
+                            <input type="hidden" name="_token" value="{{ csrf_token('teleconsultation_reschedule' ~ consultation.id) }}">
+                            <input type="datetime-local" name="scheduled_at" min="{{ 'now'|date('Y-m-d\\TH:i') }}" required style="width: 100%; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px;">
+                            <button type="submit" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 16px; background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; border-radius: 10px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s;">
+                                <i class="fas fa-calendar-alt"></i>
+                                Replanifier
+                            </button>
+                        </form>
                     {% endif %}
 
                     {% if consultation.pending and isInitiator %}

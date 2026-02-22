@@ -56,6 +56,37 @@ class SanteQuotidienneController extends AbstractController
         ]);
     }
 
+    #[Route('/patients', name: 'app_sante_quotidienne_patients', methods: ['GET'])]
+    public function patientJournals(Request $request, SanteQuotidienneRepository $repository): Response
+    {
+        $user = $this->getUser();
+        if (!$user instanceof \App\Entity\User) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $effectiveRole = $user->getSubscriptionType() ?: $user->getRole();
+        if ($effectiveRole !== 'ROLE_MEDECIN') {
+            throw $this->createAccessDeniedException();
+        }
+
+        $query = $repository->createQueryBuilder('s')
+            ->join('s.user', 'u')
+            ->andWhere('u.role = :role')
+            ->setParameter('role', 'ROLE_PATIENT')
+            ->orderBy('s.date', 'DESC');
+
+        $patientId = $request->query->getInt('patient');
+        if ($patientId > 0) {
+            $query->andWhere('u.id = :patientId')->setParameter('patientId', $patientId);
+        }
+
+        $entries = $query->setMaxResults(100)->getQuery()->getResult();
+
+        return $this->render('sante_quotidienne/medecin_patient_journals.html.twig', [
+            'entries' => $entries,
+        ]);
+    }
+
     #[Route('/front', name: 'app_sante_quotidienne_front', methods: ['GET'])]
     public function front(): Response
     {
@@ -274,11 +305,6 @@ class SanteQuotidienneController extends AbstractController
     #[IsGranted('SANTE_VIEW', subject: 'sante')]  // optionnel : sécuriser par voter
     public function show(SanteQuotidienne $sante): Response
     {
-        // Vérification supplémentaire que c'est bien l'utilisateur connecté
-        if ($sante->getUser() !== $this->getUser()) {
-            throw $this->createAccessDeniedException();
-        }
-
         return $this->render('sante_quotidienne/show.html.twig', [
             'sante' => $sante,
         ]);

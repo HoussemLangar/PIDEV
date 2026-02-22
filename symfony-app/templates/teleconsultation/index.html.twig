@@ -175,7 +175,11 @@
                                                 </span>
                                             </div>
                                             <span style="background: white; color: #d97706; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700;">
-                                                <i class="fas fa-clock"></i> EN ATTENTE
+                                                {% if consultation.requested %}
+                                                    <i class="fas fa-user-clock"></i> À APPROUVER
+                                                {% else %}
+                                                    <i class="fas fa-clock"></i> EN ATTENTE
+                                                {% endif %}
                                             </span>
                                         </div>
                                     </div>
@@ -218,6 +222,15 @@
                                         <a href="{{ path('app_teleconsultation_show', {id: consultation.id}) }}" style="padding: 10px 16px; background: white; color: #64748b; border: 1px solid #e2e8f0; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 13px; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;">
                                             <i class="fas fa-info-circle"></i> Voir
                                         </a>
+                                        {% set effectiveRole = app.user.subscriptionType ?? app.user.role %}
+                                        {% if consultation.requested and consultation.recipient == app.user and effectiveRole in ['ROLE_MEDECIN', 'ROLE_COACH', 'ROLE_NUTRITIONNISTE'] %}
+                                            <form action="{{ path('app_teleconsultation_approve', {id: consultation.id}) }}" method="POST" style="margin: 0;">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('teleconsultation_approve' ~ consultation.id) }}">
+                                                <button type="submit" style="padding: 10px 16px; background: white; color: #059669; border: 1px solid #10b981; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;">
+                                                    <i class="fas fa-check"></i> Approuver
+                                                </button>
+                                            </form>
+                                        {% endif %}
                                         {% if consultation.initiator == app.user %}
                                             <form action="{{ path('app_teleconsultation_cancel', {id: consultation.id}) }}" method="POST" style="margin: 0;">
                                                 <input type="hidden" name="_token" value="{{ csrf_token('teleconsultation_cancel' ~ consultation.id) }}">
