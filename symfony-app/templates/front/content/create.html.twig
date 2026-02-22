@@ -1,18 +1,22 @@
 {% extends 'front/base.html.twig' %}
 
-{% block title %}{{ isEdit ? 'Modifier le contenu' : 'Ajouter un contenu' }}{% endblock %}
+{% block title %}{{ isEdit ? '{{ 'content.edit_title'|trans }}' : 'Ajouter un contenu' }}{% endblock %}
 
 {% block body %}
 <section class="content-page">
-    <div class="content-hero">
-        <div class="content-header">
+    <div class="page-hero">
+        <i class="fas fa-plus page-hero-cross"></i>
+        <i class="fas fa-plus page-hero-cross"></i>
+        <div class="page-hero-header">
             <div>
-                <div class="profile-badge">Création</div>
-                <h1>{{ isEdit ? 'Modifier le contenu' : 'Ajouter un contenu' }}</h1>
-                <p>Articles, vidéos, PDF ou liens externes. Validation admin requise.</p>
+                <div class="page-hero-badge"><i class="fas fa-pen"></i> {{ isEdit ? '{{ 'content.edit_title'|trans }}' : '{{ 'content.create_title'|trans }}' }}</div>
+                <h1>{{ isEdit ? '{{ 'content.edit_title'|trans }}' : 'Ajouter un contenu' }}</h1>
+                <p>{{ 'content.add_sub'|trans }}</p>
             </div>
-            <div>
-                <a href="{{ path('front_content_index') }}" class="btn btn-secondary">Retour</a>
+            <div class="page-hero-actions">
+                <a href="{{ path('front_content_index') }}" class="btn" style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:10px;font-weight:700;font-size:14px;background:rgba(255,255,255,.18);color:white;border:1.5px solid rgba(255,255,255,.3);backdrop-filter:blur(4px);text-decoration:none;">
+                    <i class="fas fa-arrow-left"></i> Retour
+                </a>
             </div>
         </div>
     </div>

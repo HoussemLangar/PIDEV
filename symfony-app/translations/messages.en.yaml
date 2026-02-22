@@ -41,3 +41,221 @@ nav:
 theme:
   light: Light
   dark: Dark
+
+common:
+  search: Search
+  reset: Reset
+  cancel: Cancel
+  confirm: Confirm
+  save: Save
+  edit: Edit
+  delete: Delete
+  view: View
+  close: Close
+  back: Back
+  next: Next
+  previous: Previous
+  submit: Submit
+  loading: Loading...
+  no_results: No results.
+  all: All
+  filter: Filter
+  publish: Publish
+  add: Add
+  send: Send
+  yes: Yes
+  no: No
+  status: Status
+  date: Date
+  time: Time
+  actions: Actions
+  details: Details
+  load_more: Load more
+  real_time: Real time
+  my: My
+  for_you: For you
+
+status:
+  pending: Pending
+  confirmed: Confirmed
+  refused: Refused
+  cancelled: Cancelled
+  published: Published
+  rejected: Rejected
+  active: Active
+  inactive: Inactive
+  all: All statuses
+
+appt:
+  title: Medical appointments
+  restricted: Restricted access
+  restricted_msg: This module is reserved for patient or doctor subscribers.
+  restricted_sub: Activate a subscription to unlock appointment booking or management.
+  choose_plan: Choose a plan
+  my_appointments: My appointments
+  my_appointments_sub: Manage your upcoming appointments.
+  find_doctor: Find a doctor
+  find_doctor_sub: Click on a doctor to view their available slots.
+  book_slot: Book a slot
+  doctor: Doctor
+  slot: Slot
+  reason: Reason (optional)
+  reason_placeholder: Your reason
+  doctor_placeholder: Type name, first name or specialty
+  patient_placeholder: Patient...
+  select_doctor_date: Select a doctor and a date.
+  select_valid: Please select a valid doctor and date.
+  no_slots: No slots available.
+  no_appointments: No appointments.
+  doctor_appointments: Doctor's appointments
+  doctor_appointments_sub: Your confirmed consultations.
+  read_only: Read only
+  reschedule: Reschedule
+  reschedule_title: Reschedule the appointment
+  reschedule_sub: Choose a new date and time
+  reschedule_approval: Awaiting doctor's approval.
+  book_btn: Book an appointment
+
+pharma:
+  title: Pharmacies
+  subtitle: Find a pharmacy, compare prices and reserve your medications.
+  search_compare: Search & compare
+  search_compare_sub: Active pharmacies sorted by distance and price.
+  search_placeholder: Pharmacy or address
+  city_placeholder: City (e.g. Tunis)
+  near_me: Near me
+  results: Results
+  no_results: No pharmacy found.
+  stock: Current stock of this pharmacy
+  stock_empty: No medications in stock.
+  med_search: Available medications
+  med_placeholder: Medication (name or barcode)
+  med_not_found: No medication found.
+  compare: Price comparator
+  compare_title: Compare a medication
+  compare_sub: Availability and prices across all pharmacies
+  compare_btn: Compare
+  reserve: Reserve
+  reservations: My reservations
+  reservations_title: Request history
+  reservations_sub: Track the status of your medication requests in real time.
+  no_reservations: No reservations yet.
+  browse: Browse pharmacies
+  qty: Quantity
+  pharmacy_label: Pharmacy
+
+content:
+  title: Blog & Forum
+  subtitle: Explore validated content, exchange and leave your comments.
+  add: Add content
+  add_sub: Articles, videos, PDFs or external links. Admin validation required.
+  all: All content
+  mine: My content
+  recommended: Recommended for you
+  recommended_sub: Based on your profile and interactions.
+  no_recommended: No recommendations available.
+  list_sub: Filterable list — updated in real time.
+  search_placeholder: Search for content...
+  all_types: All types
+  all_categories: All categories
+  type_article: Article
+  type_video: Video
+  type_pdf: PDF
+  type_link: Link
+  comments: Comments
+  comment_placeholder: Add a comment...
+  create_title: Create content
+  create_sub: Articles, videos, PDFs or external links. Admin validation required.
+  edit_title: Edit content
+  personalized: Personalized
+
+category:
+  general: General
+  mental_health: Mental health
+  medications: Medications
+  sport: Sport
+  nutrition: Nutrition
+  sleep: Sleep
+  stress: Stress
+  addiction: Addictions
+  wellbeing: Wellbeing
+  cardiology: Cardiology
+  dermatology: Dermatology
+  dental: Dental
+  ophthalmology: Ophthalmology
+  pediatrics: Pediatrics
+  geriatrics: Geriatrics
+  pregnancy: Pregnancy
+  preventive: Prevention
+  chronic: Chronic diseases
+  alternative: Alternative medicine
+  generic: Generic medications
+  sexuality: Sexuality
+  vaccination: Vaccination
+  emergencies: Emergencies
+  therapy: Therapies
+
+profile:
+  title: My profile
+  edit_title: Edit my profile
+  avatar: Profile picture
+  first_name: First name
+  last_name: Last name
+  email: Email
+  phone: Phone
+  specialty: Specialty
+  bio: Biography
+  save: Save changes
+  password_section: Change password
+  current_password: Current password
+  new_password: New password
+  confirm_password: Confirm password
+
+auth:
+  login_title: Sign in
+  register_title: Create an account
+  email: Email address
+  password: Password
+  remember_me: Remember me
+  forgot_password: Forgot your password?
+  no_account: No account yet?
+  has_account: Already have an account?
+  sign_in: Sign in
+  sign_up: Sign up
+  or_continue: Or continue with
+  first_name: First name
+  last_name: Last name
+  role: Role
+  patient: Patient
+  doctor: Doctor
+  pharmacist: Pharmacist
+  coach: Coach
+
+home:
+  hero_title: Your health, our priority
+  hero_sub: Consult a doctor, manage your prescriptions and track your wellbeing from a single smart platform.
+  book_appointment: Book an appointment
+  discover: Discover
+  about_title: About Santéa
+  stats_patients: Patients
+  stats_doctors: Doctors
+  stats_pharmacies: Pharmacies
+  stats_consults: Consultations
+  services_title: Our services
+  testimonials_title: Testimonials
+  contact_title: Contact us
+  contact_send: Send message
+  footer_rights: All rights reserved.
+
+sub:
+  title: My subscriptions
+  choose_title: Choose your plan
+  active: Active
+  expired: Expired
+  free: Free
+  monthly: Month
+  yearly: Year
+  features: Features
+  subscribe: Subscribe
+  current: Current plan
+  upgrade: Upgrade

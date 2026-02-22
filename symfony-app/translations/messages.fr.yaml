@@ -41,3 +41,221 @@ nav:
 theme:
   light: Clair
   dark: Sombre
+
+common:
+  search: Rechercher
+  reset: Réinitialiser
+  cancel: Annuler
+  confirm: Confirmer
+  save: Enregistrer
+  edit: Modifier
+  delete: Supprimer
+  view: Voir
+  close: Fermer
+  back: Retour
+  next: Suivant
+  previous: Précédent
+  submit: Soumettre
+  loading: Chargement...
+  no_results: Aucun résultat.
+  all: Tous
+  filter: Filtrer
+  publish: Publier
+  add: Ajouter
+  send: Envoyer
+  yes: Oui
+  no: Non
+  status: Statut
+  date: Date
+  time: Heure
+  actions: Actions
+  details: Détails
+  load_more: Charger plus
+  real_time: Temps réel
+  my: Mon
+  for_you: Pour vous
+
+status:
+  pending: En attente
+  confirmed: Confirmé
+  refused: Refusé
+  cancelled: Annulé
+  published: Publié
+  rejected: Rejeté
+  active: Actif
+  inactive: Inactif
+  all: Tous les statuts
+
+appt:
+  title: Rendez-vous médicaux
+  restricted: Accès réservé
+  restricted_msg: Ce module est réservé aux abonnés patient ou médecin.
+  restricted_sub: Activez un abonnement pour débloquer la prise ou la gestion des rendez-vous.
+  choose_plan: Choisir un abonnement
+  my_appointments: Mes rendez-vous
+  my_appointments_sub: Gérez vos rendez-vous à venir.
+  find_doctor: Trouver un médecin
+  find_doctor_sub: Cliquez sur un médecin pour voir ses créneaux.
+  book_slot: Prendre un créneau
+  doctor: Médecin
+  slot: Créneau
+  reason: Motif (optionnel)
+  reason_placeholder: Votre motif
+  doctor_placeholder: Tapez nom, prénom ou spécialité
+  patient_placeholder: Patient...
+  select_doctor_date: Sélectionnez un médecin et une date.
+  select_valid: Sélectionnez un médecin valide et une date.
+  no_slots: Aucun créneau disponible.
+  no_appointments: Aucun rendez-vous.
+  doctor_appointments: Rendez-vous du médecin
+  doctor_appointments_sub: Vos consultations confirmées.
+  read_only: Lecture seule
+  reschedule: Replanifier
+  reschedule_title: Replanifier le rendez-vous
+  reschedule_sub: Choisissez une nouvelle date et heure
+  reschedule_approval: En attente d'approbation du médecin.
+  book_btn: Réserver un rendez-vous
+
+pharma:
+  title: Pharmacies
+  subtitle: Trouvez une pharmacie, comparez les prix et réservez vos médicaments.
+  search_compare: Recherche & comparaison
+  search_compare_sub: Pharmacies actives triées par distance et prix.
+  search_placeholder: Pharmacie ou adresse
+  city_placeholder: 'Ville (ex: Tunis)'
+  near_me: Autour de moi
+  results: Résultats
+  no_results: Aucune pharmacie trouvée.
+  stock: Stock actuel de cette pharmacie
+  stock_empty: Aucun médicament en stock.
+  med_search: Médicaments disponibles
+  med_placeholder: Médicament (nom ou code-barres)
+  med_not_found: Aucun médicament trouvé.
+  compare: Comparateur de prix
+  compare_title: Comparer un médicament
+  compare_sub: Disponibilité et prix dans toutes les pharmacies
+  compare_btn: Comparer
+  reserve: Réserver
+  reservations: Mes réservations
+  reservations_title: Historique des demandes
+  reservations_sub: Suivez l'état de vos demandes de médicaments en temps réel.
+  no_reservations: Aucune réservation pour le moment.
+  browse: Parcourir les pharmacies
+  qty: Quantité
+  pharmacy_label: Pharmacie
+
+content:
+  title: Blog & Forum
+  subtitle: Explorez les contenus validés, échangez et laissez vos commentaires.
+  add: Ajouter un contenu
+  add_sub: Articles, vidéos, PDF ou liens externes. Validation admin requise.
+  all: Tous les contenus
+  mine: Mon contenu
+  recommended: Recommandé pour vous
+  recommended_sub: Basé sur votre profil et vos interactions.
+  no_recommended: Aucune recommandation disponible.
+  list_sub: Liste filtrable — mise à jour en temps réel.
+  search_placeholder: Rechercher un contenu...
+  all_types: Tous les types
+  all_categories: Toutes les catégories
+  type_article: Article
+  type_video: Vidéo
+  type_pdf: PDF
+  type_link: Lien
+  comments: Commentaires
+  comment_placeholder: Ajouter un commentaire...
+  create_title: Créer un contenu
+  create_sub: Articles, vidéos, PDF ou liens externes. Validation admin requise.
+  edit_title: Modifier le contenu
+  personalized: Personnalisé
+
+category:
+  general: Général
+  mental_health: Santé mentale
+  medications: Médicaments
+  sport: Sport
+  nutrition: Nutrition
+  sleep: Sommeil
+  stress: Stress
+  addiction: Addictions
+  wellbeing: Bien-être
+  cardiology: Cardiologie
+  dermatology: Dermatologie
+  dental: Dentaire
+  ophthalmology: Ophtalmologie
+  pediatrics: Pédiatrie
+  geriatrics: Gériatrie
+  pregnancy: Grossesse
+  preventive: Prévention
+  chronic: Maladies chroniques
+  alternative: Médecine douce
+  generic: Médicaments génériques
+  sexuality: Sexualité
+  vaccination: Vaccination
+  emergencies: Urgences
+  therapy: Thérapies
+
+profile:
+  title: Mon profil
+  edit_title: Modifier mon profil
+  avatar: Photo de profil
+  first_name: Prénom
+  last_name: Nom
+  email: Email
+  phone: Téléphone
+  specialty: Spécialité
+  bio: Biographie
+  save: Enregistrer les modifications
+  password_section: Changer le mot de passe
+  current_password: Mot de passe actuel
+  new_password: Nouveau mot de passe
+  confirm_password: Confirmer le mot de passe
+
+auth:
+  login_title: Connexion
+  register_title: Créer un compte
+  email: Adresse email
+  password: Mot de passe
+  remember_me: Se souvenir de moi
+  forgot_password: Mot de passe oublié ?
+  no_account: Pas encore de compte ?
+  has_account: Déjà un compte ?
+  sign_in: Se connecter
+  sign_up: S'inscrire
+  or_continue: Ou continuer avec
+  first_name: Prénom
+  last_name: Nom
+  role: Rôle
+  patient: Patient
+  doctor: Médecin
+  pharmacist: Pharmacien
+  coach: Coach
+
+home:
+  hero_title: Votre santé, notre priorité
+  hero_sub: Consultez un médecin, gérez vos ordonnances et suivez votre bien‑être depuis une seule plateforme intelligente.
+  book_appointment: Prendre rendez-vous
+  discover: Découvrir
+  about_title: À propos de Santéa
+  stats_patients: Patients
+  stats_doctors: Médecins
+  stats_pharmacies: Pharmacies
+  stats_consults: Consultations
+  services_title: Nos services
+  testimonials_title: Témoignages
+  contact_title: Contactez-nous
+  contact_send: Envoyer le message
+  footer_rights: Tous droits réservés.
+
+sub:
+  title: Mes abonnements
+  choose_title: Choisissez votre forfait
+  active: Actif
+  expired: Expiré
+  free: Gratuit
+  monthly: Mois
+  yearly: Année
+  features: Fonctionnalités
+  subscribe: S'abonner
+  current: Forfait actuel
+  upgrade: Mettre à niveau

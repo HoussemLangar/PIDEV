@@ -1,44 +1,71 @@
 {% extends 'front/base.html.twig' %}
 
-{% block title %}Pharmacies{% endblock %}
+{% block title %}{{ 'pharma.title'|trans }} — SANTÉA{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+    .page-hero .content-filters input::placeholder { color: rgba(255,255,255,.65); }
+    </style>
+{% endblock %}
 
 {% block body %}
 <section class="content-page">
-    <div class="content-hero">
-        <div class="content-header">
+
+    <!-- Hero -->
+    <div class="page-hero">
+        <i class="fas fa-plus page-hero-cross"></i>
+        <i class="fas fa-plus page-hero-cross"></i>
+        <div class="page-hero-header">
             <div>
-                <div class="profile-badge">Pharmacies</div>
-                <h1>Recherche & comparaison</h1>
-                <p>Trouvez une pharmacie, comparez les prix et réservez.</p>
+                <div class="page-hero-badge"><i class="fas fa-pills"></i> {{ 'pharma.title'|trans }}</div>
+                <h1>{{ 'pharma.search_compare'|trans }}</h1>
+                <p>{{ 'pharma.subtitle'|trans }}</p>
             </div>
-            <div>
-                <a href="{{ path('front_pharmacy_my_reservations') }}" class="btn btn-secondary">Mes réservations</a>
+            <div class="page-hero-actions">
+                <a href="{{ path('front_pharmacy_my_reservations') }}" class="btn" style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:10px;font-weight:700;font-size:14px;background:rgba(255,255,255,.18);color:white;border:1.5px solid rgba(255,255,255,.3);backdrop-filter:blur(4px);text-decoration:none;">
+                    <i class="fas fa-clipboard-list"></i> Mes réservations
+                </a>
             </div>
         </div>
-        <div class="content-filters">
-            <input type="text" id="pharmacySearch" placeholder="Pharmacie ou adresse">
-            <input type="text" id="medSearch" placeholder="Médicament (nom ou code-barres)">
-            <button class="btn btn-primary btn-xs" id="searchBtn">Rechercher</button>
-            <button class="btn btn-secondary btn-xs" id="geoBtn">Autour de moi</button>
+        <div class="content-filters" style="margin-top:20px;">
+            <input type="text" id="pharmacySearch" placeholder="{{ 'pharma.search_placeholder'|trans }}" style="background:rgba(255,255,255,.15)!important;color:white!important;border-color:rgba(255,255,255,.3)!important;">
+            <input type="text" id="medSearch" placeholder="Médicament (nom ou code-barres)" style="background:rgba(255,255,255,.15)!important;color:white!important;border-color:rgba(255,255,255,.3)!important;">
+            <button class="btn btn-primary btn-xs" id="searchBtn" style="background:white;color:#0D8ABC;border:none;padding:0 18px;height:42px;border-radius:10px;font-weight:700;"><i class="fas fa-search" style="margin-right:6px;"></i>{{ 'common.search'|trans }}</button>
+            <button class="btn btn-secondary btn-xs" id="geoBtn" style="background:rgba(255,255,255,.15);color:white;border:1.5px solid rgba(255,255,255,.3);padding:0 18px;height:42px;border-radius:10px;font-weight:700;"><i class="fas fa-map-marker-alt" style="margin-right:6px;"></i>{{ 'pharma.near_me'|trans }}</button>
         </div>
     </div>
 
+    <!-- Results -->
     <div class="content-section">
         <div class="content-section-header">
             <div class="content-section-title">
-                <h3>Résultats</h3>
-                <p>Pharmacies actives triées par distance/prix.</p>
+                <h3><i class="fas fa-map-marked-alt" style="color:#0D8ABC;margin-right:8px;"></i>{{ 'pharma.results'|trans }}</h3>
+                <p>{{ 'pharma.search_compare_sub'|trans }}</p>
             </div>
-            <span class="content-pill">Temps réel</span>
+            <span class="content-pill"><i class="fas fa-circle" style="font-size:7px;margin-right:4px;color:#22c55e;"></i> Temps réel</span>
         </div>
-        <div class="content-grid" id="pharmacyGrid"></div>
+        <div class="content-grid" id="pharmacyGrid">
+            <div style="grid-column:1/-1;text-align:center;padding:32px;color:#94a3b8;">
+                <i class="fas fa-spinner fa-spin" style="margin-right:8px;font-size:20px;"></i> {{ 'common.loading'|trans }}
+            </div>
+        </div>
     </div>
+
 </section>
 {% endblock %}
 
 {% block javascripts %}
     {{ parent() }}
     <script>
+
+        const TRANS = {
+            loading:    '{{ "common.loading"|trans|e("js") }}',
+            no_results: '{{ "pharma.no_results"|trans|e("js") }}',
+            details:    '{{ "common.details"|trans|e("js") }}',
+            reserve:    '{{ "pharma.reserve"|trans|e("js") }}',
+        };
+
         (function () {
             const grid = document.getElementById('pharmacyGrid');
             const searchInput = document.getElementById('pharmacySearch');
@@ -46,24 +73,25 @@
             const searchBtn = document.getElementById('searchBtn');
             const geoBtn = document.getElementById('geoBtn');
             let geo = { lat: null, lng: null };
-            const apiFetch = (url, options = {}) => fetch(url, { ...options, loading: true });
+            const apiFetch = (url, options = {}) => fetch(url, options);
 
             const renderPharmacy = (p) => `
                 <div class="content-card">
                     <div class="content-meta">
-                        <span class="content-pill">Pharmacie</span>
-                        <span>${p.distance ? p.distance.toFixed(2) + ' km' : 'Distance N/A'}</span>
+                        <span class="content-pill"><i class="fas fa-pills" style="margin-right:3px;"></i> Pharmacie</span>
+                        <span>${p.distance ? '<i class="fas fa-location-arrow" style="margin-right:3px;color:#0D8ABC;"></i>' + p.distance.toFixed(2) + ' km' : ''}</span>
                     </div>
                     <h3>${p.nom}</h3>
-                    <p>${p.adresse}</p>
+                    <p><i class="fas fa-map-marker-alt" style="color:#0D8ABC;margin-right:4px;"></i>${p.adresse}</p>
                     <div class="content-actions">
-                        <a class="btn btn-primary btn-xs" href="/pharmacies/${p.id}">Détails</a>
-                        <a class="btn btn-secondary btn-xs" href="/pharmacies/${p.id}#compareBox">Réserver</a>
+                        <a class="btn btn-primary btn-xs" href="/pharmacies/${p.id}"><i class="fas fa-eye" style="margin-right:4px;"></i>{{ 'common.details'|trans }}</a>
+                        <a class="btn btn-secondary btn-xs" href="/pharmacies/${p.id}#compareBox"><i class="fas fa-cart-plus" style="margin-right:4px;"></i>{{ 'pharma.reserve'|trans }}</a>
                     </div>
                 </div>
             `;
 
             const load = async () => {
+                grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:32px;color:#94a3b8;"><i class="fas fa-spinner fa-spin" style="font-size:20px;"></i></div>';
                 const params = new URLSearchParams({ q: searchInput.value.trim() });
                 if (geo.lat && geo.lng) {
                     params.set('lat', geo.lat);
@@ -72,10 +100,15 @@
                 const res = await apiFetch(`/api/pharmacies/search?${params.toString()}`);
                 const data = await res.json();
                 grid.innerHTML = '';
+                if (!data.items || data.items.length === 0) {
+                    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#94a3b8;"><i class="fas fa-search" style="font-size:32px;display:block;margin-bottom:12px;opacity:.4;"></i><p>{{ 'pharma.no_results'|trans }}</p></div>';
+                    return;
+                }
                 (data.items || []).forEach(p => grid.insertAdjacentHTML('beforeend', renderPharmacy(p)));
             };
 
             searchBtn.addEventListener('click', load);
+            searchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') load(); });
             geoBtn.addEventListener('click', () => {
                 if (!navigator.geolocation) return;
                 navigator.geolocation.getCurrentPosition((pos) => {

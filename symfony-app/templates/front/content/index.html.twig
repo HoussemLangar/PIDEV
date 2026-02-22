@@ -1,51 +1,84 @@
 {% extends 'front/base.html.twig' %}
 
-{% block title %}Forum & Contenus{% endblock %}
+{% block title %}Forum & Contenus — SANTÉA{% endblock %}
 
 {% block stylesheets %}
     {{ parent() }}
     <style>
-        .content-pill.status-pending {
-            background-color: #ffc107;
-            color: #000;
-        }
-        .content-pill.status-published {
-            background-color: #28a745;
-            color: #fff;
-        }
-        .content-pill.status-rejected {
-            background-color: #dc3545;
-            color: #fff;
-        }
+    .content-pill.status-pending  { background:#fef9c3; color:#b45309; border-color:#fde68a; }
+    .content-pill.status-published{ background:#dcfce7; color:#15803d; border-color:#bbf7d0; }
+    .content-pill.status-rejected { background:#fee2e2; color:#b91c1c; border-color:#fecaca; }
+    [data-theme="dark"] .content-pill.status-pending  { background:rgba(245,158,11,.2);  color:#fcd34d; border-color:#f59e0b44; }
+    [data-theme="dark"] .content-pill.status-published{ background:rgba(34,197,94,.2);   color:#86efac; border-color:#22c55e44; }
+    [data-theme="dark"] .content-pill.status-rejected { background:rgba(239,68,68,.2);   color:#fca5a5; border-color:#ef444444; }
+    .content-mine-btn.active { background:rgba(13,138,188,.15)!important; color:#0D8ABC!important; border-color:#0D8ABC!important; }
+    /* Hero filter inputs — keep text visible at all states */
+    .page-hero .content-filters input,
+    .page-hero .content-filters select {
+        color: #1a1a2e !important;
+        background: rgba(255,255,255,.92) !important;
+        border-color: rgba(255,255,255,.6) !important;
+    }
+    .page-hero .content-filters input:focus,
+    .page-hero .content-filters select:focus {
+        color: #1a1a2e !important;
+        background: #fff !important;
+        outline: 2px solid rgba(255,255,255,.8) !important;
+    }
+    .page-hero .content-filters input::placeholder {
+        color: #6b7280 !important;
+    }
+    .page-hero .content-filters input:-webkit-autofill,
+    .page-hero .content-filters input:-webkit-autofill:focus {
+        -webkit-text-fill-color: #1a1a2e !important;
+        -webkit-box-shadow: 0 0 0 1000px #fff inset !important;
+    }
+    [data-theme="dark"] .page-hero .content-filters input,
+    [data-theme="dark"] .page-hero .content-filters select {
+        color: #e2e8f0 !important;
+        background: rgba(30,41,59,.85) !important;
+    }
+    [data-theme="dark"] .page-hero .content-filters input:focus,
+    [data-theme="dark"] .page-hero .content-filters select:focus {
+        color: #e2e8f0 !important;
+        background: #1e293b !important;
+    }
     </style>
 {% endblock %}
 
 {% block body %}
 <section class="content-page">
-    <div class="content-hero">
-        <div class="content-header">
+
+    <!-- Hero -->
+    <div class="page-hero">
+        <i class="fas fa-plus page-hero-cross"></i>
+        <i class="fas fa-plus page-hero-cross"></i>
+        <div class="page-hero-header">
             <div>
-                <div class="profile-badge">Contenus</div>
-                <h1>Forum, Articles & Guides</h1>
-                <p>Explorez les contenus validés, échangez et laissez vos commentaires.</p>
+                <div class="page-hero-badge"><i class="fas fa-newspaper"></i> {{ 'content.title'|trans }}</div>
+                <h1>Articles, Forum &amp; Guides</h1>
+                <p>{{ 'content.subtitle'|trans }}</p>
             </div>
-            <div>
-                {% if canCreate %}
-                    <a href="{{ path('front_content_create') }}" class="btn btn-primary">Ajouter un contenu</a>
-                {% endif %}
+            {% if canCreate %}
+            <div class="page-hero-actions">
+                <a href="{{ path('front_content_create') }}" class="btn" style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:10px;font-weight:700;font-size:14px;background:white;color:#0D8ABC;border:none;text-decoration:none;">
+                    <i class="fas fa-plus"></i> Ajouter un contenu
+                </a>
             </div>
+            {% endif %}
         </div>
-        <div class="content-filters">
-            <input type="text" id="contentSearch" placeholder="Rechercher un contenu...">
+        <!-- Filters inside hero -->
+        <div class="content-filters" style="margin-top:20px;">
+            <input type="text" id="contentSearch" placeholder="{{ 'content.search_placeholder'|trans }}" style="min-width:200px;">
             <select id="contentTypeFilter">
-                <option value="">Tous les types</option>
-                <option value="article">Article</option>
-                <option value="video">Vidéo</option>
-                <option value="pdf">PDF</option>
-                <option value="lien">Lien</option>
+                <option value="">{{ 'content.all_types'|trans }}</option>
+                <option value="article">{{ 'content.type_article'|trans }}</option>
+                <option value="video">{{ 'content.type_video'|trans }}</option>
+                <option value="pdf">{{ 'content.type_pdf'|trans }}</option>
+                <option value="lien">{{ 'content.type_link'|trans }}</option>
             </select>
             <select id="contentCategoryFilter">
-                <option value="">Toutes les catégories</option>
+                <option value="">{{ 'content.all_categories'|trans }}</option>
                 <option value="Santé mentale">Santé mentale</option>
                 <option value="Général">Général</option>
                 <option value="Médicaments">Médicaments</option>
@@ -73,20 +106,20 @@
                 <option value="Médecine douce">Médecine douce</option>
             </select>
             {% if app.user.role != 'ROLE_PATIENT' %}
-                <button class="btn btn-secondary btn-xs" id="contentMine">Mon contenu</button>
+                <button class="btn btn-secondary btn-xs content-mine-btn" id="contentMine" style="background:rgba(255,255,255,.15);color:white;border:1.5px solid rgba(255,255,255,.3);height:42px;padding:0 16px;border-radius:10px;font-weight:700;">{{ 'content.mine'|trans }}</button>
             {% endif %}
-            <button class="btn btn-secondary btn-xs" id="contentReset">Réinitialiser</button>
+            <button class="btn btn-secondary btn-xs" id="contentReset" style="background:rgba(255,255,255,.1);color:white;border:1.5px solid rgba(255,255,255,.2);height:42px;padding:0 16px;border-radius:10px;font-weight:700;"><i class="fas fa-undo" style="margin-right:4px;"></i>{{ 'common.reset'|trans }}</button>
         </div>
     </div>
 
+    <!-- Recommended -->
     <div class="content-section">
-        <div>
         <div class="content-section-header">
             <div class="content-section-title">
-                <h3>Recommandé pour vous</h3>
-                <p>Basé sur votre profil et vos interactions.</p>
+                <h3><i class="fas fa-star" style="color:#f59e0b;margin-right:8px;"></i>{{ 'content.recommended'|trans }}</h3>
+                <p>{{ 'content.recommended_sub'|trans }}</p>
             </div>
-            <span class="content-pill">Personnalisé</span>
+            <span class="content-pill"><i class="fas fa-magic" style="margin-right:4px;"></i>Personnalisé</span>
         </div>
         <div class="content-grid" id="recommendedGrid">
             {% for item in recommended %}
@@ -96,23 +129,9 @@
                     <div class="content-meta">
                         <span class="content-pill">{{ item.type|upper }}</span>
                         {% if isOwner and item.statut %}
-                            {% set statutClass = 'content-pill' %}
-                            {% set statutLabel = '' %}
-                            {% if item.statut == 'en_attente' %}
-                                {% set statutClass = statutClass ~ ' status-pending' %}
-                                {% set statutLabel = 'En attente' %}
-                            {% elseif item.statut == 'publie' %}
-                                {% set statutClass = statutClass ~ ' status-published' %}
-                                {% set statutLabel = 'Publié' %}
-                            {% elseif item.statut == 'rejete' %}
-                                {% set statutClass = statutClass ~ ' status-rejected' %}
-                                {% set statutLabel = 'Rejeté' %}
-                            {% else %}
-                                {% set statutClass = statutClass ~ ' status-pending' %}
-                                {% set statutLabel = item.statut %}
-                            {% endif %}
-                            {% if statutLabel %}
-                                <span class="{{ statutClass }}">{{ statutLabel }}</span>
+                            {% if item.statut == 'en_attente' %}<span class="content-pill status-pending">{{ 'status.pending'|trans }}</span>
+                            {% elseif item.statut == 'publie' %}<span class="content-pill status-published">{{ 'status.published'|trans }}</span>
+                            {% elseif item.statut == 'rejete' %}<span class="content-pill status-rejected">{{ 'status.rejected'|trans }}</span>
                             {% endif %}
                         {% endif %}
                         <span>{{ (item.datePublication ?? item.createdAt)|date('d/m/Y') }}</span>
@@ -126,9 +145,9 @@
                             <span class="like-count">{{ item.likes|length }}</span>
                         </button>
                         <button class="btn btn-secondary btn-xs comment-toggle">
-                            Commentaires (<span class="comment-count">{{ item.commentaires|length }}</span>)
+                            <i class="fas fa-comment" style="margin-right:4px;"></i>(<span class="comment-count">{{ item.commentaires|length }}</span>)
                         </button>
-                        <a class="btn btn-primary btn-xs" href="{{ path('front_content_show', {id: item.id}) }}">Voir</a>
+                        <a class="btn btn-primary btn-xs" href="{{ path('front_content_show', {id: item.id}) }}">{{ 'common.view'|trans }}</a>
                     </div>
                     <div class="comment-panel" hidden>
                         <div class="comment-list"></div>
@@ -142,30 +161,51 @@
                     </div>
                 </div>
             {% else %}
-                <p>Aucune recommandation disponible.</p>
+                <div style="grid-column:1/-1;text-align:center;padding:24px;color:#94a3b8;">{{ 'content.no_recommended'|trans }}</div>
             {% endfor %}
         </div>
     </div>
 
+    <!-- All contents -->
     <div class="content-section">
         <div class="content-section-header">
             <div class="content-section-title">
-                <h3>Tous les contenus</h3>
-                <p>Liste filtrable et mise à jour en temps réel.</p>
+                <h3><i class="fas fa-th-large" style="color:#0D8ABC;margin-right:8px;"></i>{{ 'content.all'|trans }}</h3>
+                <p>{{ 'content.list_sub'|trans }}</p>
             </div>
         </div>
         <div id="contentAlert" class="appointment-alert" hidden></div>
         <div class="content-grid" id="contentGrid"></div>
         <div class="content-load-more">
-            <button class="btn btn-secondary" id="loadMoreBtn">Charger plus</button>
+            <button class="btn btn-secondary" id="loadMoreBtn"><i class="fas fa-chevron-down" style="margin-right:6px;"></i>{{ 'common.load_more'|trans }}</button>
         </div>
     </div>
+
 </section>
 {% endblock %}
 
 {% block javascripts %}
     {{ parent() }}
     <script>
+
+        const TRANS = {
+            loading:        '{{ "common.loading"|trans|e("js") }}',
+            no_results:     '{{ "common.no_results"|trans|e("js") }}',
+            edit:           '{{ "common.edit"|trans|e("js") }}',
+            delete_btn:     '{{ "common.delete"|trans|e("js") }}',
+            view:           '{{ "common.view"|trans|e("js") }}',
+            publish:        '{{ "common.publish"|trans|e("js") }}',
+            pending:        '{{ "status.pending"|trans|e("js") }}',
+            published:      '{{ "status.published"|trans|e("js") }}',
+            rejected:       '{{ "status.rejected"|trans|e("js") }}',
+            type_article:   '{{ "content.type_article"|trans|e("js") }}',
+            type_video:     '{{ "content.type_video"|trans|e("js") }}',
+            type_pdf:       '{{ "content.type_pdf"|trans|e("js") }}',
+            type_link:      '{{ "content.type_link"|trans|e("js") }}',
+            comments:       '{{ "content.comments"|trans|e("js") }}',
+            load_more:      '{{ "common.load_more"|trans|e("js") }}',
+        };
+
         (function () {
             const grid = document.getElementById('contentGrid');
             const recommendedGrid = document.getElementById('recommendedGrid');
@@ -180,20 +220,7 @@
             const currentUserId = {{ app.user ? app.user.id : 'null' }};
             let onlyMine = false;
             
-            // Vérification des éléments DOM
-            console.log('Éléments trouvés:', {
-                grid: !!grid,
-                searchInput: !!searchInput,
-                typeFilter: !!typeFilter,
-                categoryFilter: !!categoryFilter,
-                resetBtn: !!resetBtn,
-                mineBtn: !!mineBtn
-            });
-            
-            if (!grid || !searchInput || !typeFilter || !categoryFilter) {
-                console.error('Éléments manquants dans le DOM!');
-                return;
-            }
+            if (!grid || !searchInput || !typeFilter || !categoryFilter) { return; }
 
             let page = 1;
             let loading = false;
@@ -206,48 +233,25 @@
                 alertBox.classList.add(type);
                 alertBox.hidden = false;
             };
+            const hideAlert = () => { if (alertBox) alertBox.hidden = true; };
 
-            const hideAlert = () => {
-                if (alertBox) alertBox.hidden = true;
+            const typeIcon = (t) => {
+                const map = { article:'newspaper', video:'video', pdf:'file-pdf', lien:'link' };
+                return `<i class="fas fa-${map[t]||'file'}" style="margin-right:3px;"></i>`;
             };
 
             const buildCard = (item) => {
                 const likedClass = item.liked ? 'active' : '';
-                
-                // Déterminer la couleur du badge de statut
                 let statutBadge = '';
                 if (item.isOwner && item.statut) {
-                    let statutClass = 'content-pill';
-                    let statutLabel = '';
-                    
-                    switch(item.statut) {
-                        case 'en_attente':
-                            statutClass += ' status-pending';
-                            statutLabel = 'En attente';
-                            break;
-                        case 'publie':
-                            statutClass += ' status-published';
-                            statutLabel = 'Publié';
-                            break;
-                        case 'rejete':
-                            statutClass += ' status-rejected';
-                            statutLabel = 'Rejeté';
-                            break;
-                        default:
-                            statutClass += ' status-pending';
-                            statutLabel = item.statut; // Afficher le statut brut si inconnu
-                            break;
-                    }
-                    
-                    if (statutLabel) {
-                        statutBadge = `<span class="${statutClass}">${statutLabel}</span>`;
-                    }
+                    const cls = item.statut === 'en_attente' ? 'status-pending' : (item.statut === 'publie' ? 'status-published' : 'status-rejected');
+                    const lbl = item.statut === 'en_attente' ? TRANS.pending : (item.statut === 'publie' ? TRANS.published : TRANS.rejected);
+                    statutBadge = `<span class="content-pill ${cls}">${lbl}</span>`;
                 }
-                
                 return `
                 <div class="content-card" data-content-id="${item.id}">
                     <div class="content-meta">
-                        <span class="content-pill">${item.type.toUpperCase()}</span>
+                        <span class="content-pill">${typeIcon(item.type)}${item.type.toUpperCase()}</span>
                         ${statutBadge}
                         <span>${item.date}</span>
                         <span>${item.auteur}</span>
@@ -260,9 +264,9 @@
                             <span class="like-count">${item.likes}</span>
                         </button>
                         <button class="btn btn-secondary btn-xs comment-toggle">
-                            Commentaires (<span class="comment-count">${item.commentaires}</span>)
+                            <i class="fas fa-comment" style="margin-right:4px;"></i>(<span class="comment-count">${item.commentaires}</span>)
                         </button>
-                        <a class="btn btn-primary btn-xs" href="/contenus/${item.id}">Voir</a>
+                        <a class="btn btn-primary btn-xs" href="/contenus/${item.id}">{{ 'common.view'|trans }}</a>
                     </div>
                     <div class="comment-panel" hidden>
                         <div class="comment-list"></div>
@@ -281,88 +285,34 @@
                 if (loading || (!hasMore && !reset)) return;
                 loading = true;
                 hideAlert();
-
-                if (reset) {
-                    page = 1;
-                    hasMore = true;
-                    grid.innerHTML = '';
-                }
-
-                const params = new URLSearchParams({
-                    page: String(page),
-                    limit: '8',
-                    q: searchInput.value.trim(),
-                    type: typeFilter.value,
-                    category: categoryFilter.value.trim(),
-                });
-                if (onlyMine) {
-                    params.set('owner', 'me');
-                }
-                
-                console.log('Filtres appliqués:', {
-                    search: searchInput.value.trim(),
-                    type: typeFilter.value,
-                    category: categoryFilter.value.trim(),
-                    onlyMine: onlyMine
-                });
-                console.log('URL de requête:', `{{ path('api_content_list') }}?${params.toString()}`);
-
+                if (reset) { page = 1; hasMore = true; grid.innerHTML = ''; }
+                const params = new URLSearchParams({ page: String(page), limit: '8', q: searchInput.value.trim(), type: typeFilter.value, category: categoryFilter.value.trim() });
+                if (onlyMine) params.set('owner', 'me');
                 try {
                     const res = await fetch(`{{ path('api_content_list') }}?${params.toString()}`);
                     const data = await res.json();
                     if (!data.items) throw new Error('Erreur');
-                    
-                    console.log('Résultats API:', {
-                        itemsCount: data.items.length,
-                        currentPage: data.page,
-                        totalPages: data.pages,
-                        totalItems: data.total
-                    });
-
-                    data.items.forEach((item) => {
-                        grid.insertAdjacentHTML('beforeend', buildCard(item));
-                    });
-
+                    data.items.forEach((item) => { grid.insertAdjacentHTML('beforeend', buildCard(item)); });
                     hasMore = data.page < data.pages;
                     loadMoreBtn.style.display = hasMore ? 'inline-flex' : 'none';
                     page += 1;
-                } catch (e) {
-                    showAlert('Impossible de charger les contenus.');
-                } finally {
-                    loading = false;
-                }
+                } catch (e) { showAlert('Impossible de charger les contenus.'); } finally { loading = false; }
             };
 
             const fetchComments = async (contentId, listEl) => {
                 const res = await fetch(`{{ path('api_content_list') }}/${contentId}/comments`);
                 const data = await res.json();
                 listEl.innerHTML = '';
-                (data.items || []).forEach((comment) => {
-                    const canDelete = currentUserId && comment.user_id === currentUserId;
-                    const deleteBtn = canDelete ? `<button class="btn btn-secondary btn-xs comment-delete" data-comment-id="${comment.id}">Supprimer</button>` : '';
-                    listEl.insertAdjacentHTML('beforeend', `
-                        <div class="comment-item" data-comment-id="${comment.id}">
-                            <div class="comment-meta">${comment.user} • ${comment.date}</div>
-                            <div>${comment.message}</div>
-                            ${deleteBtn}
-                        </div>
-                    `);
+                (data.items || []).forEach((c) => {
+                    const canDelete = currentUserId && c.user_id === currentUserId;
+                    listEl.insertAdjacentHTML('beforeend', `<div class="comment-item" data-comment-id="${c.id}"><div class="comment-meta">${c.user} · ${c.date}</div><div>${c.message}</div>${canDelete ? `<button class="btn btn-secondary btn-xs comment-delete" data-comment-id="${c.id}" style="margin-top:6px;">{{ 'common.delete'|trans }}</button>` : ''}</div>`);
                 });
             };
 
             const toggleLike = async (contentId, btn, countEl) => {
-                const res = await fetch(`{{ path('api_content_list') }}/${contentId}/like`, {
-                    method: 'POST',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': csrfToken,
-                    },
-                });
+                const res = await fetch(`{{ path('api_content_list') }}/${contentId}/like`, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': csrfToken } });
                 const data = await res.json();
-                if (!data.success) {
-                    showAlert(data.message || 'Action impossible.');
-                    return;
-                }
+                if (!data.success) { showAlert(data.message || 'Action impossible.'); return; }
                 btn.classList.toggle('active', data.liked);
                 btn.dataset.liked = data.liked ? '1' : '0';
                 countEl.textContent = data.count;
@@ -371,87 +321,31 @@
             const submitComment = async (contentId, textarea, errorEl, listEl, countEl) => {
                 errorEl.textContent = '';
                 const message = textarea.value.trim();
-                if (!message) {
-                    errorEl.textContent = 'Le commentaire est obligatoire.';
-                    return;
-                }
-                const res = await fetch(`{{ path('api_content_list') }}/${contentId}/comment`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': csrfToken,
-                    },
-                    body: JSON.stringify({ message }),
-                });
+                if (!message) { errorEl.textContent = 'Le commentaire est obligatoire.'; return; }
+                const res = await fetch(`{{ path('api_content_list') }}/${contentId}/comment`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': csrfToken }, body: JSON.stringify({ message }) });
                 const data = await res.json();
-                if (!data.success) {
-                    errorEl.textContent = data.message || (data.errors ? data.errors.join(', ') : 'Erreur.');
-                    return;
-                }
+                if (!data.success) { errorEl.textContent = data.message || (data.errors ? data.errors.join(', ') : 'Erreur.'); return; }
                 textarea.value = '';
-                const comment = data.comment;
-                listEl.insertAdjacentHTML('afterbegin', `
-                    <div class="comment-item" data-comment-id="${comment.id}">
-                        <div class="comment-meta">${comment.user} • ${comment.date}</div>
-                        <div>${comment.message}</div>
-                        <button class="btn btn-secondary btn-xs comment-delete" data-comment-id="${comment.id}">Supprimer</button>
-                    </div>
-                `);
+                const c = data.comment;
+                listEl.insertAdjacentHTML('afterbegin', `<div class="comment-item" data-comment-id="${c.id}"><div class="comment-meta">${c.user} · ${c.date}</div><div>${c.message}</div><button class="btn btn-secondary btn-xs comment-delete" data-comment-id="${c.id}" style="margin-top:6px;">{{ 'common.delete'|trans }}</button></div>`);
                 countEl.textContent = data.count;
             };
 
             const deleteComment = async (commentId, itemEl, countEl) => {
-                const res = await fetch(`{{ path('api_content_list') }}/comments/${commentId}/delete`, {
-                    method: 'POST',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': csrfToken,
-                    },
-                });
+                const res = await fetch(`{{ path('api_content_list') }}/comments/${commentId}/delete`, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': csrfToken } });
                 const data = await res.json();
-                if (!data.success) {
-                    showAlert(data.message || 'Suppression impossible.');
-                    return;
-                }
+                if (!data.success) { showAlert(data.message || 'Suppression impossible.'); return; }
                 itemEl.remove();
-                if (countEl && data.count !== undefined) {
-                    countEl.textContent = data.count;
-                }
+                if (countEl && data.count !== undefined) countEl.textContent = data.count;
             };
 
             document.addEventListener('click', async (e) => {
                 const likeBtn = e.target.closest('.like-btn');
-                if (likeBtn) {
-                    const card = likeBtn.closest('.content-card');
-                    if (!card) return;
-                    const contentId = card.dataset.contentId;
-                    const countEl = likeBtn.querySelector('.like-count');
-                    await toggleLike(contentId, likeBtn, countEl);
-                    return;
-                }
-
+                if (likeBtn) { const card = likeBtn.closest('.content-card'); if (!card) return; await toggleLike(card.dataset.contentId, likeBtn, likeBtn.querySelector('.like-count')); return; }
                 const toggleBtn = e.target.closest('.comment-toggle');
-                if (toggleBtn) {
-                    const card = toggleBtn.closest('.content-card');
-                    const panel = card.querySelector('.comment-panel');
-                    const listEl = panel.querySelector('.comment-list');
-                    panel.hidden = !panel.hidden;
-                    if (!panel.hidden) {
-                        await fetchComments(card.dataset.contentId, listEl);
-                    }
-                    return;
-                }
-
+                if (toggleBtn) { const card = toggleBtn.closest('.content-card'); const panel = card.querySelector('.comment-panel'); panel.hidden = !panel.hidden; if (!panel.hidden) await fetchComments(card.dataset.contentId, panel.querySelector('.comment-list')); return; }
                 const deleteBtn = e.target.closest('.comment-delete');
-                if (deleteBtn) {
-                    const itemEl = deleteBtn.closest('.comment-item');
-                    const card = deleteBtn.closest('.content-card');
-                    const countEl = card.querySelector('.comment-count');
-                    if (confirm('Supprimer ce commentaire ?')) {
-                        await deleteComment(deleteBtn.dataset.commentId, itemEl, countEl);
-                    }
-                }
+                if (deleteBtn) { const itemEl = deleteBtn.closest('.comment-item'); const card = deleteBtn.closest('.content-card'); if (confirm('Supprimer ce commentaire ?')) await deleteComment(deleteBtn.dataset.commentId, itemEl, card.querySelector('.comment-count')); }
             });
 
             document.addEventListener('submit', async (e) => {
@@ -459,52 +353,15 @@
                 if (!form) return;
                 e.preventDefault();
                 const card = form.closest('.content-card');
-                const textarea = form.querySelector('textarea');
-                const errorEl = form.querySelector('[data-comment-error]');
-                const listEl = card.querySelector('.comment-list');
-                const countEl = card.querySelector('.comment-count');
-                await submitComment(card.dataset.contentId, textarea, errorEl, listEl, countEl);
+                await submitComment(card.dataset.contentId, form.querySelector('textarea'), form.querySelector('[data-comment-error]'), card.querySelector('.comment-list'), card.querySelector('.comment-count'));
             });
 
             loadMoreBtn.addEventListener('click', () => loadContents(false));
-            resetBtn.addEventListener('click', () => {
-                searchInput.value = '';
-                typeFilter.value = '';
-                categoryFilter.value = '';
-                onlyMine = false;
-                if (mineBtn) mineBtn.classList.remove('active');
-                loadContents(true);
-            });
-            
-            if (mineBtn) {
-                mineBtn.addEventListener('click', () => {
-                    onlyMine = !onlyMine;
-                    mineBtn.classList.toggle('active', onlyMine);
-                    loadContents(true);
-                });
-            }
-            
-            // Recherche en temps réel avec 'input'
-            if (searchInput) {
-                searchInput.addEventListener('input', () => {
-                    console.log('Event input déclenché, valeur:', searchInput.value);
-                    loadContents(true);
-                });
-            }
-            
-            // Changement de filtres
-            if (typeFilter) {
-                typeFilter.addEventListener('change', () => {
-                    console.log('Event change type déclenché, valeur:', typeFilter.value);
-                    loadContents(true);
-                });
-            }
-            if (categoryFilter) {
-                categoryFilter.addEventListener('change', () => {
-                    console.log('Event change category déclenché, valeur:', categoryFilter.value);
-                    loadContents(true);
-                });
-            }
+            resetBtn.addEventListener('click', () => { searchInput.value = ''; typeFilter.value = ''; categoryFilter.value = ''; onlyMine = false; if (mineBtn) mineBtn.classList.remove('active'); loadContents(true); });
+            if (mineBtn) { mineBtn.addEventListener('click', () => { onlyMine = !onlyMine; mineBtn.classList.toggle('active', onlyMine); loadContents(true); }); }
+            searchInput.addEventListener('input', () => loadContents(true));
+            typeFilter.addEventListener('change', () => loadContents(true));
+            categoryFilter.addEventListener('change', () => loadContents(true));
 
             loadContents(true);
         })();

@@ -1,6 +1,6 @@
 {% extends 'front/base.html.twig' %}
 
-{% block title %}Mon profil - SANTÉA{% endblock %}
+{% block title %}{{ 'profile.title'|trans }} - SANTÉA{% endblock %}
 
 {% block stylesheets %}
     {{ parent() }}
@@ -122,7 +122,7 @@
     <div class="profile-shell">
         <div class="profile-hero">
             <div>
-                <div class="profile-badge"><i class="fas fa-user-cog"></i> Mon profil</div>
+                <div class="profile-badge"><i class="fas fa-user-cog"></i> {{ 'profile.title'|trans }}</div>
                 <h1>Votre compte, maîtrisé</h1>
                 <p>Gérez vos informations, votre sécurité et vos préférences en un seul endroit.</p>
             </div>
@@ -159,7 +159,7 @@
             {{ form_start(form, { attr: { class: 'profile-form', id: 'profileForm' } }) }}
 
                 <div class="profile-section-title">
-                    <i class="fas fa-camera"></i> Photo de profil
+                    <i class="fas fa-camera"></i> {{ 'profile.avatar'|trans }}
                 </div>
                 <div class="profile-avatar-row">
                     <div class="profile-avatar-preview">
@@ -225,7 +225,7 @@
                 <div class="profile-modal" id="passwordModal" aria-hidden="true">
                     <div class="modal-card">
                         <div class="modal-header">
-                            <h3><i class="fas fa-lock" style="color:#0D8ABC;margin-right:8px;"></i>Changer le mot de passe</h3>
+                            <h3><i class="fas fa-lock" style="color:#0D8ABC;margin-right:8px;"></i>{{ 'profile.password_section'|trans }}</h3>
                             <button type="button" class="modal-close" data-modal-close>×</button>
                         </div>
                         <div class="modal-body">

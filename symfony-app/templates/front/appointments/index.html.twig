@@ -1,6 +1,6 @@
 {% extends 'front/base.html.twig' %}
 
-{% block title %}Rendez-vous — SANTÉA{% endblock %}
+{% block title %}{{ 'appt.title'|trans }} — SANTÉA{% endblock %}
 
 {% block stylesheets %}
     {{ parent() }}
@@ -23,6 +23,155 @@
     .appt-hero-search input:focus { background:rgba(255,255,255,.25); }
     .appt-step-label { display:flex; align-items:center; gap:10px; font-size:16px; font-weight:700; color:#1a1a2e; margin:0 0 16px; }
     .appt-step-num { width:28px; height:28px; background:linear-gradient(135deg,#0D8ABC,#0a6d96); color:white; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; flex-shrink:0; }
+
+    /* ── Filter fields: force legible colors in both light & dark mode ── */
+    .appointment-filters select,
+    .appointment-filters input[type="date"],
+    .appointment-filters input[type="text"] {
+        background: #ffffff !important;
+        color: #1a1a2e !important;
+        border: 1px solid #e2e8f0 !important;
+    }
+    .appointment-filters select option {
+        background: #ffffff;
+        color: #1a1a2e;
+    }
+    /* Dark mode overrides */
+    [data-theme="dark"] .appointment-filters select,
+    [data-theme="dark"] .appointment-filters input[type="date"],
+    [data-theme="dark"] .appointment-filters input[type="text"] {
+        background: #1e293b !important;
+        color: #e2e8f0 !important;
+        border: 1px solid #334155 !important;
+    }
+    [data-theme="dark"] .appointment-filters select option {
+        background: #1e293b;
+        color: #e2e8f0;
+    }
+    /* Also fix the patient booking form inputs inside appointment cards */
+    .appointment-form label { color: #374151; }
+    [data-theme="dark"] .appointment-form label { color: #cbd5e1; }
+    .appointment-form input,
+    .appointment-form textarea,
+    .appointment-form select {
+        background: #ffffff !important;
+        color: #1a1a2e !important;
+        border: 1px solid #e2e8f0 !important;
+    }
+    [data-theme="dark"] .appointment-form input,
+    [data-theme="dark"] .appointment-form textarea,
+    [data-theme="dark"] .appointment-form select {
+        background: #1e293b !important;
+        color: #e2e8f0 !important;
+        border: 1px solid #334155 !important;
+    }
+    .appointment-form input::placeholder,
+    .appointment-form textarea::placeholder { color: #94a3b8 !important; }
+
+    /* ── Reschedule modal ── */
+    #rescheduleModal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 100000;
+        align-items: center;
+        justify-content: center;
+    }
+    #rescheduleModal.open { display: flex; }
+    .rmd-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0,0,0,.55);
+        backdrop-filter: blur(4px);
+        animation: rmd-fade-in .2s ease;
+    }
+    .rmd-box {
+        position: relative;
+        background: #ffffff;
+        border-radius: 20px;
+        padding: 32px 28px 28px;
+        width: min(440px, 94vw);
+        box-shadow: 0 24px 60px rgba(0,0,0,.25);
+        animation: rmd-slide-up .25s cubic-bezier(.34,1.3,.64,1);
+    }
+    [data-theme="dark"] .rmd-box { background: #1e293b; }
+    .rmd-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 22px;
+    }
+    .rmd-icon {
+        width: 44px; height: 44px;
+        background: linear-gradient(135deg,#0D8ABC,#00c9a7);
+        border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        color: white; font-size: 18px;
+        flex-shrink: 0;
+    }
+    .rmd-title { font-size: 17px; font-weight: 800; color: #1a1a2e; margin: 0; }
+    [data-theme="dark"] .rmd-title { color: #e2e8f0; }
+    .rmd-subtitle { font-size: 12px; color: #64748b; margin: 2px 0 0; }
+    [data-theme="dark"] .rmd-subtitle { color: #94a3b8; }
+    .rmd-close {
+        position: absolute; top: 16px; right: 18px;
+        background: none; border: none; cursor: pointer;
+        font-size: 18px; color: #94a3b8;
+        width: 32px; height: 32px; border-radius: 8px;
+        display: flex; align-items: center; justify-content: center;
+        transition: background .15s, color .15s;
+    }
+    .rmd-close:hover { background: #f1f5f9; color: #1a1a2e; }
+    [data-theme="dark"] .rmd-close:hover { background: #334155; color: #e2e8f0; }
+    .rmd-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 22px; }
+    .rmd-field label {
+        display: block; font-size: 12px; font-weight: 700;
+        color: #374151; margin-bottom: 6px;
+        text-transform: uppercase; letter-spacing: .5px;
+    }
+    [data-theme="dark"] .rmd-field label { color: #94a3b8; }
+    .rmd-field input {
+        width: 100%; height: 42px;
+        padding: 0 12px;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 10px;
+        font-size: 14px;
+        background: #f8fafc !important;
+        color: #1a1a2e !important;
+        outline: none;
+        transition: border-color .2s, box-shadow .2s;
+        box-sizing: border-box;
+    }
+    [data-theme="dark"] .rmd-field input {
+        background: #0f172a !important;
+        color: #e2e8f0 !important;
+        border-color: #334155;
+    }
+    .rmd-field input:focus {
+        border-color: #0D8ABC;
+        box-shadow: 0 0 0 3px rgba(13,138,188,.15);
+    }
+    .rmd-actions { display: flex; gap: 10px; justify-content: flex-end; }
+    .rmd-btn {
+        padding: 10px 22px; border-radius: 10px;
+        font-size: 14px; font-weight: 700;
+        cursor: pointer; border: none; transition: all .2s;
+    }
+    .rmd-btn-cancel {
+        background: #f1f5f9; color: #475569;
+    }
+    .rmd-btn-cancel:hover { background: #e2e8f0; }
+    [data-theme="dark"] .rmd-btn-cancel { background: #334155; color: #94a3b8; }
+    [data-theme="dark"] .rmd-btn-cancel:hover { background: #475569; }
+    .rmd-btn-confirm {
+        background: linear-gradient(135deg,#0D8ABC,#00c9a7);
+        color: white;
+        box-shadow: 0 4px 12px rgba(13,138,188,.35);
+    }
+    .rmd-btn-confirm:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(13,138,188,.45); }
+    .rmd-btn-confirm:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+    @keyframes rmd-fade-in { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes rmd-slide-up { from { opacity: 0; transform: translateY(24px) scale(.97); } to { opacity: 1; transform: none; } }
     </style>
 {% endblock %}
 
@@ -36,7 +185,7 @@
 
     <!-- Enhanced hero header -->
     <div class="appt-hero">
-        <div class="appt-hero-badge"><i class="fas fa-calendar-check"></i> Rendez-vous médicaux</div>
+        <div class="appt-hero-badge"><i class="fas fa-calendar-check"></i> {{ 'appt.title'|trans }}</div>
         <h1>{% if isMedecin %}Gérer mes rendez-vous{% else %}Réserver un rendez-vous{% endif %}</h1>
         <p>{% if isMedecin %}Consultez et gérez les demandes de vos patients en temps réel.{% else %}Choisissez un médecin, une date et un créneau disponible en quelques clics.{% endif %}</p>
         {% if isPatient %}
@@ -57,24 +206,54 @@
 
     {% if not isPatient and not isMedecin %}
         <div class="appointment-card appointment-lock">
-            <h3 style="display:flex;align-items:center;gap:10px;"><i class="fas fa-lock" style="color:#0D8ABC;"></i> Accès réservé</h3>
-            <p>Ce module est réservé aux abonnés patient ou médecin.</p>
-            <p class="appointment-hint">Activez un abonnement pour débloquer la prise ou la gestion des rendez-vous.</p>
-            <a href="{{ path('app_subscription') }}" class="btn btn-primary">Choisir un abonnement</a>
+            <h3 style="display:flex;align-items:center;gap:10px;"><i class="fas fa-lock" style="color:#0D8ABC;"></i> {{ 'appt.restricted'|trans }}</h3>
+            <p>{{ 'appt.restricted_msg'|trans }}</p>
+            <p class="appointment-hint">{{ 'appt.restricted_sub'|trans }}</p>
+            <a href="{{ path('app_subscription') }}" class="btn btn-primary">{{ 'appt.choose_plan'|trans }}</a>
         </div>
     {% endif %}
 
     <div class="appointment-sections">
         {% if isPatient %}
-        <div class="appointment-grid">
+        <!-- Step 1: Appointments list (shown first) -->
+        <div class="appointment-card">
+            <div class="appointment-card-header">
+                <div>
+                    <div class="appt-step-label"><div class="appt-step-num">1</div> {{ 'appt.my_appointments'|trans }}</div>
+                    <p class="appointment-hint">{{ 'appt.my_appointments_sub'|trans }}</p>
+                </div>
+                <button type="button" id="openBookingBtn" class="btn btn-primary" style="display:flex;align-items:center;gap:8px;white-space:nowrap;">
+                    <i class="fas fa-plus"></i> Réserver un rendez-vous
+                </button>
+            </div>
+            <div class="appointment-filters" id="patientFilters">
+                <select id="patientStatusFilter">
+                    <option value="">{{ 'status.all'|trans }}</option>
+                    <option value="en_attente">{{ 'status.pending'|trans }}</option>
+                    <option value="confirme">{{ 'status.confirmed'|trans }}</option>
+                    <option value="refuse">{{ 'status.refused'|trans }}</option>
+                    <option value="annule">{{ 'status.cancelled'|trans }}</option>
+                </select>
+                <input type="date" id="patientDateFilter">
+                <input type="text" id="patientSearchFilter" placeholder="Médecin...">
+                <button type="button" class="btn btn-secondary btn-xs" id="patientFiltersReset">{{ 'common.reset'|trans }}</button>
+            </div>
+            <div id="myAppointments" class="appointment-list"></div>
+        </div>
+
+        <!-- Steps 2+3: Booking form (hidden by default) -->
+        <div class="appointment-grid" id="bookingGrid" style="display:none;margin-top:20px;">
             <div class="appointment-card">
-                <div class="appt-step-label"><div class="appt-step-num">1</div> Trouver un médecin</div>
+                <div class="appointment-card-header" style="margin-bottom:12px;">
+                    <div class="appt-step-label"><div class="appt-step-num">2</div> {{ 'appt.find_doctor'|trans }}</div>
+                    <button type="button" id="closeBookingBtn" class="rmd-close" style="position:static;" aria-label="Fermer"><i class="fas fa-times"></i></button>
+                </div>
                 <div id="map" class="appointment-map"></div>
-                <p class="appointment-hint">Cliquez sur un médecin pour voir ses créneaux.</p>
+                <p class="appointment-hint">{{ 'appt.find_doctor_sub'|trans }}</p>
             </div>
 
             <div class="appointment-card">
-                <div class="appt-step-label"><div class="appt-step-num">2</div> Prendre un créneau</div>
+                <div class="appt-step-label"><div class="appt-step-num">3</div> {{ 'appt.book_slot'|trans }}</div>
                 <form id="appointmentForm" class="appointment-form" data-ajax="1">
                     <label>Médecin</label>
                     <input type="text" id="doctorSelect" list="doctorOptions" placeholder="Tapez nom, prénom ou spécialité" autocomplete="off" required>
@@ -93,34 +272,11 @@
                     <textarea name="motif" id="motifInput" rows="3" placeholder="Votre motif"></textarea>
 
                     <div class="form-actions">
-                        <button type="submit" class="btn btn-primary">Confirmer</button>
+                        <button type="submit" class="btn btn-primary">{{ 'common.confirm'|trans }}</button>
                     </div>
                     <div id="appointmentAlert" class="appointment-alert" hidden></div>
                 </form>
             </div>
-        </div>
-
-        <div class="appointment-card">
-            <div class="appointment-card-header">
-                <div>
-                    <div class="appt-step-label"><div class="appt-step-num">3</div> Replanifier ou annuler</div>
-                    <p class="appointment-hint">Gérez vos rendez-vous à venir.</p>
-                </div>
-                <div class="appointment-help-badge">Actions rapides</div>
-            </div>
-            <div class="appointment-filters" id="patientFilters">
-                <select id="patientStatusFilter">
-                    <option value="">Tous statuts</option>
-                    <option value="en_attente">En attente</option>
-                    <option value="confirme">Confirmé</option>
-                    <option value="refuse">Refusé</option>
-                    <option value="annule">Annulé</option>
-                </select>
-                <input type="date" id="patientDateFilter">
-                <input type="text" id="patientSearchFilter" placeholder="Médecin...">
-                <button type="button" class="btn btn-secondary btn-xs" id="patientFiltersReset">Réinitialiser</button>
-            </div>
-            <div id="myAppointments" class="appointment-list"></div>
         </div>
         {% endif %}
 
@@ -128,26 +284,55 @@
         <div class="appointment-card">
             <div class="appointment-card-header">
                 <div>
-                    <h3>Rendez-vous du médecin</h3>
+                    <h3>{{ 'appt.doctor_appointments'|trans }}</h3>
                     <p class="appointment-hint">Vos consultations confirmées.</p>
                 </div>
-                <div class="appointment-help-badge">Lecture seule</div>
+                <div class="appointment-help-badge">{{ 'appt.read_only'|trans }}</div>
             </div>
             <div class="appointment-filters" id="doctorFilters">
                 <select id="doctorStatusFilter">
                     <option value="">Tous les statuts</option>
-                    <option value="en_attente">En attente</option>
-                    <option value="confirme">Confirmé</option>
-                    <option value="refuse">Refusé</option>
-                    <option value="annule">Annulé</option>
+                    <option value="en_attente">{{ 'status.pending'|trans }}</option>
+                    <option value="confirme">{{ 'status.confirmed'|trans }}</option>
+                    <option value="refuse">{{ 'status.refused'|trans }}</option>
+                    <option value="annule">{{ 'status.cancelled'|trans }}</option>
                 </select>
                 <input type="date" id="doctorDateFilter">
                 <input type="text" id="doctorSearchFilter" placeholder="Patient...">
-                <button type="button" class="btn btn-secondary btn-xs" id="doctorFiltersReset">Réinitialiser</button>
+                <button type="button" class="btn btn-secondary btn-xs" id="doctorFiltersReset">{{ 'common.reset'|trans }}</button>
             </div>
             <div id="doctorAppointments" class="appointment-list"></div>
         </div>
         {% endif %}
+    </div>
+
+    <!-- Reschedule modal -->
+    <div id="rescheduleModal" role="dialog" aria-modal="true" aria-labelledby="rmdTitle">
+        <div class="rmd-overlay" id="rmdOverlay"></div>
+        <div class="rmd-box">
+            <button class="rmd-close" id="rmdClose" aria-label="Fermer"><i class="fas fa-times"></i></button>
+            <div class="rmd-header">
+                <div class="rmd-icon"><i class="fas fa-calendar-alt"></i></div>
+                <div>
+                    <p class="rmd-title" id="rmdTitle">{{ 'appt.reschedule_title'|trans }}</p>
+                    <p class="rmd-subtitle" id="rmdSubtitle">Choisissez une nouvelle date et heure</p>
+                </div>
+            </div>
+            <div class="rmd-fields">
+                <div class="rmd-field">
+                    <label for="rmdDate"><i class="fas fa-calendar"></i> Date</label>
+                    <input type="date" id="rmdDate">
+                </div>
+                <div class="rmd-field">
+                    <label for="rmdTime"><i class="fas fa-clock"></i> Heure</label>
+                    <input type="time" id="rmdTime">
+                </div>
+            </div>
+            <div class="rmd-actions">
+                <button class="rmd-btn rmd-btn-cancel" id="rmdCancel">{{ 'common.cancel'|trans }}</button>
+                <button class="rmd-btn rmd-btn-confirm" id="rmdConfirm"><i class="fas fa-check"></i> Confirmer</button>
+            </div>
+        </div>
     </div>
 </section>
 {% endblock %}
@@ -157,6 +342,27 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
+
+        // ── Translations (Twig-injected) ──────────────────────────
+        const TRANS = {
+            loading:       '{{ "common.loading"|trans|e("js") }}',
+            no_appointments: '{{ "appt.no_appointments"|trans|e("js") }}',
+            no_slots:      '{{ "appt.no_slots"|trans|e("js") }}',
+            select_doctor: '{{ "appt.select_doctor_date"|trans|e("js") }}',
+            select_valid:  '{{ "appt.select_valid"|trans|e("js") }}',
+            reschedule:    '{{ "appt.reschedule"|trans|e("js") }}',
+            confirmed:     '{{ "status.confirmed"|trans|e("js") }}',
+            refused:       '{{ "status.refused"|trans|e("js") }}',
+            cancelled:     '{{ "status.cancelled"|trans|e("js") }}',
+            pending:       '{{ "status.pending"|trans|e("js") }}',
+            confirm_btn:   '{{ "common.confirm"|trans|e("js") }}',
+            refuse_btn:    '{{ "status.refused"|trans|e("js") }}',
+            cancel_btn:    '{{ "common.cancel"|trans|e("js") }}',
+            reschedule_sub: '{{ "appt.reschedule_sub"|trans|e("js") }}',
+            reschedule_approval: '{{ "appt.reschedule_approval"|trans|e("js") }}',
+            appt_rescheduled: '{{ "appt.reschedule_title"|trans|e("js") }}',
+        };
+
         (function () {
             const canBook = {{ isPatient ? 'true' : 'false' }};
             const canMedecin = {{ isMedecin ? 'true' : 'false' }};
@@ -269,11 +475,11 @@
             const fetchSlots = async () => {
                 if (!canBook) return;
                 showLoader();
-                slotsWrap.innerHTML = '<div class="slot-empty">Chargement...</div>';
+                slotsWrap.innerHTML = '<div class="slot-empty">' + TRANS.loading + '</div>';
                 const medecinId = syncSelectedDoctorId();
                 const date = dateInput.value;
                 if (!medecinId || !date) {
-                    slotsWrap.innerHTML = '<div class="slot-empty">Sélectionnez un médecin et une date.</div>';
+                    slotsWrap.innerHTML = '<div class="slot-empty">' + TRANS.select_doctor + '</div>';
                     hideLoader();
                     return;
                 }
@@ -281,7 +487,7 @@
                 const data = await res.json();
                 slotsWrap.innerHTML = '';
                 if (!data.slots || data.slots.length === 0) {
-                    slotsWrap.innerHTML = '<div class="slot-empty">Aucun créneau disponible.</div>';
+                    slotsWrap.innerHTML = '<div class="slot-empty">' + TRANS.no_slots + '</div>';
                     hideLoader();
                     return;
                 }
@@ -308,13 +514,13 @@
                 const data = await res.json();
                 myAppointments.innerHTML = '';
                 if (!data.items || data.items.length === 0) {
-                    myAppointments.innerHTML = '<div class="slot-empty">Aucun rendez-vous.</div>';
+                    myAppointments.innerHTML = '<div class="slot-empty">' + TRANS.no_appointments + '</div>';
                     hideLoader();
                     return;
                 }
                 data.items.forEach(item => {
                     const status = item.statut || 'en_attente';
-                    const statusLabel = status === 'confirme' ? 'Confirmé' : (status === 'refuse' ? 'Refusé' : (status === 'annule' ? 'Annulé' : 'En attente'));
+                    const statusLabel = status === 'confirme' ? TRANS.confirmed : (status === 'refuse' ? TRANS.refused : (status === 'annule' ? TRANS.cancelled : TRANS.pending));
                     const statusClass = status === 'confirme' ? 'status-confirmed' : (status === 'refuse' ? 'status-cancelled' : (status === 'annule' ? 'status-cancelled' : 'status-pending'));
                     const row = document.createElement('div');
                     row.className = 'appointment-row';
@@ -325,8 +531,8 @@
                             <div class="status-line"><span class="status-pill ${statusClass}">${statusLabel}</span></div>
                         </div>
                         <div class="appointment-row-actions">
-                            <button class="btn btn-secondary" data-action="reschedule" data-id="${item.id}">Replanifier</button>
-                            <button class="btn btn-danger" data-action="cancel" data-id="${item.id}">Annuler</button>
+                            <button class="btn btn-secondary" data-action="reschedule" data-id="${item.id}">{{ 'appt.reschedule'|trans }}</button>
+                            <button class="btn btn-danger" data-action="cancel" data-id="${item.id}">{{ 'common.cancel'|trans }}</button>
                         </div>
                     `;
                     row.dataset.status = status;
@@ -344,7 +550,7 @@
                 const data = await res.json();
                 doctorAppointments.innerHTML = '';
                 if (!data.items || data.items.length === 0) {
-                    doctorAppointments.innerHTML = '<div class="slot-empty">Aucun rendez-vous.</div>';
+                    doctorAppointments.innerHTML = '<div class="slot-empty">' + TRANS.no_appointments + '</div>';
                     hideLoader();
                     return;
                 }
@@ -352,16 +558,16 @@
                     const row = document.createElement('div');
                     row.className = 'appointment-row';
                     const status = item.statut || 'en_attente';
-                    const statusLabel = status === 'confirme' ? 'Confirmé' : (status === 'refuse' ? 'Refusé' : (status === 'annule' ? 'Annulé' : 'En attente'));
+                    const statusLabel = status === 'confirme' ? TRANS.confirmed : (status === 'refuse' ? TRANS.refused : (status === 'annule' ? TRANS.cancelled : TRANS.pending));
                     const statusClass = status === 'confirme' ? 'status-confirmed' : (status === 'refuse' ? 'status-cancelled' : (status === 'annule' ? 'status-cancelled' : 'status-pending'));
                     const actions = status === 'en_attente'
                         ? `
-                            <button class="btn btn-primary btn-xs" data-action="confirm" data-id="${item.id}">Confirmer</button>
-                            <button class="btn btn-secondary btn-xs" data-action="refuse" data-id="${item.id}">Refuser</button>
-                            <button class="btn btn-danger btn-xs" data-action="cancel" data-id="${item.id}">Annuler</button>
+                            <button class="btn btn-primary btn-xs" data-action="confirm" data-id="${item.id}">{{ 'common.confirm'|trans }}</button>
+                            <button class="btn btn-secondary btn-xs" data-action="refuse" data-id="${item.id}">{{ 'status.refused'|trans }}</button>
+                            <button class="btn btn-danger btn-xs" data-action="cancel" data-id="${item.id}">{{ 'common.cancel'|trans }}</button>
                           `
                         : `
-                            <button class="btn btn-secondary btn-xs" data-action="reschedule" data-id="${item.id}">Replanifier</button>
+                            <button class="btn btn-secondary btn-xs" data-action="reschedule" data-id="${item.id}">{{ 'appt.reschedule'|trans }}</button>
                             <span class="status-pill ${statusClass}">${statusLabel}</span>
                           `;
                     row.innerHTML = `
@@ -382,11 +588,61 @@
             hideLoader();
         };
 
+        /* ── Reschedule modal helpers ── */
+        const rmdModal   = document.getElementById('rescheduleModal');
+        const rmdDateEl  = document.getElementById('rmdDate');
+        const rmdTimeEl  = document.getElementById('rmdTime');
+        const rmdConfirm = document.getElementById('rmdConfirm');
+        const rmdCancel  = document.getElementById('rmdCancel');
+        const rmdClose   = document.getElementById('rmdClose');
+        const rmdOverlay = document.getElementById('rmdOverlay');
+        let _rmdResolve  = null;
+
+        const rmdSubtitle = document.getElementById('rmdSubtitle');
+
+        const openRescheduleModal = (mode = 'doctor') => new Promise((resolve) => {
+            _rmdResolve = resolve;
+            const today = new Date().toISOString().slice(0, 10);
+            rmdDateEl.value = today;
+            rmdDateEl.min   = today;
+            const hh = String(new Date().getHours()).padStart(2,'0');
+            const mm = String(Math.ceil(new Date().getMinutes() / 15) * 15 % 60).padStart(2,'0');
+            rmdTimeEl.value = `${hh}:${mm}`;
+            if (mode === 'patient') {
+                rmdSubtitle.innerHTML = TRANS.reschedule_sub + (mode === 'patient' ? ' <strong style="color:#f59e0b;">' + TRANS.reschedule_approval + '</strong>' : '');
+            } else {
+                rmdSubtitle.textContent = 'Choisissez une nouvelle date et heure';
+            }
+            rmdModal.classList.add('open');
+            rmdDateEl.focus();
+        });
+
+        const closeRescheduleModal = (result) => {
+            rmdModal.classList.remove('open');
+            if (_rmdResolve) { _rmdResolve(result ?? null); _rmdResolve = null; }
+        };
+
+        rmdConfirm.addEventListener('click', () => {
+            const date = rmdDateEl.value;
+            const time = rmdTimeEl.value;
+            if (!date || !time) {
+                rmdDateEl.style.borderColor = date ? '' : '#ef4444';
+                rmdTimeEl.style.borderColor = time ? '' : '#ef4444';
+                return;
+            }
+            rmdDateEl.style.borderColor = '';
+            rmdTimeEl.style.borderColor = '';
+            closeRescheduleModal({ date, time });
+        });
+        rmdCancel.addEventListener('click',  () => closeRescheduleModal(null));
+        rmdClose.addEventListener('click',   () => closeRescheduleModal(null));
+        rmdOverlay.addEventListener('click', () => closeRescheduleModal(null));
+        rmdModal.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeRescheduleModal(null); });
+
         const rescheduleDoctor = async (id) => {
-            const date = prompt('Nouvelle date (YYYY-MM-DD) :');
-            if (!date) return;
-            const time = prompt('Nouvelle heure (HH:MM) :');
-            if (!time) return;
+            const result = await openRescheduleModal();
+            if (!result) return;
+            const { date, time } = result;
             showLoader();
             const res = await fetch(`/api/appointments/${id}/doctor-reschedule`, {
                 method: 'POST',
@@ -436,7 +692,7 @@
                     if (selectedId) {
                         fetchSlots();
                     } else {
-                        slotsWrap.innerHTML = '<div class="slot-empty">Sélectionnez un médecin valide et une date.</div>';
+                        slotsWrap.innerHTML = '<div class="slot-empty">' + TRANS.select_valid + '</div>';
                     }
                 });
                 dateInput.addEventListener('change', fetchSlots);
@@ -532,8 +788,25 @@
                         hideLoader();
                     }
                     if (btn.dataset.action === 'reschedule') {
-                        showAlert('Sélectionnez un nouveau créneau puis cliquez Confirmer.', 'success');
-                        slotsWrap.dataset.reschedule = id;
+                        const result = await openRescheduleModal('patient');
+                        if (!result) return;
+                        showLoader();
+                        const res = await fetch(`/api/appointments/${id}/patient-reschedule`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                            body: JSON.stringify({ date: result.date, time: result.time })
+                        });
+                        let data = null;
+                        try { data = await res.json(); } catch(e) { data = { success: false, message: 'Réponse invalide.' }; }
+                        if (!data.success) {
+                            showAlert(data.message || 'Erreur', 'error');
+                            hideLoader();
+                            return;
+                        }
+                        showAlert('Demande de replanification envoyée. En attente d\'approbation du médecin.', 'success');
+                        await loadMyAppointments();
+                        applyPatientFilters();
+                        hideLoader();
                     }
                 });
             }
@@ -605,6 +878,18 @@
             }
 
             if (canBook) {
+                const bookingGrid = document.getElementById('bookingGrid');
+                const openBookingBtn = document.getElementById('openBookingBtn');
+                const closeBookingBtn = document.getElementById('closeBookingBtn');
+                openBookingBtn.addEventListener('click', () => {
+                    bookingGrid.style.display = '';
+                    bookingGrid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    if (!map) return;
+                    setTimeout(() => map.invalidateSize(), 150);
+                });
+                closeBookingBtn.addEventListener('click', () => {
+                    bookingGrid.style.display = 'none';
+                });
                 loadDoctors();
                 loadMyAppointments();
             }

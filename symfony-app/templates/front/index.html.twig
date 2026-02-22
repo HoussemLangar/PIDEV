@@ -18,14 +18,14 @@
         </div>
         
         <div class="hero-content">
-            <div class="text-side">
+            <div class="text-side s3d-reveal-left">
                 <span class="badge">BIEN ÊTRE</span>
-                <h1>Votre SANTÉA, en toute confiance</h1>
-                <p>Suivez votre état de SANTÉA au quotidien, bénéficiez d'un accompagnement global et facilitez vos échanges avec les professionnels de SANTÉA.</p>
-                <a href="#doctors" class="btn-primary">Découvrir SANTÉA</a>
+                <h1>Votre SANT&#201;A, en toute confiance</h1>
+                <p>Suivez votre &#233;tat de SANT&#201;A au quotidien, b&#233;n&#233;ficiez d'un accompagnement global et facilitez vos &#233;changes avec les professionnels de SANT&#201;A.</p>
+                <a href="#doctors" class="btn-primary">D&#233;couvrir SANT&#201;A</a>
             </div>
-            <div class="image-side">
-                <img src="{{ asset('img/heart.png') }}" alt="Doctor & Nurse" class="hero-img"/>
+            <div class="image-side s3d-reveal-right">
+                <img src="{{ asset('img/heart.png') }}" alt="Doctor &amp; Nurse" class="hero-img" data-parallax="0.08"/>
             </div>
         </div>
 
@@ -60,9 +60,11 @@
     </section>
 
     <!-- Quick Info Cards -->
-    <section class="quick-info" id="quick-info">
+    <section class="quick-info" id="quick-info" style="position:relative;overflow:hidden;">
+        <i class="fas fa-plus s3d-cross-decoration" style="top:5%;left:3%;font-size:60px;" aria-hidden="true"></i>
+        <i class="fas fa-plus s3d-cross-decoration" style="bottom:8%;right:2%;font-size:40px;animation-delay:-4s;" aria-hidden="true"></i>
         <div class="container">
-            <h2 class="section-title">Pourquoi choisir SANTÉA</h2>
+            <h2 class="section-title s3d-reveal">Pourquoi choisir SANT&#201;A</h2>
         </div>
         <div class="features-grid">
             <div class="feature-card">
@@ -164,10 +166,11 @@
     </section>
 
     <!-- Section Prendre Rendez-vous -->
-    <section class="appointment-section" id="appointment-section">
+    <section class="appointment-section" id="appointment-section" style="position:relative;overflow:hidden;">
+        <i class="fas fa-heartbeat s3d-cross-decoration" style="top:5%;right:5%;font-size:90px;opacity:.04;" aria-hidden="true"></i>
         <div class="container">
-            <h2 class="section-title">Nos services médicaux</h2>
-            <p class="section-subtitle">Des solutions complètes pour prendre soin de votre santé</p>
+            <h2 class="section-title s3d-reveal">Nos services m&#233;dicaux</h2>
+            <p class="section-subtitle s3d-reveal s3d-delay-1">Des solutions compl&#232;tes pour prendre soin de votre sant&#233;</p>
         </div>
         
         <!-- Première paire : Prendre rendez-vous + Trouver vos médicaments -->
@@ -319,9 +322,10 @@
     </section>
 
     <!-- Forum et publications -->
-    <section class="forum-section" id="forum">
+    <section class="forum-section" id="forum" style="position:relative;">
+        <i class="fas fa-plus s3d-cross-decoration" style="top:3%;left:1%;font-size:50px;animation-delay:-2s;" aria-hidden="true"></i>
         <div class="container">
-            <h2 class="section-title">Forum & Publications</h2>
+            <h2 class="section-title s3d-reveal">Forum &amp; Publications</h2>
         </div>
         
         <div class="forum-posts-container">
@@ -451,7 +455,8 @@
     </section>
 
     <!-- Contactez-nous -->
-    <section class="contact-section" id="contact-section">
+    <section class="contact-section" id="contact-section" style="position:relative;overflow:hidden;">
+        <i class="fas fa-plus s3d-cross-decoration" style="bottom:10%;right:4%;font-size:70px;animation-delay:-6s;" aria-hidden="true"></i>
         <div class="container">
             <div class="contact-hero">
                 <div class="contact-badge">

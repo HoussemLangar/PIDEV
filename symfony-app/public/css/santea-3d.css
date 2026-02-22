@@ -1,0 +1,1029 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   SANTÉA 3D — Immersive Visual Layer
+   Author: Santea Dev  |  2026
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Design Tokens ─────────────────────────────────────────────────── */
+:root {
+  --s3d-primary:     #0D8ABC;
+  --s3d-primary-deep:#0862a0;
+  --s3d-teal:        #00c9a7;
+  --s3d-green:       #22c55e;
+  --s3d-glow:        rgba(13,138,188,.35);
+  --s3d-glow-green:  rgba(34,197,94,.25);
+  --s3d-glass-bg:    rgba(255,255,255,.72);
+  --s3d-glass-border:rgba(255,255,255,.55);
+  --s3d-shadow:      0 8px 32px rgba(13,138,188,.18);
+  --s3d-radius:      20px;
+  --s3d-transition:  cubic-bezier(.4,0,.2,1);
+  --s3d-perspective: 1000px;
+}
+
+[data-theme="dark"] {
+  --s3d-glass-bg:    rgba(15,23,42,.78);
+  --s3d-glass-border:rgba(13,138,188,.22);
+  --s3d-shadow:      0 8px 40px rgba(0,0,0,.45);
+}
+
+/* ── WebGL Canvas Layer ─────────────────────────────────────────────── */
+#santea-canvas-bg {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 1.2s ease;
+}
+#santea-canvas-bg.ready { opacity: 1; }
+
+/* Fallback gradient when WebGL not available */
+.no-webgl body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(ellipse at 20% 20%, rgba(13,138,188,.08) 0%, transparent 60%),
+              radial-gradient(ellipse at 80% 80%, rgba(34,197,94,.06) 0%, transparent 60%),
+              linear-gradient(160deg, #f0f9ff 0%, #ffffff 50%, #f0fdf4 100%);
+}
+[data-theme="dark"] .no-webgl body::before {
+  background: radial-gradient(ellipse at 20% 20%, rgba(13,138,188,.12) 0%, transparent 60%),
+              radial-gradient(ellipse at 80% 80%, rgba(34,197,94,.08) 0%, transparent 60%),
+              linear-gradient(160deg, #0a1628 0%, #0f172a 50%, #0a1f2e 100%);
+}
+
+/* ── Global Page Enhancement ──────────────────────────────────────── */
+body {
+  background: transparent !important;
+}
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background: linear-gradient(160deg, #f0f9ff 0%, #ffffff 50%, #f0fdf4 100%);
+  transition: background .4s;
+}
+[data-theme="dark"] body::after {
+  background: linear-gradient(160deg, #0a1628 0%, #0f172a 50%, #0a1f2e 100%);
+}
+
+/* ── Glassmorphism Navbar ───────────────────────────────────────────── */
+/*
+ * Stacking context note:
+ * backdrop-filter + position on <header> creates a stacking context.
+ * Nav dropdowns are portaled to <body> by JS (portalNavDropdowns) so they
+ * fully escape this context. The z-index below only keeps the header bar
+ * itself visible above scrolled page content.
+ */
+header {
+  position: relative !important;
+  z-index: 1000 !important;
+  overflow: visible !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  background: rgba(255,255,255,.88) !important;
+  border-bottom: 1px solid rgba(255,255,255,.6) !important;
+  box-shadow: 0 4px 30px rgba(13,138,188,.12) !important;
+  transition: background .3s, box-shadow .3s !important;
+}
+[data-theme="dark"] header {
+  background: rgba(10,22,40,.88) !important;
+  border-bottom-color: rgba(13,138,188,.2) !important;
+  box-shadow: 0 4px 30px rgba(0,0,0,.4) !important;
+}
+
+.nav-icon-wrap { position: relative !important; }
+
+/* Navbar logo 3D glow */
+.navbar {
+  overflow: visible !important;
+}
+.logo {
+  background: linear-gradient(135deg, var(--s3d-primary), var(--s3d-teal)) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+  filter: drop-shadow(0 0 12px var(--s3d-glow)) !important;
+  font-size: 1.6rem !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.5px !important;
+  transition: filter .3s !important;
+}
+.logo:hover { filter: drop-shadow(0 0 20px var(--s3d-glow)) !important; }
+
+/* Nav links hover 3D underline */
+.nav-links a {
+  position: relative;
+  transition: color .25s, transform .25s !important;
+}
+.nav-links a::after {
+  content: '';
+  position: absolute;
+  bottom: -3px; left: 50%; right: 50%;
+  height: 2px;
+  background: linear-gradient(90deg, var(--s3d-primary), var(--s3d-teal));
+  border-radius: 2px;
+  transition: left .28s var(--s3d-transition), right .28s var(--s3d-transition);
+  box-shadow: 0 0 8px var(--s3d-glow);
+}
+.nav-links a:hover::after,
+.nav-links a.active::after {
+  left: 0; right: 0;
+}
+.nav-links a:hover { transform: translateY(-1px) !important; }
+
+/* ── 3D Feature Cards ───────────────────────────────────────────────── */
+.feature-card {
+  transform-style: preserve-3d;
+  perspective: var(--s3d-perspective);
+  transition: transform .4s var(--s3d-transition),
+              box-shadow .4s var(--s3d-transition),
+              background .3s !important;
+  background: var(--s3d-glass-bg) !important;
+  backdrop-filter: blur(16px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(160%) !important;
+  border: 1px solid var(--s3d-glass-border) !important;
+  box-shadow: var(--s3d-shadow), inset 0 1px 0 rgba(255,255,255,.8) !important;
+  border-radius: var(--s3d-radius) !important;
+  overflow: visible !important;
+  position: relative;
+  will-change: transform;
+}
+
+.feature-card::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: calc(var(--s3d-radius) + 1px);
+  background: linear-gradient(135deg, rgba(13,138,188,.15), rgba(0,201,167,.1), transparent 70%);
+  opacity: 0;
+  transition: opacity .4s;
+  pointer-events: none;
+  z-index: 0;
+}
+.feature-card:hover::before { opacity: 1; }
+
+.feature-card:hover {
+  transform: translateY(-8px) rotateX(4deg) rotateY(-2deg) scale(1.02) !important;
+  box-shadow: 0 24px 60px rgba(13,138,188,.28),
+              0 8px 20px rgba(0,0,0,.08),
+              inset 0 1px 0 rgba(255,255,255,.9) !important;
+}
+.feature-card > * { position: relative; z-index: 1; }
+
+/* Feature icon 3D depth */
+.feature-icon-wrapper {
+  transform: translateZ(20px);
+  transition: transform .4s var(--s3d-transition), box-shadow .4s !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,.15) !important;
+}
+.feature-card:hover .feature-icon-wrapper {
+  transform: translateZ(30px) scale(1.08) !important;
+  box-shadow: 0 12px 32px rgba(13,138,188,.35) !important;
+}
+
+/* ── 3D Stat Cards (hero) ───────────────────────────────────────────── */
+.stat-card-hero {
+  background: var(--s3d-glass-bg) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid var(--s3d-glass-border) !important;
+  border-radius: 18px !important;
+  transition: transform .35s var(--s3d-transition), box-shadow .35s !important;
+  box-shadow: 0 4px 20px rgba(13,138,188,.15) !important;
+  will-change: transform;
+}
+.stat-card-hero:hover {
+  transform: translateY(-6px) scale(1.04) !important;
+  box-shadow: 0 16px 40px rgba(13,138,188,.25) !important;
+}
+
+.stat-value-hero {
+  background: linear-gradient(135deg, var(--s3d-primary), var(--s3d-teal)) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+}
+
+/* ── 3D Hero Section ────────────────────────────────────────────────── */
+.hero {
+  position: relative;
+  overflow: hidden;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -60%; left: -20%;
+  width: 80vw; height: 80vw;
+  max-width: 900px; max-height: 900px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(13,138,188,.12) 0%, transparent 70%);
+  pointer-events: none;
+  animation: s3d-pulse 6s ease-in-out infinite;
+}
+.hero::after {
+  content: '';
+  position: absolute;
+  bottom: -30%; right: -10%;
+  width: 60vw; height: 60vw;
+  max-width: 700px; max-height: 700px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(34,197,94,.10) 0%, transparent 70%);
+  pointer-events: none;
+  animation: s3d-pulse 8s ease-in-out infinite reverse;
+}
+
+@keyframes s3d-pulse {
+  0%, 100% { transform: scale(1); opacity: .8; }
+  50%       { transform: scale(1.1); opacity: 1; }
+}
+
+/* Hero title shimmer */
+.hero h1 {
+  background: linear-gradient(135deg, #1a1a2e 0%, var(--s3d-primary) 40%, var(--s3d-teal) 60%, #1a1a2e 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: s3d-shimmer 4s linear infinite;
+}
+[data-theme="dark"] .hero h1 {
+  background: linear-gradient(135deg, #e2e8f0 0%, var(--s3d-primary) 40%, var(--s3d-teal) 60%, #e2e8f0 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: s3d-shimmer 4s linear infinite;
+}
+
+@keyframes s3d-shimmer {
+  to { background-position: 200% center; }
+}
+
+/* Hero image float */
+.hero-img {
+  animation: s3d-float 5s ease-in-out infinite !important;
+  filter: drop-shadow(0 20px 40px rgba(13,138,188,.3)) !important;
+}
+
+@keyframes s3d-float {
+  0%, 100% { transform: translateY(0) rotate(-1deg); }
+  50%       { transform: translateY(-16px) rotate(1deg); }
+}
+
+/* Hero badge glow */
+.badge {
+  background: linear-gradient(135deg, var(--s3d-primary), var(--s3d-teal)) !important;
+  box-shadow: 0 4px 20px var(--s3d-glow) !important;
+  animation: s3d-badge-pulse 3s ease-in-out infinite !important;
+}
+@keyframes s3d-badge-pulse {
+  0%, 100% { box-shadow: 0 4px 20px var(--s3d-glow); }
+  50%       { box-shadow: 0 6px 30px rgba(13,138,188,.55); }
+}
+
+/* ── CTA Buttons 3D ─────────────────────────────────────────────────── */
+.btn-primary, .btn-appointment {
+  position: relative;
+  overflow: hidden;
+  transition: transform .3s var(--s3d-transition),
+              box-shadow .3s var(--s3d-transition) !important;
+}
+.btn-primary::before, .btn-appointment::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.3), transparent);
+  transition: left .5s;
+}
+.btn-primary:hover::before, .btn-appointment:hover::before { left: 100%; }
+.btn-primary:hover, .btn-appointment:hover {
+  transform: translateY(-3px) scale(1.03) !important;
+  box-shadow: 0 12px 35px rgba(13,138,188,.45) !important;
+}
+.btn-primary:active, .btn-appointment:active {
+  transform: translateY(-1px) scale(1.01) !important;
+}
+
+/* ── Section Titles 3D ──────────────────────────────────────────────── */
+.section-title {
+  position: relative;
+  display: inline-block;
+}
+.section-title::after {
+  content: '';
+  display: block;
+  margin: 10px auto 0;
+  height: 3px;
+  width: 60px;
+  background: linear-gradient(90deg, var(--s3d-primary), var(--s3d-teal));
+  border-radius: 3px;
+  box-shadow: 0 2px 10px var(--s3d-glow);
+}
+
+/* ── 3D Floating Medical Icons (Hero) ──────────────────────────────── */
+.floating-icon {
+  animation: s3d-float-icon 4s ease-in-out infinite !important;
+  filter: drop-shadow(0 4px 12px var(--s3d-glow)) !important;
+}
+.floating-icon.icon-1 { animation-delay:  0s !important; }
+.floating-icon.icon-2 { animation-delay: -1.3s !important; }
+.floating-icon.icon-3 { animation-delay: -2.6s !important; }
+.floating-icon.icon-4 { animation-delay: -3.9s !important; }
+
+@keyframes s3d-float-icon {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50%       { transform: translateY(-10px) scale(1.08); }
+}
+
+/* ── Scroll Reveal ──────────────────────────────────────────────────── */
+.s3d-reveal {
+  opacity: 0;
+  transform: translateY(32px) scale(.97);
+  transition: opacity .7s var(--s3d-transition),
+              transform .7s var(--s3d-transition);
+}
+.s3d-reveal.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+.s3d-reveal-left {
+  opacity: 0;
+  transform: translateX(-40px);
+  transition: opacity .7s var(--s3d-transition), transform .7s var(--s3d-transition);
+}
+.s3d-reveal-left.visible { opacity: 1; transform: translateX(0); }
+.s3d-reveal-right {
+  opacity: 0;
+  transform: translateX(40px);
+  transition: opacity .7s var(--s3d-transition), transform .7s var(--s3d-transition);
+}
+.s3d-reveal-right.visible { opacity: 1; transform: translateX(0); }
+
+/* Stagger delays */
+.s3d-delay-1 { transition-delay: .1s !important; }
+.s3d-delay-2 { transition-delay: .2s !important; }
+.s3d-delay-3 { transition-delay: .3s !important; }
+.s3d-delay-4 { transition-delay: .4s !important; }
+.s3d-delay-5 { transition-delay: .5s !important; }
+
+/* ── 3D Form Inputs ─────────────────────────────────────────────────── */
+input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="range"]),
+textarea,
+select {
+  transition: border-color .25s, box-shadow .25s, transform .2s !important;
+}
+input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="range"]):focus,
+textarea:focus,
+select:focus {
+  box-shadow: 0 0 0 3px rgba(13,138,188,.18),
+              0 4px 16px rgba(13,138,188,.12) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* ── Page Transition Layer ──────────────────────────────────────────── */
+#s3d-page-transition {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  background: linear-gradient(135deg, var(--s3d-primary), var(--s3d-teal));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform .45s var(--s3d-transition),
+              opacity .2s ease;
+  opacity: 0;
+}
+#s3d-page-transition.entering {
+  transform: scaleX(1);
+  opacity: .85;
+  transform-origin: left;
+}
+#s3d-page-transition.leaving {
+  transform: scaleX(0);
+  opacity: .85;
+  transform-origin: right;
+}
+
+/* ── 3D Doctor/Appointment Cards ────────────────────────────────────── */
+.doctor-card,
+.appointment-card,
+.plan-card,
+.content-card,
+.pharmacy-card {
+  transition: transform .35s var(--s3d-transition),
+              box-shadow .35s var(--s3d-transition) !important;
+  will-change: transform;
+}
+.doctor-card:hover,
+.appointment-card:hover,
+.plan-card:hover,
+.content-card:hover,
+.pharmacy-card:hover {
+  transform: translateY(-6px) scale(1.015) !important;
+  box-shadow: 0 20px 50px rgba(13,138,188,.2) !important;
+}
+
+/* ── Dashboard 3D Metric Cards ──────────────────────────────────────── */
+.metric-card,
+.stat-card,
+.dashboard-card,
+.info-card {
+  background: var(--s3d-glass-bg) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid var(--s3d-glass-border) !important;
+  border-radius: var(--s3d-radius) !important;
+  box-shadow: var(--s3d-shadow) !important;
+  transition: transform .35s var(--s3d-transition),
+              box-shadow .35s !important;
+  will-change: transform;
+}
+.metric-card:hover,
+.stat-card:hover,
+.dashboard-card:hover,
+.info-card:hover {
+  transform: translateY(-5px) !important;
+  box-shadow: 0 16px 45px rgba(13,138,188,.22) !important;
+}
+
+/* ── Glowing Sidebar (back/admin) ───────────────────────────────────── */
+.sidebar, .admin-sidebar, .side-nav {
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border-right: 1px solid var(--s3d-glass-border) !important;
+  box-shadow: 4px 0 30px rgba(13,138,188,.10) !important;
+}
+
+.sidebar a:hover, .admin-sidebar a:hover, .side-nav a:hover {
+  background: rgba(13,138,188,.1) !important;
+  transform: translateX(4px) !important;
+  box-shadow: inset 3px 0 0 var(--s3d-primary) !important;
+}
+
+/* ── 3D Scroll Progress Bar ─────────────────────────────────────────── */
+#s3d-scroll-progress {
+  position: fixed;
+  top: 0; left: 0;
+  height: 3px;
+  width: 0%;
+  background: linear-gradient(90deg, var(--s3d-primary), var(--s3d-teal), var(--s3d-green));
+  z-index: 10000;
+  box-shadow: 0 0 10px var(--s3d-glow), 0 0 5px var(--s3d-glow-green);
+  transition: width .1s linear;
+  border-radius: 0 3px 3px 0;
+}
+
+/* ── Global Loader 3D ───────────────────────────────────────────────── */
+.loader-spinner {
+  background: conic-gradient(var(--s3d-primary), var(--s3d-teal), transparent) !important;
+  border: none !important;
+  box-shadow: 0 0 20px var(--s3d-glow) !important;
+}
+
+/* ── Alerts / Flash Enhancement ─────────────────────────────────────── */
+.alert {
+  backdrop-filter: blur(10px) !important;
+  border-radius: 14px !important;
+  border-left: 4px solid currentColor !important;
+  animation: s3d-slide-in-alert .4s var(--s3d-transition) !important;
+}
+@keyframes s3d-slide-in-alert {
+  from { opacity: 0; transform: translateY(-16px) scale(.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ── Toast Enhancement ──────────────────────────────────────────────── */
+.toast {
+  backdrop-filter: blur(20px) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 8px 30px rgba(0,0,0,.2) !important;
+  animation: s3d-toast-in .35s var(--s3d-transition) !important;
+}
+@keyframes s3d-toast-in {
+  from { opacity: 0; transform: translateY(20px) scale(.94); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ── Dropdown 3D Enhancement ────────────────────────────────────────── */
+/* Dropdowns are portaled to <body> (position:fixed, z-index:99999 via JS).
+   Only visual properties are set here; positioning is handled by JS. */
+.nav-dropdown {
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  border: 1px solid rgba(226,232,240,.8) !important;
+  box-shadow: 0 20px 60px rgba(13,138,188,.18),
+              0 4px 16px rgba(15,23,42,.08),
+              inset 0 1px 0 rgba(255,255,255,.7) !important;
+}
+[data-theme="dark"] .nav-dropdown {
+  border-color: rgba(51,65,85,.8) !important;
+  box-shadow: 0 20px 60px rgba(0,0,0,.45),
+              0 4px 16px rgba(0,0,0,.2) !important;
+}
+
+/* ── Medical Cross Decorations ──────────────────────────────────────── */
+.s3d-cross-decoration {
+  position: absolute;
+  pointer-events: none;
+  color: rgba(13,138,188,.08);
+  font-size: 80px;
+  animation: s3d-cross-spin 12s linear infinite;
+  user-select: none;
+}
+@keyframes s3d-cross-spin {
+  from { transform: rotate(0deg) scale(1); }
+  50%  { transform: rotate(180deg) scale(1.1); }
+  to   { transform: rotate(360deg) scale(1); }
+}
+
+/* ── Parallax Cards (scroll) ────────────────────────────────────────── */
+[data-parallax] {
+  transition: transform .1s linear;
+  will-change: transform;
+}
+
+/* ── Hero Canvas Background ─────────────────────────────────────────── */
+#hero-particle-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: .6;
+}
+
+/* ── Subscription Banner 3D ─────────────────────────────────────────── */
+.subscription-banner {
+  backdrop-filter: blur(20px) !important;
+  background: linear-gradient(135deg, rgba(13,138,188,.9), rgba(8,98,160,.9)) !important;
+  box-shadow: 0 -4px 20px rgba(13,138,188,.3) !important;
+}
+
+/* ── Appointment Section 3D ─────────────────────────────────────────── */
+.appointment-img-circle {
+  transition: transform .4s cubic-bezier(.4,0,.2,1), box-shadow .4s !important;
+  box-shadow: 0 16px 50px rgba(13,138,188,.2) !important;
+}
+.appointment-img-circle:hover {
+  transform: translateY(-8px) scale(1.03) rotateY(3deg) !important;
+  box-shadow: 0 28px 70px rgba(13,138,188,.32) !important;
+}
+
+.appointment-content h2 {
+  background: linear-gradient(135deg, #1a1a2e, var(--s3d-primary)) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+}
+[data-theme="dark"] .appointment-content h2 {
+  background: linear-gradient(135deg, #e2e8f0, var(--s3d-teal)) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+}
+
+.btn-appointment-main {
+  transition: transform .3s cubic-bezier(.4,0,.2,1), box-shadow .3s !important;
+  position: relative;
+  overflow: hidden;
+}
+.btn-appointment-main::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.25), transparent);
+  transition: left .5s;
+}
+.btn-appointment-main:hover::before { left: 100%; }
+.btn-appointment-main:hover {
+  transform: translateY(-3px) scale(1.02) !important;
+  box-shadow: 0 12px 30px rgba(13,138,188,.4) !important;
+}
+
+/* ── Contact Cards 3D ───────────────────────────────────────────────── */
+.contact-info-card {
+  transition: transform .35s cubic-bezier(.4,0,.2,1), box-shadow .35s !important;
+  background: var(--s3d-glass-bg) !important;
+  backdrop-filter: blur(12px) !important;
+  border: 1px solid var(--s3d-glass-border) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 8px 30px rgba(13,138,188,.1) !important;
+}
+.contact-info-card:hover {
+  transform: translateY(-8px) scale(1.02) !important;
+  box-shadow: 0 20px 50px rgba(13,138,188,.2) !important;
+}
+.contact-card-icon {
+  transition: transform .3s, box-shadow .3s !important;
+  box-shadow: 0 6px 20px rgba(0,0,0,.12) !important;
+}
+.contact-info-card:hover .contact-card-icon {
+  transform: scale(1.1) rotateZ(5deg) !important;
+  box-shadow: 0 10px 28px rgba(13,138,188,.3) !important;
+}
+
+.social-link {
+  transition: transform .3s cubic-bezier(.4,0,.2,1), box-shadow .3s !important;
+}
+.social-link:hover {
+  transform: translateY(-5px) scale(1.12) !important;
+  box-shadow: 0 12px 30px rgba(0,0,0,.25) !important;
+}
+
+/* ── Forum Cards 3D ─────────────────────────────────────────────────── */
+.forum-post-card {
+  transition: transform .35s cubic-bezier(.4,0,.2,1), box-shadow .35s !important;
+  background: var(--s3d-glass-bg) !important;
+  backdrop-filter: blur(10px) !important;
+  border-radius: 18px !important;
+  border: 1px solid var(--s3d-glass-border) !important;
+}
+.forum-post-card:hover {
+  transform: translateY(-5px) !important;
+  box-shadow: 0 16px 45px rgba(13,138,188,.18) !important;
+}
+
+/* ── Footer 3D ──────────────────────────────────────────────────────── */
+footer {
+  backdrop-filter: blur(20px) !important;
+  background: linear-gradient(135deg, rgba(8,98,160,.95), rgba(13,138,188,.92)) !important;
+  border-top: 1px solid rgba(255,255,255,.1) !important;
+  box-shadow: 0 -4px 30px rgba(13,138,188,.2) !important;
+}
+
+/* ── Mobile Optimizations ───────────────────────────────────────────── */
+/* ── Shared Page Hero Banner (pharmacie, blog, etc.) ────────────────── */
+.page-hero {
+  background: linear-gradient(135deg, #0D8ABC 0%, #0a6d96 55%, #1e40af 100%);
+  padding: 40px 32px 48px;
+  border-radius: 20px;
+  margin-bottom: 28px;
+  position: relative;
+  overflow: hidden;
+}
+.page-hero::before {
+  content: '';
+  position: absolute;
+  top: -40px; right: -40px;
+  width: 220px; height: 220px;
+  background: rgba(255,255,255,.06);
+  border-radius: 50%;
+}
+.page-hero::after {
+  content: '';
+  position: absolute;
+  bottom: -60px; right: 80px;
+  width: 160px; height: 160px;
+  background: rgba(255,255,255,.04);
+  border-radius: 50%;
+}
+.page-hero-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,.2);
+  color: white;
+  padding: 5px 14px;
+  border-radius: 50px;
+  font-size: 12px; font-weight: 700;
+  margin-bottom: 14px;
+  backdrop-filter: blur(4px);
+  position: relative;
+}
+.page-hero h1 {
+  color: white;
+  font-size: clamp(22px, 4vw, 34px);
+  font-weight: 800;
+  margin: 0 0 10px;
+  position: relative;
+}
+.page-hero p {
+  color: rgba(255,255,255,.82);
+  margin: 0 0 22px;
+  font-size: 15px;
+  position: relative;
+}
+.page-hero-actions {
+  display: flex; gap: 12px; flex-wrap: wrap; position: relative;
+}
+.page-hero-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap;
+  position: relative;
+}
+.page-hero-cross {
+  position: absolute;
+  opacity: .12;
+  font-size: 32px;
+  color: white;
+  animation: s3d-cross-spin 20s linear infinite;
+  pointer-events: none;
+}
+.page-hero-cross:nth-child(1) { bottom: 16px; left: 40px; font-size: 20px; animation-duration: 18s; }
+.page-hero-cross:nth-child(2) { top: 20px; right: 140px; font-size: 14px; animation-direction: reverse; }
+
+/* ── Enhanced content cards ── */
+.content-card {
+  background: var(--surface, #fff) !important;
+  border-radius: 16px !important;
+  padding: 22px !important;
+  border: 1px solid var(--border, #e2e8f0) !important;
+  box-shadow: 0 4px 16px rgba(13,138,188,.08) !important;
+  transition: transform .25s ease, box-shadow .25s ease !important;
+  position: relative;
+  overflow: hidden;
+}
+.content-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #0D8ABC, #00c9a7);
+  border-radius: 16px 16px 0 0;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform .3s ease;
+}
+.content-card:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: 0 12px 32px rgba(13,138,188,.14) !important;
+}
+.content-card:hover::before {
+  transform: scaleX(1);
+}
+.content-card h3 {
+  color: var(--text, #1a1a2e) !important;
+  font-size: 15px;
+  font-weight: 700;
+  margin: 10px 0 6px;
+}
+.content-card p {
+  color: var(--text-muted, #64748b) !important;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+/* ── Enhanced content-page layout ── */
+.content-page {
+  max-width: 1100px !important;
+  margin: 0 auto !important;
+  padding: 24px 20px 48px !important;
+}
+
+/* ── Enhanced content-section → appointment-card look ── */
+.content-section {
+  background: var(--surface, #fff) !important;
+  border-radius: 18px !important;
+  padding: 24px 22px !important;
+  margin-bottom: 24px !important;
+  border: 1px solid var(--border, #e2e8f0) !important;
+  box-shadow: 0 4px 20px rgba(13,138,188,.07) !important;
+}
+.content-section-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  margin-bottom: 18px !important;
+  padding-bottom: 14px !important;
+  border-bottom: 1px solid var(--border, #e2e8f0) !important;
+}
+.content-section-title h3 {
+  font-size: 16px !important;
+  font-weight: 800 !important;
+  color: var(--text, #1a1a2e) !important;
+  margin: 0 0 3px !important;
+}
+.content-section-title p {
+  font-size: 12px !important;
+  color: var(--text-muted, #64748b) !important;
+  margin: 0 !important;
+}
+
+/* ── Enhanced content-filters ── */
+.content-filters {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+  align-items: center !important;
+  padding: 14px 0 !important;
+}
+.content-filters input,
+.content-filters select {
+  height: 42px !important;
+  padding: 0 14px !important;
+  border-radius: 10px !important;
+  border: 1.5px solid var(--border, #e2e8f0) !important;
+  background: var(--surface, #fff) !important;
+  color: var(--text, #1a1a2e) !important;
+  font-size: 14px !important;
+  outline: none !important;
+  min-width: 160px !important;
+  transition: border-color .2s, box-shadow .2s !important;
+}
+.content-filters input:focus,
+.content-filters select:focus {
+  border-color: #0D8ABC !important;
+  box-shadow: 0 0 0 3px rgba(13,138,188,.12) !important;
+}
+[data-theme="dark"] .content-filters input,
+[data-theme="dark"] .content-filters select {
+  background: #1e293b !important;
+  color: #e2e8f0 !important;
+  border-color: #334155 !important;
+}
+
+/* ── Content pill ── */
+.content-pill {
+  display: inline-flex; align-items: center;
+  padding: 3px 10px;
+  border-radius: 50px;
+  font-size: 11px; font-weight: 700;
+  background: linear-gradient(135deg, rgba(13,138,188,.12), rgba(0,201,167,.12));
+  color: #0D8ABC;
+  border: 1px solid rgba(13,138,188,.2);
+  letter-spacing: .3px;
+}
+[data-theme="dark"] .content-pill {
+  background: rgba(13,138,188,.2);
+  color: #38bdf8;
+  border-color: rgba(56,189,248,.25);
+}
+
+/* ── Like button ── */
+.like-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1.5px solid var(--border, #e2e8f0);
+  background: transparent;
+  color: var(--text-muted, #94a3b8);
+  font-size: 13px; font-weight: 600;
+  cursor: pointer;
+  transition: all .2s;
+}
+.like-btn:hover, .like-btn.active {
+  border-color: #ef4444;
+  color: #ef4444;
+  background: rgba(239,68,68,.08);
+}
+.like-btn .fas { font-size: 12px; }
+
+/* ── Comment panel ── */
+.comment-panel { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border, #e2e8f0); }
+.comment-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+.comment-item {
+  padding: 10px 14px;
+  background: var(--bg, #f8fafc);
+  border-radius: 10px;
+  border: 1px solid var(--border, #e2e8f0);
+  font-size: 13px;
+}
+[data-theme="dark"] .comment-item { background: #0f172a; border-color: #1e293b; }
+.comment-meta { font-size: 11px; color: var(--text-muted, #94a3b8); margin-bottom: 4px; }
+.comment-form textarea {
+  width: 100%; padding: 10px 12px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border, #e2e8f0);
+  background: var(--surface, #fff) !important;
+  color: var(--text, #1a1a2e) !important;
+  font-size: 13px;
+  resize: vertical;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color .2s;
+}
+[data-theme="dark"] .comment-form textarea {
+  background: #1e293b !important;
+  color: #e2e8f0 !important;
+  border-color: #334155;
+}
+.comment-form textarea:focus { border-color: #0D8ABC; }
+.content-load-more { text-align: center; margin-top: 20px; }
+
+/* ── Content actions ── */
+.content-actions {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  margin-top: 14px;
+}
+.content-meta {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  font-size: 11px; color: var(--text-muted, #94a3b8);
+  margin-bottom: 4px;
+}
+.content-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 18px;
+}
+.reserve-qty {
+  width: 60px; height: 34px;
+  padding: 0 8px;
+  border-radius: 8px;
+  border: 1.5px solid var(--border, #e2e8f0);
+  background: var(--surface, #fff) !important;
+  color: var(--text, #1a1a2e) !important;
+  font-size: 13px;
+  text-align: center;
+}
+[data-theme="dark"] .reserve-qty {
+  background: #1e293b !important;
+  color: #e2e8f0 !important;
+  border-color: #334155;
+}
+
+@media (max-width: 768px) {
+  .page-hero { padding: 28px 18px 36px; }
+  .page-hero h1 { font-size: 22px; }
+  .content-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+  .feature-card:hover {
+    transform: translateY(-4px) scale(1.01) !important;
+  }
+  #santea-canvas-bg {
+    opacity: .5 !important;
+  }
+  .hero::before, .hero::after {
+    display: none;
+  }
+}
+
+/* ── Reduced Motion ─────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+  #santea-canvas-bg { display: none !important; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   ▌ RTL — Arabic language support  [dir="rtl"]
+   ══════════════════════════════════════════════════════════════════════ */
+[dir="rtl"] {
+    font-family: 'Segoe UI', 'Tahoma', 'Arial', sans-serif;
+    letter-spacing: 0;
+}
+
+/* Nav */
+[dir="rtl"] nav .nav-links { flex-direction: row-reverse; }
+[dir="rtl"] .nav-icon-wrap { order: -1; }
+[dir="rtl"] .nav-logo { margin-right: 0; margin-left: auto; }
+[dir="rtl"] .nav-dropdown { right: auto; left: 0; }
+[dir="rtl"] #accountDropdown { right: auto; left: 0; }
+
+/* Sidebar (back/admin) */
+[dir="rtl"] .sidebar { left: auto; right: 0; border-right: none; border-left: 1px solid var(--border); }
+[dir="rtl"] .main-content { margin-left: 0; margin-right: 260px; }
+[dir="rtl"] .nav-link { flex-direction: row-reverse; text-align: right; }
+[dir="rtl"] .nav-link i { margin-right: 0; margin-left: 10px; }
+
+/* Page hero */
+[dir="rtl"] .page-hero { text-align: right; }
+[dir="rtl"] .page-hero-header { flex-direction: row-reverse; }
+[dir="rtl"] .page-hero-actions { flex-direction: row-reverse; }
+[dir="rtl"] .page-hero::before { right: auto; left: -60px; }
+[dir="rtl"] .page-hero::after  { left: auto; right: -40px; }
+
+/* Cards & items */
+[dir="rtl"] .dropdown-item { flex-direction: row-reverse; text-align: right; }
+[dir="rtl"] .notif-item { flex-direction: row-reverse; }
+[dir="rtl"] .notif-item.unread { border-left: none; border-right: 3px solid #3b82f6; padding-left: 12px; padding-right: 17px; }
+[dir="rtl"] .conv-item { flex-direction: row-reverse; }
+[dir="rtl"] .conv-arrow { transform: rotate(180deg); }
+[dir="rtl"] .conv-item:hover .conv-arrow { transform: rotate(180deg) translateX(3px); }
+
+/* Accordion submenu */
+[dir="rtl"] .dropdown-section-toggle { flex-direction: row-reverse; }
+[dir="rtl"] .dropdown-submenu { padding: 0 24px 0 0 !important; border-left: none !important; border-right: 3px solid rgba(13,138,188,.25) !important; }
+[dir="rtl"] #accountDropdown .dropdown-submenu { padding: 6px 24px 6px 0 !important; border-left: none !important; border-right: 3px solid rgba(13,138,188,.25) !important; }
+
+/* Content section */
+[dir="rtl"] .content-section-header { flex-direction: row-reverse; }
+[dir="rtl"] .content-section-title::before { left: auto; right: 0; }
+[dir="rtl"] .content-filters { flex-direction: row-reverse; }
+
+/* Messenger popup */
+[dir="rtl"] #messengerContainer { right: auto; left: 24px; flex-direction: row-reverse; }
+[dir="rtl"] #messengerSliderBtn { right: auto; left: 0; border-radius: 0 8px 8px 0; }
+
+/* Buttons & pills */
+[dir="rtl"] .acc-role-badge { flex-direction: row-reverse; }
+[dir="rtl"] .page-hero-badge { flex-direction: row-reverse; }
+[dir="rtl"] .content-meta { flex-direction: row-reverse; }
+
+/* Forms */
+[dir="rtl"] input, [dir="rtl"] textarea, [dir="rtl"] select { text-align: right; }
+[dir="rtl"] .content-filters input::placeholder { text-align: right; }
+
+/* Hover slide effect — reverse direction */
+[dir="rtl"] #accountDropdown .dropdown-item:hover { transform: translateX(-2px); }
+
+/* Notification badge position */
+[dir="rtl"] .nav-badge { right: auto; left: -4px; }
+

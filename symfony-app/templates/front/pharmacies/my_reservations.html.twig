@@ -1,43 +1,65 @@
 {% extends 'front/base.html.twig' %}
 
-{% block title %}Mes réservations{% endblock %}
+{% block title %}{{ 'pharma.reservations'|trans }} — SANTÉA{% endblock %}
 
 {% block body %}
 <section class="content-page">
-    <div class="content-hero">
-        <div class="content-header">
+
+    <!-- Hero -->
+    <div class="page-hero">
+        <i class="fas fa-plus page-hero-cross"></i>
+        <i class="fas fa-plus page-hero-cross"></i>
+        <div class="page-hero-header">
             <div>
-                <div class="profile-badge">Réservations</div>
-                <h1>Mes réservations</h1>
-                <p>Suivez l’état de vos demandes.</p>
+                <div class="page-hero-badge"><i class="fas fa-clipboard-list"></i> Réservations</div>
+                <h1>{{ 'pharma.reservations'|trans }}</h1>
+                <p>{{ 'pharma.reservations_sub'|trans }}</p>
             </div>
-            <div>
-                <a href="{{ path('front_pharmacy_index') }}" class="btn btn-secondary">Retour</a>
+            <div class="page-hero-actions">
+                <a href="{{ path('front_pharmacy_index') }}" class="btn" style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:10px;font-weight:700;font-size:14px;background:rgba(255,255,255,.18);color:white;border:1.5px solid rgba(255,255,255,.3);backdrop-filter:blur(4px);text-decoration:none;">
+                    <i class="fas fa-arrow-left"></i> Pharmacies
+                </a>
             </div>
         </div>
     </div>
 
+    <!-- List -->
     <div class="content-section">
+        <div class="content-section-header">
+            <div class="content-section-title">
+                <h3><i class="fas fa-history" style="color:#0D8ABC;margin-right:8px;"></i>{{ 'pharma.reservations_title'|trans }}</h3>
+                <p>{{ reservations|length }} réservation{{ reservations|length > 1 ? 's' : '' }}</p>
+            </div>
+        </div>
         <div class="content-grid">
             {% for r in reservations %}
+                {% set statusColor = r.statut == 'confirmee' ? '#22c55e' : (r.statut == 'annulee' ? '#ef4444' : '#f59e0b') %}
+                {% set statusIcon  = r.statut == 'confirmee' ? 'check-circle' : (r.statut == 'annulee' ? 'times-circle' : 'clock') %}
                 <div class="content-card">
                     <div class="content-meta">
-                        <span class="content-pill">{{ r.statut }}</span>
-                        <span>{{ r.createdAt|date('d/m/Y H:i') }}</span>
+                        <span class="content-pill" style="color:{{ statusColor }};border-color:{{ statusColor }}40;background:{{ statusColor }}15;">
+                            <i class="fas fa-{{ statusIcon }}" style="margin-right:3px;"></i>{{ r.statut|capitalize }}
+                        </span>
+                        <span><i class="fas fa-calendar" style="margin-right:3px;"></i>{{ r.createdAt|date('d/m/Y H:i') }}</span>
                     </div>
                     <h3>{{ r.medicament.nom }}</h3>
-                    <p>{{ r.pharmacie.nom }} • {{ r.pharmacie.adresse }}</p>
+                    <p><i class="fas fa-map-marker-alt" style="color:#0D8ABC;margin-right:4px;"></i>{{ r.pharmacie.nom }} &mdash; {{ r.pharmacie.adresse }}</p>
                     <div class="content-actions">
-                        <span>Qté: {{ r.quantite }}</span>
+                        <span class="content-pill" style="background:rgba(13,138,188,.1);">Qté: {{ r.quantite }}</span>
                         <form method="post" action="{{ path('api_pharmacies_reservation_cancel', {id: r.id}) }}" data-ajax="1">
-                            <button class="btn btn-secondary btn-xs" type="submit">Annuler</button>
+                            <button class="btn btn-secondary btn-xs" type="submit"><i class="fas fa-times" style="margin-right:4px;"></i>{{ 'common.cancel'|trans }}</button>
                         </form>
                     </div>
                 </div>
             {% else %}
-                <p>Aucune réservation.</p>
+                <div style="grid-column:1/-1;text-align:center;padding:40px;color:#94a3b8;">
+                    <i class="fas fa-clipboard-list" style="font-size:36px;margin-bottom:12px;display:block;opacity:.4;"></i>
+                    <p>{{ 'pharma.no_reservations'|trans }}</p>
+                    <a href="{{ path('front_pharmacy_index') }}" class="btn btn-primary" style="margin-top:12px;">{{ 'pharma.browse'|trans }}</a>
+                </div>
             {% endfor %}
         </div>
     </div>
+
 </section>
 {% endblock %}

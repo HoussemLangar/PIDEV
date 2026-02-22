@@ -34,6 +34,7 @@
     
     {% block stylesheets %}
         <link rel="stylesheet" href="{{ asset('style.css') }}?v=10002">
+        <link rel="stylesheet" href="{{ asset('css/santea-3d.css') }}?v=1">
         <link rel="SHORTCUT ICON" type="image/x-icon" href="{{ asset('logo.png') }}">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
         <style>
@@ -159,6 +160,204 @@
         }
         [data-theme="dark"] #accountDropdown .dropdown-submenu { background:rgba(13,138,188,.06) !important; border-color:rgba(13,138,188,.3) !important; }
 
+        /* ══════════════════════════════════════════════════════════
+           ▌ ACCOUNT DROPDOWN — Enhanced Design
+           ══════════════════════════════════════════════════════════ */
+
+        /* ─ Container ─────────────────────────────────────────────── */
+        #accountDropdown {
+            width: 300px;
+            border-radius: 20px;
+            padding: 0;
+            overflow: hidden;
+            border: 1px solid rgba(226,232,240,.6);
+        }
+        [data-theme="dark"] #accountDropdown { border-color: rgba(51,65,85,.8); }
+
+        /* ─ Header banner ─────────────────────────────────────────── */
+        #accountDropdown .account-header {
+            background: linear-gradient(135deg, #0D8ABC 0%, #0a6d96 55%, #1e40af 100%);
+            padding: 22px 20px 18px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+        #accountDropdown .account-header::before {
+            content: '';
+            position: absolute; top: -30px; right: -20px;
+            width: 100px; height: 100px;
+            background: rgba(255,255,255,.08);
+            border-radius: 50%;
+        }
+        #accountDropdown .account-header::after {
+            content: '';
+            position: absolute; bottom: -20px; left: 10px;
+            width: 70px; height: 70px;
+            background: rgba(255,255,255,.06);
+            border-radius: 50%;
+        }
+        #accountDropdown .acc-avatar-ring {
+            width: 66px; height: 66px;
+            border-radius: 50%;
+            padding: 3px;
+            background: linear-gradient(135deg, rgba(255,255,255,.9), rgba(255,255,255,.4));
+            box-shadow: 0 4px 18px rgba(0,0,0,.25);
+            flex-shrink: 0;
+            position: relative; z-index:1;
+        }
+        #accountDropdown .acc-avatar-ring img {
+            width: 100%; height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            display: block;
+        }
+        #accountDropdown .acc-name {
+            font-weight: 800; font-size: 15px; color: #fff;
+            text-shadow: 0 1px 4px rgba(0,0,0,.2);
+            position: relative; z-index:1;
+            line-height: 1.2;
+        }
+        #accountDropdown .acc-email {
+            font-size: 11.5px; color: rgba(255,255,255,.75);
+            position: relative; z-index:1;
+        }
+        #accountDropdown .acc-role-badge {
+            display: inline-flex; align-items: center; gap: 5px;
+            background: rgba(255,255,255,.2);
+            border: 1px solid rgba(255,255,255,.35);
+            color: #fff; font-size: 11px; font-weight: 700;
+            padding: 3px 10px; border-radius: 50px;
+            letter-spacing: .4px; text-transform: uppercase;
+            position: relative; z-index:1;
+        }
+        #accountDropdown .acc-role-badge i { font-size: 9px; opacity: .85; }
+
+        /* ─ Body ───────────────────────────────────────────────────── */
+        #accountDropdown .acc-body {
+            padding: 8px 0 6px;
+        }
+
+        /* ─ Items ───────────────────────────────────────────────────── */
+        #accountDropdown .dropdown-item {
+            display: flex; align-items: center; gap: 11px;
+            padding: 10px 18px; margin: 1px 8px;
+            border-radius: 12px;
+            font-size: 13.5px; font-weight: 600;
+            color: #1a1a2e; text-decoration: none;
+            transition: background .15s, color .15s, transform .12s;
+            position: relative;
+        }
+        [data-theme="dark"] #accountDropdown .dropdown-item { color: #cbd5e1; }
+        #accountDropdown .dropdown-item:hover {
+            background: rgba(13,138,188,.09);
+            color: #0D8ABC;
+            transform: translateX(2px);
+        }
+        [data-theme="dark"] #accountDropdown .dropdown-item:hover {
+            background: rgba(13,138,188,.15);
+            color: #38bdf8;
+        }
+        #accountDropdown .dropdown-item i:first-child {
+            width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(13,138,188,.1); color: #0D8ABC;
+            font-size: 12.5px; transition: background .15s;
+        }
+        [data-theme="dark"] #accountDropdown .dropdown-item i:first-child {
+            background: rgba(13,138,188,.2); color: #38bdf8;
+        }
+        #accountDropdown .dropdown-item:hover i:first-child {
+            background: rgba(13,138,188,.18);
+        }
+        /* danger item */
+        #accountDropdown .dropdown-item.danger {
+            color: #dc2626;
+            margin-top: 2px;
+        }
+        [data-theme="dark"] #accountDropdown .dropdown-item.danger { color: #f87171; }
+        #accountDropdown .dropdown-item.danger i:first-child {
+            background: rgba(220,38,38,.1); color: #dc2626;
+        }
+        [data-theme="dark"] #accountDropdown .dropdown-item.danger i:first-child {
+            background: rgba(248,113,113,.15); color: #f87171;
+        }
+        #accountDropdown .dropdown-item.danger:hover {
+            background: rgba(220,38,38,.08); color: #b91c1c; transform: translateX(2px);
+        }
+        [data-theme="dark"] #accountDropdown .dropdown-item.danger:hover {
+            background: rgba(248,113,113,.12); color: #fca5a5;
+        }
+
+        /* ─ Submenu toggle button ───────────────────────────────────── */
+        #accountDropdown .dropdown-section-toggle {
+            display: flex; align-items: center; gap: 11px;
+            width: calc(100% - 16px); margin: 1px 8px;
+            padding: 10px 18px 10px 18px;
+            border: none; border-radius: 12px;
+            background: rgba(13,138,188,.06);
+            color: #1a1a2e; font-size: 13.5px; font-weight: 600;
+            cursor: pointer; transition: background .15s, color .15s;
+            box-sizing: border-box;
+        }
+        [data-theme="dark"] #accountDropdown .dropdown-section-toggle {
+            background: rgba(13,138,188,.1); color: #cbd5e1;
+        }
+        #accountDropdown .dropdown-section-toggle:hover {
+            background: rgba(13,138,188,.12); color: #0D8ABC;
+        }
+        [data-theme="dark"] #accountDropdown .dropdown-section-toggle:hover { color: #38bdf8; }
+        #accountDropdown .dropdown-section-toggle i:first-child {
+            width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(13,138,188,.12); color: #0D8ABC; font-size: 12.5px;
+        }
+        [data-theme="dark"] #accountDropdown .dropdown-section-toggle i:first-child {
+            background: rgba(13,138,188,.2); color: #38bdf8;
+        }
+        #accountDropdown .dropdown-section-toggle span { flex: 1; text-align: left; }
+        #accountDropdown .toggle-indicator {
+            font-size: 11px; color: #94a3b8; transition: transform .25s;
+            width: auto !important; height: auto !important;
+            background: none !important;
+        }
+        #accountDropdown .dropdown-section.has-submenu.open .toggle-indicator { transform: rotate(90deg); }
+
+        /* ─ Divider ─────────────────────────────────────────────────── */
+        #accountDropdown .dropdown-divider {
+            height: 1px; background: rgba(226,232,240,.7);
+            margin: 6px 18px;
+        }
+        [data-theme="dark"] #accountDropdown .dropdown-divider { background: rgba(51,65,85,.7); }
+
+        /* ─ Inline rows (theme / lang) ──────────────────────────────── */
+        #accountDropdown .dropdown-inline {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 8px 18px; margin: 1px 8px;
+            color: #64748b; font-size: 12.5px; font-weight: 600;
+            border-radius: 10px;
+            cursor: default;
+        }
+        [data-theme="dark"] #accountDropdown .dropdown-inline { color: #94a3b8; }
+        #accountDropdown .inline-actions { display: flex; gap: 5px; }
+        #accountDropdown .mini-pill {
+            padding: 3px 10px; border-radius: 50px;
+            font-size: 11.5px; font-weight: 700;
+            background: rgba(13,138,188,.08); color: #0D8ABC;
+            border: 1px solid rgba(13,138,188,.2);
+            text-decoration: none; transition: all .15s;
+        }
+        #accountDropdown .mini-pill:hover {
+            background: #0D8ABC; color: #fff;
+            border-color: #0D8ABC;
+        }
+        [data-theme="dark"] #accountDropdown .mini-pill {
+            background: rgba(13,138,188,.15); color: #38bdf8; border-color: rgba(56,189,248,.25);
+        }
+        [data-theme="dark"] #accountDropdown .mini-pill:hover { background: #0D8ABC; color: #fff; }
+
         /* ─── Messenger popup ────────────────────────────────────── */
         #messengerContainer {
             position:fixed; bottom:0; right:24px;
@@ -238,6 +437,12 @@
 </head>
 {% set theme = app.user ? app.user.themePreference : (app.session ? app.session.get('theme') : 'light') %}
 <body data-theme="{{ theme ?: 'light' }}"{% block body_class %}{% endblock %}>
+
+    <!-- 3D Scroll Progress Bar -->
+    <div id="s3d-scroll-progress" aria-hidden="true"></div>
+
+    <!-- 3D Page Transition Overlay -->
+    <div id="s3d-page-transition" aria-hidden="true"></div>
     
     {% block header %}
         <!-- Header / Navbar -->
@@ -307,112 +512,128 @@
                         </button>
 
                         <div class="account-dropdown nav-dropdown" id="accountDropdown">
-                            <div class="account-info">
-                                <img src="{{ _avatarUrl }}"
-                                            alt="Avatar" class="account-avatar">
-                                <strong>{{ app.user.nom }} {{ app.user.prenom }}</strong>
-                                <p>{{ app.user.email }}</p>
-                            </div>
-
-                            <hr>
-
-                            <a href="{{ path('profile_edit') }}" class="dropdown-item">
-                                <i class="fas fa-cog"></i> {{ 'nav.settings'|trans }}
-                            </a>
-                            <a href="{{ path('profile_mfa') }}" class="dropdown-item">
-                                <i class="fas fa-key"></i> {{ 'nav.mfa'|trans }}
-                            </a>
-
-                            <hr>
-
-                            {% set canTeleconsult = is_granted('ROLE_PATIENT') or is_granted('ROLE_MEDECIN') %}
-                            {% set canPlan = is_granted('ROLE_PATIENT') or is_granted('ROLE_COACH') %}
-                            {% set isPatient = app.user and (app.user.subscriptionType ?? app.user.role) == 'ROLE_PATIENT' %}
-
-                            <div class="dropdown-section has-submenu">
-                                <button type="button" class="dropdown-section-toggle" data-submenu="accompagnement" aria-controls="submenu-accompagnement" aria-expanded="false">
-                                    <i class="fas fa-hand-holding-heart"></i>
-                                    <span>Accompagnement</span>
-                                    <i class="fas fa-chevron-right toggle-indicator" aria-hidden="true"></i>
-                                </button>
-                                <div class="dropdown-submenu" id="submenu-accompagnement" role="menu" aria-hidden="true">
-                                    <a href="{{ path('app_message_index') }}" class="dropdown-item">
-                                        <i class="fas fa-envelope"></i> Messages
-                                    </a>
-                                    <a href="{{ path('app_document_index') }}" class="dropdown-item">
-                                        <i class="fas fa-file"></i> Documents
-                                    </a>
-                                    {% if canTeleconsult %}
-                                    <a href="{{ path('app_teleconsultation_index') }}" class="dropdown-item">
-                                        <i class="fas fa-video"></i> Consultations vidéo
-                                    </a>
-                                    {% endif %}
-                                    {% if canPlan %}
-                                    <a href="{{ path('app_plan_index') }}" class="dropdown-item">
-                                        <i class="fas fa-calendar-check"></i> Mes plans
-                                    </a>
-                                    {% endif %}
-                                </div>
-                            </div>
-
-                            {% if isPatient %}
-                            <div class="dropdown-section has-submenu">
-                                <button type="button" class="dropdown-section-toggle" data-submenu="sante" aria-controls="submenu-sante" aria-expanded="false">
-                                    <i class="fas fa-heartbeat"></i>
-                                    <span>Santé quotidienne</span>
-                                    <i class="fas fa-chevron-right toggle-indicator" aria-hidden="true"></i>
-                                </button>
-                                <div class="dropdown-submenu" id="submenu-sante" role="menu" aria-hidden="true">
-                                    <a href="{{ path('app_sante_quotidienne_index') }}" class="dropdown-item">
-                                        <i class="fas fa-book-medical"></i> Mon journal santé
-                                    </a>
-                                    <a href="{{ path('app_symptomes') }}" class="dropdown-item">
-                                        <i class="fas fa-stethoscope"></i> Mes symptômes
-                                    </a>
-                                </div>
-                            </div>
+                            {# ── header ── #}
+                            {% set _userRole = app.user.subscriptionType ?? app.user.role %}
+                            {% if _userRole == 'ROLE_MEDECIN' %}
+                                {% set _roleLabel = 'Médecin' %} {% set _roleIcon = 'fas fa-user-md' %}
+                            {% elseif _userRole == 'ROLE_PHARMACIEN' %}
+                                {% set _roleLabel = 'Pharmacien' %} {% set _roleIcon = 'fas fa-pills' %}
+                            {% elseif _userRole == 'ROLE_COACH' %}
+                                {% set _roleLabel = 'Coach' %} {% set _roleIcon = 'fas fa-dumbbell' %}
+                            {% else %}
+                                {% set _roleLabel = 'Patient' %} {% set _roleIcon = 'fas fa-user' %}
                             {% endif %}
-
-                            <a href="{{ path('app_subscription_overview') }}" class="dropdown-item">
-                                <i class="fas fa-star"></i> {{ 'nav.subscription'|trans }}
-                            </a>
-                            {% if isPatient %}
-                            <a href="{{ path('app_appointments') }}" class="dropdown-item">
-                                <i class="fas fa-calendar-check"></i> Rendez-vous
-                            </a>
-                            {% endif %}
-                            {% if app.user and (app.user.subscriptionType ?? app.user.role) == 'ROLE_MEDECIN' %}
-                            <a href="{{ path('app_appointments') }}" class="dropdown-item">
-                                <i class="fas fa-calendar-check"></i> Rendez-vous
-                            </a>
-                            {% endif %}
-                            {% if app.user and (app.user.subscriptionType ?? app.user.role) == 'ROLE_PHARMACIEN' %}
-                            <a href="{{ path('front_pharmacien_dashboard') }}" class="dropdown-item">
-                                <i class="fas fa-clinic-medical"></i> Ma pharmacie
-                            </a>
-                            {% endif %}
-
-                            <div class="dropdown-divider"></div>
-
-                            <div class="dropdown-item dropdown-inline">
-                                <span>{{ 'nav.theme'|trans }}</span>
-                                <div class="inline-actions">
-                                    <a href="{{ path('app_theme', {theme: 'light'}) }}" class="mini-pill">{{ 'theme.light'|trans }}</a>
-                                    <a href="{{ path('app_theme', {theme: 'dark'}) }}" class="mini-pill">{{ 'theme.dark'|trans }}</a>
+                            <div class="account-header">
+                                <div class="acc-avatar-ring">
+                                    <img src="{{ _avatarUrl }}" alt="Avatar">
                                 </div>
-                            </div>
-                            <div class="dropdown-item dropdown-inline">
-                                <span>{{ 'nav.language'|trans }}</span>
-                                <div class="inline-actions">
-                                    <a href="{{ path('app_locale', {_locale: 'fr'}) }}" class="mini-pill">FR</a>
-                                    <a href="{{ path('app_locale', {_locale: 'en'}) }}" class="mini-pill">EN</a>
-                                    <a href="{{ path('app_locale', {_locale: 'ar'}) }}" class="mini-pill">AR</a>
-                                </div>
+                                <div class="acc-name">{{ app.user.nom }} {{ app.user.prenom }}</div>
+                                <div class="acc-email">{{ app.user.email }}</div>
+                                <span class="acc-role-badge"><i class="{{ _roleIcon }}"></i> {{ _roleLabel }}</span>
                             </div>
 
-                            <a href="{{ path('app_logout') }}" class="dropdown-item danger">
-                                <i class="fas fa-sign-out-alt"></i> {{ 'nav.logout'|trans }}
-                            </a>
+                            {# ── body ── #}
+                            <div class="acc-body">
+                                {% set canTeleconsult = is_granted('ROLE_PATIENT') or is_granted('ROLE_MEDECIN') %}
+                                {% set canPlan = is_granted('ROLE_PATIENT') or is_granted('ROLE_COACH') %}
+                                {% set isPatient = app.user and (app.user.subscriptionType ?? app.user.role) == 'ROLE_PATIENT' %}
+
+                                <a href="{{ path('profile_edit') }}" class="dropdown-item">
+                                    <i class="fas fa-user-circle"></i> {{ 'nav.settings'|trans }}
+                                </a>
+                                <a href="{{ path('profile_mfa') }}" class="dropdown-item">
+                                    <i class="fas fa-key"></i> {{ 'nav.mfa'|trans }}
+                                </a>
+
+                                <div class="dropdown-divider"></div>
+
+                                <div class="dropdown-section has-submenu">
+                                    <button type="button" class="dropdown-section-toggle" data-submenu="accompagnement" aria-controls="submenu-accompagnement" aria-expanded="false">
+                                        <i class="fas fa-hand-holding-heart"></i>
+                                        <span>Accompagnement</span>
+                                        <i class="fas fa-chevron-right toggle-indicator" aria-hidden="true"></i>
+                                    </button>
+                                    <div class="dropdown-submenu" id="submenu-accompagnement" role="menu" aria-hidden="true">
+                                        <a href="{{ path('app_message_index') }}" class="dropdown-item">
+                                            <i class="fas fa-envelope"></i> Messages
+                                        </a>
+                                        <a href="{{ path('app_document_index') }}" class="dropdown-item">
+                                            <i class="fas fa-file-alt"></i> Documents
+                                        </a>
+                                        {% if canTeleconsult %}
+                                        <a href="{{ path('app_teleconsultation_index') }}" class="dropdown-item">
+                                            <i class="fas fa-video"></i> Consultations vidéo
+                                        </a>
+                                        {% endif %}
+                                        {% if canPlan %}
+                                        <a href="{{ path('app_plan_index') }}" class="dropdown-item">
+                                            <i class="fas fa-calendar-check"></i> Mes plans
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                {% if isPatient %}
+                                <div class="dropdown-section has-submenu">
+                                    <button type="button" class="dropdown-section-toggle" data-submenu="sante" aria-controls="submenu-sante" aria-expanded="false">
+                                        <i class="fas fa-heartbeat"></i>
+                                        <span>Santé quotidienne</span>
+                                        <i class="fas fa-chevron-right toggle-indicator" aria-hidden="true"></i>
+                                    </button>
+                                    <div class="dropdown-submenu" id="submenu-sante" role="menu" aria-hidden="true">
+                                        <a href="{{ path('app_sante_quotidienne_index') }}" class="dropdown-item">
+                                            <i class="fas fa-book-medical"></i> Mon journal santé
+                                        </a>
+                                        <a href="{{ path('app_symptomes') }}" class="dropdown-item">
+                                            <i class="fas fa-stethoscope"></i> Mes symptômes
+                                        </a>
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                <a href="{{ path('app_subscription_overview') }}" class="dropdown-item">
+                                    <i class="fas fa-star"></i> {{ 'nav.subscription'|trans }}
+                                </a>
+                                {% if isPatient %}
+                                <a href="{{ path('app_appointments') }}" class="dropdown-item">
+                                    <i class="fas fa-calendar-alt"></i> Rendez-vous
+                                </a>
+                                {% endif %}
+                                {% if app.user and (app.user.subscriptionType ?? app.user.role) == 'ROLE_MEDECIN' %}
+                                <a href="{{ path('app_appointments') }}" class="dropdown-item">
+                                    <i class="fas fa-calendar-alt"></i> Rendez-vous
+                                </a>
+                                {% endif %}
+                                {% if app.user and (app.user.subscriptionType ?? app.user.role) == 'ROLE_PHARMACIEN' %}
+                                <a href="{{ path('front_pharmacien_dashboard') }}" class="dropdown-item">
+                                    <i class="fas fa-clinic-medical"></i> Ma pharmacie
+                                </a>
+                                {% endif %}
+
+                                <div class="dropdown-divider"></div>
+
+                                <div class="dropdown-inline">
+                                    <span>{{ 'nav.theme'|trans }}</span>
+                                    <div class="inline-actions">
+                                        <a href="{{ path('app_theme', {theme: 'light'}) }}" class="mini-pill">{{ 'theme.light'|trans }}</a>
+                                        <a href="{{ path('app_theme', {theme: 'dark'}) }}" class="mini-pill">{{ 'theme.dark'|trans }}</a>
+                                    </div>
+                                </div>
+                                <div class="dropdown-inline">
+                                    <span>{{ 'nav.language'|trans }}</span>
+                                    <div class="inline-actions">
+                                        <a href="{{ path('app_locale', {_locale: 'fr'}) }}" class="mini-pill">FR</a>
+                                        <a href="{{ path('app_locale', {_locale: 'en'}) }}" class="mini-pill">EN</a>
+                                        <a href="{{ path('app_locale', {_locale: 'ar'}) }}" class="mini-pill">AR</a>
+                                    </div>
+                                </div>
+
+                                <div class="dropdown-divider"></div>
+
+                                <a href="{{ path('app_logout') }}" class="dropdown-item danger" style="margin-bottom:6px;">
+                                    <i class="fas fa-sign-out-alt"></i> {{ 'nav.logout'|trans }}
+                                </a>
+                            </div>
                         </div>
                     </div>
 
@@ -735,6 +956,74 @@
             // ─── Account button ─────────────────────────────────────────────────
             setupDropdown('accountBtn', 'accountDropdown');
 
+            // ─── Portal Nav Dropdowns to <body> ──────────────────────────────────
+            // backdrop-filter on <header> creates a stacking context that traps
+            // children regardless of z-index. Moving dropdowns to <body> (portal
+            // pattern) keeps them in the root stacking context and above everything.
+            (function portalNavDropdowns() {
+                const pairs = [
+                    { btnId: 'notifBtn',  dropId: 'notifDropdown'  },
+                    { btnId: 'msgNavBtn', dropId: 'msgDropdown'     },
+                    { btnId: 'accountBtn',dropId: 'accountDropdown' },
+                ];
+                pairs.forEach(({ btnId, dropId }) => {
+                    const btn  = document.getElementById(btnId);
+                    const drop = document.getElementById(dropId);
+                    if (!btn || !drop) return;
+
+                    // Detach from header and attach to body
+                    document.body.appendChild(drop);
+
+                    // Override CSS positioning to fixed so it's viewport-relative
+                    Object.assign(drop.style, {
+                        position : 'fixed',
+                        top      : '-9999px',
+                        left     : '-9999px',
+                        right    : 'auto',
+                        bottom   : 'auto',
+                        margin   : '0',
+                        zIndex   : '99999',
+                    });
+
+                    function reposition() {
+                        const r    = btn.getBoundingClientRect();
+                        const dropW = drop.offsetWidth  || 360;
+                        const dropH = drop.scrollHeight || 500;
+                        const vw   = window.innerWidth;
+                        const vh   = window.innerHeight;
+                        const gap  = 8;
+
+                        // Align right edge of dropdown with right edge of button
+                        let left = r.right - dropW;
+                        if (left < gap)              left = gap;
+                        if (left + dropW > vw - gap) left = vw - dropW - gap;
+
+                        // Open downward; flip upward if it would bleed off-screen
+                        const top = (r.bottom + gap + dropH > vh - gap)
+                            ? Math.max(gap, r.top - dropH - gap)
+                            : r.bottom + gap;
+
+                        drop.style.top  = top  + 'px';
+                        drop.style.left = left + 'px';
+                    }
+
+                    // Reposition every time .show is toggled
+                    new MutationObserver(() => {
+                        if (drop.classList.contains('show')) {
+                            reposition();
+                        } else {
+                            drop.style.top  = '-9999px';
+                            drop.style.left = '-9999px';
+                        }
+                    }).observe(drop, { attributes: true, attributeFilter: ['class'] });
+
+                    window.addEventListener('resize', () => {
+                        if (drop.classList.contains('show')) reposition();
+                    }, { passive: true });
+                });
+            })();
+            // ─────────────────────────────────────────────────────────────────────
+
             // ─── Messenger Popup ────────────────────────────────────────────────
             const messengerContainer = document.getElementById('messengerContainer');
             const openPopups = new Map();
@@ -938,6 +1227,12 @@
             </div>
         </footer>
     {% endblock %}
+
+    {# ──── SANTÉA 3D Layer ────────────────────────────────────────── #}
+    {# Three.js WebGL background (async, idle-loaded) #}
+    <script type="module" src="{{ asset('js/santea-3d-engine.js') }}?v=1"></script>
+    {# Interactions: scroll reveal, tilt, parallax, counters #}
+    <script defer src="{{ asset('js/santea-3d-interactions.js') }}?v=1"></script>
 
 </body>
 </html>

@@ -273,6 +273,67 @@ class AppointmentController extends AbstractController
         return new JsonResponse(['success' => true]);
     }
 
+    #[Route('/{id}/patient-reschedule', name: 'patient_reschedule', methods: ['POST'])]
+    public function patientReschedule(int $id, Request $request): JsonResponse
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            return new JsonResponse(['success' => false], 403);
+        }
+        if (!$this->canAccessPatient($user)) {
+            return new JsonResponse(['success' => false, 'message' => 'Abonnement patient requis'], 403);
+        }
+        $patient = $this->ensurePatient($user);
+        if (!$patient) {
+            return new JsonResponse(['success' => false], 403);
+        }
+        $rdv = $this->rendezVousRepository->find($id);
+        if (!$rdv || $rdv->getPatient()->getId() !== $patient->getId()) {
+            return new JsonResponse(['success' => false, 'message' => 'Introuvable'], 404);
+        }
+
+        $data = json_decode($request->getContent(), true) ?: [];
+        $date = (string) ($data['date'] ?? '');
+        $time = (string) ($data['time'] ?? '');
+        if (!$date || !$time) {
+            return new JsonResponse(['success' => false, 'message' => 'Date et heure requises'], 422);
+        }
+
+        $medecin = $rdv->getMedecin();
+        $dispo = $this->disponibiliteRepository->createQueryBuilder('d')
+            ->andWhere('d.medecin = :m')->setParameter('m', $medecin)
+            ->andWhere('d.date = :d')->setParameter('d', new \DateTime($date))
+            ->andWhere('d.heureDebut = :h')->setParameter('h', new \DateTime($date . ' ' . $time))
+            ->getQuery()->getOneOrNullResult();
+
+        if (!$dispo) {
+            $dispo = new Disponibilite();
+            $dispo->setMedecin($medecin);
+            $dispo->setDate(new \DateTime($date));
+            $dispo->setHeureDebut(new \DateTime($date . ' ' . $time));
+            $dispo->setHeureFin((new \DateTime($date . ' ' . $time))->modify('+30 minutes'));
+            $dispo->setStatut('disponible');
+            $this->em->persist($dispo);
+            $this->em->flush();
+        }
+
+        if ($dispo->getRendezvous() && $dispo->getRendezvous()->getId() !== $rdv->getId()) {
+            return new JsonResponse(['success' => false, 'message' => 'Ce créneau est déjà réservé'], 409);
+        }
+
+        $this->appointmentService->reschedule($rdv, $dispo);
+        // Override to en_attente so the doctor must approve
+        $rdv->setStatut('en_attente');
+        $this->em->flush();
+
+        $doctorUser = $medecin->getUser();
+        $this->notificationService->notify($doctorUser, 'Replanification demandée', 'Un patient demande une replanification. Veuillez confirmer ou refuser.', 'rdv', null, 'normal');
+        $this->notificationService->notify($user, 'Replanification envoyée', 'Votre demande de replanification est en attente d\'approbation du médecin.', 'rdv', null, 'normal');
+
+        return new JsonResponse(['success' => true]);
+    }
+
     #[Route('/doctor', name: 'doctor', methods: ['GET'])]
     public function doctorAppointments(): JsonResponse
     {
