@@ -224,7 +224,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     #[ORM\OneToOne(mappedBy: 'user', targetEntity: Nutritionniste::class, cascade: ['persist', 'remove'])]
     private ?Nutritionniste $nutritionniste = null;
 
-    #[ORM\OneToOne(mappedBy: 'user', targetEntity: GoogleFitAccount::class, cascade: ['persist', 'remove'])]
+    #[ORM\OneToOne(
+        mappedBy: 'user',
+        targetEntity: GoogleFitAccount::class,
+        cascade: ['persist', 'remove'],
+        fetch: 'LAZY'
+    )]
     private ?GoogleFitAccount $googleFitAccount = null;
 
     #[ORM\OneToMany(mappedBy: 'auteur', targetEntity: Contenu::class)]

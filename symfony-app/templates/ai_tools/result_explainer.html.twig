@@ -1,0 +1,44 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Explain AI Résultat{% endblock %}
+
+{% block content %}
+<div class="content-wrapper" style="padding: 30px 40px; max-width: 980px; margin: 0 auto;">
+    <h1 style="margin:0 0 8px 0; color:#1a1a2e;">Explain AI (résultat médical)</h1>
+    <form method="post" style="background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:16px;">
+        <input name="testName" placeholder="Nom du test (ex: Glycémie)" style="width:100%; margin-bottom:10px; border:1px solid #dbe2ea; border-radius:10px; padding:10px;">
+        <div style="display:flex; gap:8px; margin-bottom:10px;">
+            <input name="value" placeholder="Valeur" style="width:180px; border:1px solid #dbe2ea; border-radius:10px; padding:10px;">
+            <input name="unit" placeholder="Unité" style="width:180px; border:1px solid #dbe2ea; border-radius:10px; padding:10px;">
+        </div>
+        <input name="referenceRange" placeholder="Intervalle de référence (ex: 0.7 - 1.1 g/L)" style="width:100%; margin-bottom:10px; border:1px solid #dbe2ea; border-radius:10px; padding:10px;">
+        <button type="submit" style="border:none; background:#0D8ABC; color:#fff; border-radius:10px; padding:10px 14px;">Expliquer</button>
+    </form>
+
+    {% if result %}
+        <div style="margin-top:18px; background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:16px;">
+            <h3 style="margin-top:0;">Explication simple</h3>
+            <p>{{ result.plainExplanation }}</p>
+
+            <h4>Interprétations possibles</h4>
+            <ul>
+                {% for x in result.possibleMeaning %}
+                    <li>{{ x }}</li>
+                {% endfor %}
+            </ul>
+
+            <h4>Prochaines étapes</h4>
+            <ul>
+                {% for x in result.nextSteps %}
+                    <li>{{ x }}</li>
+                {% endfor %}
+            </ul>
+
+            <div style="margin-top:10px; background:#fff7ed; border:1px solid #fed7aa; color:#9a3412; border-radius:10px; padding:10px;">
+                {{ result.warning }}
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+

@@ -1,0 +1,46 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Assistant Exercice IA{% endblock %}
+
+{% block content %}
+<div class="content-wrapper" style="padding: 30px 40px; max-width: 980px; margin: 0 auto;">
+    <h1 style="margin:0 0 8px 0; color:#1a1a2e;">Assistant exercice (IA)</h1>
+    <form method="post" style="background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:16px;">
+        <input name="goal" placeholder="Objectif (ex: endurance)" style="width:100%; margin-bottom:10px; border:1px solid #dbe2ea; border-radius:10px; padding:10px;">
+        <select name="level" style="width:100%; margin-bottom:10px; border:1px solid #dbe2ea; border-radius:10px; padding:10px;">
+            <option value="debutant">Débutant</option>
+            <option value="intermediaire">Intermédiaire</option>
+            <option value="avance">Avancé</option>
+        </select>
+        <div style="display:flex; gap:8px; margin-bottom:10px;">
+            <input type="number" name="daysPerWeek" min="1" max="7" value="3" style="width:180px; border:1px solid #dbe2ea; border-radius:10px; padding:10px;">
+            <input type="number" name="minutes" min="10" max="120" value="30" style="width:180px; border:1px solid #dbe2ea; border-radius:10px; padding:10px;">
+        </div>
+        <input name="constraints" placeholder="Contraintes physiques" style="width:100%; margin-bottom:10px; border:1px solid #dbe2ea; border-radius:10px; padding:10px;">
+        <button type="submit" style="border:none; background:#0D8ABC; color:#fff; border-radius:10px; padding:10px 14px;">Générer</button>
+    </form>
+
+    {% if result %}
+        <div style="margin-top:18px; background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:16px;">
+            <h3 style="margin-top:0;">{{ result.overview }}</h3>
+            {% for s in result.sessions %}
+                <div style="margin-bottom:12px; padding:10px; border:1px solid #eef2f7; border-radius:10px;">
+                    <strong>{{ s.day }}</strong> - {{ s.focus }} ({{ s.durationMin }} min)
+                    <ul>
+                        {% for step in s.plan %}
+                            <li>{{ step }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endfor %}
+            <h4>Sécurité</h4>
+            <ul>
+                {% for x in result.safety %}
+                    <li>{{ x }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+

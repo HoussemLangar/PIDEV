@@ -1,0 +1,60 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Scanner Document IA{% endblock %}
+
+{% block content %}
+<div class="content-wrapper" style="padding: 30px 40px; max-width: 980px; margin: 0 auto;">
+    <h1 style="margin:0 0 8px 0; color:#1a1a2e;">Scanner de document médical (IA)</h1>
+    <p style="margin:0 0 20px 0; color:#64748b;">Collez un texte médical ou chargez un fichier texte.</p>
+
+    <form method="post" enctype="multipart/form-data" style="background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:16px;">
+        <textarea name="content" rows="8" placeholder="Collez ici le contenu du document..." style="width:100%; border:1px solid #dbe2ea; border-radius:10px; padding:12px;"></textarea>
+        <div style="margin-top:10px;">
+            <input type="file" name="document" accept=".txt,.csv,.log" />
+        </div>
+        <button type="submit" style="margin-top:12px; border:none; background:#0D8ABC; color:#fff; border-radius:10px; padding:10px 14px;">Analyser</button>
+    </form>
+
+    {% if result %}
+        <div style="margin-top:18px; background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:16px;">
+            <h3 style="margin-top:0;">Résumé</h3>
+            <p>{{ result.summary }}</p>
+
+            <h4>Points clés</h4>
+            <ul>
+                {% for p in result.keyPoints %}
+                    <li>{{ p }}</li>
+                {% else %}
+                    <li>Aucun point clé.</li>
+                {% endfor %}
+            </ul>
+
+            <h4>Valeurs extraites</h4>
+            <table style="width:100%; border-collapse:collapse;">
+                <thead>
+                    <tr><th style="text-align:left;">Libellé</th><th style="text-align:left;">Valeur</th><th style="text-align:left;">Unité</th></tr>
+                </thead>
+                <tbody>
+                {% for v in result.values %}
+                    <tr>
+                        <td>{{ v.label }}</td>
+                        <td>{{ v.value }}</td>
+                        <td>{{ v.unit }}</td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="3">Aucune valeur extraite.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+
+            <h4>Actions suggérées</h4>
+            <ul>
+                {% for a in result.suggestedActions %}
+                    <li>{{ a }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+

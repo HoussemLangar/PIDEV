@@ -7,6 +7,9 @@ parameters:
     geoip_db_path: '%kernel.project_dir%/var/geoip/GeoLite2-Country.mmdb'
     geoip_api_url: '%env(resolve:GEOIP_API_URL)%'
     jitsi_server_url: '%env(JITSI_SERVER_URL)%'
+    ai_api_base_url: '%env(resolve:AI_API_BASE_URL)%'
+    ai_api_key: '%env(resolve:AI_API_KEY)%'
+    ai_model: '%env(resolve:AI_MODEL)%'
     content_forbidden_words:
         - spam
         - arnaque
@@ -33,6 +36,12 @@ services:
             - '../src/DependencyInjection/'
             - '../src/Entity/'
             - '../src/Kernel.php'
+            - '../src/Twig/Components/'
+
+    App\Twig\Components\:
+        resource: '../src/Twig/Components/'
+        autowire: true
+        autoconfigure: true
 
     App\Service\InvoiceService:
         arguments:
@@ -46,6 +55,16 @@ services:
     App\Service\ForbiddenWordsFilterService:
         arguments:
             $forbiddenWords: '%content_forbidden_words%'
+
+    App\Service\Ai\AiGatewayService:
+        arguments:
+            $baseUrl: '%ai_api_base_url%'
+            $apiKey: '%ai_api_key%'
+            $model: '%ai_model%'
+
+    App\Service\MessageRealtimePublisher:
+        arguments:
+            $hub: '@?mercure.hub.default'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

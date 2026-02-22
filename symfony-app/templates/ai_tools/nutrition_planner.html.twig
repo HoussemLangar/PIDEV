@@ -1,0 +1,42 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Assistant Nutrition IA{% endblock %}
+
+{% block content %}
+<div class="content-wrapper" style="padding: 30px 40px; max-width: 980px; margin: 0 auto;">
+    <h1 style="margin:0 0 8px 0; color:#1a1a2e;">Assistant nutrition (IA)</h1>
+    <form method="post" style="background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:16px;">
+        <input name="goal" placeholder="Objectif (ex: perte de poids)" style="width:100%; margin-bottom:10px; border:1px solid #dbe2ea; border-radius:10px; padding:10px;">
+        <select name="dietStyle" style="width:100%; margin-bottom:10px; border:1px solid #dbe2ea; border-radius:10px; padding:10px;">
+            <option value="standard">Standard</option>
+            <option value="vegetarien">Végétarien</option>
+            <option value="mediterraneen">Méditerranéen</option>
+        </select>
+        <input name="allergies" placeholder="Allergies/intolérances" style="width:100%; margin-bottom:10px; border:1px solid #dbe2ea; border-radius:10px; padding:10px;">
+        <input type="number" name="days" min="1" max="14" value="7" style="width:130px; border:1px solid #dbe2ea; border-radius:10px; padding:10px;">
+        <button type="submit" style="margin-left:8px; border:none; background:#0D8ABC; color:#fff; border-radius:10px; padding:10px 14px;">Générer</button>
+    </form>
+
+    {% if result %}
+        <div style="margin-top:18px; background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:16px;">
+            <h3 style="margin-top:0;">{{ result.overview }}</h3>
+            {% for d in result.days %}
+                <div style="margin-bottom:12px; padding:10px; border:1px solid #eef2f7; border-radius:10px;">
+                    <strong>Jour {{ d.day }}</strong>
+                    <div>Petit-déjeuner: {{ d.breakfast }}</div>
+                    <div>Déjeuner: {{ d.lunch }}</div>
+                    <div>Dîner: {{ d.dinner }}</div>
+                    <div>Collation: {{ d.snack }}</div>
+                </div>
+            {% endfor %}
+            <h4>Conseils</h4>
+            <ul>
+                {% for tip in result.tips %}
+                    <li>{{ tip }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+

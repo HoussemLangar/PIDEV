@@ -1,0 +1,30 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Outils IA{% endblock %}
+
+{% block content %}
+<div class="content-wrapper" style="padding: 30px 40px; max-width: 1100px; margin: 0 auto;">
+    <h1 style="margin: 0 0 8px 0; font-size: 30px; color: #1a1a2e;">Outils IA indépendants</h1>
+    <p style="margin: 0 0 24px 0; color: #64748b;">Modules autonomes: scan document, nutrition, exercice, explicateur de résultats.</p>
+
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:16px;">
+        <a href="{{ path('app_ai_tools_document_scanner') }}" style="text-decoration:none; background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:18px;">
+            <div style="font-weight:700; color:#0f172a;">1. Scanner document</div>
+            <div style="font-size:13px; color:#64748b; margin-top:6px;">OCR texte + extraction de valeurs.</div>
+        </a>
+        <a href="{{ path('app_ai_tools_nutrition_planner') }}" style="text-decoration:none; background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:18px;">
+            <div style="font-weight:700; color:#0f172a;">8. Assistant nutrition</div>
+            <div style="font-size:13px; color:#64748b; margin-top:6px;">Plan repas personnalisé.</div>
+        </a>
+        <a href="{{ path('app_ai_tools_workout_planner') }}" style="text-decoration:none; background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:18px;">
+            <div style="font-weight:700; color:#0f172a;">9. Assistant exercice</div>
+            <div style="font-size:13px; color:#64748b; margin-top:6px;">Programme d'entraînement autonome.</div>
+        </a>
+        <a href="{{ path('app_ai_tools_result_explainer') }}" style="text-decoration:none; background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:18px;">
+            <div style="font-weight:700; color:#0f172a;">10. Explain AI</div>
+            <div style="font-size:13px; color:#64748b; margin-top:6px;">Explication simple d'un résultat.</div>
+        </a>
+    </div>
+</div>
+{% endblock %}
+

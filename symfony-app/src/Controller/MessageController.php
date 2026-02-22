@@ -9,6 +9,7 @@ use App\Form\MessageType;
 use App\Repository\ConversationRepository;
 use App\Repository\MessageRepository;
 use App\Repository\UserRepository;
+use App\Service\MessageRealtimePublisher;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -27,6 +28,7 @@ class MessageController extends AbstractController
         private ConversationRepository $conversationRepository,
         private MessageRepository $messageRepository,
         private UserRepository $userRepository,
+        private MessageRealtimePublisher $messageRealtimePublisher,
         private EntityManagerInterface $em,
     ) {
     }
@@ -83,6 +85,7 @@ class MessageController extends AbstractController
             $this->em->persist($message);
             $conversation->setLastMessageAt(new \DateTimeImmutable());
             $this->em->flush();
+            $this->messageRealtimePublisher->publishNewMessage($message);
 
             return $this->redirectToRoute('app_message_show', ['id' => $conversation->getId()]);
         }
@@ -102,6 +105,7 @@ class MessageController extends AbstractController
             'messages' => $messages,
             'form' => $form,
             'otherUser' => $otherUser,
+            'liveComponentEnabled' => class_exists(\Symfony\UX\LiveComponent\LiveComponentBundle::class),
         ]);
     }
 
@@ -154,6 +158,7 @@ class MessageController extends AbstractController
             $this->em->persist($message);
             $conversation->setLastMessageAt(new \DateTimeImmutable());
             $this->em->flush();
+            $this->messageRealtimePublisher->publishNewMessage($message);
 
             return $this->json([
                 'success' => true,

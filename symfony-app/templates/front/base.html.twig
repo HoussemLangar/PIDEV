@@ -73,8 +73,8 @@
         [data-theme="dark"] .nav-dropdown { background:#1e293b; border-color:#334155; }
         .nav-dropdown.show { opacity:1; visibility:visible; transform:translateY(0) scale(1); }
 
-        /* Account dropdown needs scroll */
-        #accountDropdown { overflow-y:auto; max-height:calc(100vh - 100px); }
+        /* Account dropdown viewport cap */
+        #accountDropdown { max-height:calc(100vh - 100px); }
 
         .nav-dropdown-header {
             display:flex; align-items:center; justify-content:space-between;
@@ -169,6 +169,9 @@
             width: 300px;
             border-radius: 20px;
             padding: 0;
+            max-height: calc(100vh - 100px);
+            display: flex;
+            flex-direction: column;
             overflow: hidden;
             border: 1px solid rgba(226,232,240,.6);
         }
@@ -238,6 +241,10 @@
         /* ─ Body ───────────────────────────────────────────────────── */
         #accountDropdown .acc-body {
             padding: 8px 0 6px;
+            overflow-y: auto;
+            min-height: 0;
+            overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch;
         }
 
         /* ─ Items ───────────────────────────────────────────────────── */
