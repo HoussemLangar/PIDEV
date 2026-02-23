@@ -163,7 +163,7 @@ class MentalHealthChatbotService
             if ($model === '') {
                 return null;
             }
-            $endpoint = 'https://api-inference.huggingface.co/models/' . rawurlencode($model);
+            $endpoint = 'https://router.huggingface.co/hf-inference/models/' . rawurlencode($model);
         }
 
         $headers = ['Content-Type' => 'application/json'];
@@ -513,7 +513,7 @@ class MentalHealthChatbotService
             if ($modelName === '') {
                 return [null, $token];
             }
-            $endpoint = 'https://api-inference.huggingface.co/models/' . rawurlencode($modelName);
+            $endpoint = 'https://router.huggingface.co/hf-inference/models/' . rawurlencode($modelName);
         }
 
         return [$endpoint, $token];

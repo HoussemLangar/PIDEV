@@ -349,14 +349,14 @@
 {% endblock %}
 
 {% block body %}
-  <main class="health-tracker-page-v2">
+  <main class="health-tracker-page-v2 health-tracker-page-neutral" style="position:relative; background:#f5f7fb; background-image:none;">
     
     <section class="content-page">
-    <div class="container-wide">
+    <div class="container-wide" style="position:relative; z-index:2;">
       
       <!-- Messages flash -->
       {% for message in app.flashes('success') %}
-        <div class="alert alert-success flash-success">
+        <div class="alert alert-success flash-success" style="margin-bottom:15px; padding:12px; background:#d4edda; border:1px solid #c3e6cb; border-radius:4px; color:#155724;">
           ✅ {{ message }}
         </div>
       {% endfor %}
@@ -373,7 +373,7 @@
         });
       </script>
       {% for message in app.flashes('error') %}
-        <div class="alert alert-danger">
+        <div class="alert alert-danger" style="margin-bottom:15px; padding:12px; background:#f8d7da; border:1px solid #f5c6cb; border-radius:4px; color:#721c24;">
           ❌ {{ message }}
         </div>
       {% endfor %}
@@ -495,7 +495,7 @@
             {'label':'Hypertension (HTA)','key':'htn'},
             {'label':'Risque diabète','key':'diabetes'},
             {'label':'Dépression légère','key':'depression'},
-            {'label':'Alimentation équilibrée','key':'nutrition'}
+            {'label':'Risque déséquilibre alimentaire','key':'nutrition'}
           ] %}
           {% for item in riskItems %}
             {% set data = attribute(riskPrediction, item.key) %}
@@ -508,12 +508,14 @@
                 </span>
               </div>
               <div class="risk-score">{{ data.score|number_format(1, '.', ' ') }} / 100</div>
-              {% if item.key == 'nutrition' %}
-                <div class="risk-note" style="margin-bottom:4px; color:#1f2937; font-weight:600;">Score d'équilibre alimentaire</div>
-              {% endif %}
               <p class="risk-note">
                 {{ data.explanations is defined and data.explanations|length > 0 ? data.explanations|first : '' }}
               </p>
+              {% if data.details is defined and data.details|length > 0 %}
+                <div class="risk-note" style="margin-top:6px; font-size:0.82rem;">
+                  {{ data.details|slice(0, 3)|join(' | ') }}
+                </div>
+              {% endif %}
             </article>
           {% endfor %}
         </div>
@@ -643,7 +645,7 @@
                     {{ form_label(form.tensionArterielle, '❤️ Tension', {'label_attr': {'class': ''}}) }}
                     <span style="color:#95a5a6; font-size:0.85em;">○ optionnel</span>
                   </label>
-                  {{ form_widget(form.tensionArterielle, {'attr': {'placeholder': 'Ex: 120/80', 'class': 'form-control'}}) }}
+                  {{ form_widget(form.tensionArterielle, {'attr': {'placeholder': 'Ex: 14 (ou 140)', 'class': 'form-control'}}) }}
                   {{ form_errors(form.tensionArterielle) }}
                 </div>
               </div>
@@ -1068,7 +1070,7 @@
             </div>
             <div class="form-group-beautiful">
               <label>❤️ Tension</label>
-              <input type="text" id="editTension" name="sante_quotidienne[tensionArterielle]" class="form-control" placeholder="Ex: 120/80">
+              <input type="text" id="editTension" name="sante_quotidienne[tensionArterielle]" class="form-control" placeholder="Ex: 14 (ou 140)">
             </div>
           </div>
           <div class="form-row-beautiful">

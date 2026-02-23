@@ -535,7 +535,7 @@
     {% block head_scripts %}{% endblock %}
 </head>
 {% set theme = app.user ? app.user.themePreference : (app.session ? app.session.get('theme') : 'light') %}
-<body data-theme="{{ theme ?: 'light' }}"{% block body_class %}{% endblock %}>
+<body data-theme="{{ theme ?: 'light' }}" data-turbo="false"{% block body_class %}{% endblock %}>
 
     <!-- 3D Scroll Progress Bar -->
     <div id="s3d-scroll-progress" aria-hidden="true"></div>

@@ -38,37 +38,6 @@ class SanteQuotidienneController extends AbstractController
         return $this->render('front/santequotidienne/form.html.twig', $this->buildFormPageData($form, $repository));
     }
 
-    #[Route('/patients', name: 'app_sante_quotidienne_patients', methods: ['GET'])]
-    public function patientJournals(Request $request, SanteQuotidienneRepository $repository): Response
-    {
-        $user = $this->getUser();
-        if (!$user instanceof \App\Entity\User) {
-            throw $this->createAccessDeniedException();
-        }
-
-        $effectiveRole = $user->getSubscriptionType() ?: $user->getRole();
-        if ($effectiveRole !== 'ROLE_MEDECIN') {
-            throw $this->createAccessDeniedException();
-        }
-
-        $query = $repository->createQueryBuilder('s')
-            ->join('s.user', 'u')
-            ->andWhere('u.role = :role')
-            ->setParameter('role', 'ROLE_PATIENT')
-            ->orderBy('s.date', 'DESC');
-
-        $patientId = $request->query->getInt('patient');
-        if ($patientId > 0) {
-            $query->andWhere('u.id = :patientId')->setParameter('patientId', $patientId);
-        }
-
-        $entries = $query->setMaxResults(100)->getQuery()->getResult();
-
-        return $this->render('sante_quotidienne/medecin_patient_journals.html.twig', [
-            'entries' => $entries,
-        ]);
-    }
-
     #[Route('/front', name: 'app_sante_quotidienne_front', methods: ['GET'])]
     public function front(): Response
     {
@@ -274,6 +243,11 @@ class SanteQuotidienneController extends AbstractController
     #[IsGranted('SANTE_VIEW', subject: 'sante')]  // optionnel : sécuriser par voter
     public function show(SanteQuotidienne $sante): Response
     {
+        // Vérification supplémentaire que c'est bien l'utilisateur connecté
+        if ($sante->getUser() !== $this->getUser()) {
+            throw $this->createAccessDeniedException();
+        }
+
         return $this->render('sante_quotidienne/show.html.twig', [
             'sante' => $sante,
         ]);
@@ -389,15 +363,8 @@ class SanteQuotidienneController extends AbstractController
             throw $this->createAccessDeniedException();
         }
         $santes = $repository->findBy(['user' => $user], ['date' => 'DESC']);
-        $prediction = $this->riskPredictionService->getOrRecalculateForToday($user);
+        $prediction = $this->riskPredictionService->recalculateForUser($user);
         $explanations = $prediction->getExplanationsJson();
-        $nutritionRisk = $prediction->getRiskRespiratory();
-        $nutritionScore = round(max(0.0, min(100.0, 100.0 - $nutritionRisk)), 1);
-        $nutritionLevel = match ($prediction->getLevelRespiratory()) {
-            'LOW' => 'HIGH',
-            'HIGH' => 'LOW',
-            default => 'MODERATE',
-        };
 
         return [
             'form' => $form->createView(),
@@ -411,10 +378,10 @@ class SanteQuotidienneController extends AbstractController
             'summaryStats' => $repository->getDashboardSummaryStats($user),
             'chartStats' => $repository->getDashboardChartSeries($user, 7),
             'riskPrediction' => [
-                'htn' => ['score' => $prediction->getRiskHtn(), 'level' => $prediction->getLevelHtn(), 'explanations' => $explanations['htn'] ?? []],
-                'diabetes' => ['score' => $prediction->getRiskDiabetes(), 'level' => $prediction->getLevelDiabetes(), 'explanations' => $explanations['diabetes'] ?? []],
-                'depression' => ['score' => $prediction->getRiskDepression(), 'level' => $prediction->getLevelDepression(), 'explanations' => $explanations['depression'] ?? []],
-                'nutrition' => ['score' => $nutritionScore, 'level' => $nutritionLevel, 'explanations' => $explanations['nutrition'] ?? ($explanations['respiratory'] ?? [])],
+                'htn' => ['score' => $prediction->getRiskHtn(), 'level' => $prediction->getLevelHtn(), 'explanations' => $explanations['htn'] ?? [], 'details' => $explanations['htn_details'] ?? []],
+                'diabetes' => ['score' => $prediction->getRiskDiabetes(), 'level' => $prediction->getLevelDiabetes(), 'explanations' => $explanations['diabetes'] ?? [], 'details' => $explanations['diabetes_details'] ?? []],
+                'depression' => ['score' => $prediction->getRiskDepression(), 'level' => $prediction->getLevelDepression(), 'explanations' => $explanations['depression'] ?? [], 'details' => $explanations['depression_details'] ?? []],
+                'nutrition' => ['score' => $prediction->getRiskRespiratory(), 'level' => $prediction->getLevelRespiratory(), 'explanations' => $explanations['nutrition'] ?? ($explanations['respiratory'] ?? []), 'details' => $explanations['nutrition_details'] ?? ($explanations['respiratory_details'] ?? [])],
                 'updatedAt' => $prediction->getUpdatedAt()->format('d/m/Y H:i'),
             ],
         ];

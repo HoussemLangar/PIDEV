@@ -452,6 +452,8 @@ class SanteQuotidienneRepository extends ServiceEntityRepository
      *   avgWater7:float,
      *   avgTension7:float,
      *   highTensionDays7:int,
+     *   latestTension7:float,
+     *   maxTension7:float,
      *   nutritionGoodDays7:int,
      *   nutritionPoorDays7:int,
      *   nutritionEntries7:int,
@@ -484,6 +486,9 @@ class SanteQuotidienneRepository extends ServiceEntityRepository
         $tensionSum = 0.0;
         $tensionCount = 0;
         $highTensionDays = [];
+        $latestTension = 0.0;
+        $latestTensionDateTs = null;
+        $maxTension = 0.0;
         $nutritionGoodDays = 0;
         $nutritionPoorDays = 0;
         $nutritionEntries = 0;
@@ -508,6 +513,22 @@ class SanteQuotidienneRepository extends ServiceEntityRepository
                 $normalized = $this->normalizeTension((float) $row['tension']);
                 $tensionSum += $normalized;
                 $tensionCount++;
+                if ($normalized > $maxTension) {
+                    $maxTension = $normalized;
+                }
+                if (isset($row['dateValue'])) {
+                    $rawDate = $row['dateValue'];
+                    $dateTs = null;
+                    if ($rawDate instanceof \DateTimeInterface) {
+                        $dateTs = $rawDate->getTimestamp();
+                    } else {
+                        $dateTs = (new \DateTimeImmutable((string) $rawDate))->getTimestamp();
+                    }
+                    if ($latestTensionDateTs === null || $dateTs > $latestTensionDateTs) {
+                        $latestTensionDateTs = $dateTs;
+                        $latestTension = $normalized;
+                    }
+                }
                 if ($normalized >= 14.0 && isset($row['dateValue'])) {
                     $rawDate = $row['dateValue'];
                     if ($rawDate instanceof \DateTimeInterface) {
@@ -590,6 +611,8 @@ class SanteQuotidienneRepository extends ServiceEntityRepository
             'avgWater7' => $waterCount > 0 ? round($waterSum / $waterCount, 2) : 0.0,
             'avgTension7' => $tensionCount > 0 ? round($tensionSum / $tensionCount, 2) : 0.0,
             'highTensionDays7' => count($highTensionDays),
+            'latestTension7' => round($latestTension, 2),
+            'maxTension7' => round($maxTension, 2),
             'nutritionGoodDays7' => $nutritionGoodDays,
             'nutritionPoorDays7' => $nutritionPoorDays,
             'nutritionEntries7' => $nutritionEntries,
@@ -693,7 +716,8 @@ class SanteQuotidienneRepository extends ServiceEntityRepository
                     'sedentaire' => 10,
                     'leger' => 25,
                     'modere' => 45,
-                    'intense' => 70,
+                    'actif' => 70,
+                    'tres_actif' => 90,
                     default => 0,
                 };
             }
@@ -789,7 +813,8 @@ class SanteQuotidienneRepository extends ServiceEntityRepository
             'sedentaire' => 10,
             'leger' => 25,
             'modere' => 45,
-            'intense' => 70,
+            'actif' => 70,
+            'tres_actif' => 90,
         ];
 
         $total = 0;

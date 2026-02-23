@@ -39,7 +39,6 @@ class AccompanimentAiAssistant
     #[LiveProp(writable: true)]
     public string $constraints = '';
 
-    #[LiveProp(writable: true)]
     public array $result = [];
 
     public function __construct(
@@ -64,7 +63,7 @@ class AccompanimentAiAssistant
         }
 
         try {
-            $this->result = $this->advisor->buildSuggestions(
+            $generated = $this->advisor->buildSuggestions(
                 trim($this->goal),
                 trim($this->dietStyle),
                 trim($this->allergies),
@@ -74,6 +73,16 @@ class AccompanimentAiAssistant
                 $this->minutes,
                 trim($this->constraints)
             );
+
+            $this->result = \is_array($generated) ? $generated : [
+                'summary' => 'Erreur lors de la génération. Veuillez réessayer.',
+                'nutrition' => ['overview' => '', 'tips' => [], 'days' => []],
+                'workout'   => ['overview' => '', 'safety' => [], 'sessions' => []],
+                'suggestedTitle' => '',
+                'suggestedObjectives' => '',
+                'suggestedDescription' => '',
+                '_error' => true,
+            ];
         } catch (\Throwable $e) {
             $this->result = [
                 'summary' => 'Erreur lors de la génération. Veuillez réessayer.',
