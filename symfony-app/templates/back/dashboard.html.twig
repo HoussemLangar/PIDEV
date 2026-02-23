@@ -2,6 +2,145 @@
 
 {% block title %}Dashboard Admin - SANTÉA{% endblock %}
 
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .admin-voice-launcher {
+            position: fixed;
+            right: 22px;
+            bottom: 22px;
+            z-index: 10020;
+            border: none;
+            border-radius: 999px;
+            padding: 12px 16px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+            color: #fff;
+            background: linear-gradient(135deg, #0ea5e9, #2563eb);
+            box-shadow: 0 10px 26px rgba(37, 99, 235, .35);
+            cursor: pointer;
+        }
+        .admin-voice-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(2, 6, 23, .55);
+            backdrop-filter: blur(2px);
+            z-index: 10030;
+            display: none;
+        }
+        .admin-voice-overlay.open { display: block; }
+        .admin-voice-panel {
+            position: fixed;
+            right: 0;
+            top: 0;
+            width: min(420px, 100vw);
+            height: 100dvh;
+            z-index: 10031;
+            background: linear-gradient(160deg, #0b1220 0%, #12243f 60%, #0a4a73 100%);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            transform: translateX(100%);
+            transition: transform .26s ease;
+            box-shadow: -20px 0 60px rgba(0,0,0,.4);
+        }
+        .admin-voice-panel.open { transform: translateX(0); }
+        .admin-voice-head {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px;
+            border-bottom: 1px solid rgba(255,255,255,.12);
+        }
+        .admin-voice-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #06b6d4, #2563eb);
+        }
+        .admin-voice-close {
+            margin-left: auto;
+            background: rgba(255,255,255,.12);
+            border: 0;
+            color: #fff;
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        .admin-voice-log {
+            flex: 1;
+            overflow: auto;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .admin-voice-msg {
+            max-width: 85%;
+            border-radius: 14px;
+            padding: 9px 12px;
+            font-size: 13px;
+            line-height: 1.45;
+        }
+        .admin-voice-msg.bot {
+            background: rgba(255,255,255,.12);
+            border-bottom-left-radius: 4px;
+            color: rgba(255,255,255,.95);
+        }
+        .admin-voice-msg.user {
+            margin-left: auto;
+            background: linear-gradient(135deg, #0ea5e9, #22c55e);
+            border-bottom-right-radius: 4px;
+            color: #fff;
+        }
+        .admin-voice-input-wrap {
+            padding: 12px;
+            border-top: 1px solid rgba(255,255,255,.12);
+        }
+        .admin-voice-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,.1);
+            border: 1px solid rgba(255,255,255,.16);
+            border-radius: 12px;
+            padding: 6px;
+        }
+        .admin-voice-input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            color: #fff;
+            outline: none;
+            font-size: 13px;
+            padding: 8px 10px;
+        }
+        .admin-voice-input::placeholder { color: rgba(255,255,255,.55); }
+        .admin-voice-btn {
+            width: 36px;
+            height: 36px;
+            border: 0;
+            border-radius: 10px;
+            color: #fff;
+            cursor: pointer;
+        }
+        .admin-voice-btn.mic { background: linear-gradient(135deg, #0ea5e9, #2563eb); }
+        .admin-voice-btn.send { background: rgba(255,255,255,.2); }
+        .admin-voice-status {
+            margin-top: 8px;
+            font-size: 11px;
+            color: rgba(255,255,255,.72);
+            text-align: center;
+        }
+    </style>
+{% endblock %}
+
 {% block admin_content %}
     <!-- Header Section -->
     <div class="dashboard-header-modern">
@@ -464,6 +603,42 @@
             </article>
         </div>
     </section>
+
+    <button type="button" id="adminVoiceLauncher" class="admin-voice-launcher">
+        <i class="fas fa-microphone-alt"></i>
+        Assistant IA vocal
+    </button>
+
+    <div id="adminVoiceOverlay" class="admin-voice-overlay"></div>
+    <aside id="adminVoicePanel" class="admin-voice-panel" aria-modal="true" role="dialog" aria-label="Assistant IA vocal admin">
+        <div class="admin-voice-head">
+            <div class="admin-voice-avatar"><i class="fas fa-robot"></i></div>
+            <div>
+                <div style="font-weight:800;">Assistant IA vocal</div>
+                <div style="font-size:12px;opacity:.75;">Commandes admin rapides</div>
+            </div>
+            <button type="button" id="adminVoiceClose" class="admin-voice-close" aria-label="Fermer">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div id="adminVoiceLog" class="admin-voice-log">
+            <div class="admin-voice-msg bot">Bonjour 👋 Dites par exemple : « ouvre utilisateurs », « ouvre abonnements », « ouvre historique scoring », « export dashboard ».</div>
+        </div>
+
+        <div class="admin-voice-input-wrap">
+            <div class="admin-voice-row">
+                <button type="button" id="adminVoiceMic" class="admin-voice-btn mic" title="Parler">
+                    <i class="fas fa-microphone" id="adminVoiceMicIcon"></i>
+                </button>
+                <input id="adminVoiceInput" class="admin-voice-input" type="text" placeholder="Dites ou écrivez une commande...">
+                <button type="button" id="adminVoiceSend" class="admin-voice-btn send" title="Envoyer">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+            <div id="adminVoiceStatus" class="admin-voice-status">🎙️ Prêt à écouter</div>
+        </div>
+    </aside>
     
 {% endblock %}
 
@@ -511,6 +686,203 @@
                         responsive: true,
                         maintainAspectRatio: false
                     }
+                });
+            }
+
+            const adminRoutes = {
+                dashboard: '{{ path('admin_dashboard')|e('js') }}',
+                users: '{{ path('admin_users')|e('js') }}',
+                usersStats: '{{ path('admin_users_stats')|e('js') }}',
+                scoreHistory: '{{ path('admin_users_score_history')|e('js') }}',
+                subscriptions: '{{ path('admin_subscriptions')|e('js') }}',
+                revenues: '{{ path('admin_revenues')|e('js') }}',
+                appointments: '{{ path('admin_appointments')|e('js') }}',
+                validation: '{{ path('admin_validation')|e('js') }}',
+                security: '{{ path('admin_security_suspicious')|e('js') }}',
+                exportDashboard: '{{ path('admin_dashboard_export')|e('js') }}',
+                voiceExecute: '{{ path('admin_voice_assistant_execute')|e('js') }}'
+            };
+
+            const launcher = document.getElementById('adminVoiceLauncher');
+            const panel = document.getElementById('adminVoicePanel');
+            const overlay = document.getElementById('adminVoiceOverlay');
+            const closeBtn = document.getElementById('adminVoiceClose');
+            const input = document.getElementById('adminVoiceInput');
+            const sendBtn = document.getElementById('adminVoiceSend');
+            const micBtn = document.getElementById('adminVoiceMic');
+            const micIcon = document.getElementById('adminVoiceMicIcon');
+            const status = document.getElementById('adminVoiceStatus');
+            const log = document.getElementById('adminVoiceLog');
+
+            const openPanel = () => {
+                panel?.classList.add('open');
+                overlay?.classList.add('open');
+                document.body.style.overflow = 'hidden';
+                input?.focus();
+            };
+            const closePanel = () => {
+                panel?.classList.remove('open');
+                overlay?.classList.remove('open');
+                document.body.style.overflow = '';
+            };
+
+            const appendMsg = (role, text) => {
+                if (!log || !text) return;
+                const div = document.createElement('div');
+                div.className = `admin-voice-msg ${role}`;
+                div.textContent = text;
+                log.appendChild(div);
+                log.scrollTop = log.scrollHeight;
+            };
+
+            const normalize = (txt) => (txt || '')
+                .toLowerCase()
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                .replace(/\s+/g, ' ')
+                .trim();
+
+            const goTo = (url, message) => {
+                appendMsg('bot', message || 'Ouverture de la page demandée.');
+                setTimeout(() => { window.location.href = url; }, 250);
+            };
+
+            const runServerCommand = async (rawText) => {
+                try {
+                    if (status) status.textContent = '🧠 Analyse et exécution en cours...';
+                    const res = await fetch(adminRoutes.voiceExecute, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({ command: rawText })
+                    });
+
+                    const data = await res.json();
+                    if (!data.success) {
+                        appendMsg('bot', data.message || 'Impossible d\'exécuter la commande.');
+                        if (status) status.textContent = 'Commande non exécutée.';
+                        return;
+                    }
+
+                    appendMsg('bot', data.message || 'Commande exécutée.');
+
+                    if (data.type === 'navigate' && data.url) {
+                        setTimeout(() => { window.location.href = data.url; }, 250);
+                        return;
+                    }
+                    if (data.type === 'download' && data.url) {
+                        setTimeout(() => { window.location.href = data.url; }, 250);
+                        return;
+                    }
+                    if (data.type === 'reload') {
+                        setTimeout(() => window.location.reload(), 250);
+                        return;
+                    }
+
+                    if (status) status.textContent = '✅ Exécution terminée.';
+                } catch (e) {
+                    appendMsg('bot', 'Erreur lors de l\'exécution automatique.');
+                    if (status) status.textContent = 'Erreur réseau.';
+                }
+            };
+
+            const executeCommand = async (rawText) => {
+                const text = normalize(rawText);
+                if (!text) return;
+                appendMsg('user', rawText);
+
+                if (text.includes('fais tout automatiquement') || text.includes('faire tout automatiquement') || text.includes('tout automatiquement') || text.includes('auto pilote') || text.includes('autopilot')) {
+                    await runServerCommand(rawText);
+                    return;
+                }
+
+                if (text.includes('ban') || text.includes('bannir') || text.includes('debannir') || text.includes('suspendre') || text.includes('modifier') || text.includes('changer role') || text.includes('changer le role')) {
+                    await runServerCommand(rawText);
+                    return;
+                }
+
+                if (text.includes('aide') || text.includes('help') || text.includes('commande')) {
+                    appendMsg('bot', 'Commandes: ouvre utilisateurs, ouvre abonnements, ouvre revenus, ouvre rendez vous, ouvre validation, ouvre securite, ouvre historique scoring, export dashboard, rafraichir, bannir utilisateur <email>, debannir utilisateur <email>, modifier role utilisateur <email> en admin/patient/...');
+                    return;
+                }
+                if (text.includes('utilisateur')) return goTo(adminRoutes.users, 'J’ouvre la gestion des utilisateurs.');
+                if (text.includes('historique') && text.includes('scor')) return goTo(adminRoutes.scoreHistory, 'J’ouvre l’historique de scoring.');
+                if (text.includes('abonnement')) return goTo(adminRoutes.subscriptions, 'J’ouvre les abonnements.');
+                if (text.includes('revenu') || text.includes('facture')) return goTo(adminRoutes.revenues, 'J’ouvre les revenus et factures.');
+                if (text.includes('rendez') || text.includes('appointment')) return goTo(adminRoutes.appointments, 'J’ouvre les rendez-vous.');
+                if (text.includes('validation')) return goTo(adminRoutes.validation, 'J’ouvre les validations.');
+                if (text.includes('securite') || text.includes('suspect') || text.includes('session')) return goTo(adminRoutes.security, 'J’ouvre la sécurité admin.');
+                if (text.includes('export')) return goTo(adminRoutes.exportDashboard, 'J’exporte le dashboard.');
+                if (text.includes('dashboard') || text.includes('accueil admin')) return goTo(adminRoutes.dashboard, 'Retour au dashboard.');
+                if (text.includes('rafraichir') || text.includes('actualise') || text.includes('refresh')) {
+                    appendMsg('bot', 'Je recharge le dashboard.');
+                    setTimeout(() => window.location.reload(), 250);
+                    return;
+                }
+
+                await runServerCommand(rawText);
+            };
+
+            launcher?.addEventListener('click', openPanel);
+            closeBtn?.addEventListener('click', closePanel);
+            overlay?.addEventListener('click', closePanel);
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') closePanel();
+            });
+
+            sendBtn?.addEventListener('click', () => {
+                const text = input?.value || '';
+                input.value = '';
+                executeCommand(text);
+            });
+            input?.addEventListener('keydown', (e) => {
+                if (e.key !== 'Enter') return;
+                e.preventDefault();
+                const text = input.value || '';
+                input.value = '';
+                executeCommand(text);
+            });
+
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                if (status) status.textContent = 'Reconnaissance vocale indisponible sur ce navigateur.';
+                if (micBtn) micBtn.disabled = true;
+            } else {
+                const recognition = new SpeechRecognition();
+                recognition.lang = 'fr-FR';
+                recognition.interimResults = false;
+                recognition.continuous = false;
+
+                let listening = false;
+
+                recognition.onstart = () => {
+                    listening = true;
+                    if (status) status.textContent = '🔴 Écoute en cours...';
+                    if (micIcon) micIcon.className = 'fas fa-stop';
+                };
+                recognition.onend = () => {
+                    listening = false;
+                    if (status) status.textContent = '🎙️ Prêt à écouter';
+                    if (micIcon) micIcon.className = 'fas fa-microphone';
+                };
+                recognition.onerror = () => {
+                    if (status) status.textContent = 'Erreur de reconnaissance vocale.';
+                };
+                recognition.onresult = (event) => {
+                    const spoken = event?.results?.[0]?.[0]?.transcript || '';
+                    appendMsg('user', spoken);
+                    runServerCommand(spoken);
+                };
+
+                micBtn?.addEventListener('click', () => {
+                    if (listening) {
+                        recognition.stop();
+                        return;
+                    }
+                    try {
+                        recognition.start();
+                    } catch (_) {}
                 });
             }
         });

@@ -15,10 +15,12 @@ use App\Repository\SuspiciousLoginRepository;
 use App\Repository\UserScoreHistoryRepository;
 use App\Repository\UserSessionRepository;
 use App\Repository\UserRepository;
+use App\Service\Ai\AiGatewayService;
 use App\Service\UserAiScoreService;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -35,6 +37,437 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 #[IsGranted('ROLE_ADMIN')]
 class AdminController extends AbstractController
 {
+    #[Route('/admin/voice-assistant/execute', name: 'admin_voice_assistant_execute', methods: ['POST'])]
+    public function voiceAssistantExecute(
+        Request $request,
+        UserRepository $userRepository,
+        UserAiScoreService $userAiScoreService,
+        EntityManagerInterface $em,
+        AiGatewayService $aiGatewayService
+    ): JsonResponse {
+        $payload = json_decode((string) $request->getContent(), true);
+        $command = trim((string) ($payload['command'] ?? ''));
+
+        if ($command === '') {
+            return new JsonResponse([
+                'success' => false,
+                'type' => 'message',
+                'message' => 'Commande vide.',
+            ], 400);
+        }
+
+        $normalized = mb_strtolower($command);
+        $normalized = strtr($normalized, [
+            'é' => 'e', 'è' => 'e', 'ê' => 'e', 'ë' => 'e',
+            'à' => 'a', 'â' => 'a',
+            'î' => 'i', 'ï' => 'i',
+            'ô' => 'o',
+            'ù' => 'u', 'û' => 'u', 'ü' => 'u',
+            'ç' => 'c',
+            '’' => '\'',
+        ]);
+        $normalized = preg_replace('/[^a-z0-9@._%+\-\s\']/u', ' ', $normalized) ?? $normalized;
+        $normalized = preg_replace('/\s+/', ' ', $normalized) ?? $normalized;
+
+        $intent = null;
+        $target = null;
+        $roleInput = null;
+
+        if ($aiGatewayService->isEnabled()) {
+            $aiIntent = $aiGatewayService->askForJson(
+                'Tu es un classifieur d\'intention pour un assistant vocal admin Symfony. Réponds STRICTEMENT en JSON avec {"intent":"...","target":"...","role":"..."}. Intent possibles: users, users_stats, score_history, subscriptions, revenues, appointments, validation, security, export_dashboard, dashboard, reload, autopilot, ban_user, unban_user, set_role_user, unknown.',
+                'Commande: ' . $command
+            );
+            if (is_array($aiIntent)) {
+                $intent = ($aiIntent['intent'] ?? null) ?: null;
+                $target = isset($aiIntent['target']) ? trim((string) $aiIntent['target']) : null;
+                $roleInput = isset($aiIntent['role']) ? trim((string) $aiIntent['role']) : null;
+            }
+        }
+
+        if ($intent === null) {
+            if (str_contains($normalized, 'tout automatiquement') || str_contains($normalized, 'auto pilote') || str_contains($normalized, 'autopilot')) {
+                $intent = 'autopilot';
+            } elseif (preg_match('/\b(debannir|deban|retirer le ban|lever le ban)\b/', $normalized)) {
+                $intent = 'unban_user';
+            } elseif (str_contains($normalized, 'historique') && str_contains($normalized, 'scor')) {
+                $intent = 'score_history';
+            } elseif (preg_match('/\b(bannir|banner|ban|suspendre)\b/', $normalized)) {
+                $intent = 'ban_user';
+            } elseif ((str_contains($normalized, 'modifier') || str_contains($normalized, 'changer')) && str_contains($normalized, 'role')) {
+                $intent = 'set_role_user';
+            } elseif (str_contains($normalized, 'utilisateur')) {
+                $intent = 'users';
+            } elseif (str_contains($normalized, 'abonnement')) {
+                $intent = 'subscriptions';
+            } elseif (str_contains($normalized, 'revenu') || str_contains($normalized, 'facture')) {
+                $intent = 'revenues';
+            } elseif (str_contains($normalized, 'rendez') || str_contains($normalized, 'appointment')) {
+                $intent = 'appointments';
+            } elseif (str_contains($normalized, 'validation')) {
+                $intent = 'validation';
+            } elseif (str_contains($normalized, 'securite') || str_contains($normalized, 'suspect')) {
+                $intent = 'security';
+            } elseif (str_contains($normalized, 'export')) {
+                $intent = 'export_dashboard';
+            } elseif (str_contains($normalized, 'dashboard')) {
+                $intent = 'dashboard';
+            } elseif (str_contains($normalized, 'rafraich') || str_contains($normalized, 'actualise') || str_contains($normalized, 'refresh')) {
+                $intent = 'reload';
+            } else {
+                $intent = 'unknown';
+            }
+        }
+
+        // Priorité absolue aux actions sensibles utilisateur (ne pas laisser l'intention AI les écraser)
+        if (preg_match('/\b(debannir|deban|retirer le ban|lever le ban)\b/', $normalized)) {
+            $intent = 'unban_user';
+        } elseif (preg_match('/\b(bannir|banner|ban|suspendre|bloquer)\b/', $normalized)) {
+            $intent = 'ban_user';
+        } elseif ((str_contains($normalized, 'modifier') || str_contains($normalized, 'changer') || str_contains($normalized, 'mettre'))
+            && (str_contains($normalized, 'role') || str_contains($normalized, 'profil'))
+        ) {
+            $intent = 'set_role_user';
+        }
+
+        if (($intent === 'ban_user' || $intent === 'unban_user' || $intent === 'set_role_user') && ($target === null || $target === '')) {
+            if (preg_match('/([a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,})/i', $normalized, $m)) {
+                $target = $m[1];
+            } elseif (preg_match('/\b(?:utilisateur|user|compte)\s+([a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,})/i', $normalized, $m)) {
+                $target = $m[1];
+            } elseif (preg_match('/\b(?:utilisateur|user|compte)\s+([a-z0-9._%+\-]{3,})\b/i', $normalized, $m)) {
+                $target = $m[1];
+            } elseif (preg_match('/\butilisateur\s+(.+)$/i', $normalized, $m)) {
+                $target = trim($m[1]);
+            } elseif (preg_match('/\b(?:de|du|pour)\s+l?\'?utilisateur\s+(.+)$/i', $normalized, $m)) {
+                $target = trim($m[1]);
+            } elseif (preg_match('/\b(id\s*#?\s*\d+)\b/i', $normalized, $m)) {
+                $target = preg_replace('/\D+/', '', $m[1]) ?: null;
+            }
+        }
+
+        if ($intent === 'set_role_user' && ($roleInput === null || $roleInput === '')) {
+            if (preg_match('/\b(?:en|vers|role|profil)\s+(admin|patient|medecin|pharmacien|coach|nutritionniste|utilisateur|user)\b/i', $normalized, $mRole)) {
+                $roleInput = $mRole[1];
+            } elseif (preg_match('/\b(admin|patient|medecin|pharmacien|coach|nutritionniste|utilisateur|user)\b/i', $normalized, $mRole)) {
+                $roleInput = $mRole[1];
+            }
+        }
+
+        $resolveUser = function (?string $value) use ($userRepository): array {
+            $value = trim((string) $value);
+            if ($value === '') {
+                return ['user' => null, 'closest' => null, 'score' => -INF];
+            }
+
+            $normalizePersonString = static function (string $text): string {
+                $text = mb_strtolower($text);
+                $text = strtr($text, [
+                    'é' => 'e', 'è' => 'e', 'ê' => 'e', 'ë' => 'e',
+                    'à' => 'a', 'â' => 'a',
+                    'î' => 'i', 'ï' => 'i',
+                    'ô' => 'o',
+                    'ù' => 'u', 'û' => 'u', 'ü' => 'u',
+                    'ç' => 'c',
+                    '’' => '\'',
+                ]);
+                $text = preg_replace('/[^a-z0-9\s]/u', ' ', $text) ?? $text;
+                $text = preg_replace('/\s+/', ' ', trim($text)) ?? trim($text);
+                return $text;
+            };
+
+            $squeezeRepeatedChars = static function (string $text): string {
+                return preg_replace('/(.)\1+/u', '$1', $text) ?? $text;
+            };
+
+            $targetNormalized = $normalizePersonString($value);
+            $targetSqueezed = $squeezeRepeatedChars($targetNormalized);
+
+            if (ctype_digit($value)) {
+                $found = $userRepository->find((int) $value);
+                return ['user' => ($found instanceof User ? $found : null), 'closest' => null, 'score' => 100];
+            }
+
+            if (str_contains($value, '@')) {
+                $found = $userRepository->findByEmail($value);
+                return ['user' => ($found instanceof User ? $found : null), 'closest' => null, 'score' => 100];
+            }
+
+            $needle = $targetNormalized;
+            $candidates = $userRepository->createQueryBuilder('u')
+                ->andWhere('u.deletedAt IS NULL')
+                ->andWhere('LOWER(u.email) LIKE :q OR LOWER(u.username) LIKE :q OR LOWER(u.nom) LIKE :q OR LOWER(u.prenom) LIKE :q')
+                ->setParameter('q', '%' . $needle . '%')
+                ->setMaxResults(1)
+                ->getQuery()
+                ->getResult();
+
+            $first = $candidates[0] ?? null;
+            if ($first instanceof User) {
+                return ['user' => $first, 'closest' => $first, 'score' => 100];
+            }
+
+            $pool = $userRepository->createQueryBuilder('u')
+                ->andWhere('u.deletedAt IS NULL')
+                ->getQuery()
+                ->getResult();
+
+            $bestUser = null;
+            $bestScore = -INF;
+
+            $targetTokens = array_values(array_filter(explode(' ', $targetSqueezed)));
+
+            foreach ($pool as $candidate) {
+                if (!$candidate instanceof User) {
+                    continue;
+                }
+
+                $fullName = trim(($candidate->getPrenom() ?? '') . ' ' . ($candidate->getNom() ?? ''));
+                $fullNameReverse = trim(($candidate->getNom() ?? '') . ' ' . ($candidate->getPrenom() ?? ''));
+                $candidateNormalized = $normalizePersonString($fullName);
+                $candidateSqueezed = $squeezeRepeatedChars($candidateNormalized);
+                $candidateReverseNormalized = $normalizePersonString($fullNameReverse);
+                $candidateReverseSqueezed = $squeezeRepeatedChars($candidateReverseNormalized);
+
+                $score = 0;
+                if ($candidateNormalized === $targetNormalized) {
+                    $score = 100;
+                } elseif ($candidateSqueezed === $targetSqueezed) {
+                    $score = 98;
+                } elseif ($candidateReverseSqueezed === $targetSqueezed) {
+                    $score = 96;
+                } else {
+                    $distance = levenshtein($targetSqueezed, $candidateSqueezed);
+                    $maxLen = max(strlen($targetSqueezed), strlen($candidateSqueezed), 1);
+                    $similarity = 1 - ($distance / $maxLen);
+                    $score = (int) round($similarity * 100);
+                }
+
+                if (str_contains($candidateNormalized, $targetNormalized) || str_contains($targetNormalized, $candidateNormalized)) {
+                    $score += 8;
+                }
+
+                if (!empty($targetTokens)) {
+                    $candidateTokenString = $candidateSqueezed;
+                    $matchedTokens = 0;
+                    foreach ($targetTokens as $token) {
+                        if (strlen($token) < 2) {
+                            continue;
+                        }
+                        if (str_contains($candidateTokenString, $token)) {
+                            $matchedTokens++;
+                        }
+                    }
+                    $score += $matchedTokens * 6;
+                }
+
+                $usernameNormalized = $squeezeRepeatedChars($normalizePersonString((string) $candidate->getUsername()));
+                if ($usernameNormalized !== '' && (str_contains($usernameNormalized, $targetSqueezed) || str_contains($targetSqueezed, $usernameNormalized))) {
+                    $score += 12;
+                }
+
+                if ($score > $bestScore) {
+                    $bestScore = $score;
+                    $bestUser = $candidate;
+                }
+            }
+
+            return [
+                'user' => ($bestUser instanceof User && $bestScore >= 62) ? $bestUser : null,
+                'closest' => $bestUser instanceof User ? $bestUser : null,
+                'score' => $bestScore,
+            ];
+        };
+
+        $normalizeRole = static function (?string $value): ?string {
+            $raw = mb_strtolower(trim((string) $value));
+            return match ($raw) {
+                'admin', 'role_admin' => 'ROLE_ADMIN',
+                'patient', 'role_patient' => 'ROLE_PATIENT',
+                'medecin', 'médecin', 'doctor', 'role_medecin' => 'ROLE_MEDECIN',
+                'pharmacien', 'role_pharmacien' => 'ROLE_PHARMACIEN',
+                'coach', 'role_coach' => 'ROLE_COACH',
+                'nutritionniste', 'role_nutritionniste' => 'ROLE_NUTRITIONNISTE',
+                'utilisateur', 'user', 'role_user' => 'ROLE_USER',
+                default => null,
+            };
+        };
+
+        $routeByIntent = [
+            'users' => 'admin_users',
+            'users_stats' => 'admin_users_stats',
+            'score_history' => 'admin_users_score_history',
+            'subscriptions' => 'admin_subscriptions',
+            'revenues' => 'admin_revenues',
+            'appointments' => 'admin_appointments',
+            'validation' => 'admin_validation',
+            'security' => 'admin_security_suspicious',
+            'dashboard' => 'admin_dashboard',
+        ];
+
+        if (isset($routeByIntent[$intent])) {
+            return new JsonResponse([
+                'success' => true,
+                'type' => 'navigate',
+                'url' => $this->generateUrl($routeByIntent[$intent]),
+                'message' => 'Action exécutée.',
+            ]);
+        }
+
+        if ($intent === 'export_dashboard') {
+            return new JsonResponse([
+                'success' => true,
+                'type' => 'download',
+                'url' => $this->generateUrl('admin_dashboard_export'),
+                'message' => 'Export déclenché.',
+            ]);
+        }
+
+        if ($intent === 'reload') {
+            return new JsonResponse([
+                'success' => true,
+                'type' => 'reload',
+                'message' => 'Rechargement en cours.',
+            ]);
+        }
+
+        if ($intent === 'ban_user') {
+            $resolved = $resolveUser($target);
+            $targetUser = $resolved['user'] ?? null;
+            if (!$targetUser instanceof User) {
+                $closest = $resolved['closest'] ?? null;
+                $hint = $closest instanceof User ? sprintf(' Utilisateur proche détecté: %s %s (%s).', $closest->getPrenom(), $closest->getNom(), $closest->getEmail()) : '';
+                return new JsonResponse([
+                    'success' => false,
+                    'type' => 'message',
+                    'message' => 'Utilisateur introuvable pour bannissement.' . $hint,
+                ], 404);
+            }
+
+            $targetUser->setIsBanned(true);
+            $targetUser->setBanReason('Bannissement via assistant admin');
+            $targetUser->setBanUntil(null);
+            $targetUser->setUpdatedAt(new \DateTimeImmutable());
+            $em->flush();
+
+            return new JsonResponse([
+                'success' => true,
+                'type' => 'message',
+                'message' => sprintf('Utilisateur %s banni avec succès.', $targetUser->getEmail()),
+            ]);
+        }
+
+        if ($intent === 'unban_user') {
+            $resolved = $resolveUser($target);
+            $targetUser = $resolved['user'] ?? null;
+            if (!$targetUser instanceof User) {
+                $closest = $resolved['closest'] ?? null;
+                $hint = $closest instanceof User ? sprintf(' Utilisateur proche détecté: %s %s (%s).', $closest->getPrenom(), $closest->getNom(), $closest->getEmail()) : '';
+                return new JsonResponse([
+                    'success' => false,
+                    'type' => 'message',
+                    'message' => 'Utilisateur introuvable pour débannissement.' . $hint,
+                ], 404);
+            }
+
+            $targetUser->setIsBanned(false);
+            $targetUser->setBanReason(null);
+            $targetUser->setBanUntil(null);
+            $targetUser->setUpdatedAt(new \DateTimeImmutable());
+            $em->flush();
+
+            return new JsonResponse([
+                'success' => true,
+                'type' => 'message',
+                'message' => sprintf('Utilisateur %s débanni avec succès.', $targetUser->getEmail()),
+            ]);
+        }
+
+        if ($intent === 'set_role_user') {
+            $resolved = $resolveUser($target);
+            $targetUser = $resolved['user'] ?? null;
+            if (!$targetUser instanceof User) {
+                $closest = $resolved['closest'] ?? null;
+                $hint = $closest instanceof User ? sprintf(' Utilisateur proche détecté: %s %s (%s).', $closest->getPrenom(), $closest->getNom(), $closest->getEmail()) : '';
+                return new JsonResponse([
+                    'success' => false,
+                    'type' => 'message',
+                    'message' => 'Utilisateur introuvable pour changement de rôle.' . $hint,
+                ], 404);
+            }
+
+            $newRole = $normalizeRole($roleInput);
+            if ($newRole === null) {
+                return new JsonResponse([
+                    'success' => false,
+                    'type' => 'message',
+                    'message' => 'Rôle non reconnu. Exemples: admin, patient, medecin, pharmacien, coach, nutritionniste.',
+                ], 422);
+            }
+
+            $targetUser->setRole($newRole);
+            $targetUser->setUpdatedAt(new \DateTimeImmutable());
+            $em->flush();
+
+            return new JsonResponse([
+                'success' => true,
+                'type' => 'message',
+                'message' => sprintf('Rôle de %s modifié en %s.', $targetUser->getEmail(), $newRole),
+            ]);
+        }
+
+        if ($intent === 'autopilot') {
+            $users = $userRepository->createQueryBuilder('u')
+                ->andWhere('u.deletedAt IS NULL')
+                ->getQuery()
+                ->getResult();
+
+            $approvedCount = 0;
+            $historyCount = 0;
+            $freeMonthCount = 0;
+            $now = new \DateTimeImmutable();
+
+            foreach ($users as $user) {
+                if (!$user instanceof User) {
+                    continue;
+                }
+
+                if (!$user->isAdminApproved()) {
+                    $user->setAdminApproved(true);
+                    $user->setUpdatedAt($now);
+                    $approvedCount++;
+                }
+
+                if ($userAiScoreService->grantFreeMonthIfEligible($user)) {
+                    $freeMonthCount++;
+                }
+
+                if ($userAiScoreService->recordDailyHistory($user)) {
+                    $historyCount++;
+                }
+            }
+
+            $em->flush();
+
+            return new JsonResponse([
+                'success' => true,
+                'type' => 'message',
+                'message' => sprintf(
+                    'Mode automatique exécuté : %d validations approuvées, %d mois gratuits attribués, %d snapshots de score créés.',
+                    $approvedCount,
+                    $freeMonthCount,
+                    $historyCount
+                ),
+            ]);
+        }
+
+        return new JsonResponse([
+            'success' => false,
+            'type' => 'message',
+            'message' => 'Commande non reconnue. Dites par exemple : "fais tout automatiquement".',
+        ], 422);
+    }
+
     // ========== DASHBOARD ==========
     #[Route('/admin_dashboard', name: 'admin_dashboard')]
     public function dashboard(
