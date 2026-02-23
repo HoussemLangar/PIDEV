@@ -135,10 +135,6 @@ class RiskPredictionService
             $score += 15;
             $reasons[] = 'Prise de poids récente.';
         }
-        if (($s['activityMinutes7'] ?? 0) < 90) {
-            $score += 12;
-            $reasons[] = 'Activité hebdomadaire faible.';
-        }
         if (($s['avgWater7'] ?? 0.0) > 0 && ($s['avgWater7'] ?? 0.0) < 1.2) {
             $score += 10;
             $reasons[] = 'Hydratation faible.';
@@ -187,10 +183,6 @@ class RiskPredictionService
             $score += 10;
             $reasons[] = 'Symptômes émotionnels répétés.';
         }
-        if (($s['activityMinutes7'] ?? 0) < 60) {
-            $score += 8;
-            $reasons[] = 'Très faible activité physique.';
-        }
         if (($s['avgWater7'] ?? 0.0) > 0 && ($s['avgWater7'] ?? 0.0) < 1.0) {
             $score += 5;
             $reasons[] = 'Hydratation insuffisante.';
@@ -232,10 +224,6 @@ class RiskPredictionService
         if (($s['latestImc'] ?? 0.0) >= 30.0) {
             $score += 12;
             $reasons[] = 'IMC élevé, vigilance nutritionnelle recommandée.';
-        }
-        if (($s['activityMinutes7'] ?? 0) < 90) {
-            $score += 8;
-            $reasons[] = 'Activité faible, impact possible sur l’équilibre métabolique.';
         }
         if (($sym['fatigueCount'] ?? 0) >= 2) {
             $score += 6;

@@ -6,6 +6,7 @@ use App\Entity\User;
 use App\Entity\SanteQuotidienne;
 use App\Form\SanteQuotidienneType;
 use App\Repository\SanteQuotidienneRepository;
+use App\Service\MentalHealthChatbotService;
 use App\Service\RiskPredictionService;
 use App\Enum\NiveauActivite;
 use App\Enum\Humeur;
@@ -158,6 +159,35 @@ class SanteQuotidienneController extends AbstractController
             'eauBue' => $sante->getEauBue(),
             'deleteCsrf' => $csrfTokenManager->getToken('delete' . $sante->getId())->getValue(),
             'editCsrf' => $csrfTokenManager->getToken('edit' . $sante->getId())->getValue(),
+        ]);
+    }
+
+    #[Route('/api/chatbot/empathy', name: 'app_sante_quotidienne_chatbot_empathy', methods: ['POST'])]
+    public function chatbotEmpathy(Request $request, MentalHealthChatbotService $chatbotService): JsonResponse
+    {
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            return new JsonResponse(['ok' => false, 'message' => 'Acces refuse'], 403);
+        }
+
+        $payload = json_decode($request->getContent(), true);
+        if (!is_array($payload)) {
+            return new JsonResponse(['ok' => false, 'message' => 'Payload invalide'], 400);
+        }
+
+        $message = trim((string) ($payload['message'] ?? ''));
+        if ($message === '') {
+            return new JsonResponse(['ok' => false, 'message' => 'Message vide'], 422);
+        }
+
+        $result = $chatbotService->reply($message);
+
+        return new JsonResponse([
+            'ok' => true,
+            'emotion' => $result['emotion'],
+            'intent' => $result['intent'],
+            'response' => $result['response'],
+            'safetyAlert' => $result['safetyAlert'],
         ]);
     }
 

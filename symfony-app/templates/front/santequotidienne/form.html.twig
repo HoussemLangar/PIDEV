@@ -229,6 +229,103 @@
       color: #4b5563;
       margin: 0;
     }
+    .chatbot-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(17, 24, 39, 0.55);
+      z-index: 9000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .chatbot-modal {
+      width: min(680px, 100%);
+      background: #ffffff;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 16px 44px rgba(15, 23, 42, 0.28);
+      display: flex;
+      flex-direction: column;
+      max-height: 80vh;
+    }
+    .chatbot-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      background: #eef2ff;
+      border-bottom: 1px solid #dbe2ff;
+    }
+    .chatbot-close {
+      border: none;
+      background: transparent;
+      font-size: 20px;
+      cursor: pointer;
+      color: #334155;
+    }
+    .chatbot-messages {
+      padding: 14px;
+      overflow-y: auto;
+      flex: 1;
+      background: #f8fafc;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .chatbot-msg {
+      max-width: 86%;
+      padding: 9px 12px;
+      border-radius: 12px;
+      line-height: 1.35;
+      font-size: 14px;
+    }
+    .chatbot-msg.user {
+      align-self: flex-end;
+      background: #dbeafe;
+      color: #1e3a8a;
+    }
+    .chatbot-msg.bot {
+      align-self: flex-start;
+      background: #ffffff;
+      color: #0f172a;
+      border: 1px solid #e2e8f0;
+    }
+    .chatbot-meta {
+      display: block;
+      margin-top: 6px;
+      font-size: 11px;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .chatbot-input-wrap {
+      display: flex;
+      gap: 8px;
+      padding: 12px;
+      border-top: 1px solid #e2e8f0;
+      background: #ffffff;
+    }
+    .chatbot-input-wrap textarea {
+      flex: 1;
+      resize: none;
+      min-height: 44px;
+      max-height: 120px;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 10px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+    .chatbot-send {
+      border: none;
+      border-radius: 10px;
+      background: #1d4ed8;
+      color: #ffffff;
+      font-weight: 700;
+      padding: 0 14px;
+      cursor: pointer;
+    }
     @media (max-width: 1100px) {
       .summary-cards {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -415,7 +512,7 @@
                 <div class="risk-note" style="margin-bottom:4px; color:#1f2937; font-weight:600;">Score d'équilibre alimentaire</div>
               {% endif %}
               <p class="risk-note">
-                {{ data.explanations is defined and data.explanations|length > 0 ? data.explanations|first : 'Aucun signal majeur détecté.' }}
+                {{ data.explanations is defined and data.explanations|length > 0 ? data.explanations|first : '' }}
               </p>
             </article>
           {% endfor %}
@@ -846,7 +943,6 @@
       <!-- Section des recommandations personnalisées -->
       <div class="recommendations-section">
         
-        {% if moodStats.showRecommendation %}
         <div class="recommendation-box" style="--rec-grad: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
           <div class="box-header" style="display: flex; align-items: center; margin-bottom: 15px;">
             <span style="font-size: 2em; margin-right: 10px;">🧠</span>
@@ -863,7 +959,6 @@
             💬 Démarrer une conversation
           </button>
         </div>
-        {% endif %}
 
         {% if activityStats.total_entries > 0 %}
         <div class="recommendation-box" style="--rec-grad: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
@@ -922,6 +1017,27 @@
     </div>
     </section>
   </main>
+
+  <div id="chatbotModalOverlay" class="chatbot-modal-overlay">
+    <div class="chatbot-modal" role="dialog" aria-modal="true" aria-labelledby="chatbotTitle">
+      <div class="chatbot-head">
+        <div>
+          <strong id="chatbotTitle">Chatbot d'Humeur</strong>
+          <div style="font-size:12px; color:#475569;">Empathie + question + petit conseil</div>
+        </div>
+        <button id="chatbotCloseBtn" class="chatbot-close" type="button" aria-label="Fermer">×</button>
+      </div>
+      <div id="chatbotMessages" class="chatbot-messages">
+        <div class="chatbot-msg bot">
+          Bonjour, je suis la pour vous ecouter. Que ressentez-vous aujourd'hui ?
+        </div>
+      </div>
+      <form id="chatbotForm" class="chatbot-input-wrap">
+        <textarea id="chatbotInput" placeholder="Ex: Je suis en rupture amoureuse et je me sens vide."></textarea>
+        <button id="chatbotSendBtn" class="chatbot-send" type="submit">Envoyer</button>
+      </form>
+    </div>
+  </div>
 
   <!-- Modal pour éditer/supprimer -->
   <div id="editModal" class="modal-overlay" style="display:none;">
@@ -1921,11 +2037,71 @@
     document.addEventListener('DOMContentLoaded', function() {
       // Gestionnaire pour le bouton chatbot
       const chatbotBtn = document.querySelector('.btn-chatbot');
-      if (chatbotBtn) {
-        chatbotBtn.addEventListener('click', function() {
-          // Ici vous pouvez intégrer votre chatbot
-          alert('Fonctionnalité chatbot bientôt disponible !');
-          // Ou rediriger vers une page de chat
+      const chatbotModalOverlay = document.getElementById('chatbotModalOverlay');
+      const chatbotCloseBtn = document.getElementById('chatbotCloseBtn');
+      const chatbotForm = document.getElementById('chatbotForm');
+      const chatbotInput = document.getElementById('chatbotInput');
+      const chatbotMessages = document.getElementById('chatbotMessages');
+      const chatbotEndpoint = '{{ path('app_sante_quotidienne_chatbot_empathy') }}';
+
+      function appendChatMessage(text, type, meta) {
+        if (!chatbotMessages) return;
+        const el = document.createElement('div');
+        el.className = 'chatbot-msg ' + type;
+        el.textContent = text;
+        if (meta) {
+          const metaEl = document.createElement('span');
+          metaEl.className = 'chatbot-meta';
+          metaEl.textContent = meta;
+          el.appendChild(metaEl);
+        }
+        chatbotMessages.appendChild(el);
+        chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+      }
+
+      function setChatOpen(open) {
+        if (!chatbotModalOverlay) return;
+        chatbotModalOverlay.style.display = open ? 'flex' : 'none';
+        if (open && chatbotInput) chatbotInput.focus();
+      }
+
+      if (chatbotBtn) chatbotBtn.addEventListener('click', () => setChatOpen(true));
+      if (chatbotCloseBtn) chatbotCloseBtn.addEventListener('click', () => setChatOpen(false));
+      if (chatbotModalOverlay) {
+        chatbotModalOverlay.addEventListener('click', (e) => {
+          if (e.target === chatbotModalOverlay) setChatOpen(false);
+        });
+      }
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && chatbotModalOverlay && chatbotModalOverlay.style.display === 'flex') {
+          setChatOpen(false);
+        }
+      });
+
+      if (chatbotForm) {
+        chatbotForm.addEventListener('submit', async function(e) {
+          e.preventDefault();
+          const message = chatbotInput ? chatbotInput.value.trim() : '';
+          if (!message) return;
+          appendChatMessage(message, 'user');
+          if (chatbotInput) chatbotInput.value = '';
+
+          try {
+            const res = await fetch(chatbotEndpoint, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ message })
+            });
+            const data = await res.json();
+            if (!res.ok || !data.ok) {
+              appendChatMessage(data.message || 'Erreur de traitement.', 'bot');
+              return;
+            }
+            const meta = `emotion: ${data.emotion} | intent: ${data.intent}`;
+            appendChatMessage(data.response || 'Je suis la pour vous aider.', 'bot', meta);
+          } catch (err) {
+            appendChatMessage('Erreur reseau. Veuillez reessayer.', 'bot');
+          }
         });
       }
 
