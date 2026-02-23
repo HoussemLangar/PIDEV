@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\User;
 use App\Form\ProfileType;
 use App\Repository\SuspiciousLoginRepository;
+use App\Service\UserAiScoreService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -23,7 +24,8 @@ class ProfileController extends AbstractController
     public function edit(
         Request $request,
         EntityManagerInterface $em,
-        UserPasswordHasherInterface $passwordHasher
+        UserPasswordHasherInterface $passwordHasher,
+        UserAiScoreService $userAiScoreService
     ): Response
     {
         $user = $this->getUser();
@@ -57,6 +59,7 @@ class ProfileController extends AbstractController
 
         return $this->render('front/profile/edit.html.twig', [
             'form' => $form->createView(),
+            'aiScore' => $userAiScoreService->getProfileSummary($user),
         ]);
     }
 

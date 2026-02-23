@@ -8,7 +8,10 @@ use Doctrine\ORM\EntityManagerInterface;
 
 class NotificationService
 {
-    public function __construct(private EntityManagerInterface $em) {}
+    public function __construct(
+        private EntityManagerInterface $em,
+        private UserAiScoreService $userAiScoreService
+    ) {}
 
     public function notify(
         User $user,
@@ -18,6 +21,10 @@ class NotificationService
         ?string $link = null,
         string $priority = 'normal'
     ): Notification {
+        if ($priority === 'normal' && in_array($type, ['support', 'assistance', 'ticket'], true)) {
+            $priority = $this->userAiScoreService->getSupportPriority($user);
+        }
+
         $notification = new Notification();
         $notification->setUser($user);
         $notification->setTitre($title);

@@ -7,6 +7,7 @@ use App\Service\Ai\DocumentScannerService;
 use App\Service\Ai\NutritionPlannerService;
 use App\Service\Ai\ResultExplainerService;
 use App\Service\Ai\WorkoutPlannerService;
+use App\Service\UserAiScoreService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -17,6 +18,10 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_USER')]
 class AiToolsController extends AbstractController
 {
+    public function __construct(private readonly UserAiScoreService $userAiScoreService)
+    {
+    }
+
     #[Route('', name: 'index', methods: ['GET'])]
     public function index(): Response
     {
@@ -140,8 +145,15 @@ class AiToolsController extends AbstractController
         $isAllowed = $user->getSubscriptionStatus() === 'ACTIVE'
             && in_array($effectiveRole, $allowedRoles, true);
 
+        if (!$isAllowed && $this->userAiScoreService->isPremiumEligible($user)) {
+            $isAllowed = true;
+        }
+
         if (!$isAllowed) {
-            throw $this->createAccessDeniedException('Votre abonnement ou rôle ne permet pas l’accès aux outils IA.');
+            $score = $this->userAiScoreService->calculateScore($user);
+            throw $this->createAccessDeniedException(
+                sprintf('Accès refusé aux outils IA. Score actuel: %d/100 (minimum 70) ou abonnement actif requis.', $score)
+            );
         }
     }
 }
