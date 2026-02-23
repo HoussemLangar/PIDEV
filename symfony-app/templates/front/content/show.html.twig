@@ -88,6 +88,14 @@
             const commentForm = card.querySelector('.comment-form');
             const commentCount = card.querySelector('.comment-count');
             const errorEl = card.querySelector('[data-comment-error]');
+            const formatSignedScore = (value) => {
+                const numeric = Number(value ?? 0);
+                if (!Number.isFinite(numeric)) {
+                    return '0.000';
+                }
+
+                return numeric.toFixed(3);
+            };
 
             const fetchComments = async () => {
                 const res = await fetch(`{{ path('api_content_list') }}/${contentId}/comments`);
@@ -98,7 +106,7 @@
                     const deleteBtn = canDelete ? `<button class="btn btn-secondary btn-xs comment-delete" data-comment-id="${comment.id}">Supprimer</button>` : '';
                     commentList.insertAdjacentHTML('beforeend', `
                         <div class="comment-item" data-comment-id="${comment.id}">
-                            <div class="comment-meta">${comment.user} • ${comment.date}</div>
+                            <div class="comment-meta">${comment.user} • ${comment.date} • Score: ${formatSignedScore(comment.score)} (${comment.sentiment ?? 'N/A'})</div>
                             <div>${comment.message}</div>
                             ${deleteBtn}
                         </div>

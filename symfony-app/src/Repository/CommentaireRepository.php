@@ -51,6 +51,23 @@ class CommentaireRepository extends ServiceEntityRepository
     /**
      * @return Commentaire[]
      */
+    public function findPublishedByContenu(int $contenuId): array
+    {
+        return $this->createQueryBuilder('c')
+            ->leftJoin('c.user', 'u')
+            ->addSelect('u')
+            ->andWhere('c.contenu = :cid')
+            ->andWhere('c.statut = :status')
+            ->setParameter('cid', $contenuId)
+            ->setParameter('status', 'publie')
+            ->orderBy('c.createdAt', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * @return Commentaire[]
+     */
     public function findRecentByContenu(int $contenuId, int $limit = 20): array
     {
         return $this->createQueryBuilder('c')

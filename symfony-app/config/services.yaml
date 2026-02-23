@@ -12,6 +12,21 @@ parameters:
         - arnaque
         - insultant
         - obscenite
+        - merde
+        - putain
+        - con
+        - connard
+        - salop
+        - salope
+        - salopard
+        - salopards
+        - pute
+        - putes
+        - bitch
+        - bitches
+        - batard
+        - fuck
+        - shit
         - menace
         - haine
         - violence
@@ -46,6 +61,13 @@ services:
     App\Service\ForbiddenWordsFilterService:
         arguments:
             $forbiddenWords: '%content_forbidden_words%'
+
+    App\EventSubscriber\CommentScoreSubscriber:
+        tags:
+            - { name: doctrine.event_subscriber }
+    App\EventSubscriber\ContentScoreSubscriber:
+        tags:
+            - { name: doctrine.event_subscriber }
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

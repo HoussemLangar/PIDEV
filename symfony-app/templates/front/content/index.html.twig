@@ -17,6 +17,39 @@
             background-color: #dc3545;
             color: #fff;
         }
+        .score-insights {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        .top-comments-list {
+            display: grid;
+            gap: 10px;
+        }
+        .top-comment-item {
+            border: 1px solid #e6eef5;
+            border-radius: 10px;
+            padding: 10px 12px;
+            background: #fff;
+        }
+        .top-comment-meta {
+            font-size: 12px;
+            color: #6c7a89;
+            margin-bottom: 4px;
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .score-badge {
+            font-weight: 700;
+            color: #0f766e;
+        }
+        .content-score-line {
+            margin: 8px 0 0;
+            font-size: 13px;
+            color: #0f766e;
+            font-weight: 600;
+        }
     </style>
 {% endblock %}
 
@@ -79,73 +112,75 @@
         </div>
     </div>
 
-    <div class="content-section">
-        <div>
-        <div class="content-section-header">
-            <div class="content-section-title">
-                <h3>Recommandé pour vous</h3>
-                <p>Basé sur votre profil et vos interactions.</p>
-            </div>
-            <span class="content-pill">Personnalisé</span>
-        </div>
-        <div class="content-grid" id="recommendedGrid">
-            {% for item in recommended %}
-                {% set isLiked = item.id in likedIds %}
-                {% set isOwner = item.auteur and app.user and item.auteur.id == app.user.id %}
-                <div class="content-card" data-content-id="{{ item.id }}">
-                    <div class="content-meta">
-                        <span class="content-pill">{{ item.type|upper }}</span>
-                        {% if isOwner and item.statut %}
-                            {% set statutClass = 'content-pill' %}
-                            {% set statutLabel = '' %}
-                            {% if item.statut == 'en_attente' %}
-                                {% set statutClass = statutClass ~ ' status-pending' %}
-                                {% set statutLabel = 'En attente' %}
-                            {% elseif item.statut == 'publie' %}
-                                {% set statutClass = statutClass ~ ' status-published' %}
-                                {% set statutLabel = 'Publié' %}
-                            {% elseif item.statut == 'rejete' %}
-                                {% set statutClass = statutClass ~ ' status-rejected' %}
-                                {% set statutLabel = 'Rejeté' %}
-                            {% else %}
-                                {% set statutClass = statutClass ~ ' status-pending' %}
-                                {% set statutLabel = item.statut %}
-                            {% endif %}
-                            {% if statutLabel %}
-                                <span class="{{ statutClass }}">{{ statutLabel }}</span>
-                            {% endif %}
-                        {% endif %}
-                        <span>{{ (item.datePublication ?? item.createdAt)|date('d/m/Y') }}</span>
-                        <span>{{ item.auteur ? (item.auteur.fullName ?? item.auteur.email) : 'Anonyme' }}</span>
-                    </div>
-                    <h3>{{ item.titre }}</h3>
-                    <p>{{ item.description ?? item.contenu|striptags|slice(0, 140) }}</p>
-                    <div class="content-actions">
-                        <button class="like-btn {{ isLiked ? 'active' : '' }}" data-liked="{{ isLiked ? '1' : '0' }}">
-                            <i class="fas fa-heart"></i>
-                            <span class="like-count">{{ item.likes|length }}</span>
-                        </button>
-                        <button class="btn btn-secondary btn-xs comment-toggle">
-                            Commentaires (<span class="comment-count">{{ item.commentaires|length }}</span>)
-                        </button>
-                        <a class="btn btn-primary btn-xs" href="{{ path('front_content_show', {id: item.id}) }}">Voir</a>
-                    </div>
-                    <div class="comment-panel" hidden>
-                        <div class="comment-list"></div>
-                        <form class="comment-form" data-ajax="1">
-                            <textarea rows="2" placeholder="Ajouter un commentaire..."></textarea>
-                            <div class="content-actions">
-                                <button type="submit" class="btn btn-primary btn-xs">Publier</button>
-                                <div class="form-error" data-comment-error></div>
-                            </div>
-                        </form>
-                    </div>
+    {% if showRecommended %}
+        <div class="content-section">
+            <div>
+            <div class="content-section-header">
+                <div class="content-section-title">
+                    <h3>Recommandé pour vous</h3>
+                    <p>Top 4 contenus avec les meilleurs scores.</p>
                 </div>
-            {% else %}
-                <p>Aucune recommandation disponible.</p>
-            {% endfor %}
+                <span class="content-pill">Personnalisé</span>
+            </div>
+            <div class="content-grid" id="recommendedGrid">
+                {% for item in recommended %}
+                    {% set isLiked = item.id in likedIds %}
+                    {% set isOwner = item.auteur and app.user and item.auteur.id == app.user.id %}
+                    <div class="content-card" data-content-id="{{ item.id }}">
+                        <div class="content-meta">
+                            <span class="content-pill">{{ item.type|upper }}</span>
+                            {% if isOwner and item.statut %}
+                                {% set statutClass = 'content-pill' %}
+                                {% set statutLabel = '' %}
+                                {% if item.statut == 'en_attente' %}
+                                    {% set statutClass = statutClass ~ ' status-pending' %}
+                                    {% set statutLabel = 'En attente' %}
+                                {% elseif item.statut == 'publie' %}
+                                    {% set statutClass = statutClass ~ ' status-published' %}
+                                    {% set statutLabel = 'Publié' %}
+                                {% elseif item.statut == 'rejete' %}
+                                    {% set statutClass = statutClass ~ ' status-rejected' %}
+                                    {% set statutLabel = 'Rejeté' %}
+                                {% else %}
+                                    {% set statutClass = statutClass ~ ' status-pending' %}
+                                    {% set statutLabel = item.statut %}
+                                {% endif %}
+                                {% if statutLabel %}
+                                    <span class="{{ statutClass }}">{{ statutLabel }}</span>
+                                {% endif %}
+                            {% endif %}
+                            <span>{{ (item.datePublication ?? item.createdAt)|date('d/m/Y') }}</span>
+                            <span>{{ item.auteur ? (item.auteur.fullName ?? item.auteur.email) : 'Anonyme' }}</span>
+                        </div>
+                        <h3>{{ item.titre }}</h3>
+                        <p>{{ item.description ?? item.contenu|striptags|slice(0, 140) }}</p>
+                        <div class="content-actions">
+                            <button class="like-btn {{ isLiked ? 'active' : '' }}" data-liked="{{ isLiked ? '1' : '0' }}">
+                                <i class="fas fa-heart"></i>
+                                <span class="like-count">{{ item.likes|length }}</span>
+                            </button>
+                            <button class="btn btn-secondary btn-xs comment-toggle">
+                                Commentaires (<span class="comment-count">{{ item.commentaires|length }}</span>)
+                            </button>
+                            <a class="btn btn-primary btn-xs" href="{{ path('front_content_show', {id: item.id}) }}">Voir</a>
+                        </div>
+                        <div class="comment-panel" hidden>
+                            <div class="comment-list"></div>
+                            <form class="comment-form" data-ajax="1">
+                                <textarea rows="2" placeholder="Ajouter un commentaire..."></textarea>
+                                <div class="content-actions">
+                                    <button type="submit" class="btn btn-primary btn-xs">Publier</button>
+                                    <div class="form-error" data-comment-error></div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                {% else %}
+                    <p>Aucune recommandation disponible.</p>
+                {% endfor %}
+            </div>
         </div>
-    </div>
+    {% endif %}
 
     <div class="content-section">
         <div class="content-section-header">
@@ -211,6 +246,15 @@
                 if (alertBox) alertBox.hidden = true;
             };
 
+            const formatSignedScore = (value) => {
+                const numeric = Number(value ?? 0);
+                if (!Number.isFinite(numeric)) {
+                    return '0.000';
+                }
+
+                return numeric.toFixed(3);
+            };
+
             const buildCard = (item) => {
                 const likedClass = item.liked ? 'active' : '';
                 
@@ -254,6 +298,7 @@
                     </div>
                     <h3>${item.titre}</h3>
                     <p>${item.description ?? ''}</p>
+                    <p class="content-score-line">Score moyen: ${formatSignedScore(item.score)} (${item.score_count ?? 0} commentaires valides)</p>
                     <div class="content-actions">
                         <button class="like-btn ${likedClass}" data-liked="${item.liked ? '1' : '0'}">
                             <i class="fas fa-heart"></i>

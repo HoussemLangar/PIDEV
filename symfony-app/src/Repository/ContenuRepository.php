@@ -110,28 +110,10 @@ class ContenuRepository extends ServiceEntityRepository
         $page = max(1, $page);
         $limit = max(1, min(50, $limit));
 
-        $qb = $this->createQueryBuilder('c')
-            ->leftJoin('c.auteur', 'a')
-            ->addSelect('a')
-            ->orderBy('c.datePublication', 'DESC')
+        $qb = $this->createFilteredQueryBuilder($type, $search, $category, $statuses, $ownerId);
+        $qb->orderBy('c.datePublication', 'DESC')
+            ->addOrderBy('c.id', 'DESC')
             ->addOrderBy('c.createdAt', 'DESC');
-
-        if ($statuses !== null) {
-            $qb->andWhere('c.statut IN (:statuses)')->setParameter('statuses', $statuses);
-        }
-        if ($ownerId !== null) {
-            $qb->andWhere('c.auteur = :owner')->setParameter('owner', $ownerId);
-        }
-        if ($type) {
-            $qb->andWhere('c.type = :type')->setParameter('type', $type);
-        }
-        if ($category) {
-            $qb->andWhere('c.categorie = :categorie')->setParameter('categorie', $category);
-        }
-        if ($search) {
-            $qb->andWhere('c.titre LIKE :q OR c.description LIKE :q OR c.tags LIKE :q')
-                ->setParameter('q', '%' . $search . '%');
-        }
 
         $qb->setFirstResult(($page - 1) * $limit)
             ->setMaxResults($limit);
@@ -162,6 +144,31 @@ class ContenuRepository extends ServiceEntityRepository
             'total' => $total,
             'pages' => (int) ceil($total / $limit),
         ];
+    }
+
+    /**
+     * @return Contenu[]
+     */
+    public function findFiltered(
+        ?string $type = null,
+        ?string $search = null,
+        ?string $category = null,
+        ?array $statuses = null,
+        ?int $ownerId = null
+    ): array {
+        $qb = $this->createFilteredQueryBuilder($type, $search, $category, $statuses, $ownerId)
+            ->distinct()
+            ->leftJoin('c.commentaires', 'cm')
+            ->addSelect('cm')
+            ->leftJoin('cm.user', 'cu')
+            ->addSelect('cu');
+
+        return $qb
+            ->orderBy('c.datePublication', 'DESC')
+            ->addOrderBy('c.id', 'DESC')
+            ->addOrderBy('c.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult();
     }
 
     public function countValidated(
@@ -232,5 +239,36 @@ class ContenuRepository extends ServiceEntityRepository
     public function flush(): void
     {
         $this->getEntityManager()->flush();
+    }
+
+    private function createFilteredQueryBuilder(
+        ?string $type = null,
+        ?string $search = null,
+        ?string $category = null,
+        ?array $statuses = null,
+        ?int $ownerId = null
+    ): QueryBuilder {
+        $qb = $this->createQueryBuilder('c')
+            ->leftJoin('c.auteur', 'a')
+            ->addSelect('a');
+
+        if ($statuses !== null) {
+            $qb->andWhere('c.statut IN (:statuses)')->setParameter('statuses', $statuses);
+        }
+        if ($ownerId !== null) {
+            $qb->andWhere('c.auteur = :owner')->setParameter('owner', $ownerId);
+        }
+        if ($type) {
+            $qb->andWhere('c.type = :type')->setParameter('type', $type);
+        }
+        if ($category) {
+            $qb->andWhere('c.categorie = :categorie')->setParameter('categorie', $category);
+        }
+        if ($search) {
+            $qb->andWhere('c.titre LIKE :q OR c.description LIKE :q OR c.tags LIKE :q')
+                ->setParameter('q', '%' . $search . '%');
+        }
+
+        return $qb;
     }
 }
