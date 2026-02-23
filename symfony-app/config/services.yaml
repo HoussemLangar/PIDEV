@@ -7,11 +7,9 @@ parameters:
     geoip_db_path: '%kernel.project_dir%/var/geoip/GeoLite2-Country.mmdb'
     geoip_api_url: '%env(resolve:GEOIP_API_URL)%'
     jitsi_server_url: '%env(JITSI_SERVER_URL)%'
-<<<<<<< HEAD
     ai_api_base_url: '%env(resolve:AI_API_BASE_URL)%'
     ai_api_key: '%env(resolve:AI_API_KEY)%'
     ai_model: '%env(resolve:AI_MODEL)%'
-=======
     hf_emotion_api_url: '%env(string:HF_EMOTION_API_URL)%'
     hf_emotion_api_token: '%env(string:HF_EMOTION_API_TOKEN)%'
     hf_emotion_model: '%env(string:HF_EMOTION_MODEL)%'
@@ -20,7 +18,6 @@ parameters:
     hf_chat_api_url: '%env(string:HF_CHAT_API_URL)%'
     hf_chat_model: '%env(string:HF_CHAT_MODEL)%'
     hf_emotion_timeout: '%env(float:HF_EMOTION_TIMEOUT)%'
->>>>>>> origin/modificationintegration
     content_forbidden_words:
         - spam
         - arnaque
