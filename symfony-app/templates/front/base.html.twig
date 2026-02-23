@@ -1313,46 +1313,48 @@
         document.addEventListener("DOMContentLoaded", __santea_initNav);
         document.addEventListener("turbo:load", __santea_initNav);
 
-        const form = document.getElementById("registerForm");
-        if (form) {
-        form.addEventListener("submit", async function(e) {
-            e.preventDefault();
+        (function () {
+            const registerForm = document.getElementById('registerForm');
+            if (!registerForm) return;
+            if (registerForm.dataset.bound === '1') return;
+            registerForm.dataset.bound = '1';
 
-            // vider anciennes erreurs
-            document.querySelectorAll(".error-message").forEach(el => el.innerHTML = "");
+            registerForm.addEventListener('submit', async function (e) {
+                e.preventDefault();
 
-            const formData = new FormData(form);
+                document.querySelectorAll('.error-message').forEach(el => el.innerHTML = '');
 
-            try {
-                const response = await fetch(form.action, {
-                    method: "POST",
-                    headers: { "X-Requested-With": "XMLHttpRequest" },
-                    body: formData
-                });
+                const formData = new FormData(registerForm);
 
-                const data = await response.json();
+                try {
+                    const response = await fetch(registerForm.action, {
+                        method: 'POST',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        body: formData
+                    });
 
-                if (data.success) {
-                    window.showToast?.('success', data.message || 'Inscription réussie.');
-                    window.location.href = data.redirect || "/";
-                }
+                    const data = await response.json();
 
-            } catch (error) {
+                    if (data.success) {
+                        window.showToast?.('success', data.message || 'Inscription réussie.');
+                        window.location.href = data.redirect || '/';
+                    }
+                } catch (error) {
+                    const response = await error.response?.json?.();
 
-                const response = await error.response?.json?.();
-
-                if (response && response.errors) {
-                    for (const field in response.errors) {
-                        const div = document.getElementById("error-" + field);
-                        if (div) {
-                            div.innerHTML = response.errors[field].join("<br>");
+                    if (response && response.errors) {
+                        for (const field in response.errors) {
+                            const div = document.getElementById('error-' + field);
+                            if (div) {
+                                div.innerHTML = response.errors[field].join('<br>');
+                            }
                         }
                     }
+
+                    window.showToast?.('error', 'Erreur lors de l’inscription.');
                 }
-                window.showToast?.('error', 'Erreur lors de l’inscription.');
-            }
-        });
-        }
+            });
+        })();
         (function () {
             const disableHtml5Validation = (root = document) => {
                 root.querySelectorAll('form').forEach((formEl) => {

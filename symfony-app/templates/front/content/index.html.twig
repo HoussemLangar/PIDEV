@@ -157,59 +157,6 @@
         </div>
     </div>
 
-<<<<<<< HEAD
-    <!-- Recommended -->
-    <div class="content-section">
-        <div class="content-section-header">
-            <div class="content-section-title">
-                <h3><i class="fas fa-star" style="color:#f59e0b;margin-right:8px;"></i>{{ 'content.recommended'|trans }}</h3>
-                <p>{{ 'content.recommended_sub'|trans }}</p>
-            </div>
-            <span class="content-pill"><i class="fas fa-magic" style="margin-right:4px;"></i>Personnalisé</span>
-        </div>
-        <div class="content-grid" id="recommendedGrid">
-            {% for item in recommended %}
-                {% set isLiked = item.id in likedIds %}
-                {% set isOwner = item.auteur and app.user and item.auteur.id == app.user.id %}
-                <div class="content-card" data-content-id="{{ item.id }}">
-                    <div class="content-meta">
-                        <span class="content-pill">{{ item.type|upper }}</span>
-                        {% if isOwner and item.statut %}
-                            {% if item.statut == 'en_attente' %}<span class="content-pill status-pending">{{ 'status.pending'|trans }}</span>
-                            {% elseif item.statut == 'publie' %}<span class="content-pill status-published">{{ 'status.published'|trans }}</span>
-                            {% elseif item.statut == 'rejete' %}<span class="content-pill status-rejected">{{ 'status.rejected'|trans }}</span>
-                            {% endif %}
-                        {% endif %}
-                        <span>{{ (item.datePublication ?? item.createdAt)|date('d/m/Y') }}</span>
-                        <span>{{ item.auteur ? (item.auteur.fullName ?? item.auteur.email) : 'Anonyme' }}</span>
-                    </div>
-                    <h3>{{ item.titre }}</h3>
-                    <p>{{ item.description ?? item.contenu|striptags|slice(0, 140) }}</p>
-                    <div class="content-actions">
-                        <button class="like-btn {{ isLiked ? 'active' : '' }}" data-liked="{{ isLiked ? '1' : '0' }}">
-                            <i class="fas fa-heart"></i>
-                            <span class="like-count">{{ item.likes|length }}</span>
-                        </button>
-                        <button class="btn btn-secondary btn-xs comment-toggle">
-                            <i class="fas fa-comment" style="margin-right:4px;"></i>(<span class="comment-count">{{ item.commentaires|length }}</span>)
-                        </button>
-                        <a class="btn btn-primary btn-xs" href="{{ path('front_content_show', {id: item.id}) }}">{{ 'common.view'|trans }}</a>
-                    </div>
-                    <div class="comment-panel" hidden>
-                        <div class="comment-list"></div>
-                        <form class="comment-form" data-ajax="1">
-                            <textarea rows="2" placeholder="Ajouter un commentaire..."></textarea>
-                            <div class="content-actions">
-                                <button type="submit" class="btn btn-primary btn-xs">Publier</button>
-                                <div class="form-error" data-comment-error></div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            {% else %}
-                <div style="grid-column:1/-1;text-align:center;padding:24px;color:#94a3b8;">{{ 'content.no_recommended'|trans }}</div>
-            {% endfor %}
-=======
     {% if showRecommended %}
         <div class="content-section">
             <div>
@@ -277,7 +224,6 @@
                     <p>Aucune recommandation disponible.</p>
                 {% endfor %}
             </div>
->>>>>>> origin/modificationintegration
         </div>
     {% endif %}
 

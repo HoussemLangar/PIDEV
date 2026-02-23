@@ -1,6 +1,6 @@
 {% extends 'front/base.html.twig' %}
 
-{% block title %}{{ isEdit ? '{{ 'content.edit_title'|trans }}' : 'Ajouter un contenu' }}{% endblock %}
+{% block title %}{{ isEdit ? ('content.edit_title'|trans) : ('content.create_title'|trans) }}{% endblock %}
 
 {% block body %}
 <section class="content-page">
@@ -9,8 +9,8 @@
         <i class="fas fa-plus page-hero-cross"></i>
         <div class="page-hero-header">
             <div>
-                <div class="page-hero-badge"><i class="fas fa-pen"></i> {{ isEdit ? '{{ 'content.edit_title'|trans }}' : '{{ 'content.create_title'|trans }}' }}</div>
-                <h1>{{ isEdit ? '{{ 'content.edit_title'|trans }}' : 'Ajouter un contenu' }}</h1>
+                <div class="page-hero-badge"><i class="fas fa-pen"></i> {{ isEdit ? ('content.edit_title'|trans) : ('content.create_title'|trans) }}</div>
+                <h1>{{ isEdit ? ('content.edit_title'|trans) : ('content.create_title'|trans) }}</h1>
                 <p>{{ 'content.add_sub'|trans }}</p>
             </div>
             <div class="page-hero-actions">
@@ -29,7 +29,7 @@
     {% endfor %}
 
     <div class="content-section">
-        {{ form_start(form, { attr: { class: 'admin-form', enctype: 'multipart/form-data', novalidate: 'novalidate' } }) }}
+        {{ form_start(form, { attr: { class: 'admin-form', enctype: 'multipart/form-data', novalidate: 'novalidate', 'data-turbo': 'false' } }) }}
             <div class="form-row">
                 <div class="form-group">
                     {{ form_label(form.titre) }}
