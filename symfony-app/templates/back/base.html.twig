@@ -34,6 +34,45 @@
         .admin-main {
             background: transparent !important;
         }
+        /* ── Section title labels ──────────────────────────────── */
+        .nav-section-title {
+            color: rgba(255,255,255,.55) !important;
+            font-size: .68rem !important;
+            font-weight: 700 !important;
+            letter-spacing: .12em !important;
+            text-transform: uppercase !important;
+            padding: 16px 16px 4px !important;
+            margin-top: 4px !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+        }
+        .nav-section-title::before {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255,255,255,.18);
+            display: block;
+        }
+        /* ── Nav items text & icon ─────────────────────────────── */
+        .admin-nav-item span {
+            color: rgba(255,255,255,.92) !important;
+            font-weight: 500 !important;
+        }
+        .admin-nav-item i {
+            color: rgba(255,255,255,.75) !important;
+            width: 18px !important;
+            text-align: center !important;
+        }
+        .admin-nav-item.active span,
+        .admin-nav-item:hover span { color: #fff !important; }
+        .admin-nav-item.active i,
+        .admin-nav-item:hover i { color: #fff !important; }
+        /* ── Sidebar scrollbar ─────────────────────────────────── */
+        .admin-sidebar { overflow-y: auto !important; scrollbar-width: thin !important; scrollbar-color: rgba(255,255,255,.2) transparent !important; }
+        .admin-sidebar::-webkit-scrollbar { width: 4px !important; }
+        .admin-sidebar::-webkit-scrollbar-track { background: transparent !important; }
+        .admin-sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,.2) !important; border-radius: 4px !important; }
         /* Admin stat cards */
         .stats-grid .stat-card,
         .admin-stat-card,

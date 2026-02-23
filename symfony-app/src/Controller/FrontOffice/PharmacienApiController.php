@@ -19,6 +19,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\String\Slugger\AsciiSlugger;
 
 #[Route('/api/pharmacien', name: 'api_pharmacien_')]
 class PharmacienApiController extends AbstractController
@@ -137,8 +138,8 @@ class PharmacienApiController extends AbstractController
         $pharmacy->setTelephone($payload['telephone'] ?? null);
         $pharmacy->setEmail($payload['email'] ?? null);
         $pharmacy->setHoraires($payload['horaires'] ?? null);
-        $pharmacy->setLatitude($payload['latitude'] ?? null);
-        $pharmacy->setLongitude($payload['longitude'] ?? null);
+        $pharmacy->setLatitude(($payload['latitude'] ?? '') !== '' ? $payload['latitude'] : null);
+        $pharmacy->setLongitude(($payload['longitude'] ?? '') !== '' ? $payload['longitude'] : null);
         $pharmacy->setIsActive((bool) ($payload['is_active'] ?? true));
         $pharmacy->setPharmacien($pharmacien);
 
@@ -165,12 +166,16 @@ class PharmacienApiController extends AbstractController
         if (array_key_exists('telephone', $payload)) $pharmacy->setTelephone($payload['telephone']);
         if (array_key_exists('email', $payload)) $pharmacy->setEmail($payload['email']);
         if (array_key_exists('horaires', $payload)) $pharmacy->setHoraires($payload['horaires']);
-        if (array_key_exists('latitude', $payload)) $pharmacy->setLatitude($payload['latitude']);
-        if (array_key_exists('longitude', $payload)) $pharmacy->setLongitude($payload['longitude']);
+        if (array_key_exists('latitude', $payload)) $pharmacy->setLatitude($payload['latitude'] !== '' ? $payload['latitude'] : null);
+        if (array_key_exists('longitude', $payload)) $pharmacy->setLongitude($payload['longitude'] !== '' ? $payload['longitude'] : null);
         if (array_key_exists('is_active', $payload)) $pharmacy->setIsActive((bool) $payload['is_active']);
         $pharmacy->setUpdatedAt(new \DateTime());
 
-        $this->em->flush();
+        try {
+            $this->em->flush();
+        } catch (\Exception $e) {
+            return new JsonResponse(['success' => false, 'message' => 'Erreur lors de la sauvegarde : ' . $e->getMessage()], 500);
+        }
         return new JsonResponse(['success' => true]);
     }
 
@@ -268,6 +273,79 @@ class PharmacienApiController extends AbstractController
         $this->em->flush();
 
         return new JsonResponse(['success' => true, 'id' => $stock->getId()]);
+    }
+
+    #[Route('/pharmacies/{id}/image', name: 'pharmacy_image', methods: ['POST'])]
+    public function uploadPharmacyImage(Pharmacy $pharmacy, Request $request): JsonResponse
+    {
+        $this->denyAccessUnlessGranted(PharmacyVoter::MANAGE);
+        /** @var User $user */
+        $user = $this->getUser();
+        $pharmacien = $user->getPharmacien();
+        if (!$pharmacien || $pharmacy->getPharmacien()?->getId() !== $pharmacien->getId()) {
+            return new JsonResponse(['success' => false, 'message' => 'Accès refusé'], 403);
+        }
+
+        $result = $this->handleImageUpload($request, 'pharmacies');
+        if (!$result['success']) {
+            return new JsonResponse($result, 422);
+        }
+
+        // Remove old image
+        if ($pharmacy->getImageName()) {
+            $old = $this->getParameter('kernel.project_dir') . '/public/images/pharmacies/' . $pharmacy->getImageName();
+            if (file_exists($old)) @unlink($old);
+        }
+
+        $pharmacy->setImageName($result['filename']);
+        $pharmacy->setUpdatedAt(new \DateTime());
+        $this->em->flush();
+
+        return new JsonResponse(['success' => true, 'imageUrl' => '/images/pharmacies/' . $result['filename']]);
+    }
+
+    #[Route('/medicaments/{id}/image', name: 'medicament_image', methods: ['POST'])]
+    public function uploadMedicamentImage(Medicament $med, Request $request): JsonResponse
+    {
+        $this->denyAccessUnlessGranted(PharmacyVoter::MANAGE);
+
+        $result = $this->handleImageUpload($request, 'medicaments');
+        if (!$result['success']) {
+            return new JsonResponse($result, 422);
+        }
+
+        if ($med->getImageName()) {
+            $old = $this->getParameter('kernel.project_dir') . '/public/images/medicaments/' . $med->getImageName();
+            if (file_exists($old)) @unlink($old);
+        }
+
+        $med->setImageName($result['filename']);
+        $med->setUpdatedAt(new \DateTime());
+        $this->em->flush();
+
+        return new JsonResponse(['success' => true, 'imageUrl' => '/images/medicaments/' . $result['filename']]);
+    }
+
+    private function handleImageUpload(Request $request, string $folder): array
+    {
+        $file = $request->files->get('image');
+        if (!$file) {
+            return ['success' => false, 'message' => 'Aucun fichier reçu.'];
+        }
+        $mime = $file->getMimeType() ?? '';
+        if (!in_array($mime, ['image/jpeg', 'image/png', 'image/webp', 'image/gif'], true)) {
+            return ['success' => false, 'message' => 'Type de fichier non supporté (jpeg, png, webp, gif).'];
+        }
+        if ($file->getSize() > 5 * 1024 * 1024) {
+            return ['success' => false, 'message' => 'Fichier trop volumineux (max 5 Mo).'];
+        }
+        $slugger = new AsciiSlugger();
+        $orig = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+        $ext  = $file->guessExtension() ?? 'jpg';
+        $name = $slugger->slug($orig) . '-' . uniqid() . '.' . $ext;
+        $dest = $this->getParameter('kernel.project_dir') . '/public/images/' . $folder;
+        $file->move($dest, $name);
+        return ['success' => true, 'filename' => $name];
     }
 
     private function pharmacienOwnsMedicament(?Pharmacien $pharmacien, Medicament $med): bool

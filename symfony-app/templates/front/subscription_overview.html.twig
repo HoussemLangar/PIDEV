@@ -25,7 +25,7 @@
         </div>
         <div style="flex:1;">
             <div style="font-weight:700;font-size:16px;color:{{ isActive ? '#065f46' : '#991b1b' }};">
-                Abonnement {{ isActive ? '{{ 'sub.active'|trans }}' : abonnement.statut }}
+                Abonnement {{ isActive ? ('sub.active'|trans) : abonnement.statut }}
             </div>
             <div style="font-size:13px;color:{{ isActive ? '#047857' : '#b91c1c' }};margin-top:2px;">
                 {% if isActive %}Votre accès premium est pleinement opérationnel.{% else %}Votre abonnement nécessite une attention.{% endif %}

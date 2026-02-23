@@ -127,21 +127,30 @@
     const overlay = document.getElementById('s3d-page-transition');
     if (!overlay) return;
 
-    // Animate in when clicked
+    // Ensure overlay is cleared on every page show (bfcache support)
+    const clearOverlay = () => {
+      overlay.classList.remove('entering');
+      overlay.classList.add('leaving');
+      setTimeout(() => overlay.classList.remove('leaving'), 500);
+    };
+
+    // Animate in when clicked (only for real cross-page navigations)
     document.querySelectorAll('a[href]').forEach(link => {
       const href = link.getAttribute('href');
       if (!href || href.startsWith('#') || href.startsWith('javascript:') || link.target === '_blank') return;
       link.addEventListener('click', () => {
+        // Skip same-page hash navigation (e.g. /dashboard#panel)
+        try {
+          const dest = new URL(link.href, location.href);
+          if (dest.pathname === location.pathname) return;
+        } catch (_) {}
         overlay.classList.add('entering');
       });
     });
 
-    // Reveal on load
-    window.addEventListener('load', () => {
-      overlay.classList.remove('entering');
-      overlay.classList.add('leaving');
-      setTimeout(() => overlay.classList.remove('leaving'), 500);
-    });
+    window.addEventListener('load', clearOverlay);
+    // bfcache: browser restores page from cache without firing 'load'
+    window.addEventListener('pageshow', (e) => { if (e.persisted) clearOverlay(); });
   })();
 
   /* ═══════════════════════════════════════════════════════════════════

@@ -75,8 +75,14 @@
             let geo = { lat: null, lng: null };
             const apiFetch = (url, options = {}) => fetch(url, options);
 
-            const renderPharmacy = (p) => `
+            const renderPharmacy = (p) => {
+                const initials = (p.nom || 'P').split(' ').slice(0,2).map(w => w[0]).join('').toUpperCase();
+                const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(p.nom || 'P')}&background=0D8ABC&color=fff&size=112&bold=true&length=2`;
+                return `
                 <div class="content-card">
+                    <div style="width:52px;height:52px;border-radius:14px;overflow:hidden;margin-bottom:12px;border:2px solid rgba(14,165,233,.15);box-shadow:0 4px 12px rgba(13,138,188,.12);flex-shrink:0;">
+                        <img src="${avatarUrl}" alt="${p.nom}" style="width:100%;height:100%;object-fit:cover;display:block;" loading="lazy">
+                    </div>
                     <div class="content-meta">
                         <span class="content-pill"><i class="fas fa-pills" style="margin-right:3px;"></i> Pharmacie</span>
                         <span>${p.distance ? '<i class="fas fa-location-arrow" style="margin-right:3px;color:#0D8ABC;"></i>' + p.distance.toFixed(2) + ' km' : ''}</span>
@@ -88,7 +94,7 @@
                         <a class="btn btn-secondary btn-xs" href="/pharmacies/${p.id}#compareBox"><i class="fas fa-cart-plus" style="margin-right:4px;"></i>{{ 'pharma.reserve'|trans }}</a>
                     </div>
                 </div>
-            `;
+            `;};
 
             const load = async () => {
                 grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:32px;color:#94a3b8;"><i class="fas fa-spinner fa-spin" style="font-size:20px;"></i></div>';
