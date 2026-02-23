@@ -172,6 +172,365 @@
     .rmd-btn-confirm:disabled { opacity: .6; cursor: not-allowed; transform: none; }
     @keyframes rmd-fade-in { from { opacity: 0; } to { opacity: 1; } }
     @keyframes rmd-slide-up { from { opacity: 0; transform: translateY(24px) scale(.97); } to { opacity: 1; transform: none; } }
+
+    /* ── Voice Bot Card ─────────────────────────────────────────── */
+    .voice-bot-card {
+        background: linear-gradient(135deg,#0b1120 0%,#112240 55%,#0c3460 100%);
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(13,138,188,.22), 0 0 0 1px rgba(255,255,255,.05);
+        margin-bottom: 20px;
+        position: relative;
+    }
+    .voice-bot-card::before {
+        content:'';
+        position:absolute;
+        top:-60px; right:-60px;
+        width:220px; height:220px;
+        background: radial-gradient(circle, rgba(13,138,188,.18) 0%, transparent 70%);
+        pointer-events:none;
+    }
+    .voice-bot-header {
+        padding: 18px 22px 14px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        border-bottom: 1px solid rgba(255,255,255,.07);
+        position: relative;
+    }
+    .voice-bot-avatar {
+        width: 50px; height: 50px;
+        background: linear-gradient(135deg,#0D8ABC,#00c9a7);
+        border-radius: 15px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 20px; color: white;
+        box-shadow: 0 8px 22px rgba(13,138,188,.45);
+        flex-shrink: 0;
+        position: relative;
+        transition: box-shadow .3s;
+    }
+    .voice-bot-avatar.listening {
+        box-shadow: 0 0 0 4px rgba(13,138,188,.35), 0 8px 22px rgba(13,138,188,.45);
+    }
+    .voice-bot-avatar.listening::before,
+    .voice-bot-avatar.listening::after {
+        content:'';
+        position:absolute;
+        inset:-7px;
+        border-radius:22px;
+        border: 2px solid rgba(13,138,188,.7);
+        animation: vb-ring 1.5s infinite;
+    }
+    .voice-bot-avatar.listening::after { inset:-14px; border-color:rgba(13,138,188,.4); animation-delay:.5s; }
+    @keyframes vb-ring {
+        0%   { opacity:.9; transform:scale(1); }
+        100% { opacity:0;  transform:scale(1.25); }
+    }
+    .voice-bot-info { flex:1; min-width:0; }
+    .voice-bot-info h3 { color:white; font-size:14px; font-weight:800; margin:0 0 2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .voice-bot-info small { color:rgba(255,255,255,.45); font-size:11px; }
+    .voice-waves {
+        display: none;
+        align-items: center;
+        gap: 3px;
+        height: 22px;
+        flex-shrink:0;
+    }
+    .voice-waves.active { display: flex; }
+    .voice-wave-bar {
+        width: 3px;
+        border-radius: 3px;
+        background: linear-gradient(to top,#0D8ABC,#00c9a7);
+        animation: vb-wave .75s infinite ease-in-out;
+    }
+    .voice-wave-bar:nth-child(1) { height:5px;  animation-delay:.00s; }
+    .voice-wave-bar:nth-child(2) { height:13px; animation-delay:.10s; }
+    .voice-wave-bar:nth-child(3) { height:20px; animation-delay:.20s; }
+    .voice-wave-bar:nth-child(4) { height:13px; animation-delay:.30s; }
+    .voice-wave-bar:nth-child(5) { height:5px;  animation-delay:.40s; }
+    @keyframes vb-wave {
+        0%,100% { transform:scaleY(.45); opacity:.55; }
+        50%      { transform:scaleY(1);   opacity:1; }
+    }
+    .voice-bot-status-dot {
+        width:9px; height:9px;
+        border-radius:50%;
+        background:#22c55e;
+        box-shadow:0 0 7px #22c55e;
+        flex-shrink:0;
+    }
+    .voice-bot-status-dot.listening { background:#f59e0b; box-shadow:0 0 7px #f59e0b; animation:vb-dot-blink .6s infinite alternate; }
+    @keyframes vb-dot-blink { to { opacity:.25; } }
+    .voice-bot-body { padding: 14px 18px 16px; }
+    /* Chat log */
+    .voice-bot-log {
+        max-height: 200px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 14px;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255,255,255,.12) transparent;
+        padding-right: 2px;
+    }
+    .voice-bot-log::-webkit-scrollbar { width:3px; }
+    .voice-bot-log::-webkit-scrollbar-thumb { background:rgba(255,255,255,.15); border-radius:4px; }
+    .vb-msg {
+        display: flex;
+        gap: 8px;
+        align-items: flex-end;
+        animation: vb-pop .22s cubic-bezier(.34,1.5,.64,1);
+    }
+    .vb-msg.user { flex-direction: row-reverse; }
+    @keyframes vb-pop {
+        from { opacity:0; transform:translateY(10px) scale(.95); }
+        to   { opacity:1; transform:none; }
+    }
+    .vb-bubble {
+        padding: 9px 13px;
+        border-radius: 15px;
+        font-size: 13px;
+        line-height: 1.5;
+        max-width: 82%;
+        word-break: break-word;
+    }
+    .vb-msg.bot  .vb-bubble { background:rgba(255,255,255,.09); color:rgba(255,255,255,.88); border-bottom-left-radius:4px; backdrop-filter:blur(4px); }
+    .vb-msg.user .vb-bubble { background:linear-gradient(135deg,#0D8ABC,#00c9a7); color:white; border-bottom-right-radius:4px; }
+    .vb-avatar {
+        width:26px; height:26px;
+        border-radius:50%;
+        background:rgba(255,255,255,.1);
+        display:flex; align-items:center; justify-content:center;
+        font-size:11px; color:rgba(255,255,255,.6);
+        flex-shrink:0;
+    }
+    /* Input row */
+    .voice-bot-input-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(255,255,255,.06);
+        border: 1px solid rgba(255,255,255,.1);
+        border-radius: 14px;
+        padding: 5px 5px 5px 13px;
+        transition: border-color .2s;
+    }
+    .voice-bot-input-row:focus-within { border-color: rgba(13,138,188,.6); }
+    .voice-bot-input {
+        flex:1;
+        background:transparent !important;
+        border:none !important;
+        outline:none;
+        color:rgba(255,255,255,.88) !important;
+        font-size:13px;
+        padding:4px 0 !important;
+    }
+    .voice-bot-input::placeholder { color:rgba(255,255,255,.3) !important; }
+    .voice-mic-btn {
+        width:38px; height:38px;
+        border-radius:11px;
+        background:linear-gradient(135deg,#0D8ABC,#00c9a7);
+        color:white;
+        border:none;
+        display:flex; align-items:center; justify-content:center;
+        font-size:14px;
+        cursor:pointer;
+        transition:all .2s;
+        flex-shrink:0;
+        box-shadow:0 4px 14px rgba(13,138,188,.4);
+    }
+    .voice-mic-btn:hover { transform:scale(1.08); box-shadow:0 6px 18px rgba(13,138,188,.55); }
+    .voice-mic-btn.active {
+        background:linear-gradient(135deg,#ef4444,#f97316);
+        box-shadow:0 4px 14px rgba(239,68,68,.45);
+        animation:vb-mic-pulse .7s infinite alternate;
+    }
+    @keyframes vb-mic-pulse { to { transform:scale(1.13); } }
+    .voice-send-btn {
+        width:38px; height:38px;
+        border-radius:11px;
+        background:rgba(255,255,255,.09);
+        color:rgba(255,255,255,.65);
+        border:none;
+        display:flex; align-items:center; justify-content:center;
+        font-size:13px;
+        cursor:pointer;
+        transition:all .2s;
+        flex-shrink:0;
+    }
+    .voice-send-btn:hover { background:rgba(255,255,255,.18); color:white; }
+    .voice-bot-hint {
+        text-align:center;
+        font-size:11px;
+        color:rgba(255,255,255,.3);
+        margin-top:10px;
+        line-height:1.5;
+    }
+
+    /* ── Floating Voice Drawer ───────────────────────────────── */
+    .vbd-overlay {
+        display:none;
+        position:fixed; inset:0; z-index:99990;
+        background:rgba(0,0,0,.45);
+        backdrop-filter:blur(3px);
+        animation:vbd-fog-in .22s ease;
+    }
+    .vbd-overlay.open { display:block; }
+    @keyframes vbd-fog-in { from{opacity:0} to{opacity:1} }
+
+    .vbd-panel {
+        position:fixed;
+        top:0; right:0;
+        width: min(400px, 100vw);
+        height:100dvh;
+        z-index:99999;
+        display:flex;
+        flex-direction:column;
+        transform:translateX(100%);
+        transition:transform .32s cubic-bezier(.32,1,.55,1);
+        background:linear-gradient(160deg,#0b1120 0%,#112240 60%,#0c3460 100%);
+        box-shadow:-20px 0 60px rgba(0,0,0,.45);
+        border-left:1px solid rgba(255,255,255,.07);
+    }
+    .vbd-panel.open { transform:translateX(0); }
+
+    .vbd-panel-header {
+        display:flex; align-items:center; gap:12px;
+        padding:18px 18px 14px;
+        border-bottom:1px solid rgba(255,255,255,.07);
+        flex-shrink:0;
+        position:relative;
+    }
+    .vbd-panel-avatar {
+        width:46px; height:46px;
+        background:linear-gradient(135deg,#0D8ABC,#00c9a7);
+        border-radius:14px;
+        display:flex; align-items:center; justify-content:center;
+        font-size:19px; color:white;
+        box-shadow:0 6px 18px rgba(13,138,188,.45);
+        flex-shrink:0; position:relative;
+        transition:box-shadow .3s;
+    }
+    .vbd-panel-avatar.listening {
+        box-shadow:0 0 0 4px rgba(13,138,188,.35),0 6px 18px rgba(13,138,188,.45);
+    }
+    .vbd-panel-avatar.listening::before,
+    .vbd-panel-avatar.listening::after {
+        content:''; position:absolute; inset:-7px;
+        border-radius:20px;
+        border:2px solid rgba(13,138,188,.7);
+        animation:vb-ring 1.5s infinite;
+    }
+    .vbd-panel-avatar.listening::after { inset:-14px; border-color:rgba(13,138,188,.4); animation-delay:.5s; }
+    .vbd-panel-info { flex:1; min-width:0; }
+    .vbd-panel-info h3 { color:white; font-size:14px; font-weight:800; margin:0 0 2px; }
+    .vbd-panel-info small { color:rgba(255,255,255,.4); font-size:11px; }
+    .vbd-close {
+        width:34px; height:34px;
+        background:rgba(255,255,255,.08);
+        border:none; border-radius:10px;
+        color:rgba(255,255,255,.6);
+        display:flex; align-items:center; justify-content:center;
+        font-size:14px; cursor:pointer;
+        transition:background .15s,color .15s;
+        flex-shrink:0;
+    }
+    .vbd-close:hover { background:rgba(255,255,255,.16); color:white; }
+    .vbd-panel-waves {
+        display:none; align-items:center; gap:3px; height:22px; flex-shrink:0;
+    }
+    .vbd-panel-waves.active { display:flex; }
+    .vbd-wave-bar {
+        width:3px; border-radius:3px;
+        background:linear-gradient(to top,#0D8ABC,#00c9a7);
+        animation:vb-wave .75s infinite ease-in-out;
+    }
+    .vbd-wave-bar:nth-child(1){height:5px;animation-delay:.00s}
+    .vbd-wave-bar:nth-child(2){height:13px;animation-delay:.10s}
+    .vbd-wave-bar:nth-child(3){height:20px;animation-delay:.20s}
+    .vbd-wave-bar:nth-child(4){height:13px;animation-delay:.30s}
+    .vbd-wave-bar:nth-child(5){height:5px;animation-delay:.40s}
+    .vbd-status-dot {
+        width:9px; height:9px; border-radius:50%;
+        background:#22c55e; box-shadow:0 0 7px #22c55e; flex-shrink:0;
+    }
+    .vbd-status-dot.listening { background:#f59e0b; box-shadow:0 0 7px #f59e0b; animation:vb-dot-blink .6s infinite alternate; }
+    .vbd-body {
+        flex:1; overflow:hidden;
+        display:flex; flex-direction:column;
+        padding:14px 16px 16px;
+    }
+    .vbd-log {
+        flex:1; overflow-y:auto;
+        display:flex; flex-direction:column; gap:10px;
+        margin-bottom:14px;
+        scrollbar-width:thin;
+        scrollbar-color:rgba(255,255,255,.12) transparent;
+        padding-right:2px;
+    }
+    .vbd-log::-webkit-scrollbar{width:3px}
+    .vbd-log::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:4px}
+    .vbd-input-row {
+        display:flex; align-items:center; gap:8px;
+        background:rgba(255,255,255,.06);
+        border:1px solid rgba(255,255,255,.1);
+        border-radius:14px;
+        padding:5px 5px 5px 13px;
+        transition:border-color .2s;
+        flex-shrink:0;
+    }
+    .vbd-input-row:focus-within { border-color:rgba(13,138,188,.6); }
+    .vbd-hint {
+        text-align:center; font-size:11px;
+        color:rgba(255,255,255,.3);
+        margin-top:10px; line-height:1.5; flex-shrink:0;
+    }
+
+    /* ── Hero voice button ───────────────────────────────────── */
+    .appt-hero-voice-btn {
+        display:inline-flex; align-items:center; gap:9px;
+        padding:10px 20px;
+        border-radius:12px;
+        font-weight:700; font-size:14px;
+        cursor:pointer; border:none;
+        background:linear-gradient(135deg,rgba(13,138,188,.9),rgba(0,201,167,.8));
+        color:white;
+        box-shadow:0 4px 20px rgba(13,138,188,.45);
+        transition:all .2s;
+        position:relative; overflow:hidden;
+    }
+    .appt-hero-voice-btn::before {
+        content:'';
+        position:absolute; inset:0;
+        background:linear-gradient(135deg,rgba(255,255,255,.15),transparent);
+        pointer-events:none;
+    }
+    .appt-hero-voice-btn:hover { transform:translateY(-2px); box-shadow:0 8px 28px rgba(13,138,188,.6); }
+    .appt-hero-voice-btn .vb-pulse {
+        width:8px; height:8px; border-radius:50%;
+        background:#fff;
+        box-shadow:0 0 0 0 rgba(255,255,255,.7);
+        animation:vb-hero-pulse 1.8s infinite;
+        flex-shrink:0;
+    }
+    @keyframes vb-hero-pulse {
+        0%  { box-shadow:0 0 0 0 rgba(255,255,255,.7); }
+        70% { box-shadow:0 0 0 7px rgba(255,255,255,0); }
+        100%{ box-shadow:0 0 0 0 rgba(255,255,255,0); }
+    }
+
+    /* ── VoiceDrawer shortcut in bookingGrid ─────────────────── */
+    .vbd-shortcut {
+        display:inline-flex; align-items:center; gap:8px;
+        padding:9px 16px; border-radius:10px;
+        font-size:13px; font-weight:700;
+        background:linear-gradient(135deg,#0D8ABC,#00c9a7);
+        color:white; border:none; cursor:pointer;
+        box-shadow:0 4px 14px rgba(13,138,188,.35);
+        transition:all .2s; margin-bottom:14px;
+    }
+    .vbd-shortcut:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(13,138,188,.5); }
     </style>
 {% endblock %}
 
@@ -200,6 +559,11 @@
                     <i class="fas fa-search"></i> Rechercher
                 </button>
             </div>
+            <button class="appt-hero-voice-btn" type="button" id="heroVoiceBtn">
+                <span class="vb-pulse"></span>
+                <i class="fas fa-microphone-alt"></i>
+                Assistant Vocal
+            </button>
         </div>
         {% endif %}
     </div>
@@ -241,20 +605,30 @@
             <div id="myAppointments" class="appointment-list"></div>
         </div>
 
-        <!-- Steps 2+3: Booking form (hidden by default) -->
-        <div class="appointment-grid" id="bookingGrid" style="display:none;margin-top:20px;">
-            <div class="appointment-card">
-                <div class="appointment-card-header" style="margin-bottom:12px;">
-                    <div class="appt-step-label"><div class="appt-step-num">2</div> {{ 'appt.find_doctor'|trans }}</div>
-                    <button type="button" id="closeBookingBtn" class="rmd-close" style="position:static;" aria-label="Fermer"><i class="fas fa-times"></i></button>
-                </div>
-                <div id="map" class="appointment-map"></div>
-                <p class="appointment-hint">{{ 'appt.find_doctor_sub'|trans }}</p>
+        <!-- Booking section (hidden by default) -->
+        <div id="bookingGrid" style="display:none;margin-top:20px;">
+
+            <!-- Raccourci vers le drawer vocal -->
+            <div style="text-align:right;">
+                <button type="button" class="vbd-shortcut" id="bookingVoiceBtn">
+                    <i class="fas fa-microphone-alt"></i> Réserver par commande vocale
+                </button>
             </div>
 
-            <div class="appointment-card">
-                <div class="appt-step-label"><div class="appt-step-num">3</div> {{ 'appt.book_slot'|trans }}</div>
-                <form id="appointmentForm" class="appointment-form" data-ajax="1">
+            <!-- Carte + Formulaire -->
+            <div class="appointment-grid" style="margin-top:0;">
+                <div class="appointment-card">
+                    <div class="appointment-card-header" style="margin-bottom:12px;">
+                        <div class="appt-step-label"><div class="appt-step-num">2</div> {{ 'appt.find_doctor'|trans }}</div>
+                        <button type="button" id="closeBookingBtn" class="rmd-close" style="position:static;" aria-label="Fermer"><i class="fas fa-times"></i></button>
+                    </div>
+                    <div id="map" class="appointment-map"></div>
+                    <p class="appointment-hint">{{ 'appt.find_doctor_sub'|trans }}</p>
+                </div>
+
+                <div class="appointment-card">
+                    <div class="appt-step-label"><div class="appt-step-num">3</div> {{ 'appt.book_slot'|trans }}</div>
+                    <form id="appointmentForm" class="appointment-form" data-ajax="1">
                     <label>Médecin</label>
                     <input type="text" id="doctorSelect" list="doctorOptions" placeholder="Tapez nom, prénom ou spécialité" autocomplete="off" required>
                     <datalist id="doctorOptions"></datalist>
@@ -276,6 +650,49 @@
                     </div>
                     <div id="appointmentAlert" class="appointment-alert" hidden></div>
                 </form>
+                </div>{# end form card #}
+            </div>{# end inner appointment-grid #}
+        </div>{# end bookingGrid #}
+
+        {# ── Floating Voice Drawer (always rendered, toggled via JS) ── #}
+        <div class="vbd-overlay" id="vbdOverlay"></div>
+        <div class="vbd-panel" id="vbdPanel" role="dialog" aria-modal="true" aria-label="Assistant vocal">
+            <div class="vbd-panel-header">
+                <div class="vbd-panel-avatar" id="voiceBotAvatar">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="vbd-panel-info">
+                    <h3>Assistant Vocal <span style="font-weight:400;opacity:.5;font-size:11px;">— Arabe Tunisien</span></h3>
+                    <small id="voiceStatusLabel">En ligne · Dites votre commande</small>
+                </div>
+                <div class="vbd-panel-waves" id="voiceWaves">
+                    <div class="vbd-wave-bar"></div>
+                    <div class="vbd-wave-bar"></div>
+                    <div class="vbd-wave-bar"></div>
+                    <div class="vbd-wave-bar"></div>
+                    <div class="vbd-wave-bar"></div>
+                </div>
+                <div class="vbd-status-dot" id="voiceStatusDot"></div>
+                <button class="vbd-close" id="vbdClose" aria-label="Fermer"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="vbd-body">
+                <div id="voiceChatLog" class="vbd-log">
+                    <div class="vb-msg bot">
+                        <div class="vb-avatar"><i class="fas fa-robot"></i></div>
+                        <div class="vb-bubble">مرحبا! قل مثلاً: «خذي رونديفو 24 فيفري افيك دكتور حسام 10:00 صباحا» وأنا نرتب ليك كلش.</div>
+                    </div>
+                </div>
+                <div class="vbd-input-row">
+                    <button type="button" class="voice-mic-btn" id="voiceListenBtn" title="Parler">
+                        <i class="fas fa-microphone" id="voiceMicIcon"></i>
+                    </button>
+                    <input type="text" class="voice-bot-input" id="voiceTranscriptInput"
+                           placeholder="أو اكتب هنا... (Enter للإرسال)" autocomplete="off" dir="auto">
+                    <button type="button" class="voice-send-btn" id="voiceAnalyzeBtn" title="Envoyer">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+                <p class="vbd-hint" id="voiceStatus">🎙️ Appuyez sur le micro et parlez librement</p>
             </div>
         </div>
         {% endif %}
@@ -395,6 +812,44 @@
             const patientDateFilter = document.getElementById('patientDateFilter');
             const patientSearchFilter = document.getElementById('patientSearchFilter');
             const patientFiltersReset = document.getElementById('patientFiltersReset');
+            const bookingGrid = document.getElementById('bookingGrid');
+            const openBookingBtn = document.getElementById('openBookingBtn');
+            const closeBookingBtn = document.getElementById('closeBookingBtn');
+            const voiceListenBtn = document.getElementById('voiceListenBtn');
+            const voiceAnalyzeBtn = document.getElementById('voiceAnalyzeBtn');
+            const voiceTranscriptInput = document.getElementById('voiceTranscriptInput');
+            const voiceStatus = document.getElementById('voiceStatus');
+            const voiceChatLog = document.getElementById('voiceChatLog');
+            const voiceBotAvatar = document.getElementById('voiceBotAvatar');
+            const voiceWaves = document.getElementById('voiceWaves');
+            const voiceStatusDot = document.getElementById('voiceStatusDot');
+            const voiceStatusLabel = document.getElementById('voiceStatusLabel');
+            const voiceMicIcon = document.getElementById('voiceMicIcon');
+            const vbdPanel   = document.getElementById('vbdPanel');
+            const vbdOverlay = document.getElementById('vbdOverlay');
+            const vbdClose   = document.getElementById('vbdClose');
+            const heroVoiceBtn    = document.getElementById('heroVoiceBtn');
+            const bookingVoiceBtn = document.getElementById('bookingVoiceBtn');
+
+            const openVoiceDrawer = () => {
+                if (!vbdPanel) return;
+                vbdPanel.classList.add('open');
+                vbdOverlay.classList.add('open');
+                document.body.style.overflow = 'hidden';
+                if (voiceTranscriptInput) voiceTranscriptInput.focus();
+            };
+            const closeVoiceDrawer = () => {
+                if (!vbdPanel) return;
+                vbdPanel.classList.remove('open');
+                vbdOverlay.classList.remove('open');
+                document.body.style.overflow = '';
+            };
+
+            if (heroVoiceBtn)    heroVoiceBtn.addEventListener('click', openVoiceDrawer);
+            if (bookingVoiceBtn) bookingVoiceBtn.addEventListener('click', openVoiceDrawer);
+            if (vbdClose)        vbdClose.addEventListener('click', closeVoiceDrawer);
+            if (vbdOverlay)      vbdOverlay.addEventListener('click', closeVoiceDrawer);
+            document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeVoiceDrawer(); });
 
             let doctors = [];
             const doctorLabelToId = new Map();
@@ -438,6 +893,130 @@
                 alertBox.className = 'appointment-alert ' + type;
                 alertBox.textContent = message;
                 setTimeout(() => { if (alertBox) alertBox.hidden = true; }, 4000);
+            };
+
+            const closeBookingAndFocusList = (successMessage = '') => {
+                closeVoiceDrawer();
+                if (bookingGrid) {
+                    bookingGrid.style.display = 'none';
+                }
+
+                const target = myAppointments ? myAppointments.closest('.appointment-card') : null;
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+
+                if (successMessage) {
+                    showAlert(successMessage, 'success');
+                }
+            };
+
+            const appendVoiceMessage = (role, text) => {
+                if (!voiceChatLog || !text) return;
+                const row = document.createElement('div');
+                row.className = `vb-msg ${role}`;
+                const avatar = document.createElement('div');
+                avatar.className = 'vb-avatar';
+                avatar.innerHTML = role === 'bot' ? '<i class="fas fa-robot"></i>' : '<i class="fas fa-user"></i>';
+                const bubble = document.createElement('div');
+                bubble.className = 'vb-bubble';
+                bubble.textContent = text;
+                if (role === 'bot') {
+                    row.appendChild(avatar);
+                    row.appendChild(bubble);
+                } else {
+                    row.appendChild(bubble);
+                    row.appendChild(avatar);
+                }
+                voiceChatLog.appendChild(row);
+                voiceChatLog.scrollTop = voiceChatLog.scrollHeight;
+            };
+
+            const setVoiceListening = (on) => {
+                if (voiceListenBtn) voiceListenBtn.classList.toggle('active', on);
+                if (voiceBotAvatar) voiceBotAvatar.classList.toggle('listening', on);
+                if (voiceWaves) voiceWaves.classList.toggle('active', on);
+                if (voiceStatusDot) voiceStatusDot.classList.toggle('listening', on);
+                if (voiceMicIcon) voiceMicIcon.className = on ? 'fas fa-stop' : 'fas fa-microphone';
+                if (voiceStatusLabel) voiceStatusLabel.textContent = on ? '🔴 Écoute en cours...' : 'En ligne · Dites votre commande';
+            };
+
+            const processVoiceCommand = async (text) => {
+                const cleaned = (text || '').trim();
+                if (!cleaned || !canBook) return;
+
+                appendVoiceMessage('user', cleaned);
+                voiceStatus.textContent = 'Analyse de votre commande vocale...';
+                showLoader();
+
+                let data = null;
+                try {
+                    const res = await fetch('/api/appointments/voice-intent', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                        body: JSON.stringify({ text: cleaned })
+                    });
+
+                    const contentType = (res.headers.get('content-type') || '').toLowerCase();
+                    if (contentType.includes('application/json')) {
+                        data = await res.json();
+                    } else {
+                        const rawBody = await res.text();
+                        const snippet = (rawBody || '').replace(/\s+/g, ' ').trim().slice(0, 180);
+                        data = {
+                            success: false,
+                            message: `Réponse serveur invalide (${res.status}). ${snippet || 'Aucun détail.'}`
+                        };
+                    }
+
+                    if (!res.ok && (!data || data.success !== false)) {
+                        data = {
+                            success: false,
+                            message: `Erreur serveur (${res.status}) pendant l'analyse vocale.`
+                        };
+                    }
+                } catch (e) {
+                    const detail = e && e.message ? ` (${e.message})` : '';
+                    data = { success: false, message: `Erreur réseau pendant l'analyse vocale${detail}.` };
+                }
+
+                if (!data.success) {
+                    const detailedMessage = data.debug ? `${data.message || 'Erreur'} (${data.debug})` : (data.message || 'Je n\'ai pas compris la commande.');
+                    appendVoiceMessage('bot', detailedMessage);
+                    voiceStatus.textContent = 'Commande non reconnue.';
+                    showAlert(detailedMessage, 'error');
+                    hideLoader();
+                    return;
+                }
+
+                if (data.doctor_label) {
+                    doctorSelect.value = data.doctor_label;
+                }
+                if (data.doctor_id) {
+                    doctorIdInput.value = String(data.doctor_id);
+                }
+                if (data.date) {
+                    dateInput.value = data.date;
+                }
+
+                await fetchSlots();
+
+                if (data.slot_id) {
+                    const slotBtn = slotsWrap.querySelector(`.slot-btn[data-dispo-id="${data.slot_id}"]`);
+                    if (slotBtn) {
+                        document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('active'));
+                        slotBtn.classList.add('active');
+                        slotsWrap.dataset.selected = String(data.slot_id);
+                    }
+                }
+
+                await loadMyAppointments();
+
+                const successText = data.message || 'Rendez-vous vocal traité.';
+                appendVoiceMessage('bot', `${successText} (${data.date || ''} ${data.slot_label || ''})`);
+                voiceStatus.textContent = 'Commande exécutée avec succès.';
+                closeBookingAndFocusList(successText);
+                hideLoader();
             };
 
             const loadDoctors = async (params = '', withLoader = true) => {
@@ -709,6 +1288,125 @@
                 });
             }
 
+            if (canBook && voiceAnalyzeBtn && voiceTranscriptInput) {
+                voiceAnalyzeBtn.addEventListener('click', async () => {
+                    await processVoiceCommand(voiceTranscriptInput.value);
+                });
+            }
+
+            if (canBook && voiceListenBtn && voiceTranscriptInput) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SpeechRecognition) {
+                    voiceListenBtn.disabled = true;
+                    voiceStatus.textContent = 'Reconnaissance vocale non disponible sur ce navigateur.';
+                } else {
+                    const recognition = new SpeechRecognition();
+                    recognition.lang = 'ar-TN';
+                    recognition.interimResults = true;
+                    recognition.continuous = true;
+
+                    let listening = false;
+                    let finalTranscript = '';
+                    let silenceTimer = null;
+                    let maxDurationTimer = null;
+                    let shouldAnalyzeOnEnd = false;
+
+                    const clearVoiceTimers = () => {
+                        if (silenceTimer) {
+                            clearTimeout(silenceTimer);
+                            silenceTimer = null;
+                        }
+                        if (maxDurationTimer) {
+                            clearTimeout(maxDurationTimer);
+                            maxDurationTimer = null;
+                        }
+                    };
+
+                    recognition.onstart = () => {
+                        listening = true;
+                        finalTranscript = '';
+                        shouldAnalyzeOnEnd = false;
+                        voiceTranscriptInput.value = '';
+                        voiceStatus.textContent = '🟡 Écoute en cours — parlez librement...';
+                        setVoiceListening(true);
+
+                        clearVoiceTimers();
+                        maxDurationTimer = setTimeout(() => {
+                            if (!listening) return;
+                            shouldAnalyzeOnEnd = true;
+                            voiceStatus.textContent = '⏱ Temps max atteint. Analyse en cours...';
+                            recognition.stop();
+                        }, 25000);
+                    };
+
+                    recognition.onerror = () => {
+                        listening = false;
+                        clearVoiceTimers();
+                        setVoiceListening(false);
+                        voiceStatus.textContent = '❌ Erreur de reconnaissance vocale.';
+                    };
+
+                    recognition.onend = async () => {
+                        listening = false;
+                        clearVoiceTimers();
+                        setVoiceListening(false);
+
+                        const transcript = (voiceTranscriptInput.value || '').trim();
+                        if (shouldAnalyzeOnEnd && transcript) {
+                            voiceStatus.textContent = '🔄 Analyse en cours...';
+                            await processVoiceCommand(transcript);
+                        } else if (!transcript) {
+                            voiceStatus.textContent = '🎙️ Aucun texte détecté. Réessayez.';
+                        }
+                    };
+
+                    recognition.onresult = (event) => {
+                        let interimTranscript = '';
+                        for (let i = event.resultIndex; i < event.results.length; i += 1) {
+                            const text = event.results[i][0] ? event.results[i][0].transcript : '';
+                            if (!text) continue;
+                            if (event.results[i].isFinal) {
+                                finalTranscript += ` ${text}`;
+                            } else {
+                                interimTranscript += ` ${text}`;
+                            }
+                        }
+
+                        const merged = `${finalTranscript} ${interimTranscript}`.trim();
+                        if (merged) {
+                            voiceTranscriptInput.value = merged;
+                            shouldAnalyzeOnEnd = true;
+                            voiceStatus.textContent = '✍️ Texte détecté... continuez ou stoppez.';
+                        }
+
+                        if (silenceTimer) {
+                            clearTimeout(silenceTimer);
+                        }
+                        silenceTimer = setTimeout(() => {
+                            if (!listening) return;
+                            voiceStatus.textContent = 'Silence détecté. Analyse en cours...';
+                            recognition.stop();
+                        }, 2200);
+                    };
+
+                    voiceListenBtn.addEventListener('click', () => {
+                        if (listening) {
+                            shouldAnalyzeOnEnd = true;
+                            voiceStatus.textContent = '⏹ Arrêt demandé...';
+                            recognition.stop();
+                            return;
+                        }
+                        recognition.start();
+                    });
+
+                    voiceTranscriptInput.addEventListener('keydown', async (event) => {
+                        if (event.key !== 'Enter') return;
+                        event.preventDefault();
+                        await processVoiceCommand(voiceTranscriptInput.value);
+                    });
+                }
+            }
+
             if (canBook) {
                 document.getElementById('appointmentForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
@@ -734,10 +1432,15 @@
                     hideLoader();
                     return;
                 }
-                showAlert(rescheduleId ? 'Rendez-vous replanifié.' : 'Rendez-vous confirmé.', 'success');
+                const successMessage = rescheduleId ? 'Rendez-vous replanifié.' : 'Rendez-vous confirmé.';
                 delete slotsWrap.dataset.reschedule;
                 await fetchSlots();
                 await loadMyAppointments();
+                if (!rescheduleId) {
+                    closeBookingAndFocusList(successMessage);
+                } else {
+                    showAlert(successMessage, 'success');
+                }
                 hideLoader();
             });
             }
@@ -878,9 +1581,6 @@
             }
 
             if (canBook) {
-                const bookingGrid = document.getElementById('bookingGrid');
-                const openBookingBtn = document.getElementById('openBookingBtn');
-                const closeBookingBtn = document.getElementById('closeBookingBtn');
                 openBookingBtn.addEventListener('click', () => {
                     bookingGrid.style.display = '';
                     bookingGrid.scrollIntoView({ behavior: 'smooth', block: 'start' });

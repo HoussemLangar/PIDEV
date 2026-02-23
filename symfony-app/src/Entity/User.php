@@ -369,13 +369,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
             return false;
         }
         if ($this->subscriptionEndAt === null) {
-            return true;
+            return false;
         }
         return $this->subscriptionEndAt > new \DateTimeImmutable();
     }
 
     public function isSubscriptionExpired(): bool
     {
+        if ($this->subscriptionStatus === 'ACTIVE' && $this->subscriptionEndAt === null) {
+            return true;
+        }
         if ($this->subscriptionEndAt === null) {
             return false;
         }

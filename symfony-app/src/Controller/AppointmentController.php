@@ -476,6 +476,117 @@ class AppointmentController extends AbstractController
         return new JsonResponse(['success' => true]);
     }
 
+    #[Route('/voice-intent', name: 'voice_intent', methods: ['POST'])]
+    public function voiceIntent(Request $request): JsonResponse
+    {
+        try {
+            /** @var User $user */
+            $user = $this->getUser();
+            if (!$user instanceof User) {
+                return new JsonResponse(['success' => false, 'message' => 'Non authentifié'], 401);
+            }
+            if (!$this->canAccessPatient($user)) {
+                return new JsonResponse(['success' => false, 'message' => 'Abonnement patient requis'], 403);
+            }
+            $patient = $this->ensurePatient($user);
+            if (!$patient) {
+                return new JsonResponse(['success' => false, 'message' => 'Accès patient requis'], 403);
+            }
+
+            $data = json_decode($request->getContent(), true) ?: [];
+            $rawText = trim((string) ($data['text'] ?? ''));
+            if ($rawText === '') {
+                return new JsonResponse(['success' => false, 'message' => 'Commande vocale vide'], 422);
+            }
+
+            $normalizedText = $this->normalizeVoiceText($rawText);
+            $date = $this->extractDateFromVoiceText($normalizedText);
+            if (!$date) {
+                return new JsonResponse([
+                    'success' => false,
+                    'message' => 'Date non détectée. Exemple: 24/02/2026',
+                ], 422);
+            }
+
+            $doctorHint = $this->extractDoctorNameFromVoiceText($normalizedText);
+            $doctor = $this->matchDoctorFromVoiceText($doctorHint ?: $normalizedText);
+            if (!$doctor) {
+                return new JsonResponse([
+                    'success' => false,
+                    'message' => 'Médecin non trouvé. Essayez de préciser le nom complet.',
+                ], 404);
+            }
+
+            $bookingDate = new \DateTime($date->format('Y-m-d'));
+            $this->ensureDefaultDisponibilites($doctor, $bookingDate);
+            $slots = $this->appointmentService->getAvailableSlots($doctor, $bookingDate);
+            if (count($slots) === 0) {
+                return new JsonResponse([
+                    'success' => false,
+                    'message' => 'Aucun créneau disponible à cette date pour ce médecin.',
+                    'doctor_id' => $doctor->getId(),
+                    'doctor_label' => $doctor->getUser()->getNom() . ' ' . $doctor->getUser()->getPrenom() . ' · ' . $doctor->getSpecialite(),
+                    'date' => $date->format('Y-m-d'),
+                ], 409);
+            }
+
+            $requestedTime = $this->extractTimeFromVoiceText($normalizedText, $date);
+            $selectedSlot = $this->pickVoiceSlot($slots, $requestedTime);
+            if (!$selectedSlot) {
+                return new JsonResponse([
+                    'success' => false,
+                    'message' => 'Impossible de sélectionner un créneau.',
+                ], 409);
+            }
+
+            /** @var Disponibilite $selectedSlot */
+
+            try {
+                $rdv = $this->appointmentService->book($patient, $doctor, $selectedSlot, 'Commande vocale: ' . mb_substr($rawText, 0, 180));
+            } catch (\RuntimeException $e) {
+                return new JsonResponse(['success' => false, 'message' => $e->getMessage()], 409);
+            }
+
+            $doctorUser = $doctor->getUser();
+            $this->notificationService->notify($user, 'Rendez-vous en attente', 'Votre demande de rendez-vous vocale est en attente de confirmation.', 'rdv', null, 'normal');
+            $this->notificationService->notify($doctorUser, 'Nouvelle demande', 'Une demande vocale de rendez-vous est en attente.', 'rdv', null, 'normal');
+
+            $confirmUrl = $this->generateUrl('app_doctor_confirm', ['id' => $rdv->getId()], \Symfony\Component\Routing\Generator\UrlGeneratorInterface::ABSOLUTE_URL);
+            $rescheduleUrl = $this->generateUrl('app_doctor_reschedule', ['id' => $rdv->getId()], \Symfony\Component\Routing\Generator\UrlGeneratorInterface::ABSOLUTE_URL);
+            $email = (new TemplatedEmail())
+                ->from(new Address('houssemlangar17@gmail.com', 'SANTÉA'))
+                ->to($doctorUser->getEmail())
+                ->subject('Nouvelle demande de rendez-vous')
+                ->htmlTemplate('emails/appointment_request_doctor.html.twig')
+                ->context([
+                    'rdv' => $rdv,
+                    'medecin' => $doctor,
+                    'patient' => $user,
+                    'confirm_url' => $confirmUrl,
+                    'reschedule_url' => $rescheduleUrl,
+                ]);
+            $this->mailer->send($email);
+
+            return new JsonResponse([
+                'success' => true,
+                'message' => 'Commande vocale comprise. Rendez-vous créé avec succès.',
+                'doctor_id' => $doctor->getId(),
+                'doctor_label' => $doctorUser->getNom() . ' ' . $doctorUser->getPrenom() . ' · ' . $doctor->getSpecialite(),
+                'date' => $date->format('Y-m-d'),
+                'requested_time' => $requestedTime,
+                'slot_id' => $selectedSlot->getId(),
+                'slot_label' => $selectedSlot->getHeureDebut()->format('H:i') . ' - ' . $selectedSlot->getHeureFin()->format('H:i'),
+                'appointment_id' => $rdv->getId(),
+            ]);
+        } catch (\Throwable $exception) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Erreur interne pendant l\'analyse vocale.',
+                'debug' => $exception->getMessage(),
+            ], 500);
+        }
+    }
+
     private function ensurePatient(User $user): ?Patient
     {
         if ($user->getPatient()) {
@@ -531,5 +642,469 @@ class AppointmentController extends AbstractController
             $cursor = $slotEnd;
         }
         $this->em->flush();
+    }
+
+    private function normalizeVoiceText(string $text): string
+    {
+        $arabicDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩', '٫', '،'];
+        $latinDigits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.', ','];
+        $text = str_replace($arabicDigits, $latinDigits, $text);
+        $text = str_replace(['أ', 'إ', 'آ', 'ٱ'], 'ا', $text);
+        $text = str_replace(['ى'], 'ي', $text);
+        $text = str_replace(['ة'], 'ه', $text);
+        $text = str_replace(['ـ'], '', $text);
+        $text = preg_replace('/\s+/u', ' ', $text) ?? $text;
+        return trim(mb_strtolower($text));
+    }
+
+    private function extractDateFromVoiceText(string $text): ?\DateTimeImmutable
+    {
+        $today = new \DateTimeImmutable('today');
+
+        if (preg_match('/\b(lyoum|today|aujourd\'hui|اليوم)\b/u', $text)) {
+            return $today;
+        }
+        if (preg_match('/\b(ghodwa|ghodwaa|ghodwa|demain|tomorrow|غدوه|غدوه|غدا)\b/u', $text)) {
+            return $today->modify('+1 day');
+        }
+        if (preg_match('/\b(baad\s*ghodwa|apres\s*demain|after\s*tomorrow|بعد\s*غدوه|بعد\s*غدوه)\b/u', $text)) {
+            return $today->modify('+2 day');
+        }
+
+        if (preg_match('/\b(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})\b/u', $text, $m)) {
+            $day = (int) $m[1];
+            $month = (int) $m[2];
+            $year = (int) $m[3];
+            if (checkdate($month, $day, $year)) {
+                return new \DateTimeImmutable(sprintf('%04d-%02d-%02d', $year, $month, $day));
+            }
+        }
+
+        if (preg_match('/\b(\d{4})[\/\-.](\d{1,2})[\/\-.](\d{1,2})\b/u', $text, $m)) {
+            $year = (int) $m[1];
+            $month = (int) $m[2];
+            $day = (int) $m[3];
+            if (checkdate($month, $day, $year)) {
+                return new \DateTimeImmutable(sprintf('%04d-%02d-%02d', $year, $month, $day));
+            }
+        }
+
+        if (preg_match('/\b(\d{1,2})[\/\-.](\d{1,2})\b/u', $text, $m)) {
+            $day = (int) $m[1];
+            $month = (int) $m[2];
+            $year = (int) $today->format('Y');
+            if (checkdate($month, $day, $year)) {
+                $candidate = new \DateTimeImmutable(sprintf('%04d-%02d-%02d', $year, $month, $day));
+                if ($candidate < $today) {
+                    $nextYear = $year + 1;
+                    if (checkdate($month, $day, $nextYear)) {
+                        return new \DateTimeImmutable(sprintf('%04d-%02d-%02d', $nextYear, $month, $day));
+                    }
+                }
+                return $candidate;
+            }
+        }
+
+        // ── Arabic ordinals → digit replacement ──────────────────────────────
+        $ordinals = [
+            'الحادي\s+والثلاثين' => '31', 'الثلاثين'  => '30', 'الثلاثون' => '30',
+            'التاسع\s+والعشرين'  => '29', 'الثامن\s+والعشرين' => '28',
+            'السابع\s+والعشرين'  => '27', 'السادس\s+والعشرين' => '26',
+            'الخامس\s+والعشرين'  => '25', 'الرابع\s+والعشرين'  => '24',
+            'الثالث\s+والعشرين'  => '23', 'الثاني\s+والعشرين'  => '22',
+            'الحادي\s+والعشرين'  => '21', 'العشرين' => '20', 'العشرون' => '20',
+            'التاسع\s+عشر' => '19', 'الثامن\s+عشر'  => '18',
+            'السابع\s+عشر' => '17', 'السادس\s+عشر'  => '16',
+            'الخامس\s+عشر' => '15', 'الرابع\s+عشر'   => '14',
+            'الثالث\s+عشر' => '13', 'الثاني\s+عشر'   => '12',
+            'الحادي\s+عشر' => '11', 'العاشر'          => '10',
+            'التاسع' => '9', 'الثامن'  => '8', 'السابع' => '7',
+            'السادس' => '6', 'الخامس'  => '5', 'الرابع' => '4',
+            'الثالث' => '3', 'الثاني'  => '2', 'الأول'  => '1', 'الاول' => '1',
+        ];
+        foreach ($ordinals as $pattern => $digit) {
+            $text = preg_replace('/\b' . $pattern . '\b/u', $digit, $text) ?? $text;
+        }
+
+        $monthNames = [
+            'janvier' => 1, 'janv' => 1, 'january' => 1, 'jan' => 1,
+            'جانفي' => 1, 'جانف' => 1,
+            'fevrier' => 2, 'février' => 2, 'fev' => 2, 'fév' => 2, 'february' => 2, 'feb' => 2,
+            'fivri' => 2, 'fivry' => 2, 'fevri' => 2, 'fivrih' => 2,
+            'fevriy' => 2, 'fivriy' => 2, 'fivry' => 2, 'fefri' => 2, 'febre' => 2,
+            'فيفري' => 2, 'فيفرى' => 2, 'فيفريه' => 2,
+            'فيفي'  => 2, 'فيفا'  => 2, 'فيفر' => 2, 'فيف' => 2,
+            'mars' => 3, 'march' => 3, 'mar' => 3,
+            'مارس' => 3, 'مارص' => 3,
+            'avril' => 4, 'april' => 4, 'avr' => 4,
+            'افريل' => 4, 'أفريل' => 4, 'افريلا' => 4,
+            'mai' => 5, 'may' => 5,
+            'ماي' => 5, 'ماييو' => 5,
+            'juin' => 6, 'june' => 6, 'jun' => 6,
+            'جوان' => 6, 'جون' => 6,
+            'juillet' => 7, 'july' => 7, 'juil' => 7,
+            'جويلية' => 7, 'جوليه' => 7, 'جويليه' => 7, 'جويلي' => 7,
+            'aout' => 8, 'août' => 8, 'august' => 8, 'aug' => 8,
+            'اوت' => 8, 'أوت' => 8,
+            'septembre' => 9, 'september' => 9, 'sep' => 9, 'sept' => 9,
+            'سبتمبر' => 9, 'سبتمبار' => 9,
+            'octobre' => 10, 'october' => 10, 'oct' => 10,
+            'اكتوبر' => 10, 'أكتوبر' => 10,
+            'novembre' => 11, 'november' => 11, 'nov' => 11,
+            'نوفمبر' => 11, 'نوفمبار' => 11,
+            'decembre' => 12, 'décembre' => 12, 'december' => 12, 'dec' => 12, 'déc' => 12,
+            'ديسمبر' => 12, 'ديسمبار' => 12,
+        ];
+
+        // ── Pattern 1 : "24 فيفي [2026]" ─────────────────────────────────────
+        if (preg_match('/\b(\d{1,2})\s+([\p{L}]+)(?:\s+(\d{4}))?\b/u', $text, $m)) {
+            $day = (int) $m[1];
+            $monthRawLabel    = $this->normalizeVoiceText((string) $m[2]);
+            $monthSimpleLabel = $this->simplifyForMatch((string) $m[2]);
+            $year = isset($m[3]) && $m[3] !== '' ? (int) $m[3] : (int) $today->format('Y');
+            $month = $this->resolveMonthFromWord($monthNames, $monthRawLabel, $monthSimpleLabel);
+            if ($month !== null && checkdate($month, $day, $year)) {
+                return new \DateTimeImmutable(sprintf('%04d-%02d-%02d', $year, $month, $day));
+            }
+        }
+
+        // ── Pattern 2 : "مت فيفري" / "فيفري العاشر(→10)" with ordinals already replaced ─
+        if (preg_match('/\b([\p{L}]+)\s+(\d{1,2})(?:\s+(\d{4}))?\b/u', $text, $m)) {
+            $monthRawLabel    = $this->normalizeVoiceText((string) $m[1]);
+            $monthSimpleLabel = $this->simplifyForMatch((string) $m[1]);
+            $day  = (int) $m[2];
+            $year = isset($m[3]) && $m[3] !== '' ? (int) $m[3] : (int) $today->format('Y');
+            $month = $this->resolveMonthFromWord($monthNames, $monthRawLabel, $monthSimpleLabel);
+            if ($month !== null && checkdate($month, $day, $year)) {
+                return new \DateTimeImmutable(sprintf('%04d-%02d-%02d', $year, $month, $day));
+            }
+        }
+
+        return null;
+    }
+
+    /** Resolve month number from a spoken word using exact + simplified + fuzzy matching. */
+    private function resolveMonthFromWord(array $monthNames, string $rawLabel, string $simpleLabel): ?int
+    {
+        // Exact match
+        if (isset($monthNames[$rawLabel]))   return (int) $monthNames[$rawLabel];
+        if (isset($monthNames[$simpleLabel])) return (int) $monthNames[$simpleLabel];
+
+        // Fuzzy: Levenshtein ≤ 2 on all simplified keys (avoid very short keys like 'fev' causing false hits)
+        $best = null;
+        $bestDist = 99;
+        foreach ($monthNames as $key => $num) {
+            $keySimple = $this->simplifyForMatch($key);
+            if (mb_strlen($keySimple) < 3) continue;
+            $dist = levenshtein($simpleLabel, $keySimple);
+            if ($dist < $bestDist && $dist <= 2) {
+                $bestDist = $dist;
+                $best = $num;
+            }
+        }
+        if ($best !== null) return (int) $best;
+
+        return null;
+    }
+
+    private function extractDoctorNameFromVoiceText(string $text): ?string
+    {
+        if (!preg_match('/(?:docteur|doctor|dr\.?|medecin|médecin|الدكتور|دكتور|طبيب)\s+([^\d,،.;]+)/iu', $text, $m)) {
+            if (!preg_match('/(?:avec|ma3|m3a|مع)\s+([^\d,،.;]+)/iu', $text, $m2)) {
+                return null;
+            }
+            $m = $m2;
+        }
+
+        $value = trim((string) $m[1]);
+        $value = preg_replace('/\b(le|la|el|fi|avec|ma3|m3a|مع|نهار|بتاريخ|date|nhar|fel|fil)\b/iu', ' ', $value) ?? $value;
+        $value = preg_replace('/\s+/u', ' ', $value) ?? $value;
+
+        return trim($value);
+    }
+
+    private function matchDoctorFromVoiceText(string $hint): ?Medecin
+    {
+        $needleRaw = $this->normalizeVoiceText($hint);
+        if ($needleRaw === '') {
+            return null;
+        }
+        $needleSimple = $this->simplifyForMatch($needleRaw);
+        $needleTransliterated = $this->transliterateArabicToLatin($needleRaw);
+
+        $needleCandidates = array_values(array_unique(array_filter([
+            $needleRaw,
+            $needleSimple,
+            $needleTransliterated,
+        ])));
+
+        foreach ($this->expandDoctorAliases($needleCandidates) as $alias) {
+            $needleCandidates[] = $alias;
+        }
+        $needleCandidates = array_values(array_unique(array_filter($needleCandidates)));
+
+        $doctors = $this->medecinRepository->findAll();
+        $best = null;
+        $bestScore = -1;
+
+        foreach ($doctors as $doctor) {
+            $user = $doctor->getUser();
+            $fullName = trim(($user->getNom() ?? '') . ' ' . ($user->getPrenom() ?? ''));
+            $haystackRaw = $this->normalizeVoiceText(trim($fullName . ' ' . ($doctor->getSpecialite() ?? '')));
+            $haystackSimple = $this->simplifyForMatch($haystackRaw);
+            $haystackTransliterated = $this->transliterateArabicToLatin($haystackRaw);
+
+            $score = 0;
+            foreach ($needleCandidates as $candidate) {
+                $candidateSimple = $this->simplifyForMatch($candidate);
+                if ($candidate === $haystackRaw || ($candidateSimple !== '' && $candidateSimple === $haystackSimple)) {
+                    $score += 120;
+                }
+                if (str_contains($haystackRaw, $candidate)) {
+                    $score += 70;
+                }
+                if ($candidateSimple !== '' && str_contains($haystackSimple, $candidateSimple)) {
+                    $score += 70;
+                }
+                if ($candidateSimple !== '' && str_contains($haystackTransliterated, $candidateSimple)) {
+                    $score += 55;
+                }
+            }
+
+            $rawTokens = array_filter(explode(' ', preg_replace('/\s+/u', ' ', $needleRaw) ?? $needleRaw));
+            foreach ($rawTokens as $token) {
+                if (mb_strlen($token) < 2) {
+                    continue;
+                }
+                if (str_contains($haystackRaw, $token)) {
+                    $score += 10;
+                }
+            }
+
+            $simpleTokens = [];
+            foreach ($needleCandidates as $candidate) {
+                $candidateSimple = $this->simplifyForMatch($candidate);
+                if ($candidateSimple === '') {
+                    continue;
+                }
+                foreach (array_filter(explode(' ', preg_replace('/\s+/u', ' ', $candidateSimple) ?? $candidateSimple)) as $token) {
+                    $simpleTokens[] = $token;
+                }
+            }
+            $simpleTokens = array_values(array_unique($simpleTokens));
+            $haystackWords = array_filter(explode(' ', $haystackSimple));
+            foreach ($simpleTokens as $token) {
+                if (strlen($token) < 2) {
+                    continue;
+                }
+                if (str_contains($haystackSimple, $token)) {
+                    $score += 10;
+                    continue;
+                }
+                if (strlen($token) < 4) {
+                    continue;
+                }
+                foreach ($haystackWords as $word) {
+                    if (strlen($word) < 4) {
+                        continue;
+                    }
+                    $distance = levenshtein($token, $word);
+                    if ($distance <= 1) {
+                        $score += 7;
+                        break;
+                    }
+                    if ($distance === 2) {
+                        $score += 4;
+                    }
+                }
+            }
+
+            if ($score > 0 && str_contains($haystackRaw, 'houssem') && str_contains($needleRaw, 'houssem')) {
+                $score += 6;
+            }
+
+            if ($score > $bestScore) {
+                $best = $doctor;
+                $bestScore = $score;
+            }
+        }
+
+        return $bestScore > 0 ? $best : null;
+    }
+
+    private function simplifyForMatch(string $value): string
+    {
+        $value = trim(mb_strtolower($value));
+        if (function_exists('iconv')) {
+            $converted = @iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $value);
+            if ($converted !== false) {
+                $value = strtolower($converted);
+            }
+        }
+        $value = preg_replace('/[^a-z0-9\s]/', ' ', $value) ?? $value;
+        $value = preg_replace('/\s+/', ' ', $value) ?? $value;
+        return trim($value);
+    }
+
+    private function extractTimeFromVoiceText(string $text, ?\DateTimeInterface $detectedDate = null): ?string
+    {
+        $hour = null;
+        $minute = 0;
+
+        // Tunisian / Arabic spoken shortcuts
+        if (preg_match('/\b(نص\s*النهار\s*(?:و\s*نص|ونص)?)\b/u', $text, $m)) {
+            return str_contains($m[1], 'نص') && preg_match('/(و\s*نص|ونص)/u', $m[1]) ? '12:30' : '12:00';
+        }
+        if (preg_match('/\b(نص\s*الليل\s*(?:و\s*نص|ونص)?)\b/u', $text, $m)) {
+            return str_contains($m[1], 'نص') && preg_match('/(و\s*نص|ونص)/u', $m[1]) ? '00:30' : '00:00';
+        }
+
+        if (preg_match('/\b(\d{1,2})\s*[:h]\s*(\d{2})\b/u', $text, $m)) {
+            $hour = (int) $m[1];
+            $minute = (int) $m[2];
+        } elseif (preg_match('/\b(\d{1,2})\s*[:h]\s*(\d{2})\s*(am|pm|matin|morning|soir|apres\s*midi|after\s*noon|صباح|صباحا|مساء|العشيه|العشية)\b/u', $text, $m)) {
+            $hour = (int) $m[1];
+            $minute = (int) $m[2];
+        } elseif (preg_match('/\b(\d{1,2})\s*(am|pm|matin|morning|soir|apres\s*midi|after\s*noon|صباح|صباحا|مساء|العشيه|العشية)\b/u', $text, $m)) {
+            $hour = (int) $m[1];
+            $minute = 0;
+        } elseif (preg_match('/\b(\d{1,2})\s*(?:و\s*نص|ونص|et\s*demi|half)\b/u', $text, $m)) {
+            $hour = (int) $m[1];
+            $minute = 30;
+        } elseif (preg_match('/(?:\b(heure|sa3a|saa|clock|الساعة)\b)\s*(\d{1,2})(?::(\d{2}))?/u', $text, $m)) {
+            $hour = (int) $m[2];
+            $minute = isset($m[3]) && $m[3] !== '' ? (int) $m[3] : 0;
+        } elseif (
+            $detectedDate instanceof \DateTimeInterface
+            && preg_match('/\b(\d{1,2})\s+(\d{1,2})\s+([\p{L}]+)\b/u', $text, $m)
+        ) {
+            // Example: "مع دكتور حسام 8 24 فيفري" => first number is hour, second+word is date
+            $candidateHour = (int) $m[1];
+            $candidateDay = (int) $m[2];
+            $detectedDay = (int) $detectedDate->format('d');
+            if ($candidateDay === $detectedDay) {
+                $hour = $candidateHour;
+                $minute = 0;
+            }
+        }
+
+        if ($hour === null) {
+            return null;
+        }
+
+        if ($hour > 24 || $minute > 59) {
+            return null;
+        }
+
+        $isPm = (bool) preg_match('/\b(pm|soir|apres\s*midi|after\s*noon|مساء|العشيه|العشية)\b/u', $text);
+        $isAm = (bool) preg_match('/\b(am|matin|morning|صباح|صباحا)\b/u', $text);
+
+        if ($isPm && $hour >= 1 && $hour <= 11) {
+            $hour += 12;
+        }
+        if ($isAm && $hour === 12) {
+            $hour = 0;
+        }
+
+        if ($hour === 24) {
+            $hour = 0;
+        }
+
+        return sprintf('%02d:%02d', $hour, $minute);
+    }
+
+    /**
+     * @param Disponibilite[] $slots
+     */
+    private function pickVoiceSlot(array $slots, ?string $requestedTime): ?Disponibilite
+    {
+        $validSlots = array_values(array_filter($slots, static function ($slot): bool {
+            return $slot instanceof Disponibilite
+                && $slot->getStatut() === 'disponible'
+                && $slot->getRendezvous() === null;
+        }));
+
+        if (count($validSlots) === 0) {
+            return null;
+        }
+        if (!$requestedTime) {
+            return $validSlots[0];
+        }
+
+        $targetMinutes = $this->timeToMinutes($requestedTime);
+        if ($targetMinutes === null) {
+            return $validSlots[0];
+        }
+
+        $best = null;
+        $bestGap = PHP_INT_MAX;
+        foreach ($validSlots as $slot) {
+            $slotMinutes = (int) $slot->getHeureDebut()->format('H') * 60 + (int) $slot->getHeureDebut()->format('i');
+            $gap = abs($slotMinutes - $targetMinutes);
+            if ($gap < $bestGap) {
+                $best = $slot;
+                $bestGap = $gap;
+            }
+        }
+
+        return $best ?? $validSlots[0];
+    }
+
+    private function timeToMinutes(string $time): ?int
+    {
+        if (!preg_match('/^(\d{2}):(\d{2})$/', $time, $m)) {
+            return null;
+        }
+        $hour = (int) $m[1];
+        $minute = (int) $m[2];
+        if ($hour > 23 || $minute > 59) {
+            return null;
+        }
+        return $hour * 60 + $minute;
+    }
+
+    private function transliterateArabicToLatin(string $value): string
+    {
+        $map = [
+            'ا' => 'a', 'ب' => 'b', 'ت' => 't', 'ث' => 'th', 'ج' => 'j', 'ح' => 'h', 'خ' => 'kh',
+            'د' => 'd', 'ذ' => 'dh', 'ر' => 'r', 'ز' => 'z', 'س' => 's', 'ش' => 'sh', 'ص' => 's',
+            'ض' => 'd', 'ط' => 't', 'ظ' => 'z', 'ع' => 'a', 'غ' => 'gh', 'ف' => 'f', 'ق' => 'q',
+            'ك' => 'k', 'ل' => 'l', 'م' => 'm', 'ن' => 'n', 'ه' => 'h', 'و' => 'w', 'ي' => 'y',
+            'ء' => '', 'ؤ' => 'w', 'ئ' => 'y', 'ى' => 'a', 'ة' => 'a', ' ' => ' ',
+        ];
+
+        $result = strtr($value, $map);
+        $result = preg_replace('/\s+/', ' ', $result) ?? $result;
+        return trim($this->simplifyForMatch($result));
+    }
+
+    /**
+     * @param string[] $candidates
+     * @return string[]
+     */
+    private function expandDoctorAliases(array $candidates): array
+    {
+        $aliases = [];
+        $joined = ' ' . implode(' ', $candidates) . ' ';
+
+        $rules = [
+            ' hsam ' => ['houssem', 'hossam', 'houssam'],
+            ' hsamh ' => ['houssem', 'hossam', 'houssam'],
+            ' hossam ' => ['houssem', 'houssam'],
+            ' housam ' => ['houssem', 'hossam'],
+            ' doctor ' => ['docteur'],
+            ' docteur ' => ['doctor'],
+        ];
+
+        foreach ($rules as $pattern => $values) {
+            if (!str_contains($joined, $pattern)) {
+                continue;
+            }
+            foreach ($values as $value) {
+                $aliases[] = $value;
+            }
+        }
+
+        return array_values(array_unique($aliases));
     }
 }

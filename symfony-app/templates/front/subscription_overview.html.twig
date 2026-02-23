@@ -18,7 +18,7 @@
     </div>
 
     <!-- Status banner -->
-    {% set isActive = abonnement.statut == 'ACTIVE' or abonnement.statut == 'active' %}
+    {% set isActive = (abonnement.statut == 'ACTIVE' or abonnement.statut == 'active') and (abonnement.dateFin|date('Y-m-d') >= 'now'|date('Y-m-d')) %}
     <div style="background:{{ isActive ? 'linear-gradient(135deg,#d1fae5,#a7f3d0)' : 'linear-gradient(135deg,#fee2e2,#fecaca)' }};border-radius:16px;padding:20px 28px;margin-bottom:32px;display:flex;align-items:center;gap:16px;border:1.5px solid {{ isActive ? '#6ee7b7' : '#f87171' }};">
         <div style="width:44px;height:44px;background:{{ isActive ? '#10b981' : '#ef4444' }};border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
             <i class="fas fa-{{ isActive ? 'check-circle' : 'times-circle' }}" style="color:white;font-size:20px;"></i>

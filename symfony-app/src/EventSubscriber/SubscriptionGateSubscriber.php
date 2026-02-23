@@ -3,11 +3,13 @@
 namespace App\EventSubscriber;
 
 use App\Entity\User;
+use App\Repository\AbonnementRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Core\Security;
 
@@ -16,7 +18,9 @@ class SubscriptionGateSubscriber implements EventSubscriberInterface
     public function __construct(
         private Security $security,
         private UrlGeneratorInterface $urlGenerator,
-        private EntityManagerInterface $em
+        private EntityManagerInterface $em,
+        private RequestStack $requestStack,
+        private AbonnementRepository $abonnementRepository
     ) {}
 
     public static function getSubscribedEvents(): array
@@ -52,6 +56,27 @@ class SubscriptionGateSubscriber implements EventSubscriberInterface
             return;
         }
 
+        $session = $this->requestStack->getSession();
+        $mustFlush = false;
+
+        if ($user->getSubscriptionStatus() === 'ACTIVE' && $this->isExpiredByData($user)) {
+            $this->revokeExpiredSubscriptionAccess($user);
+            $mustFlush = true;
+
+            if ($session && !$session->get('subscription_expired_notice_shown', false)) {
+                $session->getFlashBag()->add('warning', 'Votre abonnement est terminé. Vos droits d\'accès ont été retirés.');
+                $session->set('subscription_expired_notice_shown', true);
+            }
+        }
+
+        if ($user->getSubscriptionStatus() !== 'ACTIVE' && $this->normalizeInactiveUserAccess($user)) {
+            $mustFlush = true;
+        }
+
+        if ($mustFlush) {
+            $this->em->flush();
+        }
+
         $allowedRoutes = [
             'app_home',
             'app_subscription',
@@ -71,15 +96,10 @@ class SubscriptionGateSubscriber implements EventSubscriberInterface
         }
 
         if ($user->isSubscriptionActive()) {
+            if ($session) {
+                $session->remove('subscription_expired_notice_shown');
+            }
             return;
-        }
-
-        // Si l'abonnement actif a expiré, marquer EXPIRED
-        if ($user->getSubscriptionStatus() === 'ACTIVE' && $user->isSubscriptionExpired()) {
-            $user->setSubscriptionStatus('EXPIRED');
-            $user->setSubscriptionEndAt(null);
-            $user->setUpdatedAt(new \DateTimeImmutable());
-            $this->em->flush();
         }
 
         // Mode découverte: autoriser uniquement le front, pas l'admin ni le contenu premium
@@ -103,6 +123,70 @@ class SubscriptionGateSubscriber implements EventSubscriberInterface
         }
 
         // PENDING / EXPIRED => forcer la page d'abonnement
+        if ($user->getSubscriptionStatus() === 'EXPIRED') {
+            if ($session && !$session->get('subscription_expired_notice_shown', false)) {
+                $session->getFlashBag()->add('warning', 'Votre abonnement est terminé. Merci de renouveler pour récupérer l\'accès.');
+                $session->set('subscription_expired_notice_shown', true);
+            }
+        }
+
         $event->setResponse(new RedirectResponse($this->urlGenerator->generate('app_subscription')));
+    }
+
+    private function revokeExpiredSubscriptionAccess(User $user): void
+    {
+        $user->setRole('ROLE_USER');
+        $user->setSubscriptionStatus('EXPIRED');
+        $user->setSubscriptionType(null);
+        $user->setSubscriptionEndAt(null);
+        $user->setUpdatedAt(new \DateTimeImmutable());
+    }
+
+    private function normalizeInactiveUserAccess(User $user): bool
+    {
+        $changed = false;
+
+        if ($user->getRole() !== 'ROLE_USER') {
+            $user->setRole('ROLE_USER');
+            $changed = true;
+        }
+        if ($user->getSubscriptionType() !== null) {
+            $user->setSubscriptionType(null);
+            $changed = true;
+        }
+        if ($user->getSubscriptionEndAt() !== null && $user->getSubscriptionStatus() !== 'ACTIVE') {
+            $user->setSubscriptionEndAt(null);
+            $changed = true;
+        }
+
+        if ($changed) {
+            $user->setUpdatedAt(new \DateTimeImmutable());
+        }
+
+        return $changed;
+    }
+
+    private function isExpiredByData(User $user): bool
+    {
+        if ($user->isSubscriptionExpired()) {
+            return true;
+        }
+
+        if ($user->getSubscriptionStatus() !== 'ACTIVE') {
+            return false;
+        }
+
+        $latest = $this->abonnementRepository->findLatestForUser($user);
+        if ($latest === null) {
+            return true;
+        }
+
+        $endDate = $latest->getDateFin();
+        $today = new \DateTimeImmutable('today');
+        $endDay = ($endDate instanceof \DateTimeImmutable)
+            ? $endDate->setTime(0, 0)
+            : \DateTimeImmutable::createFromMutable((clone $endDate)->setTime(0, 0));
+
+        return $endDay < $today;
     }
 }

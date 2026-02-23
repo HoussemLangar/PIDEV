@@ -632,6 +632,7 @@
                                 {% set canPlan = is_granted('ROLE_PATIENT') or is_granted('ROLE_MEDECIN') or is_granted('ROLE_COACH') or is_granted('ROLE_NUTRITIONNISTE') %}
                                 {% set isPatient = app.user and (app.user.subscriptionType ?? app.user.role) == 'ROLE_PATIENT' %}
                                 {% set isProfessionalPlanRole = app.user and (app.user.subscriptionType ?? app.user.role) in ['ROLE_MEDECIN', 'ROLE_COACH', 'ROLE_NUTRITIONNISTE'] %}
+                                {% set canAiTools = app.user and (is_granted('ROLE_ADMIN') or (app.user.subscriptionStatus == 'ACTIVE' and (app.user.subscriptionType ?? app.user.role) in ['ROLE_PATIENT', 'ROLE_MEDECIN', 'ROLE_COACH', 'ROLE_NUTRITIONNISTE'])) %}
 
                                 <a href="{{ path('profile_edit') }}" class="dropdown-item">
                                     <i class="fas fa-user-circle"></i> {{ 'nav.settings'|trans }}
@@ -665,9 +666,11 @@
                                             <i class="fas fa-calendar-check"></i> Mes plans
                                         </a>
                                         {% endif %}
+                                        {% if canAiTools %}
                                         <a href="{{ path('app_ai_tools_index') }}" class="dropdown-item">
                                             <i class="fas fa-robot"></i> Outils IA
                                         </a>
+                                        {% endif %}
                                     </div>
                                 </div>
 
@@ -897,8 +900,15 @@
                 const btn      = document.getElementById(btnId);
                 const dropdown = document.getElementById(dropdownId);
                 if (!btn || !dropdown) return;
+
+                // Remove stale listeners from a previous __santea_initNav call
+                // (happens when DOMContentLoaded + turbo:load both fire, or on re-navigation)
+                if (btn._navClickHandler)      btn.removeEventListener('click', btn._navClickHandler);
+                if (dropdown._navClickHandler) dropdown.removeEventListener('click', dropdown._navClickHandler);
+
                 allDropdowns.push({ btn, dropdown });
-                btn.addEventListener('click', (e) => {
+
+                btn._navClickHandler = (e) => {
                     e.stopPropagation();
                     const isOpen = dropdown.classList.contains('show');
                     closeAllDropdowns();
@@ -908,8 +918,11 @@
                         btn.setAttribute('aria-expanded', 'true');
                         if (onOpen) onOpen();
                     }
-                });
-                dropdown.addEventListener('click', (e) => e.stopPropagation());
+                };
+                btn.addEventListener('click', btn._navClickHandler);
+
+                dropdown._navClickHandler = (e) => e.stopPropagation();
+                dropdown.addEventListener('click', dropdown._navClickHandler);
             }
 
             // Single persistent document click listener — updated on each Turbo re-init
@@ -933,7 +946,11 @@
             closeAllSubmenus();
 
             submenuToggles.forEach((toggle) => {
-                toggle.addEventListener('click', (event) => {
+                if (toggle._submenuToggleHandler) {
+                    toggle.removeEventListener('click', toggle._submenuToggleHandler);
+                }
+
+                toggle._submenuToggleHandler = (event) => {
                     event.stopPropagation();
                     const section  = toggle.closest('.dropdown-section');
                     const isActive = section.classList.contains('open');
@@ -945,9 +962,17 @@
                         const panel   = panelId ? document.getElementById(panelId) : null;
                         if (panel) panel.setAttribute('aria-hidden', 'false');
                     }
-                });
+                };
+
+                toggle.addEventListener('click', toggle._submenuToggleHandler);
             });
-            submenuPanels.forEach(s => s.addEventListener('click', e => e.stopPropagation()));
+            submenuPanels.forEach((panel) => {
+                if (panel._submenuPanelClickHandler) {
+                    panel.removeEventListener('click', panel._submenuPanelClickHandler);
+                }
+                panel._submenuPanelClickHandler = (e) => e.stopPropagation();
+                panel.addEventListener('click', panel._submenuPanelClickHandler);
+            });
 
             // ─── Utility ──────────────────────────────────────────────────────────
             function timeAgo(dateStr) {

@@ -46,7 +46,7 @@ class SubscriptionController extends AbstractController
     }
 
     #[Route('/subscription/overview', name: 'app_subscription_overview')]
-    public function overview(AbonnementRepository $abonnementRepository): Response
+    public function overview(AbonnementRepository $abonnementRepository, EntityManagerInterface $em): Response
     {
         /** @var User $user */
         $user = $this->getUser();
@@ -55,6 +55,32 @@ class SubscriptionController extends AbstractController
         }
 
         $abonnement = $abonnementRepository->findLatestForUser($user);
+
+        if ($abonnement) {
+            $today = new \DateTimeImmutable('today');
+            $endDate = $abonnement->getDateFin();
+            $endDay = ($endDate instanceof \DateTimeImmutable)
+                ? $endDate->setTime(0, 0)
+                : \DateTimeImmutable::createFromMutable((clone $endDate)->setTime(0, 0));
+
+            if ($endDay < $today) {
+                if (strtolower($abonnement->getStatut()) !== 'expire') {
+                    $abonnement->setStatut('expire');
+                }
+
+                $this->removeRoleEntity($user, $em);
+                $user->setRole('ROLE_USER');
+                $user->setSubscriptionStatus('EXPIRED');
+                $user->setSubscriptionType(null);
+                $user->setSubscriptionEndAt(null);
+                $user->setUpdatedAt(new \DateTimeImmutable());
+
+                $em->flush();
+
+                $this->addFlash('warning', 'Votre abonnement est terminé. Veuillez renouveler pour récupérer l\'accès aux services premium.');
+                return $this->redirectToRoute('app_subscription');
+            }
+        }
 
         if (!$user->isSubscriptionActive() || !$abonnement) {
             return $this->redirectToRoute('app_subscription');
@@ -211,6 +237,7 @@ class SubscriptionController extends AbstractController
 
             $mailer->send($email);
             $request->getSession()->remove('subscription_type');
+            $request->getSession()->remove('subscription_expired_notice_shown');
 
             $this->addFlash('success', 'Paiement réussi. Abonnement activé.');
             return $this->redirectToRoute('app_subscription_overview');

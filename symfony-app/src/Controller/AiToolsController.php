@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\User;
 use App\Service\Ai\DocumentScannerService;
 use App\Service\Ai\NutritionPlannerService;
 use App\Service\Ai\ResultExplainerService;
@@ -19,12 +20,16 @@ class AiToolsController extends AbstractController
     #[Route('', name: 'index', methods: ['GET'])]
     public function index(): Response
     {
+        $this->denyAiToolsAccessIfNeeded();
+
         return $this->render('ai_tools/index.html.twig');
     }
 
     #[Route('/document-scanner', name: 'document_scanner', methods: ['GET', 'POST'])]
     public function documentScanner(Request $request, DocumentScannerService $scannerService): Response
     {
+        $this->denyAiToolsAccessIfNeeded();
+
         $result = null;
 
         if ($request->isMethod('POST')) {
@@ -55,6 +60,8 @@ class AiToolsController extends AbstractController
     #[Route('/nutrition-planner', name: 'nutrition_planner', methods: ['GET', 'POST'])]
     public function nutritionPlanner(Request $request, NutritionPlannerService $service): Response
     {
+        $this->denyAiToolsAccessIfNeeded();
+
         $result = null;
         if ($request->isMethod('POST')) {
             $goal = trim((string) $request->request->get('goal', ''));
@@ -73,6 +80,8 @@ class AiToolsController extends AbstractController
     #[Route('/workout-planner', name: 'workout_planner', methods: ['GET', 'POST'])]
     public function workoutPlanner(Request $request, WorkoutPlannerService $service): Response
     {
+        $this->denyAiToolsAccessIfNeeded();
+
         $result = null;
         if ($request->isMethod('POST')) {
             $goal = trim((string) $request->request->get('goal', ''));
@@ -92,6 +101,8 @@ class AiToolsController extends AbstractController
     #[Route('/result-explainer', name: 'result_explainer', methods: ['GET', 'POST'])]
     public function resultExplainer(Request $request, ResultExplainerService $service): Response
     {
+        $this->denyAiToolsAccessIfNeeded();
+
         $result = null;
         if ($request->isMethod('POST')) {
             $testName = trim((string) $request->request->get('testName', ''));
@@ -105,5 +116,32 @@ class AiToolsController extends AbstractController
         return $this->render('ai_tools/result_explainer.html.twig', [
             'result' => $result,
         ]);
+    }
+
+    private function denyAiToolsAccessIfNeeded(): void
+    {
+        if ($this->isGranted('ROLE_ADMIN')) {
+            return;
+        }
+
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            throw $this->createAccessDeniedException('Accès non autorisé aux outils IA.');
+        }
+
+        $effectiveRole = $user->getSubscriptionType() ?: $user->getRole();
+        $allowedRoles = [
+            'ROLE_PATIENT',
+            'ROLE_MEDECIN',
+            'ROLE_COACH',
+            'ROLE_NUTRITIONNISTE',
+        ];
+
+        $isAllowed = $user->getSubscriptionStatus() === 'ACTIVE'
+            && in_array($effectiveRole, $allowedRoles, true);
+
+        if (!$isAllowed) {
+            throw $this->createAccessDeniedException('Votre abonnement ou rôle ne permet pas l’accès aux outils IA.');
+        }
     }
 }
