@@ -2,9 +2,12 @@
 
 namespace App\Controller;
 
+use App\Entity\User;
 use App\Entity\SanteQuotidienne;
 use App\Form\SanteQuotidienneType;
 use App\Repository\SanteQuotidienneRepository;
+use App\Service\MentalHealthChatbotService;
+use App\Service\RiskPredictionService;
 use App\Enum\NiveauActivite;
 use App\Enum\Humeur;
 use App\Enum\Alimentation;
@@ -22,38 +25,17 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('IS_AUTHENTICATED_FULLY')] // obligatoire : seul un utilisateur connecté peut accéder
 class SanteQuotidienneController extends AbstractController
 {
+    public function __construct(
+        private readonly RiskPredictionService $riskPredictionService
+    ) {}
+
     #[Route('', name: 'app_sante_quotidienne_index', methods: ['GET'])]
     public function index(SanteQuotidienneRepository $repository): Response
     {
         $sante = new SanteQuotidienne();
-
         $form = $this->createForm(SanteQuotidienneType::class, $sante);
 
-        // Récupère les entrées de l'utilisateur connecté pour affichage et actions
-        $santes = $repository->findBy([
-            'user' => $this->getUser(),
-        ], ['date' => 'DESC']);
-
-        // Moyenne de sommeil pour l'utilisateur connecté
-        $averageSommeil = $repository->getAverageSommeilForUser($this->getUser());
-
-        // Statistiques pour les boîtes d'action
-        $moodStats = $repository->getMoodStatistics($this->getUser());
-        $activityStats = $repository->getActivityStatistics($this->getUser());
-        $nutritionStats = $repository->getNutritionStatistics($this->getUser());
-        $googleFitLatest = $repository->getLatestGoogleFitMetrics($this->getUser());
-        $googleFitAvgSteps = $repository->getAverageStepsLastDays($this->getUser(), 7);
-
-        return $this->render('front/santequotidienne/form.html.twig', [
-            'form' => $form->createView(),
-            'santes' => $santes,
-            'averageSommeil' => $averageSommeil,
-            'moodStats' => $moodStats,
-            'activityStats' => $activityStats,
-            'nutritionStats' => $nutritionStats,
-            'googleFitLatest' => $googleFitLatest,
-            'googleFitAvgSteps' => $googleFitAvgSteps,
-        ]);
+        return $this->render('front/santequotidienne/form.html.twig', $this->buildFormPageData($form, $repository));
     }
 
     #[Route('/patients', name: 'app_sante_quotidienne_patients', methods: ['GET'])]
@@ -97,34 +79,9 @@ class SanteQuotidienneController extends AbstractController
     public function frontNewForm(SanteQuotidienneRepository $repository): Response
     {
         $sante = new SanteQuotidienne();
-
         $form = $this->createForm(SanteQuotidienneType::class, $sante);
 
-        // Récupère les entrées de l'utilisateur connecté pour affichage et actions
-        $santes = $repository->findBy([
-            'user' => $this->getUser(),
-        ], ['date' => 'DESC']);
-
-        // Moyenne de sommeil pour l'utilisateur connecté
-        $averageSommeil = $repository->getAverageSommeilForUser($this->getUser());
-
-        // Statistiques pour les boîtes d'action
-        $moodStats = $repository->getMoodStatistics($this->getUser());
-        $activityStats = $repository->getActivityStatistics($this->getUser());
-        $nutritionStats = $repository->getNutritionStatistics($this->getUser());
-        $googleFitLatest = $repository->getLatestGoogleFitMetrics($this->getUser());
-        $googleFitAvgSteps = $repository->getAverageStepsLastDays($this->getUser(), 7);
-
-        return $this->render('front/santequotidienne/form.html.twig', [
-            'form' => $form->createView(),
-            'santes' => $santes,
-            'averageSommeil' => $averageSommeil,
-            'moodStats' => $moodStats,
-            'activityStats' => $activityStats,
-            'nutritionStats' => $nutritionStats,
-            'googleFitLatest' => $googleFitLatest,
-            'googleFitAvgSteps' => $googleFitAvgSteps,
-        ]);
+        return $this->render('front/santequotidienne/form.html.twig', $this->buildFormPageData($form, $repository));
     }
 
     #[Route('/sante-quotidienne/calc-imc', name: 'app_sante_quotidienne_calc_imc', methods: ['GET'])]
@@ -236,9 +193,44 @@ class SanteQuotidienneController extends AbstractController
         ]);
     }
 
+    #[Route('/api/chatbot/empathy', name: 'app_sante_quotidienne_chatbot_empathy', methods: ['POST'])]
+    public function chatbotEmpathy(Request $request, MentalHealthChatbotService $chatbotService): JsonResponse
+    {
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            return new JsonResponse(['ok' => false, 'message' => 'Acces refuse'], 403);
+        }
+
+        $payload = json_decode($request->getContent(), true);
+        if (!is_array($payload)) {
+            return new JsonResponse(['ok' => false, 'message' => 'Payload invalide'], 400);
+        }
+
+        $message = trim((string) ($payload['message'] ?? ''));
+        if ($message === '') {
+            return new JsonResponse(['ok' => false, 'message' => 'Message vide'], 422);
+        }
+
+        $result = $chatbotService->reply($message);
+
+        return new JsonResponse([
+            'ok' => true,
+            'emotion' => $result['emotion'],
+            'intent' => $result['intent'],
+            'response' => $result['response'],
+            'safetyAlert' => $result['safetyAlert'],
+        ]);
+    }
+
     #[Route('/new', name: 'app_sante_quotidienne_new', methods: ['GET', 'POST'])]
     public function new(Request $request, EntityManagerInterface $em, SanteQuotidienneRepository $repository): Response
     {
+        /** @var User $user */
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            throw $this->createAccessDeniedException();
+        }
+
         // Debug: Log de la méthode HTTP
         error_log('=== NEW SANTE QUOTIDIENNE ===');
         error_log('Method: ' . $request->getMethod());
@@ -266,6 +258,7 @@ class SanteQuotidienneController extends AbstractController
             error_log('Saving data: poids=' . $sante->getPoids() . ', taille=' . $sante->getTaille());
             $em->persist($sante);
             $em->flush();
+            $this->riskPredictionService->recalculateForUser($user);
             error_log('Data saved successfully with ID: ' . $sante->getId());
 
             $this->addFlash('success', 'Données quotidiennes enregistrées avec succès !');
@@ -273,32 +266,8 @@ class SanteQuotidienneController extends AbstractController
             return $this->redirectToRoute('app_sante_quotidienne_front_new');
         }
 
-        // Récupère les entrées de l'utilisateur pour affichage et actions
-        $santes = $repository->findBy([
-            'user' => $this->getUser(),
-        ], ['date' => 'DESC']);
-
-        // Moyenne de sommeil pour l'utilisateur connecté
-        $averageSommeil = $repository->getAverageSommeilForUser($this->getUser());
-
-        // Statistiques pour les boîtes d'action
-        $moodStats = $repository->getMoodStatistics($this->getUser());
-        $activityStats = $repository->getActivityStatistics($this->getUser());
-        $nutritionStats = $repository->getNutritionStatistics($this->getUser());
-        $googleFitLatest = $repository->getLatestGoogleFitMetrics($this->getUser());
-        $googleFitAvgSteps = $repository->getAverageStepsLastDays($this->getUser(), 7);
-
         // Affiche le formulaire dans la page front avec les erreurs de validation
-        return $this->render('front/santequotidienne/form.html.twig', [
-            'form' => $form->createView(),
-            'santes' => $santes,
-            'averageSommeil' => $averageSommeil,
-            'moodStats' => $moodStats,
-            'activityStats' => $activityStats,
-            'nutritionStats' => $nutritionStats,
-            'googleFitLatest' => $googleFitLatest,
-            'googleFitAvgSteps' => $googleFitAvgSteps,
-        ]);
+        return $this->render('front/santequotidienne/form.html.twig', $this->buildFormPageData($form, $repository));
     }
 
     #[Route('/{id}', name: 'app_sante_quotidienne_show', methods: ['GET'])]
@@ -314,8 +283,14 @@ class SanteQuotidienneController extends AbstractController
     #[IsGranted('SANTE_EDIT', subject: 'sante')]
     public function edit(Request $request, SanteQuotidienne $sante, EntityManagerInterface $em, SanteQuotidienneRepository $repository, CsrfTokenManagerInterface $csrfTokenManager): Response
     {
+        /** @var User $user */
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            throw $this->createAccessDeniedException();
+        }
+
         // Sécurité : on ne peut éditer que ses propres données
-        if ($sante->getUser() !== $this->getUser()) {
+        if ($sante->getUser() !== $user) {
             throw $this->createAccessDeniedException();
         }
 
@@ -332,6 +307,11 @@ class SanteQuotidienneController extends AbstractController
 
             if ($form->isSubmitted() && $form->isValid()) {
                 $em->flush();
+                /** @var User $currentUser */
+                $currentUser = $this->getUser();
+                if ($currentUser instanceof User) {
+                    $this->riskPredictionService->recalculateForUser($currentUser);
+                }
                 return new JsonResponse(['ok' => true, 'message' => 'Données modifiées avec succès.']);
             }
 
@@ -359,37 +339,14 @@ class SanteQuotidienneController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $em->flush();
+            $this->riskPredictionService->recalculateForUser($user);
 
             $this->addFlash('success', 'Données modifiées avec succès.');
             return $this->redirectToRoute('app_sante_quotidienne_front_new');
         }
 
-        // Récupère les entrées de l'utilisateur pour affichage et actions
-        $santes = $repository->findBy([
-            'user' => $this->getUser(),
-        ], ['date' => 'DESC']);
-
-        // Moyenne de sommeil pour l'utilisateur connecté
-        $averageSommeil = $repository->getAverageSommeilForUser($this->getUser());
-
-        // Statistiques pour les boîtes d'action
-        $moodStats = $repository->getMoodStatistics($this->getUser());
-        $activityStats = $repository->getActivityStatistics($this->getUser());
-        $nutritionStats = $repository->getNutritionStatistics($this->getUser());
-        $googleFitLatest = $repository->getLatestGoogleFitMetrics($this->getUser());
-        $googleFitAvgSteps = $repository->getAverageStepsLastDays($this->getUser(), 7);
-
         // Affiche le formulaire dans le template front
-        return $this->render('front/santequotidienne/form.html.twig', [
-            'form' => $form->createView(),
-            'santes' => $santes,
-            'averageSommeil' => $averageSommeil,
-            'moodStats' => $moodStats,
-            'activityStats' => $activityStats,
-            'nutritionStats' => $nutritionStats,
-            'googleFitLatest' => $googleFitLatest,
-            'googleFitAvgSteps' => $googleFitAvgSteps,
-        ]);
+        return $this->render('front/santequotidienne/form.html.twig', $this->buildFormPageData($form, $repository));
     }
 
     #[Route('/{id}', name: 'app_sante_quotidienne_delete', methods: ['POST'])]
@@ -408,5 +365,58 @@ class SanteQuotidienneController extends AbstractController
         }
 
         return $this->redirectToRoute('app_sante_quotidienne_front_new');
+    }
+
+    /**
+     * @return array{
+     *   form: mixed,
+     *   santes: array<int, SanteQuotidienne>,
+     *   averageSommeil: ?float,
+     *   moodStats: array<string, mixed>,
+     *   activityStats: array<string, mixed>,
+     *   nutritionStats: array<string, mixed>,
+     *   googleFitLatest: array<string, mixed>,
+     *   googleFitAvgSteps: ?float,
+     *   summaryStats: array{latestWeight:?float,weeklyActivityMinutes:int,averageWater:?float},
+     *   chartStats: array{labels: array<int, string>, weights: array<int, ?float>, sleep: array<int, ?float>, tension: array<int, ?float>, water: array<int, ?float>, activity: array<int, int>},
+     *   riskPrediction: array<string, mixed>
+     * }
+     */
+    private function buildFormPageData(FormInterface $form, SanteQuotidienneRepository $repository): array
+    {
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            throw $this->createAccessDeniedException();
+        }
+        $santes = $repository->findBy(['user' => $user], ['date' => 'DESC']);
+        $prediction = $this->riskPredictionService->getOrRecalculateForToday($user);
+        $explanations = $prediction->getExplanationsJson();
+        $nutritionRisk = $prediction->getRiskRespiratory();
+        $nutritionScore = round(max(0.0, min(100.0, 100.0 - $nutritionRisk)), 1);
+        $nutritionLevel = match ($prediction->getLevelRespiratory()) {
+            'LOW' => 'HIGH',
+            'HIGH' => 'LOW',
+            default => 'MODERATE',
+        };
+
+        return [
+            'form' => $form->createView(),
+            'santes' => $santes,
+            'averageSommeil' => $repository->getAverageSommeilForUser($user),
+            'moodStats' => $repository->getMoodStatistics($user),
+            'activityStats' => $repository->getActivityStatistics($user),
+            'nutritionStats' => $repository->getNutritionStatistics($user),
+            'googleFitLatest' => $repository->getLatestGoogleFitMetrics($user),
+            'googleFitAvgSteps' => $repository->getAverageStepsLastDays($user, 7),
+            'summaryStats' => $repository->getDashboardSummaryStats($user),
+            'chartStats' => $repository->getDashboardChartSeries($user, 7),
+            'riskPrediction' => [
+                'htn' => ['score' => $prediction->getRiskHtn(), 'level' => $prediction->getLevelHtn(), 'explanations' => $explanations['htn'] ?? []],
+                'diabetes' => ['score' => $prediction->getRiskDiabetes(), 'level' => $prediction->getLevelDiabetes(), 'explanations' => $explanations['diabetes'] ?? []],
+                'depression' => ['score' => $prediction->getRiskDepression(), 'level' => $prediction->getLevelDepression(), 'explanations' => $explanations['depression'] ?? []],
+                'nutrition' => ['score' => $nutritionScore, 'level' => $nutritionLevel, 'explanations' => $explanations['nutrition'] ?? ($explanations['respiratory'] ?? [])],
+                'updatedAt' => $prediction->getUpdatedAt()->format('d/m/Y H:i'),
+            ],
+        ];
     }
 }

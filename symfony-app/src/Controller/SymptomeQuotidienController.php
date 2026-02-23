@@ -6,6 +6,7 @@ use App\Entity\SymptomeQuotidien;
 use App\Form\SymptomeQuotidienType;
 use App\Repository\SymptomeQuotidienRepository;
 use App\Repository\SymptomeListeRepository;
+use App\Service\RiskPredictionService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -21,6 +22,7 @@ class SymptomeQuotidienController extends AbstractController
     public function __construct(
         private readonly SymptomeQuotidienRepository $repository,
         private readonly EntityManagerInterface $entityManager,
+        private readonly RiskPredictionService $riskPredictionService,
     ) {}
 
     /**
@@ -69,6 +71,7 @@ class SymptomeQuotidienController extends AbstractController
             
             $em->persist($symptomeQuotidien);
             $em->flush();
+            $this->riskPredictionService->recalculateForUser($user);
 
             $this->addFlash('success', '✅ Symptôme enregistré avec succès!');
             return $this->redirectToRoute('app_symptomes');
@@ -190,6 +193,7 @@ class SymptomeQuotidienController extends AbstractController
 
         $em->remove($symptome);
         $em->flush();
+        $this->riskPredictionService->recalculateForUser($user);
 
         return new JsonResponse(['success' => true, 'message' => 'Symptôme supprimé avec succès']);
     }
@@ -279,6 +283,7 @@ class SymptomeQuotidienController extends AbstractController
 
         try {
             $em->flush();
+            $this->riskPredictionService->recalculateForUser($user);
             return new JsonResponse(['success' => true, 'message' => 'Symptôme modifié avec succès']);
         } catch (\Exception $e) {
             return new JsonResponse(['success' => false, 'error' => 'Erreur lors de la modification: ' . $e->getMessage()], 500);

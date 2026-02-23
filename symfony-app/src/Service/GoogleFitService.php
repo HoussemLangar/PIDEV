@@ -78,9 +78,19 @@ class GoogleFitService
             $activeMinutes = 0;
 
             foreach ($bucket['dataset'] as $dataset) {
+                $datasetSource = mb_strtolower((string) ($dataset['dataSourceId'] ?? ''));
                 foreach ($dataset['point'] ?? [] as $point) {
                     $value = $point['value'][0] ?? null;
-                    $dataType = $point['dataTypeName'] ?? '';
+                    $dataType = mb_strtolower((string) ($point['dataTypeName'] ?? ''));
+                    if ($dataType === '') {
+                        if (str_contains($datasetSource, 'step_count.delta')) {
+                            $dataType = 'com.google.step_count.delta';
+                        } elseif (str_contains($datasetSource, 'calories.expended')) {
+                            $dataType = 'com.google.calories.expended';
+                        } elseif (str_contains($datasetSource, 'active_minutes')) {
+                            $dataType = 'com.google.active_minutes';
+                        }
+                    }
                     if ($value === null) {
                         continue;
                     }
@@ -89,16 +99,16 @@ class GoogleFitService
                     } elseif ($dataType === 'com.google.calories.expended') {
                         $calories += (float) ($value['fpVal'] ?? 0);
                     } elseif ($dataType === 'com.google.active_minutes') {
-                        $activeMinutes += (int) ($value['intVal'] ?? 0);
+                        $activeMinutes += (int) round((float) (($value['intVal'] ?? $value['fpVal']) ?? 0));
                     }
                 }
             }
 
             $source = $entry->getSourceDonnees();
             if ($source === 'google_fit' || $source === 'manuel') {
-                $entry->setPas($steps ?: $entry->getPas());
-                $entry->setCalories($calories ?: $entry->getCalories());
-                $entry->setDureeActiviteMinutes($activeMinutes ?: $entry->getDureeActiviteMinutes());
+                $entry->setPas($steps);
+                $entry->setCalories(round($calories, 2));
+                $entry->setDureeActiviteMinutes($activeMinutes);
                 if ($source === 'manuel' && ($steps || $calories || $activeMinutes)) {
                     $entry->setSourceDonnees('google_fit');
                 }
