@@ -41,7 +41,7 @@ class Pharmacy
     #[ORM\Column(type: 'string', length: 255)]
     #[Assert\NotBlank(message: 'L\'adresse est obligatoire.')]
     #[Assert\Length(
-        min: 10,
+        min: 4,
         max: 255,
         minMessage: 'L\'adresse doit contenir au moins {{ limit }} caractères.',
         maxMessage: 'L\'adresse ne peut pas dépasser {{ limit }} caractères.'
@@ -91,6 +91,9 @@ class Pharmacy
     #[ORM\Column(type: 'boolean', options: ['default' => true])]
     private bool $isActive = true;
 
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    private ?string $imageName = null;
+
     #[ORM\Column(type: 'datetime', options: ['default' => 'CURRENT_TIMESTAMP'])]
     private \DateTimeInterface $createdAt;
 
@@ -126,6 +129,8 @@ class Pharmacy
     public function setLongitude(?string $longitude): void { $this->longitude = $longitude; }
     public function isActive(): bool { return $this->isActive; }
     public function setIsActive(bool $isActive): void { $this->isActive = $isActive; }
+    public function getImageName(): ?string { return $this->imageName; }
+    public function setImageName(?string $imageName): void { $this->imageName = $imageName; }
     public function getCreatedAt(): \DateTimeInterface { return $this->createdAt; }
     public function setCreatedAt(\DateTimeInterface $createdAt): void { $this->createdAt = $createdAt; }
     public function getUpdatedAt(): \DateTimeInterface { return $this->updatedAt; }

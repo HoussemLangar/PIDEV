@@ -38,6 +38,77 @@
         <link rel="SHORTCUT ICON" type="image/x-icon" href="{{ asset('logo.png') }}">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
         <style>
+        /* ─── Nav Pharmacien submenu ─────────────────────────── */
+        .nav-links .nav-has-sub { position:relative; }
+        .nav-links .nav-has-sub > a .nav-caret {
+            font-size:.6rem;
+            margin-left:3px;
+            opacity:.7;
+            transition:transform .2s;
+            display:inline-block;
+        }
+        .nav-links .nav-has-sub:hover > a .nav-caret,
+        .nav-links .nav-has-sub:focus-within > a .nav-caret { transform:rotate(180deg); }
+        .nav-links .nav-sub {
+            position:absolute;
+            top:calc(100% + 8px);
+            left:50%;
+            transform:translateX(-50%) translateY(-6px);
+            min-width:210px;
+            background:#fff;
+            border:1px solid #e2e8f0;
+            border-radius:14px;
+            box-shadow:0 16px 40px rgba(15,23,42,.14);
+            opacity:0;
+            visibility:hidden;
+            transition:opacity .2s,transform .2s,visibility .2s;
+            z-index:999;
+            overflow:hidden;
+            list-style:none;
+            padding:6px 0;
+            margin:0;
+        }
+        [data-theme="dark"] .nav-links .nav-sub {
+            background:#1e293b;
+            border-color:#334155;
+        }
+        .nav-links .nav-has-sub:hover .nav-sub,
+        .nav-links .nav-has-sub:focus-within .nav-sub {
+            opacity:1;
+            visibility:visible;
+            transform:translateX(-50%) translateY(0);
+        }
+        .nav-links .nav-sub li a {
+            display:flex;
+            align-items:center;
+            gap:9px;
+            padding:9px 16px;
+            font-size:.87rem;
+            font-weight:600;
+            color:#374151;
+            text-decoration:none;
+            transition:background .15s,color .15s;
+            white-space:nowrap;
+        }
+        [data-theme="dark"] .nav-links .nav-sub li a { color:#cbd5e1; }
+        .nav-links .nav-sub li a:hover {
+            background:rgba(13,138,188,.08);
+            color:#0D8ABC;
+        }
+        .nav-links .nav-sub li a i {
+            width:18px;
+            text-align:center;
+            color:#0D8ABC;
+            font-size:.8rem;
+        }
+        .nav-links .nav-sub li a::after { display:none; }
+        .nav-links .nav-sub .nav-sub-divider {
+            height:1px;
+            background:#e2e8f0;
+            margin:4px 0;
+        }
+        [data-theme="dark"] .nav-links .nav-sub .nav-sub-divider { background:#334155; }
+
         /* ─── Nav Icons ─────────────────────────────────────────── */
         .nav-icons { display:flex; align-items:center; gap:6px; }
         .nav-icon-wrap { position:relative; }
@@ -451,20 +522,34 @@
                 <div class="logo">SANTÉA</div>
 
                 <ul class="nav-links">
-                    <li><a href="{{ path('app_home') }}">{{ 'nav.home'|trans }}</a></li>
-                    <li><a href="#quick-info">{{ 'nav.about'|trans }}</a></li>
-                    <li><a href="#appointment-section">{{ 'nav.services'|trans }}</a></li>
-                    <li><a href="{{ path('front_content_index') }}">{{ 'nav.blog'|trans }}</a></li>
+                    <li><a href="{{ path('app_home') }}"><i class="fas fa-home" style="margin-right:5px;color:#0D8ABC;"></i>{{ 'nav.home'|trans }}</a></li>
+                    <li><a href="#quick-info"><i class="fas fa-info-circle" style="margin-right:5px;color:#0D8ABC;"></i>{{ 'nav.about'|trans }}</a></li>
+                    <li><a href="#appointment-section"><i class="fas fa-stethoscope" style="margin-right:5px;color:#0D8ABC;"></i>{{ 'nav.services'|trans }}</a></li>
+                    <li><a href="{{ path('front_content_index') }}"><i class="fas fa-newspaper" style="margin-right:5px;color:#0D8ABC;"></i>{{ 'nav.blog'|trans }}</a></li>
                     {% if app.user and (app.user.subscriptionType ?? app.user.role) == 'ROLE_PATIENT' %}
-                        <li><a href="{{ path('app_sante_quotidienne_index') }}">Mon journal santé</a></li>
-                        <li><a href="{{ path('app_symptomes') }}">Mes symptômes</a></li>
-                        <li><a href="{{ path('front_pharmacy_index') }}">Pharmacies</a></li>
-                        <li><a href="{{ path('app_appointments') }}">Rendez-Vous</a></li>
+                        <li><a href="{{ path('app_sante_quotidienne_index') }}"><i class="fas fa-book-medical" style="margin-right:5px;color:#0D8ABC;"></i>Mon journal santé</a></li>
+                        <li><a href="{{ path('app_symptomes') }}"><i class="fas fa-diagnoses" style="margin-right:5px;color:#0D8ABC;"></i>Mes symptômes</a></li>
+                        <li><a href="{{ path('front_pharmacy_index') }}"><i class="fas fa-clinic-medical" style="margin-right:5px;color:#0D8ABC;"></i>Pharmacies</a></li>
+                        <li><a href="{{ path('app_appointments') }}"><i class="fas fa-calendar-alt" style="margin-right:5px;color:#0D8ABC;"></i>Rendez-Vous</a></li>
                     {% endif %}
                     {% if app.user and app.user.subscriptionStatus == 'ACTIVE' and (app.user.subscriptionType ?? app.user.role) == 'ROLE_PHARMACIEN' %}
-                        <li><a href="{{ path('front_pharmacien_dashboard') }}">Ma pharmacie</a></li>
+                        <li class="nav-has-sub">
+                            <a href="{{ path('front_pharmacien_dashboard') }}"><i class="fas fa-clinic-medical" style="margin-right:4px;color:#0D8ABC;"></i>Ma pharmacie <i class="fas fa-chevron-down nav-caret"></i></a>
+                            <ul class="nav-sub">
+                                <li><a href="{{ path('front_pharmacien_dashboard') }}#dashboard"><i class="fas fa-tachometer-alt"></i> Tableau de bord</a></li>
+                                <li><div class="nav-sub-divider"></div></li>
+                                <li><a href="{{ path('front_pharmacien_dashboard') }}#list-pharmacies"><i class="fas fa-store"></i> Mes pharmacies</a></li>
+                                <li><a href="{{ path('front_pharmacien_dashboard') }}#create-pharmacy"><i class="fas fa-plus-circle"></i> Créer une pharmacie</a></li>
+                                <li><div class="nav-sub-divider"></div></li>
+                                <li><a href="{{ path('front_pharmacien_dashboard') }}#list-medicaments"><i class="fas fa-pills"></i> Mes médicaments</a></li>
+                                <li><a href="{{ path('front_pharmacien_dashboard') }}#create-medicament"><i class="fas fa-capsules"></i> Ajouter médicament</a></li>
+                                <li><div class="nav-sub-divider"></div></li>
+                                <li><a href="{{ path('front_pharmacien_dashboard') }}#list-stocks"><i class="fas fa-warehouse"></i> Mon stock</a></li>
+                                <li><a href="{{ path('front_pharmacien_dashboard') }}#list-reservations"><i class="fas fa-calendar-check"></i> Réservations</a></li>
+                            </ul>
+                        </li>
                     {% endif %}
-                    <li><a href="#contact-section">{{ 'nav.contact'|trans }}</a></li>
+                    <li><a href="#contact-section"><i class="fas fa-envelope" style="margin-right:5px;color:#0D8ABC;"></i>{{ 'nav.contact'|trans }}</a></li>
                 </ul>
 
                 {% if app.user %}
@@ -688,8 +773,6 @@
         </div>
     {% endif %}
 
-    <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
-
     {% if app.user %}
     <!-- Messenger popup container (Messenger desktop style) -->
     <div id="messengerContainer"></div>
@@ -698,8 +781,8 @@
     {% block javascripts %}
         <script>
             (function () {
-                const container = document.getElementById('toastContainer');
                 const showToast = (type, message) => {
+                    const container = document.getElementById('toastContainer');
                     if (!container || !message) return;
                     const toast = document.createElement('div');
                     toast.className = `toast toast-${type || 'info'}`;
@@ -728,18 +811,16 @@
                         if (showLoader) window.setLoading(false);
                     }
 
-                    if (!skipToast && method !== 'GET') {
+                    if (!skipToast && method !== 'GET' && !response.ok) {
                         const contentType = response.headers.get('content-type') || '';
                         let payload = null;
                         if (contentType.includes('application/json')) {
                             try {
                                 payload = await response.clone().json();
                             } catch (_) {}
-                        
-                            } else {
-                            const msg = payload?.message || payload?.error || response.statusText || 'Erreur.';
-                            showToast('error', msg);
                         }
+                        const msg = payload?.message || payload?.error || response.statusText || 'Erreur.';
+                        showToast('error', msg);
                     }
 
                     return response;
@@ -771,6 +852,11 @@
                     link.addEventListener('click', (e) => {
                         const href = link.getAttribute('href');
                         if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
+                        // Skip loader for same-page hash navigation (e.g. /dashboard#panel)
+                        try {
+                            const linkUrl = new URL(link.href, location.href);
+                            if (linkUrl.pathname === location.pathname && linkUrl.hash) return;
+                        } catch (_) {}
                         show();
                     });
                 });
@@ -1233,6 +1319,9 @@
     <script type="module" src="{{ asset('js/santea-3d-engine.js') }}?v=1"></script>
     {# Interactions: scroll reveal, tilt, parallax, counters #}
     <script defer src="{{ asset('js/santea-3d-interactions.js') }}?v=1"></script>
+
+    {# Toast container — last in DOM so z-index is always above modals #}
+    <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
 
 </body>
 </html>

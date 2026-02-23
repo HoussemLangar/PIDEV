@@ -51,8 +51,26 @@ class PharmacienDashboardController extends AbstractController
             } elseif ($form->isValid()) {
                 $em->persist($pharmacy);
                 $em->flush();
+
+                // Handle optional image upload
+                $imageFile = $request->files->get('pharmacyImageFile');
+                if ($imageFile) {
+                    $mime = $imageFile->getMimeType() ?? '';
+                    $allowedMimes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+                    if (in_array($mime, $allowedMimes, true) && $imageFile->getSize() <= 5 * 1024 * 1024) {
+                        $slugger = new \Symfony\Component\String\Slugger\AsciiSlugger();
+                        $orig = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
+                        $ext  = $imageFile->guessExtension() ?? 'jpg';
+                        $name = $slugger->slug($orig) . '-' . uniqid() . '.' . $ext;
+                        $dest = $this->getParameter('kernel.project_dir') . '/public/images/pharmacies';
+                        $imageFile->move($dest, $name);
+                        $pharmacy->setImageName($name);
+                        $em->flush();
+                    }
+                }
+
                 $this->addFlash('success', 'Pharmacie créée avec succès.');
-                return $this->redirectToRoute('front_pharmacien_dashboard');
+                return $this->redirect($this->generateUrl('front_pharmacien_dashboard') . '#list-pharmacies');
             }
         }
 

@@ -43,6 +43,9 @@ class Medicament
     #[ORM\Column(type: 'string', length: 120, nullable: true)]
     private ?string $codeBarre = null;
 
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    private ?string $imageName = null;
+
     #[ORM\Column(type: 'datetime', options: ['default' => 'CURRENT_TIMESTAMP'])]
     private \DateTimeInterface $createdAt;
 
@@ -83,6 +86,8 @@ class Medicament
     public function setLaboratoire(?string $laboratoire): void { $this->laboratoire = $laboratoire; }
     public function getCodeBarre(): ?string { return $this->codeBarre; }
     public function setCodeBarre(?string $codeBarre): void { $this->codeBarre = $codeBarre; }
+    public function getImageName(): ?string { return $this->imageName; }
+    public function setImageName(?string $imageName): void { $this->imageName = $imageName; }
     public function getCreatedAt(): \DateTimeInterface { return $this->createdAt; }
     public function setCreatedAt(\DateTimeInterface $createdAt): void { $this->createdAt = $createdAt; }
     public function getUpdatedAt(): \DateTimeInterface { return $this->updatedAt; }

@@ -5,146 +5,1147 @@
 {% block stylesheets %}
     {{ parent() }}
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+    /* ═══════════════════════════════════════════════════════════════
+       PHARMACIEN DASHBOARD — DESIGN SYSTEM
+    ═══════════════════════════════════════════════════════════════ */
+
+    /* CSS variable fallbacks */
+    .pharm-dashboard {
+        --border: rgba(15,23,42,.1);
+        --surface: #fff;
+        --text: #0f172a;
+        --muted: #64748b;
+    }
+    @media (prefers-color-scheme: dark) {
+        .pharm-dashboard {
+            --border: rgba(255,255,255,.08);
+            --surface: #1e293b;
+            --text: #f1f5f9;
+            --muted: #94a3b8;
+        }
+    }
+
+    /* Hero override */
+    .pharm-dashboard .page-hero {
+        padding:36px 36px 28px;
+        margin-bottom:28px;
+    }
+    .pharm-dashboard .page-hero h1 {
+        font-size:2rem;
+        font-weight:800;
+        margin:6px 0 4px;
+    }
+    .pharm-dashboard .page-hero > p {
+        opacity:.85;
+        font-size:.95rem;
+    }
+
+    /* ── Stats row ── */
+    .pharm-dashboard .dash-stats {
+        display:grid;
+        grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+        gap:12px;
+        margin-top:22px;
+    }
+    .pharm-dashboard .dash-stat {
+        background:rgba(255,255,255,.18);
+        border:1px solid rgba(255,255,255,.35);
+        backdrop-filter:blur(6px);
+        border-radius:16px;
+        padding:16px 14px;
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+        gap:4px;
+        text-align:center;
+    }
+    .pharm-dashboard .dash-stat .stat-icon {
+        width:36px;height:36px;
+        border-radius:10px;
+        display:flex;align-items:center;justify-content:center;
+        font-size:15px;
+        margin-bottom:4px;
+    }
+    .pharm-dashboard .dash-stat span { color:rgba(255,255,255,.8); font-size:.78rem; font-weight:600; text-transform:uppercase; letter-spacing:.4px; }
+    .pharm-dashboard .dash-stat strong { font-size:1.6rem; font-weight:800; color:#fff; line-height:1; }
+
+    /* ── Navigation grid ── */
+    .pharm-dashboard .dash-actions-grid {
+        display:grid;
+        grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
+        gap:14px;
+        margin-top:22px;
+    }
+    .pharm-dashboard .dash-action-group {
+        background:rgba(255,255,255,.15);
+        border:1px solid rgba(255,255,255,.3);
+        backdrop-filter:blur(8px);
+        border-radius:18px;
+        padding:16px;
+        transition:background .2s;
+    }
+    .pharm-dashboard .dash-action-group:hover {
+        background:rgba(255,255,255,.22);
+    }
+    .pharm-dashboard .dash-action-title {
+        color:rgba(255,255,255,.7);
+        font-size:.72rem;
+        text-transform:uppercase;
+        letter-spacing:.8px;
+        font-weight:700;
+        margin-bottom:10px;
+        padding-bottom:8px;
+        border-bottom:1px solid rgba(255,255,255,.18);
+    }
+    .pharm-dashboard .dash-actions {
+        display:flex;
+        flex-direction:column;
+        gap:8px;
+    }
+    .pharm-dashboard .dash-nav {
+        border-radius:10px;
+        padding:10px 14px;
+        font-weight:600;
+        font-size:.87rem;
+        display:flex;
+        align-items:center;
+        gap:9px;
+        width:100%;
+        justify-content:flex-start;
+        transition:all .2s;
+        border:1px solid transparent;
+    }
+    .pharm-dashboard .dash-nav.btn-primary {
+        background:rgba(255,255,255,.95);
+        color:#0D8ABC;
+        border-color:rgba(255,255,255,.6);
+    }
+    .pharm-dashboard .dash-nav.btn-primary:hover,
+    .pharm-dashboard .dash-nav.btn-primary.is-active {
+        background:#fff;
+        transform:translateX(3px);
+        box-shadow:0 6px 18px rgba(0,0,0,.15);
+    }
+    .pharm-dashboard .dash-nav.btn-secondary {
+        background:rgba(255,255,255,.12);
+        color:#fff;
+        border-color:rgba(255,255,255,.25);
+    }
+    .pharm-dashboard .dash-nav.btn-secondary:hover,
+    .pharm-dashboard .dash-nav.btn-secondary.is-active {
+        background:rgba(255,255,255,.25);
+        transform:translateX(3px);
+        box-shadow:0 4px 14px rgba(0,0,0,.12);
+    }
+    .pharm-dashboard .dash-hint {
+        color:rgba(255,255,255,.7);
+        font-size:.82rem;
+        margin-top:14px;
+        text-align:center;
+    }
+
+    /* ── Section panels ── */
+    .pharm-dashboard .dash-panel {
+        display:none;
+        animation:dashFadeIn .3s ease;
+    }
+    .pharm-dashboard .dash-panel.is-active {
+        display:block;
+    }
+    @keyframes dashFadeIn {
+        from{opacity:0;transform:translateY(10px)}
+        to{opacity:1;transform:translateY(0)}
+    }
+    .pharm-dashboard .content-section {
+        margin-top:24px;
+        border-radius:20px;
+        border:1px solid var(--border);
+        background:var(--surface);
+        padding:26px;
+        box-shadow:0 8px 32px rgba(15,23,42,.07);
+    }
+    .pharm-dashboard .content-section-header {
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:12px;
+        margin-bottom:18px;
+        padding-bottom:16px;
+        border-bottom:1px solid var(--border);
+    }
+    .pharm-dashboard .content-section-title h3 {
+        font-size:1.15rem;
+        font-weight:800;
+        color:var(--text);
+        display:flex;
+        align-items:center;
+        gap:8px;
+    }
+    .pharm-dashboard .content-section-title h3::before {
+        content:'';
+        display:inline-block;
+        width:4px;
+        height:18px;
+        background:linear-gradient(180deg,#0D8ABC,#38bdf8);
+        border-radius:2px;
+    }
+    .pharm-dashboard .content-section-title p {
+        color:var(--muted);
+        font-size:.87rem;
+        margin-top:3px;
+    }
+
+    /* ── Cards ── */
+    .pharm-dashboard .content-grid {
+        display:grid;
+        grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+        gap:16px;
+    }
+    .pharm-dashboard .dash-card {
+        border-radius:16px;
+        border:1px solid rgba(14,165,233,.12);
+        background:var(--surface);
+        padding:18px;
+        box-shadow:0 4px 20px rgba(15,23,42,.06);
+        transition:transform .2s,box-shadow .2s;
+    }
+    .pharm-dashboard .dash-card:hover {
+        transform:translateY(-3px);
+        box-shadow:0 12px 32px rgba(13,138,188,.14);
+    }
+    .pharm-dashboard .dash-card-header {
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:10px;
+        margin-bottom:14px;
+        padding-bottom:12px;
+        border-bottom:1px solid rgba(14,165,233,.08);
+    }
+    .pharm-dashboard .dash-card-header h3 {
+        font-size:.97rem;
+        font-weight:700;
+    }
+
+    /* ── Reservation cards pill colors ── */
+    .pharm-dashboard .reservation-card .content-pill { font-size:.75rem; border-radius:20px; padding:3px 10px; }
+    .pharm-dashboard .reservation-card[data-status="en_attente"] .content-pill { background:#fef9c3;color:#b45309;border:1px solid #fde68a; }
+    .pharm-dashboard .reservation-card[data-status="confirmee"] .content-pill { background:#dcfce7;color:#15803d;border:1px solid #bbf7d0; }
+    .pharm-dashboard .reservation-card[data-status="refusee"] .content-pill { background:#fee2e2;color:#b91c1c;border:1px solid #fecaca; }
+    .pharm-dashboard .reservation-card[data-status="annulee"] .content-pill { background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0; }
+
+    /* ── Filters ── */
+    .pharm-dashboard .content-filters {
+        display:flex;
+        gap:10px;
+        flex-wrap:wrap;
+        margin-bottom:16px;
+    }
+    .pharm-dashboard .content-filters input,
+    .pharm-dashboard .content-filters select {
+        flex:1;
+        min-width:160px;
+        padding:10px 14px;
+        border-radius:12px;
+        border:1px solid var(--border);
+        background:var(--surface);
+        color:var(--text);
+        font-size:.88rem;
+    }
+    .pharm-dashboard .content-filters input:focus,
+    .pharm-dashboard .content-filters select:focus {
+        outline:none;
+        border-color:rgba(14,165,233,.5);
+        box-shadow:0 0 0 3px rgba(14,165,233,.12);
+    }
+
+    /* ── Forms ── */
+    .pharm-dashboard .dash-form-grid {
+        display:grid;
+        grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+        gap:12px;
+    }
+    .pharm-dashboard .dash-form-grid input,
+    .pharm-dashboard .dash-form-grid select {
+        padding:11px 14px;
+        border-radius:11px;
+        border:1px solid rgba(15,23,42,.12);
+        background:linear-gradient(180deg,#fff,#f8fafc);
+        box-shadow:inset 0 1px 2px rgba(15,23,42,.06);
+        color:var(--text);
+        font-size:.9rem;
+        transition:border-color .2s,box-shadow .2s;
+    }
+    .pharm-dashboard .dash-form-grid input:focus,
+    .pharm-dashboard .dash-form-grid select:focus {
+        outline:none;
+        border-color:rgba(14,165,233,.55);
+        box-shadow:0 0 0 3px rgba(14,165,233,.13);
+    }
+    .pharm-dashboard .dash-form-grid input::placeholder { color:#94a3b8; }
+    .pharm-dashboard .dash-actions-row {
+        display:flex;
+        gap:10px;
+        margin-top:20px;
+        flex-wrap:wrap;
+        align-items:center;
+    }
+
+    /* ── Labeled form fields ── */
+    .pharm-dashboard .form-section {
+        margin-bottom:24px;
+    }
+    .pharm-dashboard .form-section-title {
+        font-size:.78rem;
+        font-weight:700;
+        text-transform:uppercase;
+        letter-spacing:.7px;
+        color:var(--muted);
+        margin-bottom:12px;
+        padding-bottom:8px;
+        border-bottom:1px solid var(--border);
+        display:flex;
+        align-items:center;
+        gap:7px;
+    }
+    .pharm-dashboard .form-section-title i {
+        color:#0D8ABC;
+        font-size:.85rem;
+    }
+    .pharm-dashboard .form-row {
+        display:grid;
+        grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+        gap:14px;
+    }
+    .pharm-dashboard .form-field {
+        display:flex;
+        flex-direction:column;
+        gap:5px;
+    }
+    .pharm-dashboard .form-field label {
+        font-size:.8rem;
+        font-weight:700;
+        color:var(--text);
+        display:flex;
+        align-items:center;
+        gap:6px;
+    }
+    .pharm-dashboard .form-field label i {
+        color:#0D8ABC;
+        font-size:.78rem;
+        width:14px;
+        text-align:center;
+    }
+    .pharm-dashboard .form-field .field-required {
+        color:#ef4444;
+        font-size:.75rem;
+        margin-left:2px;
+    }
+    .pharm-dashboard .form-field input,
+    .pharm-dashboard .form-field select,
+    .pharm-dashboard .form-field textarea {
+        padding:11px 14px;
+        border-radius:11px;
+        border:1.5px solid var(--border);
+        background:var(--surface);
+        color:var(--text);
+        font-size:.9rem;
+        transition:border-color .2s,box-shadow .2s;
+        width:100%;
+        box-sizing:border-box;
+    }
+    .pharm-dashboard .form-field input:focus,
+    .pharm-dashboard .form-field select:focus,
+    .pharm-dashboard .form-field textarea:focus {
+        outline:none;
+        border-color:#0D8ABC;
+        box-shadow:0 0 0 3px rgba(13,138,188,.13);
+    }
+    .pharm-dashboard .form-field input::placeholder,
+    .pharm-dashboard .form-field textarea::placeholder { color:#94a3b8; }
+    .pharm-dashboard .form-field .field-hint {
+        font-size:.76rem;
+        color:var(--muted);
+        margin-top:2px;
+    }
+    .pharm-dashboard .form-field.is-error input,
+    .pharm-dashboard .form-field.is-error select { border-color:#ef4444; }
+    .pharm-dashboard .form-field .field-error { font-size:.76rem;color:#ef4444;margin-top:2px; }
+
+    /* toggle switch for isActive */
+    .pharm-dashboard .form-toggle {
+        display:flex;
+        align-items:center;
+        gap:10px;
+        padding:12px 14px;
+        border-radius:11px;
+        border:1.5px solid var(--border);
+        background:var(--surface);
+    }
+    .pharm-dashboard .form-toggle input[type="checkbox"] {
+        width:20px;height:20px;
+        accent-color:#0D8ABC;
+        cursor:pointer;
+        flex-shrink:0;
+    }
+    .pharm-dashboard .form-toggle span {
+        font-size:.9rem;
+        font-weight:600;
+        color:var(--text);
+    }
+
+    /* ── Card view/edit sections ── */
+    .pharm-dashboard .card-body {
+        padding:14px 0 0;
+    }
+    .pharm-dashboard .card-info-row {
+        display:flex;
+        flex-wrap:wrap;
+        gap:8px 16px;
+        margin-bottom:12px;
+    }
+    .pharm-dashboard .card-info-item {
+        display:flex;
+        align-items:center;
+        gap:6px;
+        font-size:.85rem;
+        color:var(--muted);
+    }
+    .pharm-dashboard .card-info-item i {
+        color:#0D8ABC;
+        width:14px;
+        text-align:center;
+        font-size:.8rem;
+    }
+    .pharm-dashboard .card-info-item strong { color:var(--text);font-weight:600; }
+    .pharm-dashboard .card-edit-toggle {
+        background:none;
+        border:1px solid var(--border);
+        border-radius:8px;
+        padding:6px 12px;
+        font-size:.8rem;
+        font-weight:600;
+        color:var(--muted);
+        cursor:pointer;
+        display:flex;
+        align-items:center;
+        gap:6px;
+        transition:all .15s;
+    }
+    .pharm-dashboard .card-edit-toggle:hover,
+    .pharm-dashboard .card-edit-toggle.open {
+        border-color:#0D8ABC;
+        color:#0D8ABC;
+        background:rgba(13,138,188,.06);
+    }
+    .pharm-dashboard .card-edit-fields {
+        display:none;
+        border-top:1px solid var(--border);
+        margin-top:12px;
+        padding-top:12px;
+    }
+    .pharm-dashboard .card-edit-fields.open { display:block; }
+    .pharm-dashboard .edit-field-row {
+        display:grid;
+        grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+        gap:10px;
+        margin-bottom:10px;
+    }
+    .pharm-dashboard .edit-field {
+        display:flex;
+        flex-direction:column;
+        gap:3px;
+    }
+    .pharm-dashboard .edit-field label {
+        font-size:.74rem;
+        font-weight:700;
+        color:var(--muted);
+        text-transform:uppercase;
+        letter-spacing:.4px;
+    }
+    .pharm-dashboard .edit-field input,
+    .pharm-dashboard .edit-field select {
+        padding:9px 12px;
+        border-radius:9px;
+        border:1.5px solid var(--border);
+        background:rgba(14,165,233,.03);
+        color:var(--text);
+        font-size:.87rem;
+        transition:border-color .2s,box-shadow .2s;
+    }
+    .pharm-dashboard .edit-field input:focus,
+    .pharm-dashboard .edit-field select:focus {
+        outline:none;
+        border-color:#0D8ABC;
+        box-shadow:0 0 0 3px rgba(13,138,188,.11);
+    }
+
+    /* ── Status badges ── */
+    .pharm-dashboard .badge {
+        display:inline-flex;
+        align-items:center;
+        gap:5px;
+        font-size:.75rem;
+        font-weight:700;
+        padding:4px 10px;
+        border-radius:20px;
+    }
+    .pharm-dashboard .badge-active { background:#dcfce7;color:#15803d;border:1px solid #bbf7d0; }
+    .pharm-dashboard .badge-inactive { background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0; }
+    .pharm-dashboard .badge-pending { background:#fef9c3;color:#b45309;border:1px solid #fde68a; }
+    .pharm-dashboard .badge-confirm { background:#dcfce7;color:#15803d;border:1px solid #bbf7d0; }
+    .pharm-dashboard .badge-reject { background:#fee2e2;color:#b91c1c;border:1px solid #fecaca; }
+    .pharm-dashboard .badge-cancel { background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0; }
+    .pharm-dashboard .badge-expire { background:#f3e8ff;color:#7c3aed;border:1px solid #e9d5ff; }
+
+    /* ── Quantity bar ── */
+    .pharm-dashboard .qty-indicator {
+        margin:10px 0;
+        display:flex;
+        flex-direction:column;
+        gap:4px;
+    }
+    .pharm-dashboard .qty-indicator-label {
+        display:flex;
+        justify-content:space-between;
+        font-size:.78rem;
+    }
+    .pharm-dashboard .qty-indicator-label span { color:var(--muted); }
+    .pharm-dashboard .qty-indicator-label strong { color:var(--text);font-weight:700; }
+    .pharm-dashboard .qty-bar {
+        height:6px;
+        border-radius:6px;
+        background:rgba(15,23,42,.07);
+        overflow:hidden;
+    }
+    .pharm-dashboard .qty-bar-fill {
+        height:100%;
+        border-radius:6px;
+        transition:width .4s;
+    }
+    .pharm-dashboard .qty-bar-fill.low { background:linear-gradient(90deg,#ef4444,#f87171); }
+    .pharm-dashboard .qty-bar-fill.mid { background:linear-gradient(90deg,#f59e0b,#fbbf24); }
+    .pharm-dashboard .qty-bar-fill.ok  { background:linear-gradient(90deg,#22c55e,#4ade80); }
+
+    /* ── Empty state ── */
+    .pharm-dashboard .empty-state {
+        grid-column:1/-1;
+        text-align:center;
+        padding:48px 24px;
+        color:var(--muted);
+    }
+    .pharm-dashboard .empty-state i {
+        font-size:2.8rem;
+        opacity:.3;
+        display:block;
+        margin-bottom:12px;
+    }
+    .pharm-dashboard .empty-state p { font-size:.95rem;margin:0; }
+
+    /* ── Filter bar ── */
+    .pharm-dashboard .filter-bar {
+        display:flex;
+        gap:10px;
+        flex-wrap:wrap;
+        margin-bottom:18px;
+        padding:14px 16px;
+        background:rgba(14,165,233,.03);
+        border:1px solid rgba(14,165,233,.1);
+        border-radius:14px;
+    }
+    .pharm-dashboard .filter-bar .filter-input-wrap {
+        flex:1;
+        min-width:150px;
+        position:relative;
+    }
+    .pharm-dashboard .filter-bar .filter-input-wrap i {
+        position:absolute;
+        left:12px;
+        top:50%;
+        transform:translateY(-50%);
+        color:#94a3b8;
+        font-size:.8rem;
+        pointer-events:none;
+    }
+    .pharm-dashboard .filter-bar input,
+    .pharm-dashboard .filter-bar select {
+        width:100%;
+        padding:9px 12px 9px 32px;
+        border-radius:10px;
+        border:1.5px solid var(--border);
+        background:var(--surface);
+        color:var(--text);
+        font-size:.87rem;
+        transition:border-color .2s;
+        box-sizing:border-box;
+    }
+    .pharm-dashboard .filter-bar select { padding-left:12px; }
+    .pharm-dashboard .filter-bar input:focus,
+    .pharm-dashboard .filter-bar select:focus {
+        outline:none;
+        border-color:#0D8ABC;
+        box-shadow:0 0 0 3px rgba(13,138,188,.1);
+    }
+    .pharm-dashboard .filter-count {
+        font-size:.82rem;
+        color:var(--muted);
+        display:flex;
+        align-items:center;
+        gap:5px;
+        white-space:nowrap;
+        padding:0 4px;
+    }
+
+    /* ── Map & schedule ── */
+    .pharm-dashboard .dash-map,
+    .pharm-dashboard .dash-schedule {
+        margin-top:18px;
+        border-radius:16px;
+        border:1px solid var(--border);
+        background:var(--surface);
+        padding:16px;
+    }
+    .pharm-dashboard .dash-map-header {
+        display:flex;
+        flex-direction:column;
+        gap:3px;
+        margin-bottom:10px;
+    }
+    .pharm-dashboard .dash-map-header strong { font-size:.95rem; }
+    .pharm-dashboard .dash-map-header span { color:var(--muted); font-size:.83rem; }
+    .pharm-dashboard .dash-map-canvas {
+        width:100%;height:320px;
+        border-radius:12px;
+        overflow:hidden;
+        border:1px solid rgba(15,23,42,.08);
+    }
+    .pharm-dashboard .schedule-grid { display:grid; gap:8px; }
+    .pharm-dashboard .schedule-row {
+        display:grid;
+        grid-template-columns:52px 90px 1fr 20px 1fr;
+        align-items:center;
+        gap:8px;
+        padding:8px 12px;
+        border-radius:10px;
+        background:rgba(14,165,233,.04);
+        border:1px solid rgba(14,165,233,.08);
+    }
+    .pharm-dashboard .schedule-row.is-closed { opacity:.55; }
+    .pharm-dashboard .schedule-row.is-closed input[type="time"] { pointer-events:none; opacity:.5; }
+    .pharm-dashboard .schedule-day { font-weight:700; font-size:.87rem; }
+    .pharm-dashboard .schedule-toggle { display:inline-flex;align-items:center;gap:5px;font-size:.83rem;color:var(--muted); }
+    .pharm-dashboard .schedule-row input[type="time"] {
+        padding:7px 9px;
+        border-radius:9px;
+        border:1px solid rgba(15,23,42,.1);
+        background:#fff;
+        font-size:.85rem;
+    }
+    .pharm-dashboard .schedule-sep { text-align:center;color:var(--muted); }
+    @media(max-width:840px){
+        .pharm-dashboard .schedule-row { grid-template-columns:52px 90px 1fr; }
+        .pharm-dashboard .schedule-sep { display:none; }
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       CHATBOT — MESSENGER UI
+    ══════════════════════════════════════════════════════════════ */
+    .pharm-dashboard .ai-chat-shell {
+        display:grid;
+        grid-template-columns:200px 1fr;
+        gap:18px;
+        align-items:start;
+    }
+    @media(max-width:780px){
+        .pharm-dashboard .ai-chat-shell { grid-template-columns:1fr; }
+    }
+
+    /* sidebar context */
+    .pharm-dashboard .ai-context-grid {
+        display:flex;
+        flex-direction:column;
+        gap:10px;
+    }
+    .pharm-dashboard .ai-context-card {
+        border-radius:14px;
+        border:1px solid var(--border);
+        background:var(--surface);
+        padding:14px;
+        display:flex;
+        flex-direction:column;
+        gap:3px;
+        box-shadow:0 4px 14px rgba(15,23,42,.05);
+    }
+    .pharm-dashboard .ai-context-card span { color:var(--muted);font-size:.76rem;font-weight:600;text-transform:uppercase;letter-spacing:.4px; }
+    .pharm-dashboard .ai-context-card strong { font-size:1.45rem;font-weight:800;color:var(--text); }
+
+    /* Messenger window */
+    .pharm-dashboard .ai-messenger {
+        border-radius:20px;
+        border:1px solid var(--border);
+        background:var(--surface);
+        box-shadow:0 16px 48px rgba(15,23,42,.1);
+        overflow:hidden;
+        display:flex;
+        flex-direction:column;
+    }
+    .pharm-dashboard .ai-messenger-head {
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:12px;
+        padding:14px 18px;
+        background:linear-gradient(135deg,#0D8ABC,#0a6d96);
+        color:#fff;
+    }
+    .pharm-dashboard .ai-messenger-identity {
+        display:flex;
+        align-items:center;
+        gap:12px;
+    }
+    .pharm-dashboard .ai-avatar {
+        width:40px;height:40px;
+        border-radius:50%;
+        background:rgba(255,255,255,.2);
+        border:2px solid rgba(255,255,255,.4);
+        display:flex;align-items:center;justify-content:center;
+        font-size:16px;
+        color:#fff;
+        flex-shrink:0;
+    }
+    .pharm-dashboard .ai-messenger-identity strong {
+        display:block;
+        font-size:.96rem;
+        font-weight:800;
+        color:#fff;
+    }
+    .pharm-dashboard .ai-messenger-identity span {
+        display:block;
+        font-size:.75rem;
+        color:rgba(255,255,255,.75);
+        margin-top:1px;
+    }
+    .pharm-dashboard .ai-status-dot {
+        display:inline-block;
+        width:7px;height:7px;
+        background:#4ade80;
+        border-radius:50%;
+        margin-right:4px;
+        animation:aiPulse 2s infinite;
+    }
+    @keyframes aiPulse {
+        0%,100%{opacity:1}
+        50%{opacity:.4}
+    }
+    .pharm-dashboard .ai-messenger-head .content-pill {
+        background:rgba(255,255,255,.2);
+        color:#fff;
+        border:1px solid rgba(255,255,255,.3);
+        font-size:.75rem;
+    }
+
+    /* Chat log */
+    .pharm-dashboard .ai-chat-log {
+        flex:1;
+        min-height:280px;
+        max-height:380px;
+        overflow-y:auto;
+        padding:18px 16px;
+        background:#f0f4f9;
+        display:flex;
+        flex-direction:column;
+        gap:14px;
+        scroll-behavior:smooth;
+    }
+    .pharm-dashboard .ai-chat-log::-webkit-scrollbar { width:4px; }
+    .pharm-dashboard .ai-chat-log::-webkit-scrollbar-thumb { background:#c4d4e8;border-radius:4px; }
+
+    /* Messages */
+    .pharm-dashboard .ai-msg {
+        display:flex;
+        gap:9px;
+        align-items:flex-end;
+        max-width:82%;
+    }
+    .pharm-dashboard .ai-msg i {
+        width:30px;height:30px;
+        border-radius:50%;
+        display:flex;align-items:center;justify-content:center;
+        font-size:12px;
+        flex-shrink:0;
+        background:#e2ecf8;
+        color:#0284c7;
+    }
+    .pharm-dashboard .ai-msg div {
+        border-radius:18px 18px 18px 4px;
+        padding:11px 14px;
+        background:#fff;
+        border:1px solid rgba(14,165,233,.15);
+        box-shadow:0 2px 8px rgba(15,23,42,.06);
+        line-height:1.5;
+        font-size:.9rem;
+    }
+    .pharm-dashboard .ai-msg p { margin:0; }
+    .pharm-dashboard .ai-msg small {
+        display:block;
+        margin-top:5px;
+        color:#94a3b8;
+        font-size:.7rem;
+    }
+
+    /* User messages */
+    .pharm-dashboard .ai-msg-user {
+        align-self:flex-end;
+        flex-direction:row-reverse;
+        max-width:82%;
+    }
+    .pharm-dashboard .ai-msg-user i {
+        background:rgba(13,138,188,.15);
+        color:#0D8ABC;
+    }
+    .pharm-dashboard .ai-msg-user div {
+        border-radius:18px 18px 4px 18px;
+        background:linear-gradient(135deg,#0D8ABC,#0a6d96);
+        border-color:#0a6d96;
+        color:#fff;
+        box-shadow:0 4px 14px rgba(13,138,188,.3);
+    }
+    .pharm-dashboard .ai-msg-user div small { color:rgba(255,255,255,.7); }
+
+    /* Typing indicator */
+    .pharm-dashboard .ai-msg-typing div {
+        display:flex;
+        align-items:center;
+        gap:4px;
+        padding:12px 14px;
+        min-width:54px;
+    }
+    .pharm-dashboard .ai-msg-typing div span {
+        width:7px;height:7px;
+        border-radius:50%;
+        background:#94a3b8;
+        display:inline-block;
+        animation:aiTypingBounce 1.2s infinite ease-in-out;
+    }
+    .pharm-dashboard .ai-msg-typing div span:nth-child(2){animation-delay:.18s}
+    .pharm-dashboard .ai-msg-typing div span:nth-child(3){animation-delay:.36s}
+    @keyframes aiTypingBounce {
+        0%,80%,100%{transform:translateY(0);opacity:.45}
+        40%{transform:translateY(-5px);opacity:1}
+    }
+
+    /* Quick prompts */
+    .pharm-dashboard .ai-quick-prompts {
+        display:flex;
+        flex-wrap:wrap;
+        gap:7px;
+        padding:12px 16px;
+        border-top:1px solid var(--border);
+        background:var(--surface);
+    }
+    .pharm-dashboard .ai-prompt {
+        border-radius:20px;
+        padding:6px 14px;
+        font-size:.8rem;
+        font-weight:600;
+        background:rgba(14,165,233,.08);
+        color:#0284c7;
+        border:1px solid rgba(14,165,233,.2);
+        cursor:pointer;
+        transition:all .18s;
+    }
+    .pharm-dashboard .ai-prompt:hover {
+        background:rgba(14,165,233,.18);
+        border-color:#0284c7;
+        transform:translateY(-1px);
+    }
+
+    /* Chat input */
+    .pharm-dashboard .ai-chat-form {
+        display:flex;
+        gap:10px;
+        padding:12px 14px;
+        border-top:1px solid var(--border);
+        background:var(--surface);
+        align-items:center;
+    }
+    .pharm-dashboard .ai-chat-form input {
+        flex:1;
+        min-width:0;
+        border-radius:24px;
+        border:1.5px solid var(--border);
+        background:#f8fafc;
+        color:var(--text);
+        padding:11px 18px;
+        font-size:.9rem;
+        transition:border-color .2s,box-shadow .2s;
+    }
+    .pharm-dashboard .ai-chat-form input:focus {
+        outline:none;
+        border-color:#0D8ABC;
+        box-shadow:0 0 0 3px rgba(13,138,188,.13);
+        background:#fff;
+    }
+    .pharm-dashboard .ai-chat-form button {
+        border-radius:50%;
+        width:42px;height:42px;
+        padding:0;
+        flex-shrink:0;
+        display:flex;align-items:center;justify-content:center;
+        background:linear-gradient(135deg,#0D8ABC,#0a6d96);
+        color:#fff;
+        border:none;
+        font-size:15px;
+        box-shadow:0 4px 12px rgba(13,138,188,.35);
+        transition:transform .15s,box-shadow .15s;
+    }
+    .pharm-dashboard .ai-chat-form button:hover {
+        transform:scale(1.08);
+        box-shadow:0 6px 18px rgba(13,138,188,.45);
+    }
+    .pharm-dashboard .ai-chat-note {
+        font-size:.78rem;
+        color:var(--muted);
+        padding:8px 16px 12px;
+        text-align:center;
+        border-top:1px solid var(--border);
+        background:var(--surface);
+    }
+
+    /* scan modal */
+    .pharm-dashboard .scan-modal { position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:2000; }
+    .pharm-dashboard .scan-modal.is-active { display:flex; }
+    .pharm-dashboard .scan-modal-backdrop { position:absolute;inset:0;background:rgba(2,8,23,.55);backdrop-filter:blur(3px); }
+    .pharm-dashboard .scan-modal-card { position:relative;width:min(680px,92vw);background:var(--surface);border-radius:20px;border:1px solid var(--border);padding:20px;box-shadow:0 30px 70px rgba(2,8,23,.35);z-index:1; }
+    .pharm-dashboard .scan-modal-header { display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px; }
+    .pharm-dashboard .scan-modal-header span { display:block;color:var(--muted);font-size:.88rem;margin-top:3px; }
+    .pharm-dashboard .scan-video { width:100%;height:260px;background:#0f172a;border-radius:12px;margin-top:8px; }
+    .pharm-dashboard .scan-hint { margin-top:8px;color:var(--muted);font-size:.88rem; }
+
+    /* ── Custom confirm dialog ── */
+    .confirm-overlay { position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:4000;background:rgba(2,8,23,.65);backdrop-filter:blur(5px);opacity:0;pointer-events:none;transition:opacity .22s; }
+    .confirm-overlay.is-open { opacity:1;pointer-events:all; }
+    .confirm-box { background:var(--surface,#fff);border:1px solid var(--border,#e2e8f0);border-radius:22px;padding:36px 32px 28px;width:min(440px,92vw);box-shadow:0 32px 80px rgba(2,8,23,.38);text-align:center;transform:scale(.94) translateY(10px);transition:transform .22s,opacity .22s; }
+    .confirm-overlay.is-open .confirm-box { transform:scale(1) translateY(0); }
+    .confirm-icon-wrap { width:58px;height:58px;border-radius:50%;background:rgba(239,68,68,.1);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-size:24px;color:#ef4444;border:2px solid rgba(239,68,68,.2); }
+    .confirm-box h4 { margin:0 0 10px;font-size:1.15rem;font-weight:700;color:var(--text,#0f172a); }
+    .confirm-box p { margin:0 0 26px;color:var(--muted,#64748b);font-size:.94rem;line-height:1.6; }
+    .confirm-actions { display:flex;gap:12px;justify-content:center;flex-wrap:wrap; }
+    .btn-delete { background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;border:none;padding:11px 26px;border-radius:11px;font-size:.92rem;font-weight:600;cursor:pointer;transition:opacity .15s,transform .12s;letter-spacing:.01em; }
+    .btn-delete:hover { opacity:.88;transform:translateY(-1px); }
+    .btn-delete:active { transform:translateY(0); }
+
+    /* ── Card avatar ── */
+    .pharm-dashboard .dash-card-avatar {
+        width:56px;
+        height:56px;
+        border-radius:14px;
+        overflow:hidden;
+        margin-bottom:12px;
+        flex-shrink:0;
+        border:2px solid rgba(14,165,233,.12);
+        box-shadow:0 4px 12px rgba(13,138,188,.12);
+    }
+    .pharm-dashboard .dash-card-avatar img {
+        width:100%;
+        height:100%;
+        object-fit:cover;
+        display:block;
+    }
+    .pharm-dashboard .dash-card-avatar-icon {
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        font-size:22px;
+        border:none;
+    }
+    /* type-based med colors */
+    .pharm-dashboard .dash-card-avatar-icon[data-type~="antibiotique"],
+    .pharm-dashboard .dash-card-avatar-icon[data-type*="antibio"] { background:linear-gradient(135deg,#fca5a5,#ef4444);color:#fff; }
+    .pharm-dashboard .dash-card-avatar-icon[data-type*="antalgique"],
+    .pharm-dashboard .dash-card-avatar-icon[data-type*="douleur"] { background:linear-gradient(135deg,#93c5fd,#3b82f6);color:#fff; }
+    .pharm-dashboard .dash-card-avatar-icon[data-type*="anti-inflamm"],
+    .pharm-dashboard .dash-card-avatar-icon[data-type*="antiinflamm"] { background:linear-gradient(135deg,#fdba74,#f97316);color:#fff; }
+    .pharm-dashboard .dash-card-avatar-icon[data-type*="cardio"],
+    .pharm-dashboard .dash-card-avatar-icon[data-type*="tension"] { background:linear-gradient(135deg,#f9a8d4,#ec4899);color:#fff; }
+    .pharm-dashboard .dash-card-avatar-icon[data-type*="diabet"] { background:linear-gradient(135deg,#6ee7b7,#10b981);color:#fff; }
+    .pharm-dashboard .dash-card-avatar-icon[data-type*="vitamin"],
+    .pharm-dashboard .dash-card-avatar-icon[data-type*="compl"] { background:linear-gradient(135deg,#fde68a,#f59e0b);color:#fff; }
+    /* default med icon */
+    .pharm-dashboard .dash-card-avatar-icon:not([data-type*="antibio"]):not([data-type*="antalgique"]):not([data-type*="douleur"]):not([data-type*="inflamm"]):not([data-type*="cardio"]):not([data-type*="tension"]):not([data-type*="diabet"]):not([data-type*="vitamin"]):not([data-type*="compl"]) {
+        background:linear-gradient(135deg,#a5f3fc,#0284c7);
+        color:#fff;
+    }
+
+    @media(max-width:700px){
+        .pharm-dashboard .dash-actions-grid { grid-template-columns:1fr; }
+        .pharm-dashboard .content-section { padding:18px; }
+    }
+
+    /* ── Image Upload ── */
+    .pharm-dashboard .img-upload-wrap { display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+    .pharm-dashboard .img-upload-preview {
+        width:80px; height:80px; border-radius:16px; border:2px dashed var(--border);
+        background:var(--surface); overflow:hidden; display:flex; align-items:center;
+        justify-content:center; color:var(--muted); font-size:1.6rem; flex-shrink:0;
+        transition:border-color .2s;
+    }
+    .pharm-dashboard .img-upload-preview img { width:100%; height:100%; object-fit:cover; display:block; }
+    .pharm-dashboard .img-upload-label {
+        display:inline-flex; align-items:center; gap:8px; cursor:pointer;
+        padding:8px 18px; border-radius:10px; border:1.5px solid rgba(13,138,188,.4);
+        background:rgba(13,138,188,.07); color:#0D8ABC; font-size:.88rem;
+        font-weight:600; transition:all .2s;
+    }
+    .pharm-dashboard .img-upload-label:hover { background:rgba(13,138,188,.15); border-color:#0D8ABC; }
+    .pharm-dashboard .img-upload-input { display:none; }
+    .pharm-dashboard .img-upload-hint { font-size:.78rem; color:var(--muted); margin-top:4px; }
+    /* Current image in card edit */
+    .pharm-dashboard .card-img-preview {
+        width:52px; height:52px; border-radius:12px; object-fit:cover;
+        border:2px solid var(--border); margin-bottom:6px; display:block;
+    }
+
+    /* ══════════════════════════════════════════════
+       PHARMA FORM MODALS
+    ══════════════════════════════════════════════ */
+    .pharma-modal { position:fixed;inset:0;z-index:3500;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s; }
+    .pharma-modal.is-open { opacity:1;pointer-events:all; }
+    .pharma-modal-backdrop { position:absolute;inset:0;background:rgba(2,8,23,.7);backdrop-filter:blur(5px); }
+    .pharma-modal-box { position:relative;background:var(--surface,#fff);border-radius:24px;box-shadow:0 40px 100px rgba(2,8,23,.5);width:min(800px,95vw);max-height:92vh;display:flex;flex-direction:column;overflow:hidden;transform:scale(.94) translateY(20px);transition:transform .28s cubic-bezier(.34,1.56,.64,1); }
+    .pharma-modal.is-open .pharma-modal-box { transform:scale(1) translateY(0); }
+    .pharma-modal-box.modal-xl { width:min(1060px,97vw); }
+    .pharma-modal-box.modal-sm { width:min(480px,96vw); }
+    .pharma-modal-header { display:flex;align-items:center;justify-content:space-between;padding:20px 26px 14px;border-bottom:1px solid var(--border); flex-shrink:0; }
+    .pharma-modal-header h3 { margin:0;font-size:1.1rem;font-weight:700;display:flex;align-items:center;gap:9px;color:var(--text); }
+    .pharma-modal-close { width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:transparent;border:1.5px solid var(--border);cursor:pointer;font-size:1rem;color:var(--muted);transition:background .15s,color .15s,border-color .15s;flex-shrink:0;line-height:1; }
+    .pharma-modal-close:hover { background:#ef4444;border-color:#ef4444;color:#fff; }
+    .pharma-modal-body { overflow-y:auto;padding:22px 26px;flex:1;min-height:0;overscroll-behavior:contain; }
+    .pharma-modal-footer { padding:14px 26px;border-top:1px solid var(--border);display:flex;gap:12px;flex-wrap:wrap;flex-shrink:0; }
+    /* form inside modal-box must participate in flex layout */
+    .pharm-create-form { display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden;border-radius:inherit; }
+    /* map inside modal */
+    .pharma-modal .dash-map-canvas { height:320px !important;min-height:320px;border-radius:14px; }
+    .pharma-modal #pharmacyMap { height:320px !important;min-height:320px; }
+
+    </style>
 {% endblock %}
 
 {% block body %}
+{% set pharmacyFormHasErrors = pharmacy_form is defined and pharmacy_form.vars.submitted and not pharmacy_form.vars.valid %}
+{% set pendingReservations = 0 %}
+{% set lowStockCount = 0 %}
+{% for r in reservations %}
+    {% if r.statut == 'en_attente' %}
+        {% set pendingReservations = pendingReservations + 1 %}
+    {% endif %}
+{% endfor %}
+{% for s in stocks %}
+    {% if s.quantite <= 10 %}
+        {% set lowStockCount = lowStockCount + 1 %}
+    {% endif %}
+{% endfor %}
 <section class="content-page pharm-dashboard">
-    <div class="content-hero">
-        <div class="content-header">
+    <div class="page-hero">
+        <i class="fas fa-plus page-hero-cross"></i>
+        <i class="fas fa-plus page-hero-cross"></i>
+        <div class="page-hero-header">
             <div>
-                <div class="profile-badge">Pharmacien</div>
+                <div class="page-hero-badge"><i class="fas fa-prescription-bottle-alt"></i> Espace Pharmacien</div>
                 <h1>Dashboard pharmacie</h1>
                 <p>Gérez vos pharmacies, vos médicaments, vos stocks et vos réservations.</p>
+            </div>
+            <div class="page-hero-actions">
+                <button class="btn btn-secondary btn-xs dash-nav" data-target="ai-assistant">
+                    <i class="fas fa-robot"></i> Assistant IA
+                </button>
             </div>
         </div>
         <div class="dash-stats">
             <div class="dash-stat">
-                <span>Pharmacies</span>
+                <div class="stat-icon" style="background:rgba(255,255,255,.2);color:#fff;"><i class="fas fa-clinic-medical"></i></div>
                 <strong>{{ pharmacies|length }}</strong>
+                <span>Pharmacies</span>
             </div>
             <div class="dash-stat">
-                <span>Médicaments</span>
+                <div class="stat-icon" style="background:rgba(255,255,255,.2);color:#fff;"><i class="fas fa-pills"></i></div>
                 <strong>{{ medicaments|length }}</strong>
+                <span>Médicaments</span>
             </div>
             <div class="dash-stat">
-                <span>Stocks</span>
+                <div class="stat-icon" style="background:rgba(255,255,255,.2);color:#fff;"><i class="fas fa-warehouse"></i></div>
                 <strong>{{ stocks|length }}</strong>
+                <span>Stocks</span>
             </div>
             <div class="dash-stat">
-                <span>Réservations</span>
+                <div class="stat-icon" style="background:rgba(255,255,255,.2);color:#fff;"><i class="fas fa-calendar-check"></i></div>
                 <strong>{{ reservations|length }}</strong>
+                <span>Réservations</span>
+            </div>
+            <div class="dash-stat" style="{% if pendingReservations > 0 %}background:rgba(251,191,36,.25);border-color:rgba(251,191,36,.4);{% endif %}">
+                <div class="stat-icon" style="background:rgba(251,191,36,.25);color:#f59e0b;"><i class="fas fa-hourglass-half"></i></div>
+                <strong>{{ pendingReservations }}</strong>
+                <span>En attente</span>
+            </div>
+            <div class="dash-stat" style="{% if lowStockCount > 0 %}background:rgba(239,68,68,.2);border-color:rgba(239,68,68,.35);{% endif %}">
+                <div class="stat-icon" style="background:rgba(239,68,68,.2);color:#f87171;"><i class="fas fa-exclamation-triangle"></i></div>
+                <strong>{{ lowStockCount }}</strong>
+                <span>Stock faible</span>
             </div>
         </div>
-        {% set pharmacyFormHasErrors = pharmacy_form is defined and pharmacy_form.vars.submitted and not pharmacy_form.vars.valid %}
-        <div class="dash-actions">
-            <button class="btn btn-primary dash-nav{{ pharmacyFormHasErrors ? ' is-active' : '' }}" data-target="create-pharmacy">Créer pharmacie</button>
-            <button class="btn btn-secondary dash-nav" data-target="list-pharmacies">Mes pharmacies</button>
-            <button class="btn btn-primary dash-nav" data-target="create-medicament">Ajouter médicament</button>
-            <button class="btn btn-secondary dash-nav" data-target="list-medicaments">Mes médicaments</button>
-            <button class="btn btn-primary dash-nav" data-target="create-stock">Ajouter stock</button>
-            <button class="btn btn-secondary dash-nav" data-target="list-stocks">Mon stock</button>
-            <button class="btn btn-secondary dash-nav" data-target="list-reservations">Réservations</button>
+        <div class="dash-actions-grid">
+            <div class="dash-action-group">
+                <div class="dash-action-title">Pharmacies</div>
+                <div class="dash-actions">
+                    <button class="btn btn-primary" data-open-modal="modal-create-pharmacy"><i class="fas fa-clinic-medical"></i> Créer pharmacie</button>
+                    <button class="btn btn-secondary dash-nav" data-target="list-pharmacies"><i class="fas fa-store"></i> Mes pharmacies</button>
+                </div>
+            </div>
+            <div class="dash-action-group">
+                <div class="dash-action-title">Médicaments</div>
+                <div class="dash-actions">
+                    <button class="btn btn-primary" data-open-modal="modal-create-medicament"><i class="fas fa-capsules"></i> Ajouter médicament</button>
+                    <button class="btn btn-secondary dash-nav" data-target="list-medicaments"><i class="fas fa-pills"></i> Mes médicaments</button>
+                </div>
+            </div>
+            <div class="dash-action-group">
+                <div class="dash-action-title">Stock & réservations</div>
+                <div class="dash-actions">
+                    <button class="btn btn-primary" data-open-modal="modal-create-stock"><i class="fas fa-boxes"></i> Ajouter stock</button>
+                    <button class="btn btn-secondary dash-nav" data-target="list-stocks"><i class="fas fa-warehouse"></i> Mon stock</button>
+                    <button class="btn btn-secondary dash-nav" data-target="list-reservations"><i class="fas fa-calendar-check"></i> Réservations</button>
+                </div>
+            </div>
+            <div class="dash-action-group">
+                <div class="dash-action-title">Assistant intelligent</div>
+                <div class="dash-actions">
+                    <button class="btn btn-secondary dash-nav" data-target="ai-assistant"><i class="fas fa-robot"></i> Assistant IA</button>
+                </div>
+            </div>
         </div>
-        <div class="dash-hint">
-            Choisissez une action pour afficher la section correspondante.
-        </div>
+        <div class="dash-hint"><i class="fas fa-hand-point-up" style="margin-right:5px;"></i>Cliquez sur une catégorie pour accéder à la section correspondante.</div>
     </div>
 
-    <div class="content-section dash-panel{{ pharmacyFormHasErrors ? ' is-active' : '' }}" id="create-pharmacy">
-        <div class="content-section-header">
-            <div class="content-section-title">
-                <h3>Créer une pharmacie</h3>
-                <p>Renseignez les informations principales.</p>
-            </div>
-        </div>
-        {{ form_start(pharmacy_form, { attr: { novalidate: 'novalidate' } }) }}
-        {{ form_errors(pharmacy_form) }}
-        <div class="dash-form-grid">
-            <div>
-                {{ form_widget(pharmacy_form.nom) }}
-                {{ form_errors(pharmacy_form.nom) }}
-            </div>
-            <div>
-                {{ form_widget(pharmacy_form.adresse) }}
-                {{ form_errors(pharmacy_form.adresse) }}
-            </div>
-            <div>
-                {{ form_widget(pharmacy_form.telephone) }}
-                {{ form_errors(pharmacy_form.telephone) }}
-            </div>
-            <div>
-                {{ form_widget(pharmacy_form.email) }}
-                {{ form_errors(pharmacy_form.email) }}
-            </div>
-            {{ form_widget(pharmacy_form.horaires) }}
-            <div>
-                {{ form_widget(pharmacy_form.latitude) }}
-                {{ form_errors(pharmacy_form.latitude) }}
-            </div>
-            <div>
-                {{ form_widget(pharmacy_form.longitude) }}
-                {{ form_errors(pharmacy_form.longitude) }}
-            </div>
-            <div style="display:flex; align-items:center; gap:8px;">
-                {{ form_widget(pharmacy_form.isActive) }}
-                {{ form_label(pharmacy_form.isActive) }}
-                {{ form_errors(pharmacy_form.isActive) }}
-            </div>
-        </div>
-        <div class="dash-schedule">
-            <div class="dash-map-header">
-                <strong>Horaires d'ouverture</strong>
-                <span>Sélectionnez les jours et les plages horaires.</span>
-            </div>
-            <div class="schedule-grid" id="scheduleGrid">
-                {% set days = [
-                    {'key':'mon','label':'Lun'},
-                    {'key':'tue','label':'Mar'},
-                    {'key':'wed','label':'Mer'},
-                    {'key':'thu','label':'Jeu'},
-                    {'key':'fri','label':'Ven'},
-                    {'key':'sat','label':'Sam'},
-                    {'key':'sun','label':'Dim'}
-                ] %}
-                {% for d in days %}
-                    <div class="schedule-row" data-day="{{ d.key }}">
-                        <span class="schedule-day">{{ d.label }}</span>
-                        <label class="schedule-toggle">
-                            <input type="checkbox" class="schedule-open" checked>
-                            <span>Ouvert</span>
-                        </label>
-                        <input type="time" class="schedule-from" value="08:00">
-                        <span class="schedule-sep">→</span>
-                        <input type="time" class="schedule-to" value="18:00">
-                    </div>
-                {% endfor %}
-            </div>
-        </div>
-
-        <div class="dash-map">
-            <div class="dash-map-header">
-                <strong>Localisation</strong>
-                <span>Cliquez sur la carte pour définir la position.</span>
-            </div>
-            <div id="pharmacyMap" class="dash-map-canvas"></div>
-        </div>
-        <div class="dash-actions-row">
-            <button class="btn btn-primary" type="submit">Créer pharmacie</button>
-        </div>
-        {{ form_end(pharmacy_form) }}
-    </div>
 
     <div class="content-section dash-panel" id="list-pharmacies">
         <div class="content-section-header">
             <div class="content-section-title">
-                <h3>Mes pharmacies</h3>
-                <p>Modifiez ou supprimez vos pharmacies.</p>
+                <h3><i class="fas fa-store" style="color:#0D8ABC;"></i> Mes pharmacies</h3>
+                <p>Consultez et modifiez vos pharmacies inline.</p>
             </div>
+            <span class="filter-count" id="pharmacyCount"><i class="fas fa-store"></i> {{ pharmacies|length }} pharmacie(s)</span>
         </div>
-        <div class="content-filters">
-            <input type="text" id="pharmacyFilterName" placeholder="Filtrer par nom">
-            <input type="text" id="pharmacyFilterAddress" placeholder="Filtrer par adresse">
-            <select id="pharmacyFilterActive">
+        <div class="filter-bar">
+            <div class="filter-input-wrap">
+                <i class="fas fa-search"></i>
+                <input type="text" id="pharmacyFilterName" placeholder="Rechercher par nom…">
+            </div>
+            <div class="filter-input-wrap">
+                <i class="fas fa-map-marker-alt"></i>
+                <input type="text" id="pharmacyFilterAddress" placeholder="Filtrer par adresse…">
+            </div>
+            <select id="pharmacyFilterActive" style="padding:9px 12px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-size:.87rem;min-width:140px;">
                 <option value="">Tous les statuts</option>
                 <option value="active">Actives</option>
                 <option value="inactive">Inactives</option>
@@ -153,168 +1154,182 @@
         <div class="content-grid" id="pharmaciesList">
             {% for p in pharmacies %}
                 <div class="content-card dash-card pharmacy-card" data-name="{{ p.nom|lower }}" data-address="{{ p.adresse|lower }}" data-active="{{ p.isActive ? 'active' : 'inactive' }}" data-id="{{ p.id }}">
+                    <div class="dash-card-avatar">
+                        {% if p.imageName %}
+                            <img src="/images/pharmacies/{{ p.imageName }}" alt="{{ p.nom }}" loading="lazy">
+                        {% else %}
+                            <img src="https://ui-avatars.com/api/?name={{ p.nom|replace({' ': '+'})|url_encode }}&background=0D8ABC&color=fff&size=112&bold=true&length=2&rounded=false" alt="{{ p.nom }}" loading="lazy">
+                        {% endif %}
+                    </div>
                     <div class="dash-card-header">
-                        <h3>{{ p.nom }}</h3>
-                        <span class="content-pill">{{ p.isActive ? 'Active' : 'Inactive' }}</span>
+                        <h3><i class="fas fa-clinic-medical" style="color:#0D8ABC;font-size:.9rem;margin-right:6px;"></i>{{ p.nom }}</h3>
+                        <span class="badge {{ p.isActive ? 'badge-active' : 'badge-inactive' }}"><i class="fas fa-circle" style="font-size:.5rem;"></i>{{ p.isActive ? 'Active' : 'Inactive' }}</span>
                     </div>
-                    <div class="dash-form-grid">
-                        <input type="text" data-field="nom" value="{{ p.nom }}">
-                        <input type="text" data-field="adresse" value="{{ p.adresse }}">
-                        <input type="text" data-field="telephone" value="{{ p.telephone }}">
-                        <input type="email" data-field="email" value="{{ p.email }}">
-                        <input type="text" data-field="horaires" value="{{ p.horaires }}">
-                        <input type="text" data-field="latitude" value="{{ p.latitude }}">
-                        <input type="text" data-field="longitude" value="{{ p.longitude }}">
-                        <select data-field="is_active">
-                            <option value="1" {{ p.isActive ? 'selected' : '' }}>Active</option>
-                            <option value="0" {{ p.isActive ? '' : 'selected' }}>Inactive</option>
-                        </select>
-                    </div>
-                    <div class="dash-actions-row">
-                        <button class="btn btn-primary btn-xs pharmacy-save">Mettre à jour</button>
-                        <button class="btn btn-secondary btn-xs pharmacy-delete">Supprimer</button>
+                    <div class="card-body">
+                        <div class="card-info-row">
+                            <div class="card-info-item"><i class="fas fa-map-marker-alt"></i><span>{{ p.adresse }}</span></div>
+                            <div class="card-info-item"><i class="fas fa-phone"></i><span>{{ p.telephone ?: '—' }}</span></div>
+                            <div class="card-info-item"><i class="fas fa-envelope"></i><span>{{ p.email ?: '—' }}</span></div>
+                        </div>
+                        <div class="dash-actions-row" style="margin-top:12px;">
+                            <button class="btn btn-primary btn-xs pharmacy-edit-btn"
+                                data-nom="{{ p.nom|e('html_attr') }}"
+                                data-adresse="{{ (p.adresse ?? '')|e('html_attr') }}"
+                                data-telephone="{{ (p.telephone ?? '')|e('html_attr') }}"
+                                data-email="{{ (p.email ?? '')|e('html_attr') }}"
+                                data-horaires="{{ (p.horaires ?? '')|e('html_attr') }}"
+                                data-latitude="{{ p.latitude }}"
+                                data-longitude="{{ p.longitude }}"
+                                data-is-active="{{ p.isActive ? '1' : '0' }}"
+                                data-image="{{ p.imageName }}">
+                                <i class="fas fa-pen"></i> Modifier
+                            </button>
+                            <button class="btn btn-secondary btn-xs pharmacy-delete" style="color:#ef4444;border-color:rgba(239,68,68,.3);"><i class="fas fa-trash"></i> Supprimer</button>
+                        </div>
                     </div>
                 </div>
             {% else %}
-                <p>Aucune pharmacie liée.</p>
+                <div class="empty-state"><i class="fas fa-store"></i><p>Aucune pharmacie créée. <a href="javascript:void(0)" data-open-modal="modal-create-pharmacy" style="color:#0D8ABC;">Créer ma première pharmacie</a></p></div>
             {% endfor %}
         </div>
     </div>
 
-    <div class="content-section dash-panel" id="create-medicament">
-        <div class="content-section-header">
-            <div class="content-section-title">
-                <h3>Ajouter un médicament</h3>
-                <p>Créez un médicament dans le catalogue.</p>
-            </div>
-        </div>
-        <div class="dash-form-grid">
-            <input type="text" id="medName" placeholder="Nom médicament">
-            <input type="text" id="medType" placeholder="Type">
-            <input type="text" id="medForme" placeholder="Forme">
-            <input type="text" id="medDosage" placeholder="Dosage">
-            <input type="text" id="medLab" placeholder="Laboratoire">
-            <input type="text" id="medCode" placeholder="Code-barres / QR">
-            <input type="number" step="0.01" id="medPrice" placeholder="Prix indicatif">
-        </div>
-        <div class="scan-modal" id="scanPanel" aria-hidden="true">
-            <div class="scan-modal-backdrop" data-close="scan"></div>
-            <div class="scan-modal-card" role="dialog" aria-modal="true" aria-labelledby="scanTitle">
-                <div class="scan-modal-header">
-                    <div>
-                        <strong id="scanTitle">Scanner un code</strong>
-                        <span>Autorisez la caméra pour détecter un QR ou code-barres.</span>
-                    </div>
-                    <button class="btn btn-secondary btn-xs" id="closeScanBtn" type="button">Fermer</button>
-                </div>
-                <video id="scanVideo" class="scan-video" playsinline></video>
-                <div class="dash-actions-row">
-                    <button class="btn btn-secondary btn-xs" id="stopScanBtn" type="button">Arrêter</button>
-                </div>
-                <div class="scan-hint" id="scanHint"></div>
-            </div>
-        </div>
-        <div class="dash-actions-row">
-            <button class="btn btn-secondary btn-xs scan-btn" id="scanCodeBtn" type="button">Scanner le code</button>
-            <button class="btn btn-primary" id="medCreate" type="button">Ajouter médicament</button>
-        </div>
-    </div>
 
     <div class="content-section dash-panel" id="list-medicaments">
         <div class="content-section-header">
             <div class="content-section-title">
-                <h3>Mes médicaments</h3>
-                <p>Médicaments liés à vos stocks.</p>
+                <h3><i class="fas fa-pills" style="color:#0D8ABC;"></i> Mes médicaments</h3>
+                <p>Catalogue complet des médicaments disponibles.</p>
+            </div>
+            <span class="filter-count"><i class="fas fa-pills"></i> {{ medicaments_all|length }} médicament(s)</span>
+        </div>
+        <div class="filter-bar">
+            <div class="filter-input-wrap">
+                <i class="fas fa-search"></i>
+                <input type="text" id="medFilterName" placeholder="Rechercher par nom…">
+            </div>
+            <div class="filter-input-wrap">
+                <i class="fas fa-tag"></i>
+                <input type="text" id="medFilterType" placeholder="Filtrer par type…">
             </div>
         </div>
-        <div class="content-filters">
-            <input type="text" id="medFilterName" placeholder="Filtrer par nom">
-            <input type="text" id="medFilterType" placeholder="Filtrer par type">
-        </div>
         <div class="content-grid" id="medicamentsList">
-            {% for m in medicaments %}
+            {% for m in medicaments_all %}
                 <div class="content-card dash-card medicament-card" data-name="{{ m.nom|lower }}" data-type="{{ (m.type ?? '')|lower }}" data-id="{{ m.id }}">
+                    <div class="dash-card-avatar dash-card-avatar-icon" data-type="{{ (m.type ?? '')|lower }}">
+                        {% if m.imageName %}
+                            <img src="/images/medicaments/{{ m.imageName }}" alt="{{ m.nom }}" loading="lazy" style="width:100%;height:100%;object-fit:cover;border-radius:60px;">
+                        {% else %}
+                            {% set medIcon = 'fa-pills' %}
+                            {% if m.type %}
+                                {% set t = m.type|lower %}
+                                {% if 'antibio' in t %}{% set medIcon = 'fa-bacterium' %}
+                                {% elseif 'antalgique' in t or 'douleur' in t %}{% set medIcon = 'fa-head-side-mask' %}
+                                {% elseif 'inflamm' in t %}{% set medIcon = 'fa-fire' %}
+                                {% elseif 'cardio' in t or 'tension' in t %}{% set medIcon = 'fa-heartbeat' %}
+                                {% elseif 'diabet' in t %}{% set medIcon = 'fa-syringe' %}
+                                {% elseif 'vitamin' in t or 'compl' in t %}{% set medIcon = 'fa-leaf' %}
+                                {% endif %}
+                            {% endif %}
+                            <i class="fas {{ medIcon }}"></i>
+                        {% endif %}
+                    </div>
                     <div class="dash-card-header">
-                        <h3>{{ m.nom }}</h3>
-                        <span class="content-pill">{{ m.type ?: 'Non défini' }}</span>
+                        <h3><i class="fas fa-capsules" style="color:#0D8ABC;font-size:.9rem;margin-right:6px;"></i>{{ m.nom }}</h3>
+                        <span class="badge" style="background:rgba(14,165,233,.1);color:#0284c7;border:1px solid rgba(14,165,233,.25);">{{ m.type ?: 'Non défini' }}</span>
                     </div>
-                    <div class="dash-form-grid">
-                        <input type="text" data-field="nom" value="{{ m.nom }}">
-                        <input type="text" data-field="type" value="{{ m.type }}">
-                        <input type="text" data-field="forme" value="{{ m.forme }}">
-                        <input type="text" data-field="dosage" value="{{ m.dosage }}">
-                        <input type="text" data-field="laboratoire" value="{{ m.laboratoire }}">
-                        <input type="text" data-field="code_barre" value="{{ m.codeBarre }}">
-                        <input type="number" step="0.01" data-field="prix" value="{{ m.prix }}">
-                    </div>
-                    <div class="dash-actions-row">
-                        <button class="btn btn-primary btn-xs med-save">Mettre à jour</button>
-                        <button class="btn btn-secondary btn-xs med-delete">Supprimer</button>
+                    <div class="card-body">
+                        <div class="card-info-row">
+                            {% if m.forme %}<div class="card-info-item"><i class="fas fa-capsules"></i><strong>{{ m.forme }}</strong></div>{% endif %}
+                            {% if m.dosage %}<div class="card-info-item"><i class="fas fa-tint"></i><span>{{ m.dosage }}</span></div>{% endif %}
+                            {% if m.laboratoire %}<div class="card-info-item"><i class="fas fa-industry"></i><span>{{ m.laboratoire }}</span></div>{% endif %}
+                            {% if m.prix %}<div class="card-info-item"><i class="fas fa-tag"></i><strong>{{ m.prix|number_format(3, '.', ' ') }} DT</strong></div>{% endif %}
+                        </div>
+                        <div class="dash-actions-row" style="margin-top:12px;">
+                            <button class="btn btn-primary btn-xs med-edit-btn"
+                                data-nom="{{ m.nom|e('html_attr') }}"
+                                data-type="{{ (m.type ?? '')|e('html_attr') }}"
+                                data-forme="{{ (m.forme ?? '')|e('html_attr') }}"
+                                data-dosage="{{ (m.dosage ?? '')|e('html_attr') }}"
+                                data-laboratoire="{{ (m.laboratoire ?? '')|e('html_attr') }}"
+                                data-code-barre="{{ (m.codeBarre ?? '')|e('html_attr') }}"
+                                data-prix="{{ m.prix }}"
+                                data-image="{{ m.imageName }}">
+                                <i class="fas fa-pen"></i> Modifier
+                            </button>
+                            <button class="btn btn-secondary btn-xs med-delete" style="color:#ef4444;border-color:rgba(239,68,68,.3);"><i class="fas fa-trash"></i> Supprimer</button>
+                        </div>
                     </div>
                 </div>
             {% else %}
-                <p>Aucun médicament lié à vos stocks.</p>
+                <div class="empty-state"><i class="fas fa-pills"></i><p>Aucun médicament dans le catalogue.</p></div>
             {% endfor %}
         </div>
     </div>
 
-    <div class="content-section dash-panel" id="create-stock">
-        <div class="content-section-header">
-            <div class="content-section-title">
-                <h3>Ajouter du stock</h3>
-                <p>Associez un médicament à une pharmacie.</p>
-            </div>
-        </div>
-        <div class="dash-form-grid">
-            <select id="stockPharmacyId">
-                <option value="">Choisir une pharmacie</option>
-                {% for p in pharmacies %}
-                    <option value="{{ p.id }}">{{ p.nom }}</option>
-                {% endfor %}
-            </select>
-            <select id="stockMedId">
-                <option value="">Choisir un médicament</option>
-                {% for m in medicaments_all %}
-                    <option value="{{ m.id }}">{{ m.nom }}</option>
-                {% endfor %}
-            </select>
-            <input type="number" id="stockQty" placeholder="Quantité">
-            <input type="number" step="0.01" id="stockPrice" placeholder="Prix">
-        </div>
-        <div class="dash-actions-row">
-            <button class="btn btn-primary" id="stockCreate">Ajouter stock</button>
-        </div>
-    </div>
 
     <div class="content-section dash-panel" id="list-stocks">
         <div class="content-section-header">
             <div class="content-section-title">
-                <h3>Mon stock</h3>
-                <p>Mettez à jour les quantités et les prix.</p>
+                <h3><i class="fas fa-warehouse" style="color:#0D8ABC;"></i> Mon stock</h3>
+                <p>Mettez à jour les quantités et les prix de vente.</p>
             </div>
+            <span class="filter-count"><i class="fas fa-boxes"></i> {{ stocks|length }} ligne(s)</span>
         </div>
-        <div class="content-filters">
-            <input type="text" id="stockFilterMed" placeholder="Filtrer par médicament">
-            <input type="text" id="stockFilterPharmacy" placeholder="Filtrer par pharmacie">
+        <div class="filter-bar">
+            <div class="filter-input-wrap">
+                <i class="fas fa-search"></i>
+                <input type="text" id="stockFilterMed" placeholder="Rechercher par médicament…">
+            </div>
+            <div class="filter-input-wrap">
+                <i class="fas fa-store"></i>
+                <input type="text" id="stockFilterPharmacy" placeholder="Filtrer par pharmacie…">
+            </div>
         </div>
         <div class="content-grid" id="stocksList">
             {% for s in stocks %}
-                <div class="content-card dash-card stock-card" data-stock-id="{{ s.id }}" data-med="{{ s.medicament.nom|lower }}" data-pharmacy="{{ s.pharmecie.nom|lower }}">
+                {% set qty = s.quantite %}
+                {% set qtyLevel = qty <= 10 ? 'low' : (qty <= 30 ? 'mid' : 'ok') %}
+                <div class="content-card dash-card stock-card"
+                     data-stock-id="{{ s.id }}"
+                     data-med="{{ s.medicament.nom|lower }}"
+                     data-pharmacy="{{ s.pharmecie.nom|lower }}">
                     <div class="dash-card-header">
-                        <h3>{{ s.medicament.nom }}</h3>
-                        <span class="content-pill">{{ s.pharmecie.nom }}</span>
+                        <h3><i class="fas fa-pills" style="color:#0D8ABC;font-size:.9rem;margin-right:6px;"></i>{{ s.medicament.nom }}</h3>
+                        <span class="badge {% if qtyLevel == 'low' %}badge-reject{% elseif qtyLevel == 'mid' %}badge-pending{% else %}badge-confirm{% endif %}">
+                            {% if qtyLevel == 'low' %}<i class="fas fa-exclamation-circle"></i> Faible
+                            {% elseif qtyLevel == 'mid' %}<i class="fas fa-minus-circle"></i> Moyen
+                            {% else %}<i class="fas fa-check-circle"></i> OK{% endif %}
+                        </span>
                     </div>
-                    <div class="dash-form-grid">
-                        <input type="number" min="0" value="{{ s.quantite }}" class="stock-qty">
-                        <input type="number" step="0.01" value="{{ s.prixVente }}" class="stock-price">
-                    </div>
-                    <div class="dash-actions-row">
-                        <button class="btn btn-primary btn-xs stock-save">Mettre à jour</button>
-                        <button class="btn btn-secondary btn-xs stock-delete">Supprimer</button>
+                    <div class="card-body">
+                        <div class="card-info-row">
+                            <div class="card-info-item"><i class="fas fa-store"></i><span>{{ s.pharmecie.nom }}</span></div>
+                            <div class="card-info-item"><i class="fas fa-tag"></i><strong>{{ s.prixVente|number_format(3, '.', ' ') }} DT</strong></div>
+                        </div>
+                        <div class="qty-indicator">
+                            <div class="qty-indicator-label">
+                                <span>Quantité</span>
+                                <strong>{{ qty }} unités</strong>
+                            </div>
+                            <div class="qty-bar">
+                                <div class="qty-bar-fill {{ qtyLevel }}"
+                                     style="width:{{ qty > 100 ? 100 : qty }}%">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dash-actions-row" style="margin-top:12px;">
+                            <button class="btn btn-primary btn-xs stock-edit-btn"
+                                data-qty="{{ qty }}"
+                                data-price="{{ s.prixVente }}">
+                                <i class="fas fa-pen"></i> Modifier
+                            </button>
+                            <button class="btn btn-secondary btn-xs stock-delete" style="color:#ef4444;border-color:rgba(239,68,68,.3);"><i class="fas fa-trash"></i> Supprimer</button>
+                        </div>
                     </div>
                 </div>
             {% else %}
-                <p>Aucun stock.</p>
+                <div class="empty-state"><i class="fas fa-warehouse"></i><p>Aucun stock enregistré.</p></div>
             {% endfor %}
         </div>
     </div>
@@ -322,14 +1337,23 @@
     <div class="content-section dash-panel" id="list-reservations">
         <div class="content-section-header">
             <div class="content-section-title">
-                <h3>Réservations</h3>
-                <p>Confirmer ou refuser.</p>
+                <h3><i class="fas fa-calendar-check" style="color:#0D8ABC;"></i> Réservations</h3>
+                <p>Confirmez ou refusez les demandes de vos patients.</p>
             </div>
+            <span class="filter-count {{ pendingReservations > 0 ? 'badge-pending' : '' }}" style="border-radius:20px;padding:4px 10px;{% if pendingReservations > 0 %}background:#fef9c3;border:1px solid #fde68a;{% endif %}">
+                <i class="fas fa-hourglass-half"></i> {{ pendingReservations }} en attente
+            </span>
         </div>
-        <div class="content-filters">
-            <input type="text" id="resFilterMed" placeholder="Filtrer par médicament">
-            <input type="text" id="resFilterPatient" placeholder="Filtrer par patient">
-            <select id="resFilterStatus">
+        <div class="filter-bar">
+            <div class="filter-input-wrap">
+                <i class="fas fa-search"></i>
+                <input type="text" id="resFilterMed" placeholder="Rechercher par médicament…">
+            </div>
+            <div class="filter-input-wrap">
+                <i class="fas fa-user"></i>
+                <input type="text" id="resFilterPatient" placeholder="Filtrer par patient…">
+            </div>
+            <select id="resFilterStatus" style="padding:9px 12px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-size:.87rem;min-width:150px;">
                 <option value="">Tous les statuts</option>
                 <option value="en_attente">En attente</option>
                 <option value="confirmee">Confirmée</option>
@@ -340,27 +1364,495 @@
         </div>
         <div class="content-grid">
             {% for r in reservations %}
+                {% set statusLabel = {
+                    'en_attente': 'En attente',
+                    'confirmee': 'Confirmée',
+                    'refusee': 'Refusée',
+                    'annulee': 'Annulée',
+                    'expiree': 'Expirée'
+                } %}
+                {% set badgeClass = {
+                    'en_attente': 'badge-pending',
+                    'confirmee': 'badge-confirm',
+                    'refusee': 'badge-reject',
+                    'annulee': 'badge-cancel',
+                    'expiree': 'badge-expire'
+                } %}
                 <div class="content-card reservation-card"
                      data-reservation-id="{{ r.id }}"
                      data-med="{{ r.medicament.nom|lower }}"
                      data-patient="{{ (r.patient.nom ~ ' ' ~ r.patient.prenom)|lower }}"
                      data-status="{{ r.statut }}">
-                    <div class="content-meta">
-                        <span class="content-pill">{{ r.statut }}</span>
-                        <span>{{ r.createdAt|date('d/m/Y H:i') }}</span>
+                    <div class="dash-card-header">
+                        <h3 style="font-size:.97rem;"><i class="fas fa-pills" style="color:#0D8ABC;font-size:.9rem;margin-right:6px;"></i>{{ r.medicament.nom }}</h3>
+                        <span class="badge {{ badgeClass[r.statut] ?? '' }}">
+                            {% if r.statut == 'en_attente' %}<i class="fas fa-clock"></i>
+                            {% elseif r.statut == 'confirmee' %}<i class="fas fa-check"></i>
+                            {% elseif r.statut == 'refusee' %}<i class="fas fa-times"></i>
+                            {% else %}<i class="fas fa-ban"></i>{% endif %}
+                            {{ statusLabel[r.statut] ?? r.statut }}
+                        </span>
                     </div>
-                    <h3>{{ r.medicament.nom }}</h3>
-                    <p>{{ r.patient.nom }} {{ r.patient.prenom }} • {{ r.pharmacie.nom }} • Qté {{ r.quantite }}</p>
-                    <div class="content-actions">
+                    <div class="card-body">
+                        <div class="card-info-row">
+                            <div class="card-info-item"><i class="fas fa-user"></i><strong>{{ r.patient.nom }} {{ r.patient.prenom }}</strong></div>
+                            <div class="card-info-item"><i class="fas fa-store"></i><span>{{ r.pharmacie.nom }}</span></div>
+                            <div class="card-info-item"><i class="fas fa-boxes"></i><span>Qté : {{ r.quantite }}</span></div>
+                            <div class="card-info-item"><i class="fas fa-calendar-alt"></i><span>{{ r.createdAt|date('d/m/Y H:i') }}</span></div>
+                        </div>
                         {% if r.statut == 'en_attente' %}
-                            <button class="btn btn-primary btn-xs res-confirm">Confirmer</button>
-                            <button class="btn btn-secondary btn-xs res-reject">Refuser</button>
+                        <div class="dash-actions-row" style="margin-top:12px;">
+                            <button class="btn btn-primary btn-xs res-confirm" style="background:linear-gradient(135deg,#22c55e,#16a34a);border:none;"><i class="fas fa-check"></i> Confirmer</button>
+                            <button class="btn btn-secondary btn-xs res-reject" style="color:#ef4444;border-color:rgba(239,68,68,.3);"><i class="fas fa-times"></i> Refuser</button>
+                        </div>
                         {% endif %}
                     </div>
                 </div>
             {% else %}
-                <p>Aucune réservation.</p>
+                <div class="empty-state"><i class="fas fa-calendar-check"></i><p>Aucune réservation pour le moment.</p></div>
             {% endfor %}
+        </div>
+    </div>
+
+    <div class="content-section dash-panel" id="ai-assistant">
+        <div class="content-section-header">
+            <div class="content-section-title">
+                <h3><i class="fas fa-robot" style="color:#0D8ABC;margin-right:8px;"></i>Assistant IA Pharmacien</h3>
+                <p>Posez une question sur votre activité: stock, réservations, priorités quotidiennes.</p>
+            </div>
+*        </div>
+        <div class="ai-chat-shell">
+            <div class="ai-context-grid">
+                <div class="ai-context-card"><span>Pharmacies</span><strong>{{ pharmacies|length }}</strong></div>
+                <div class="ai-context-card"><span>Médicaments</span><strong>{{ medicaments|length }}</strong></div>
+                <div class="ai-context-card"><span>Réservations en attente</span><strong>{{ pendingReservations }}</strong></div>
+                <div class="ai-context-card"><span>Stocks ≤ 10</span><strong>{{ lowStockCount }}</strong></div>
+            </div>
+            <div class="ai-messenger">
+                <div class="ai-messenger-head">
+                    <div class="ai-messenger-identity">
+                        <span class="ai-avatar"><i class="fas fa-robot"></i></span>
+                        <div>
+                            <strong>Pharma Assistant IA</strong>
+                            <span><span class="ai-status-dot"></span>En ligne • Réponse instantanée</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="ai-chat-log" id="aiChatLog" aria-live="polite">
+                    <div class="ai-msg ai-msg-bot">
+                        <i class="fas fa-robot"></i>
+                        <div>
+                            <p>Bonjour 👋 Je suis votre assistant IA du module pharmacien.</p>
+                            <small>Je peux vous aider à prioriser les actions sur les stocks et réservations.</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="ai-quick-prompts" id="aiQuickPrompts">
+                    <button class="btn btn-secondary btn-xs ai-prompt" type="button" data-prompt="Quelles sont mes priorités aujourd'hui ?">Priorités du jour</button>
+                    <button class="btn btn-secondary btn-xs ai-prompt" type="button" data-prompt="Analyse mon niveau de stock">Analyse du stock</button>
+                    <button class="btn btn-secondary btn-xs ai-prompt" type="button" data-prompt="Que faire pour les réservations en attente ?">Réservations en attente</button>
+                </div>
+                <form class="ai-chat-form" id="aiChatForm" data-ajax="1">
+                    <input type="text" id="aiChatInput" placeholder="Posez une question…" autocomplete="off" aria-label="Message à l'assistant">
+                    <button type="submit" aria-label="Envoyer"><i class="fas fa-paper-plane"></i></button>
+                </form>
+                <div class="ai-chat-note"><i class="fas fa-shield-alt" style="margin-right:5px;opacity:.6;"></i>Conseils d'aide à la décision — vérifiez toujours la réglementation applicable.</div>
+            </div>
+        </div>
+    </div>
+
+    {# ══════════════════════════════════════
+       MODAL — CRÉER PHARMACIE
+    ══════════════════════════════════════ #}
+    <div id="modal-create-pharmacy" class="pharma-modal{% if pharmacyFormHasErrors %} is-open{% endif %}" aria-hidden="{{ pharmacyFormHasErrors ? 'false' : 'true' }}">
+        <div class="pharma-modal-backdrop" data-close-modal="modal-create-pharmacy"></div>
+        <div class="pharma-modal-box modal-xl" role="dialog" aria-modal="true" aria-labelledby="mcp-title">
+            {{ form_start(pharmacy_form, { attr: { novalidate: 'novalidate', class: 'pharm-create-form', enctype: 'multipart/form-data' } }) }}
+            {% if pharmacyFormHasErrors %}<div class="pharma-form-errors" style="background:#fef2f2;border-bottom:2px solid #fca5a5;padding:12px 26px;color:#b91c1c;font-size:.88rem;display:flex;gap:10px;align-items:flex-start;flex-shrink:0;"><i class="fas fa-exclamation-circle" style="margin-top:1px;flex-shrink:0;"></i><div>{{ form_errors(pharmacy_form) }}</div></div>{% endif %}
+            <div class="pharma-modal-header">
+                <h3 id="mcp-title"><i class="fas fa-clinic-medical" style="color:#0D8ABC;"></i> Créer une pharmacie</h3>
+                <button class="pharma-modal-close" data-close-modal="modal-create-pharmacy" type="button" aria-label="Fermer">&#10005;</button>
+            </div>
+            <div class="pharma-modal-body">
+                <div class="form-section">
+                    <div class="form-section-title"><i class="fas fa-info-circle"></i> Informations générales</div>
+                    <div class="form-row">
+                        <div class="form-field{{ pharmacy_form.nom.vars.errors|length ? ' is-error' : '' }}">
+                            <label for="{{ pharmacy_form.nom.vars.id }}"><i class="fas fa-signature"></i> Nom <span class="field-required">*</span></label>
+                            {{ form_widget(pharmacy_form.nom, { attr: { placeholder: 'Ex : Pharmacie du Soleil' } }) }}
+                            {{ form_errors(pharmacy_form.nom) }}
+                        </div>
+                        <div class="form-field{{ pharmacy_form.adresse.vars.errors|length ? ' is-error' : '' }}">
+                            <label for="{{ pharmacy_form.adresse.vars.id }}"><i class="fas fa-map-marker-alt"></i> Adresse <span class="field-required">*</span></label>
+                            {{ form_widget(pharmacy_form.adresse, { attr: { placeholder: 'Ex : 12 rue de la Paix, Tunis' } }) }}
+                            {{ form_errors(pharmacy_form.adresse) }}
+                        </div>
+                    </div>
+                </div>
+                <div class="form-section">
+                    <div class="form-section-title"><i class="fas fa-address-book"></i> Contact</div>
+                    <div class="form-row">
+                        <div class="form-field{{ pharmacy_form.telephone.vars.errors|length ? ' is-error' : '' }}">
+                            <label for="{{ pharmacy_form.telephone.vars.id }}"><i class="fas fa-phone"></i> Téléphone</label>
+                            {{ form_widget(pharmacy_form.telephone, { attr: { placeholder: '+216 71 000 000' } }) }}
+                            {{ form_errors(pharmacy_form.telephone) }}
+                        </div>
+                        <div class="form-field{{ pharmacy_form.email.vars.errors|length ? ' is-error' : '' }}">
+                            <label for="{{ pharmacy_form.email.vars.id }}"><i class="fas fa-envelope"></i> Email</label>
+                            {{ form_widget(pharmacy_form.email, { attr: { placeholder: 'contact@pharmacie.tn' } }) }}
+                            {{ form_errors(pharmacy_form.email) }}
+                        </div>
+                    </div>
+                </div>
+                <div class="form-section">
+                    <div class="form-section-title"><i class="fas fa-map-pin"></i> Localisation GPS</div>
+                    {# Champs lat/lng cachés — remplis automatiquement par la carte #}
+                    <div style="display:none">
+                        {{ form_widget(pharmacy_form.latitude, { attr: { id: 'pharmacyLat' } }) }}
+                        {{ form_errors(pharmacy_form.latitude) }}
+                        {{ form_widget(pharmacy_form.longitude, { attr: { id: 'pharmacyLng' } }) }}
+                        {{ form_errors(pharmacy_form.longitude) }}
+                    </div>
+                    <p style="font-size:.83rem;color:var(--muted);margin:0 0 8px;"><i class="fas fa-info-circle" style="color:#0D8ABC;"></i> Cliquez sur la carte ou glissez le marqueur pour définir la position.</p>
+                    <div id="pharmacyMap" class="dash-map-canvas" style="height:320px;min-height:320px;"></div>
+                    <div id="pharmacyCoordsBadge" style="margin-top:8px;font-size:.8rem;color:var(--muted);display:flex;align-items:center;gap:6px;">
+                        <i class="fas fa-crosshairs" style="color:#0D8ABC;"></i>
+                        <span id="pharmacyCoordsText">Aucune position sélectionnée</span>
+                    </div>
+                </div>
+                <div class="form-section" style="display:none">
+                    {{ form_widget(pharmacy_form.horaires, { attr: { id: 'pharmacyHours' } }) }}
+                </div>
+                <div class="form-section">
+                    <div class="form-section-title"><i class="fas fa-clock"></i> Horaires d'ouverture</div>
+                    <div class="schedule-grid" id="scheduleGrid">
+                        {% set days = [{'key':'mon','label':'Lun'},{'key':'tue','label':'Mar'},{'key':'wed','label':'Mer'},{'key':'thu','label':'Jeu'},{'key':'fri','label':'Ven'},{'key':'sat','label':'Sam'},{'key':'sun','label':'Dim'}] %}
+                        {% for d in days %}
+                            <div class="schedule-row" data-day="{{ d.key }}">
+                                <span class="schedule-day">{{ d.label }}</span>
+                                <label class="schedule-toggle"><input type="checkbox" class="schedule-open" checked><span>Ouvert</span></label>
+                                <input type="time" class="schedule-from" value="08:00">
+                                <span class="schedule-sep">→</span>
+                                <input type="time" class="schedule-to" value="18:00">
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="form-field" style="max-width:280px;margin-top:16px;">
+                    <label><i class="fas fa-toggle-on"></i> Statut</label>
+                    <div class="form-toggle">{{ form_widget(pharmacy_form.isActive) }}<span>Pharmacie active</span></div>
+                    {{ form_errors(pharmacy_form.isActive) }}
+                </div>
+                <div class="form-section" style="margin-top:20px;">
+                    <div class="form-section-title"><i class="fas fa-image"></i> Photo</div>
+                    <div class="img-upload-wrap">
+                        <div class="img-upload-preview" id="pharmacyImgPreview"><i class="fas fa-clinic-medical"></i></div>
+                        <div>
+                            <label class="img-upload-label" for="pharmacyImageInput"><i class="fas fa-upload"></i> Choisir une image</label>
+                            <input type="file" id="pharmacyImageInput" name="pharmacyImageFile" class="img-upload-input" accept="image/jpeg,image/png,image/webp">
+                            <div class="img-upload-hint">JPG, PNG, WebP — max 5 Mo</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="pharma-modal-footer">
+                <button class="btn btn-primary" type="submit" style="padding:11px 28px;"><i class="fas fa-check-circle"></i> Créer la pharmacie</button>
+                <button class="btn btn-secondary" data-close-modal="modal-create-pharmacy" type="button"><i class="fas fa-times"></i> Annuler</button>
+            </div>
+            {{ form_end(pharmacy_form) }}
+        </div>
+    </div>
+
+    {# ══════════════════════════════════════
+       MODAL — MODIFIER PHARMACIE
+    ══════════════════════════════════════ #}
+    <div id="modal-edit-pharmacy" class="pharma-modal" aria-hidden="true">
+        <div class="pharma-modal-backdrop" data-close-modal="modal-edit-pharmacy"></div>
+        <div class="pharma-modal-box" role="dialog" aria-modal="true" aria-labelledby="mep-title">
+            <div class="pharma-modal-header">
+                <h3 id="mep-title"><i class="fas fa-edit" style="color:#0D8ABC;"></i> Modifier la pharmacie</h3>
+                <button class="pharma-modal-close" data-close-modal="modal-edit-pharmacy" type="button" aria-label="Fermer">&#10005;</button>
+            </div>
+            <div class="pharma-modal-body">
+                <div class="form-section">
+                    <div class="form-section-title"><i class="fas fa-info-circle"></i> Informations</div>
+                    <div class="form-row">
+                        <div class="form-field"><label>Nom <span class="field-required">*</span></label><input type="text" id="editPharmNom" data-field="nom"></div>
+                        <div class="form-field"><label>Adresse</label><input type="text" id="editPharmAdresse" data-field="adresse"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-field"><label>Téléphone</label><input type="text" id="editPharmTel" data-field="telephone"></div>
+                        <div class="form-field"><label>Email</label><input type="email" id="editPharmEmail" data-field="email"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-field"><label>Statut</label>
+                            <select id="editPharmStatus" data-field="is_active">
+                                <option value="1">Active</option>
+                                <option value="0">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-field"><label>Latitude</label><input type="text" id="editPharmLat" data-field="latitude"></div>
+                        <div class="form-field"><label>Longitude</label><input type="text" id="editPharmLng" data-field="longitude"></div>
+                    </div>
+                </div>
+                <div class="form-section">
+                    <div class="form-section-title"><i class="fas fa-clock"></i> Horaires d'ouverture</div>
+                    <input type="hidden" id="editPharmHoraires" data-field="horaires">
+                    <div class="schedule-grid" id="editScheduleGrid">
+                        <div class="schedule-row" data-day="mon"><span class="schedule-day">Lun</span><label class="schedule-toggle"><input type="checkbox" class="schedule-open" checked><span>Ouvert</span></label><input type="time" class="schedule-from" value="08:00"><span class="schedule-sep">→</span><input type="time" class="schedule-to" value="18:00"></div>
+                        <div class="schedule-row" data-day="tue"><span class="schedule-day">Mar</span><label class="schedule-toggle"><input type="checkbox" class="schedule-open" checked><span>Ouvert</span></label><input type="time" class="schedule-from" value="08:00"><span class="schedule-sep">→</span><input type="time" class="schedule-to" value="18:00"></div>
+                        <div class="schedule-row" data-day="wed"><span class="schedule-day">Mer</span><label class="schedule-toggle"><input type="checkbox" class="schedule-open" checked><span>Ouvert</span></label><input type="time" class="schedule-from" value="08:00"><span class="schedule-sep">→</span><input type="time" class="schedule-to" value="18:00"></div>
+                        <div class="schedule-row" data-day="thu"><span class="schedule-day">Jeu</span><label class="schedule-toggle"><input type="checkbox" class="schedule-open" checked><span>Ouvert</span></label><input type="time" class="schedule-from" value="08:00"><span class="schedule-sep">→</span><input type="time" class="schedule-to" value="18:00"></div>
+                        <div class="schedule-row" data-day="fri"><span class="schedule-day">Ven</span><label class="schedule-toggle"><input type="checkbox" class="schedule-open" checked><span>Ouvert</span></label><input type="time" class="schedule-from" value="08:00"><span class="schedule-sep">→</span><input type="time" class="schedule-to" value="18:00"></div>
+                        <div class="schedule-row" data-day="sat"><span class="schedule-day">Sam</span><label class="schedule-toggle"><input type="checkbox" class="schedule-open" checked><span>Ouvert</span></label><input type="time" class="schedule-from" value="08:00"><span class="schedule-sep">→</span><input type="time" class="schedule-to" value="18:00"></div>
+                        <div class="schedule-row" data-day="sun"><span class="schedule-day">Dim</span><label class="schedule-toggle"><input type="checkbox" class="schedule-open" checked><span>Ouvert</span></label><input type="time" class="schedule-from" value="08:00"><span class="schedule-sep">→</span><input type="time" class="schedule-to" value="18:00"></div>
+                    </div>
+                </div>
+                <div class="form-section">
+                    <div class="form-section-title"><i class="fas fa-image"></i> Photo</div>
+                    <div class="img-upload-wrap">
+                        <div class="img-upload-preview" id="editPharmImgPreview"><i class="fas fa-clinic-medical"></i></div>
+                        <div>
+                            <label class="img-upload-label" for="editPharmImgInput"><i class="fas fa-upload"></i> Changer la photo</label>
+                            <input type="file" id="editPharmImgInput" class="img-upload-input" accept="image/jpeg,image/png,image/webp">
+                            <div class="img-upload-hint">JPG, PNG, WebP — max 5 Mo (optionnel)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="pharma-modal-footer">
+                <button class="btn btn-primary" id="editPharmSave" type="button"><i class="fas fa-save"></i> Enregistrer</button>
+                <button class="btn btn-secondary" data-close-modal="modal-edit-pharmacy" type="button"><i class="fas fa-times"></i> Annuler</button>
+            </div>
+        </div>
+    </div>
+
+    {# ══════════════════════════════════════
+       MODAL — AJOUTER MÉDICAMENT
+    ══════════════════════════════════════ #}
+    <div id="modal-create-medicament" class="pharma-modal" aria-hidden="true">
+        <div class="pharma-modal-backdrop" data-close-modal="modal-create-medicament"></div>
+        <div class="pharma-modal-box" role="dialog" aria-modal="true" aria-labelledby="mcm-title">
+            <div class="pharma-modal-header">
+                <h3 id="mcm-title"><i class="fas fa-capsules" style="color:#0D8ABC;"></i> Ajouter un médicament</h3>
+                <button class="pharma-modal-close" data-close-modal="modal-create-medicament" type="button" aria-label="Fermer">&#10005;</button>
+            </div>
+            <div class="pharma-modal-body">
+                <div class="form-section">
+                    <div class="form-section-title"><i class="fas fa-pills"></i> Identification</div>
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label><i class="fas fa-signature"></i> Nom <span class="field-required">*</span></label>
+                            <input type="text" id="medName" placeholder="Ex : Doliprane 500mg">
+                        </div>
+                        <div class="form-field">
+                            <label><i class="fas fa-tag"></i> Type / Catégorie</label>
+                            <input type="text" id="medType" list="medTypeList" placeholder="Choisir ou saisir…">
+                            <datalist id="medTypeList">
+                                <option value="Antalgique"><option value="Antibiotique"><option value="Anti-inflammatoire">
+                                <option value="Antihistaminique"><option value="Antihypertenseur"><option value="Antidiabétique">
+                                <option value="Antidépresseur"><option value="Anxiolytique"><option value="Anticoagulant">
+                                <option value="Bronchodilatateur"><option value="Diurétique"><option value="Laxatif">
+                                <option value="Antiacide"><option value="Vitamines &amp; Compléments"><option value="Dermocorticoïde">
+                                <option value="Antifongique"><option value="Antiparasitaire"><option value="Vaccin">
+                                <option value="Ophtalmologie"><option value="ORL"><option value="Cardiologie">
+                                <option value="Neurologie"><option value="Dermatologie">
+                            </datalist>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-section">
+                    <div class="form-section-title"><i class="fas fa-microscope"></i> Caractéristiques</div>
+                    <div class="form-row">
+                        <div class="form-field"><label><i class="fas fa-capsules"></i> Forme galénique</label><input type="text" id="medForme" placeholder="Ex : Comprimé, Gélule…"></div>
+                        <div class="form-field"><label><i class="fas fa-tint"></i> Dosage</label><input type="text" id="medDosage" placeholder="Ex : 500 mg…"></div>
+                        <div class="form-field"><label><i class="fas fa-industry"></i> Laboratoire</label><input type="text" id="medLab" placeholder="Ex : Sanofi…"></div>
+                    </div>
+                </div>
+                <div class="form-section">
+                    <div class="form-section-title"><i class="fas fa-barcode"></i> Code &amp; prix</div>
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label><i class="fas fa-qrcode"></i> Code-barres / QR</label>
+                            <div style="display:flex;gap:8px;">
+                                <input type="text" id="medCode" placeholder="Saisissez ou scannez" style="flex:1;">
+                                <button class="btn btn-secondary btn-xs" id="scanCodeBtn" type="button"><i class="fas fa-camera"></i></button>
+                            </div>
+                        </div>
+                        <div class="form-field"><label><i class="fas fa-tag"></i> Prix (DT)</label><input type="number" step="0.01" id="medPrice" placeholder="Ex : 3.500"></div>
+                    </div>
+                </div>
+                <div class="form-section">
+                    <div class="form-section-title"><i class="fas fa-image"></i> Photo</div>
+                    <div class="img-upload-wrap">
+                        <div class="img-upload-preview" id="medImgPreview"><i class="fas fa-pills"></i></div>
+                        <div>
+                            <label class="img-upload-label" for="medImageInput"><i class="fas fa-upload"></i> Choisir une image</label>
+                            <input type="file" id="medImageInput" class="img-upload-input" accept="image/jpeg,image/png,image/webp">
+                            <div class="img-upload-hint">JPG, PNG, WebP — max 5 Mo (optionnel)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="pharma-modal-footer">
+                <button class="btn btn-primary" id="medCreate" type="button"><i class="fas fa-plus-circle"></i> Ajouter au catalogue</button>
+                <button class="btn btn-secondary" data-close-modal="modal-create-medicament" type="button"><i class="fas fa-times"></i> Annuler</button>
+            </div>
+        </div>
+    </div>
+
+    {# ══════════════════════════════════════
+       MODAL — MODIFIER MÉDICAMENT
+    ══════════════════════════════════════ #}
+    <div id="modal-edit-medicament" class="pharma-modal" aria-hidden="true">
+        <div class="pharma-modal-backdrop" data-close-modal="modal-edit-medicament"></div>
+        <div class="pharma-modal-box" role="dialog" aria-modal="true" aria-labelledby="mem-title">
+            <div class="pharma-modal-header">
+                <h3 id="mem-title"><i class="fas fa-edit" style="color:#0D8ABC;"></i> Modifier le médicament</h3>
+                <button class="pharma-modal-close" data-close-modal="modal-edit-medicament" type="button" aria-label="Fermer">&#10005;</button>
+            </div>
+            <div class="pharma-modal-body">
+                <div class="form-section">
+                    <div class="form-section-title"><i class="fas fa-pills"></i> Identification</div>
+                    <div class="form-row">
+                        <div class="form-field"><label>Nom <span class="field-required">*</span></label><input type="text" id="editMedNom" data-field="nom"></div>
+                        <div class="form-field"><label>Type</label><input type="text" id="editMedType" data-field="type" list="editMedTypeList">
+                            <datalist id="editMedTypeList">
+                                <option value="Antalgique"><option value="Antibiotique"><option value="Anti-inflammatoire">
+                                <option value="Antihistaminique"><option value="Antidiabétique"><option value="Antidépresseur">
+                                <option value="Bronchodilatateur"><option value="Vitamines &amp; Compléments"><option value="Vaccin">
+                            </datalist>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-field"><label>Forme</label><input type="text" id="editMedForme" data-field="forme"></div>
+                        <div class="form-field"><label>Dosage</label><input type="text" id="editMedDosage" data-field="dosage"></div>
+                        <div class="form-field"><label>Laboratoire</label><input type="text" id="editMedLab" data-field="laboratoire"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-field"><label>Code-barres</label><input type="text" id="editMedCode" data-field="code_barre"></div>
+                        <div class="form-field"><label>Prix (DT)</label><input type="number" step="0.01" id="editMedPrix" data-field="prix"></div>
+                    </div>
+                </div>
+                <div class="form-section">
+                    <div class="form-section-title"><i class="fas fa-image"></i> Photo</div>
+                    <div class="img-upload-wrap">
+                        <div class="img-upload-preview" id="editMedImgPreview"><i class="fas fa-pills"></i></div>
+                        <div>
+                            <label class="img-upload-label" for="editMedImgInput"><i class="fas fa-upload"></i> Changer la photo</label>
+                            <input type="file" id="editMedImgInput" class="img-upload-input" accept="image/jpeg,image/png,image/webp">
+                            <div class="img-upload-hint">JPG, PNG, WebP — max 5 Mo (optionnel)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="pharma-modal-footer">
+                <button class="btn btn-primary" id="editMedSave" type="button"><i class="fas fa-save"></i> Enregistrer</button>
+                <button class="btn btn-secondary" data-close-modal="modal-edit-medicament" type="button"><i class="fas fa-times"></i> Annuler</button>
+            </div>
+        </div>
+    </div>
+
+    {# ══════════════════════════════════════
+       MODAL — AJOUTER STOCK
+    ══════════════════════════════════════ #}
+    <div id="modal-create-stock" class="pharma-modal" aria-hidden="true">
+        <div class="pharma-modal-backdrop" data-close-modal="modal-create-stock"></div>
+        <div class="pharma-modal-box modal-sm" role="dialog" aria-modal="true" aria-labelledby="mcs-title">
+            <div class="pharma-modal-header">
+                <h3 id="mcs-title"><i class="fas fa-boxes" style="color:#0D8ABC;"></i> Ajouter du stock</h3>
+                <button class="pharma-modal-close" data-close-modal="modal-create-stock" type="button" aria-label="Fermer">&#10005;</button>
+            </div>
+            <div class="pharma-modal-body">
+                <div class="form-section">
+                    <div class="form-section-title"><i class="fas fa-link"></i> Association</div>
+                    <div class="form-field">
+                        <label><i class="fas fa-store"></i> Pharmacie <span class="field-required">*</span></label>
+                        <select id="stockPharmacyId">
+                            <option value="">— Sélectionnez une pharmacie —</option>
+                            {% for p in pharmacies %}<option value="{{ p.id }}">{{ p.nom }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-field" style="margin-top:12px;">
+                        <label><i class="fas fa-pills"></i> Médicament <span class="field-required">*</span></label>
+                        <select id="stockMedId">
+                            <option value="">— Sélectionnez un médicament —</option>
+                            {% for m in medicaments_all %}<option value="{{ m.id }}">{{ m.nom }}</option>{% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="form-section">
+                    <div class="form-section-title"><i class="fas fa-sliders-h"></i> Quantité &amp; Prix</div>
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label><i class="fas fa-boxes"></i> Quantité <span class="field-required">*</span></label>
+                            <input type="number" id="stockQty" placeholder="Ex : 100" min="0">
+                        </div>
+                        <div class="form-field">
+                            <label><i class="fas fa-tag"></i> Prix de vente (DT)</label>
+                            <input type="number" step="0.01" id="stockPrice" placeholder="Ex : 4.500">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="pharma-modal-footer">
+                <button class="btn btn-primary" id="stockCreate" type="button"><i class="fas fa-plus-circle"></i> Ajouter ce stock</button>
+                <button class="btn btn-secondary" data-close-modal="modal-create-stock" type="button"><i class="fas fa-times"></i> Annuler</button>
+            </div>
+        </div>
+    </div>
+
+    {# ══════════════════════════════════════
+       MODAL — MODIFIER STOCK
+    ══════════════════════════════════════ #}
+    <div id="modal-edit-stock" class="pharma-modal" aria-hidden="true">
+        <div class="pharma-modal-backdrop" data-close-modal="modal-edit-stock"></div>
+        <div class="pharma-modal-box modal-sm" role="dialog" aria-modal="true" aria-labelledby="mes-title">
+            <div class="pharma-modal-header">
+                <h3 id="mes-title"><i class="fas fa-edit" style="color:#0D8ABC;"></i> Modifier le stock</h3>
+                <button class="pharma-modal-close" data-close-modal="modal-edit-stock" type="button" aria-label="Fermer">&#10005;</button>
+            </div>
+            <div class="pharma-modal-body">
+                <div class="form-section">
+                    <div class="form-section-title"><i class="fas fa-sliders-h"></i> Quantité &amp; Prix</div>
+                    <div class="form-row">
+                        <div class="form-field"><label><i class="fas fa-boxes"></i> Quantité</label><input type="number" min="0" id="editStockQty"></div>
+                        <div class="form-field"><label><i class="fas fa-tag"></i> Prix de vente (DT)</label><input type="number" step="0.01" id="editStockPrice"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="pharma-modal-footer">
+                <button class="btn btn-primary" id="editStockSave" type="button"><i class="fas fa-save"></i> Enregistrer</button>
+                <button class="btn btn-secondary" data-close-modal="modal-edit-stock" type="button"><i class="fas fa-times"></i> Annuler</button>
+            </div>
+        </div>
+    </div>
+
+    {# Scan modal (kept for barcode scanner) #}
+    <div class="scan-modal" id="scanPanel" aria-hidden="true">
+        <div class="scan-modal-backdrop" data-close="scan"></div>
+        <div class="scan-modal-card" role="dialog" aria-modal="true" aria-labelledby="scanTitle">
+            <div class="scan-modal-header">
+                <div><strong id="scanTitle">Scanner un code</strong><span>Autorisez la caméra.</span></div>
+                <button class="btn btn-secondary btn-xs" id="closeScanBtn" type="button">Fermer</button>
+            </div>
+            <video id="scanVideo" class="scan-video" playsinline></video>
+            <div class="dash-actions-row"><button class="btn btn-secondary btn-xs" id="stopScanBtn" type="button">Arrêter</button></div>
+            <div class="scan-hint" id="scanHint"></div>
+        </div>
+    </div>
+    {# ── Custom confirmation dialog (replaces browser confirm()) ── #}
+    <div id="confirmDialog" class="confirm-overlay" aria-hidden="true" role="alertdialog" aria-modal="true" aria-labelledby="confirmDlgTitle" aria-describedby="confirmDlgMsg">
+        <div class="confirm-box">
+            <div class="confirm-icon-wrap"><i class="fas fa-exclamation-triangle"></i></div>
+            <h4 id="confirmDlgTitle">Confirmation requise</h4>
+            <p id="confirmDlgMsg">Êtes-vous sûr de vouloir effectuer cette action ?</p>
+            <div class="confirm-actions">
+                <button class="btn btn-secondary" id="confirmCancel" type="button"><i class="fas fa-times"></i> Annuler</button>
+                <button class="btn-delete" id="confirmOk" type="button"><i class="fas fa-trash-alt"></i> Supprimer</button>
+            </div>
         </div>
     </div>
 </section>
@@ -368,10 +1860,122 @@
 
 {% block javascripts %}
     {{ parent() }}
+    {% set pendingReservationsJs = 0 %}
+    {% set lowStockCountJs = 0 %}
+    {% for r in reservations %}
+        {% if r.statut == 'en_attente' %}
+            {% set pendingReservationsJs = pendingReservationsJs + 1 %}
+        {% endif %}
+    {% endfor %}
+    {% for s in stocks %}
+        {% if s.quantite <= 10 %}
+            {% set lowStockCountJs = lowStockCountJs + 1 %}
+        {% endif %}
+    {% endfor %}
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/@zxing/library@0.19.1/umd/index.min.js"></script>
     <script>
         (function () {
             const apiFetch = (url, options = {}) => fetch(url, { ...options, loading: true });
+
+            /* ── Modal open / close ── */
+            const openModal = (id) => {
+                const m = document.getElementById(id);
+                if (!m) return;
+                m.classList.add('is-open');
+                m.setAttribute('aria-hidden', 'false');
+                document.body.style.overflow = 'hidden';
+                if (id === 'modal-create-pharmacy') setTimeout(initPharmMap, 310);
+            };
+            const closeModal = (id) => {
+                const m = document.getElementById(id);
+                if (!m) return;
+                m.classList.remove('is-open');
+                m.setAttribute('aria-hidden', 'true');
+                document.body.style.overflow = '';
+            };
+            document.addEventListener('click', (e) => {
+                const openBtn = e.target.closest('[data-open-modal]');
+                if (openBtn) { openModal(openBtn.dataset.openModal); return; }
+                const closeBtn = e.target.closest('[data-close-modal]');
+                if (closeBtn) { closeModal(closeBtn.dataset.closeModal); return; }
+                /* backdrop click */
+                if (e.target.classList.contains('pharma-modal')) closeModal(e.target.id);
+            });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    document.querySelectorAll('.pharma-modal.is-open').forEach((m) => closeModal(m.id));
+                }
+            });
+
+            /* ── Navigate to a panel then reload to refresh data ── */
+            const reloadTo = (panelId) => {
+                history.replaceState(null, '', '#' + panelId);
+                location.reload();
+            };
+
+            /* ── Custom confirmation dialog (promise-based, replaces confirm()) ── */
+            const askConfirm = (msg, title = 'Confirmer la suppression', okLabel = 'Supprimer') => new Promise((resolve) => {
+                const dlg  = document.getElementById('confirmDialog');
+                const msgEl   = document.getElementById('confirmDlgMsg');
+                const titleEl = document.getElementById('confirmDlgTitle');
+                const okBtn   = document.getElementById('confirmOk');
+                const cancelBtn = document.getElementById('confirmCancel');
+                if (!dlg) { resolve(window.confirm(msg)); return; }
+                titleEl.textContent = title;
+                msgEl.textContent   = msg;
+                okBtn.innerHTML = `<i class="fas fa-trash-alt"></i> ${okLabel}`;
+                dlg.setAttribute('aria-hidden', 'false');
+                dlg.classList.add('is-open');
+                const cleanup = (result) => {
+                    dlg.classList.remove('is-open');
+                    dlg.setAttribute('aria-hidden', 'true');
+                    okBtn.onclick = null;
+                    cancelBtn.onclick = null;
+                    resolve(result);
+                };
+                okBtn.onclick    = () => cleanup(true);
+                cancelBtn.onclick = () => cleanup(false);
+                /* Close on backdrop click */
+                const backdropHandler = (e) => { if (e.target === dlg) { dlg.removeEventListener('click', backdropHandler); cleanup(false); } };
+                dlg.addEventListener('click', backdropHandler);
+            });
+
+            /* ── Image upload helpers ── */
+            const previewFile = (inputEl, previewEl) => {
+                if (!inputEl || !previewEl) return;
+                inputEl.addEventListener('change', () => {
+                    const file = inputEl.files[0];
+                    if (!file) return;
+                    const url = URL.createObjectURL(file);
+                    previewEl.innerHTML = `<img src="${url}" alt="Aperçu">`;
+                });
+            };
+            const uploadImage = async (file, endpoint) => {
+                if (!file) return null;
+                const fd = new FormData();
+                fd.append('image', file);
+                const res = await apiFetch(endpoint, { method: 'POST', body: fd });
+                let d = null;
+                try { d = await res.json(); } catch (_) {}
+                return d?.imageUrl ?? null;
+            };
+
+            previewFile(document.getElementById('pharmacyImageInput'), document.getElementById('pharmacyImgPreview'));
+            previewFile(document.getElementById('medImageInput'), document.getElementById('medImgPreview'));
+            previewFile(document.getElementById('editPharmImgInput'), document.getElementById('editPharmImgPreview'));
+            previewFile(document.getElementById('editMedImgInput'), document.getElementById('editMedImgPreview'));
+            /* Clear red outline on input */
+            document.getElementById('editPharmNom')?.addEventListener('input', (e) => e.target.style.outline = '');
+            document.getElementById('editMedNom')?.addEventListener('input', (e) => e.target.style.outline = '');
+            const dashboardContext = {
+                pharmacies: {{ pharmacies|length }},
+                medicaments: {{ medicaments|length }},
+                stocks: {{ stocks|length }},
+                reservations: {{ reservations|length }},
+                pendingReservations: {{ pendingReservationsJs }},
+                lowStockCount: {{ lowStockCountJs }}
+            };
             const hoursInput = document.getElementById('pharmacyHours');
             const scheduleGrid = document.getElementById('scheduleGrid');
             const dayLabels = {
@@ -394,40 +1998,115 @@
             scheduleGrid?.addEventListener('change', buildSchedule);
             buildSchedule();
 
+            /* ── Edit-pharmacy schedule grid ── */
+            const editScheduleGrid = document.getElementById('editScheduleGrid');
+            const editHoursInput   = document.getElementById('editPharmHoraires');
+            const buildEditSchedule = () => {
+                if (!editScheduleGrid || !editHoursInput) return;
+                const parts = [];
+                editScheduleGrid.querySelectorAll('.schedule-row').forEach((row) => {
+                    const day    = row.dataset.day;
+                    const isOpen = row.querySelector('.schedule-open').checked;
+                    const from   = row.querySelector('.schedule-from').value;
+                    const to     = row.querySelector('.schedule-to').value;
+                    parts.push(`${dayLabels[day]} ${isOpen ? `${from}-${to}` : 'Fermé'}`);
+                    row.classList.toggle('is-closed', !isOpen);
+                });
+                editHoursInput.value = parts.join('; ');
+            };
+            editScheduleGrid?.addEventListener('change', buildEditSchedule);
+
+            const parseScheduleToGrid = (horaires) => {
+                if (!editScheduleGrid) return;
+                const map = {};
+                (horaires || '').split(';').forEach((part) => {
+                    const p     = part.trim();
+                    if (!p) return;
+                    const label = p.substring(0, 3);
+                    const rest  = p.substring(4).trim();
+                    if (rest === 'Fermé' || rest === 'Ferme') {
+                        map[label] = { open: false, from: '08:00', to: '18:00' };
+                    } else {
+                        const [from, to] = rest.split('-');
+                        map[label] = { open: true, from: (from || '08:00').trim(), to: (to || '18:00').trim() };
+                    }
+                });
+                editScheduleGrid.querySelectorAll('.schedule-row').forEach((row) => {
+                    const label = dayLabels[row.dataset.day];
+                    const info  = map[label];
+                    const cb    = row.querySelector('.schedule-open');
+                    const f     = row.querySelector('.schedule-from');
+                    const t     = row.querySelector('.schedule-to');
+                    cb.checked = info ? info.open : true;
+                    f.value    = info ? info.from : '08:00';
+                    t.value    = info ? info.to   : '18:00';
+                    row.classList.toggle('is-closed', !cb.checked);
+                });
+                buildEditSchedule();
+            };
+
             const mapEl = document.getElementById('pharmacyMap');
             const latInput = document.getElementById('pharmacyLat');
             const lngInput = document.getElementById('pharmacyLng');
-            if (mapEl && window.L && latInput && lngInput) {
+            let pharmMap = null;
+            let pharmMapInited = false;
+            const initPharmMap = () => {
+                if (!window.L) return;
+                /* Ensure the container has a real height before Leaflet reads it */
+                if (!mapEl) return;
+                mapEl.style.height = '320px';
+
+                const doInvalidate = () => {
+                    if (!pharmMap) return;
+                    requestAnimationFrame(() => {
+                        pharmMap.invalidateSize({ animate: false });
+                        /* second pass after the next paint */
+                        requestAnimationFrame(() => pharmMap.invalidateSize({ animate: false }));
+                    });
+                };
+
+                if (pharmMap) {
+                    doInvalidate();
+                    return;
+                }
+
                 const defaultLat = 36.8065;
                 const defaultLng = 10.1815;
-                const map = L.map(mapEl).setView([defaultLat, defaultLng], 12);
+                pharmMap = L.map(mapEl, { preferCanvas: true }).setView([defaultLat, defaultLng], 12);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     maxZoom: 19,
                     attribution: '&copy; OpenStreetMap'
-                }).addTo(map);
+                }).addTo(pharmMap);
 
-                let marker = L.marker([defaultLat, defaultLng], { draggable: true }).addTo(map);
+                let marker = L.marker([defaultLat, defaultLng], { draggable: true }).addTo(pharmMap);
+
                 const syncInputs = (latlng) => {
-                    latInput.value = latlng.lat.toFixed(6);
-                    lngInput.value = latlng.lng.toFixed(6);
+                    if (latInput) latInput.value = latlng.lat.toFixed(6);
+                    if (lngInput) lngInput.value = latlng.lng.toFixed(6);
+                    const badge = document.getElementById('pharmacyCoordsText');
+                    if (badge) badge.textContent = `${latlng.lat.toFixed(5)}, ${latlng.lng.toFixed(5)}`;
                 };
                 syncInputs(marker.getLatLng());
 
-                map.on('click', (e) => {
-                    marker.setLatLng(e.latlng);
-                    syncInputs(e.latlng);
-                });
+                pharmMap.on('click', (e) => { marker.setLatLng(e.latlng); syncInputs(e.latlng); });
                 marker.on('dragend', () => syncInputs(marker.getLatLng()));
+
+                /* Multiple invalidateSize passes to handle modal transition delay */
+                doInvalidate();
+                setTimeout(doInvalidate, 150);
+                setTimeout(doInvalidate, 400);
+                setTimeout(doInvalidate, 800);
 
                 if (navigator.geolocation) {
                     navigator.geolocation.getCurrentPosition((pos) => {
                         const coords = [pos.coords.latitude, pos.coords.longitude];
-                        map.setView(coords, 14);
+                        pharmMap.setView(coords, 14);
                         marker.setLatLng(coords);
                         syncInputs(marker.getLatLng());
-                    });
+                        doInvalidate();
+                    }, () => { /* geoloc denied — keep Tunis default */ });
                 }
-            }
+            };
 
             const panels = document.querySelectorAll('.dash-panel');
             const buttons = document.querySelectorAll('.dash-nav');
@@ -436,9 +2115,118 @@
                 buttons.forEach((b) => b.classList.toggle('is-active', b.dataset.target === id));
                 const target = document.getElementById(id);
                 if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+/* map is lazy-inited via openModal('modal-create-pharmacy') */
             };
             buttons.forEach((btn) => {
                 btn.addEventListener('click', () => activatePanel(btn.dataset.target));
+            });
+            const _hashToModal = { 'create-pharmacy': 'modal-create-pharmacy', 'create-medicament': 'modal-create-medicament', 'create-stock': 'modal-create-stock' };
+            const handleHash = () => {
+                const h = location.hash ? location.hash.replace('#', '') : null;
+                if (!h) return;
+                history.replaceState(null, '', location.pathname);
+                if (_hashToModal[h]) {
+                    openModal(_hashToModal[h]);
+                } else if (document.getElementById(h)) {
+                    activatePanel(h);
+                }
+            };
+            window.addEventListener('hashchange', handleHash);
+            if (!document.querySelector('.dash-panel.is-active')) {
+                const hash = location.hash ? location.hash.replace('#', '') : null;
+                if (hash && _hashToModal[hash]) {
+                    activatePanel('list-pharmacies');
+                    setTimeout(() => openModal(_hashToModal[hash]), 80);
+                } else if (hash && document.getElementById(hash)) {
+                    activatePanel(hash);
+                } else {
+                    activatePanel('list-pharmacies');
+                }
+            }
+
+            /* data-toggle-edit removed — edits now use modals */
+
+            const aiChatLog = document.getElementById('aiChatLog');
+            const aiChatForm = document.getElementById('aiChatForm');
+            const aiChatInput = document.getElementById('aiChatInput');
+            const aiPromptButtons = document.querySelectorAll('.ai-prompt');
+            const escapeHtml = (text) => (text || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+
+            const appendAiMessage = (type, text) => {
+                if (!aiChatLog) return;
+                const item = document.createElement('div');
+                item.className = `ai-msg ${type === 'user' ? 'ai-msg-user' : 'ai-msg-bot'}`;
+                const safeText = escapeHtml(text);
+                const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                item.innerHTML = type === 'user'
+                    ? `<i class="fas fa-user"></i><div><p>${safeText}</p><small>${time}</small></div>`
+                    : `<i class="fas fa-robot"></i><div><p>${safeText}</p><small>${time}</small></div>`;
+                aiChatLog.appendChild(item);
+                aiChatLog.scrollTop = aiChatLog.scrollHeight;
+            };
+
+            const appendTyping = () => {
+                if (!aiChatLog) return null;
+                const item = document.createElement('div');
+                item.className = 'ai-msg ai-msg-bot ai-msg-typing';
+                item.innerHTML = '<i class="fas fa-robot"></i><div><span></span><span></span><span></span></div>';
+                aiChatLog.appendChild(item);
+                aiChatLog.scrollTop = aiChatLog.scrollHeight;
+                return item;
+            };
+
+            const getAiReply = (question) => {
+                const q = (question || '').toLowerCase();
+                if (q.includes('priorit') || q.includes('aujourd')) {
+                    return `Priorités du jour : 1) traiter ${dashboardContext.pendingReservations} réservation(s) en attente, 2) vérifier ${dashboardContext.lowStockCount} stock(s) faible(s), 3) valider les prix sur les produits les plus demandés.`;
+                }
+                if (q.includes('stock') || q.includes('rupture') || q.includes('quantit')) {
+                    if (dashboardContext.lowStockCount > 0) {
+                        return `Vous avez ${dashboardContext.lowStockCount} stock(s) avec quantité ≤ 10. Je recommande un réassort par criticité (médicaments à forte rotation d'abord) et une vérification des seuils d'alerte.`;
+                    }
+                    return 'Aucun stock critique détecté (≤ 10) actuellement. Vous pouvez optimiser les prix et anticiper les besoins saisonniers.';
+                }
+                if (q.includes('reservation') || q.includes('attente') || q.includes('patient')) {
+                    return `Il y a ${dashboardContext.pendingReservations} réservation(s) en attente sur ${dashboardContext.reservations} au total. Traitez d’abord les demandes anciennes, puis confirmez selon disponibilité réelle du stock.`;
+                }
+                if (q.includes('médicament') || q.includes('medicament') || q.includes('catalogue') || q.includes('prix')) {
+                    return `Votre catalogue lié au dashboard contient ${dashboardContext.medicaments} médicament(s). Pensez à harmoniser dosage/forme/prix pour faciliter la recherche et limiter les erreurs de dispensation.`;
+                }
+                if (q.includes('pharmacie') || q.includes('horaire') || q.includes('localisation')) {
+                    return `Vous gérez ${dashboardContext.pharmacies} pharmacie(s). Vérifiez les horaires et la géolocalisation pour réduire les annulations et améliorer la fiabilité côté patient.`;
+                }
+                return `Résumé actuel : ${dashboardContext.pharmacies} pharmacie(s), ${dashboardContext.medicaments} médicament(s), ${dashboardContext.stocks} ligne(s) de stock, ${dashboardContext.pendingReservations} réservation(s) en attente. Demandez "priorités", "stock" ou "réservations" pour une recommandation ciblée.`;
+            };
+
+            const handleAiQuestion = (question) => {
+                const cleanQuestion = (question || '').trim();
+                if (!cleanQuestion) return;
+                appendAiMessage('user', cleanQuestion);
+                const reply = getAiReply(cleanQuestion);
+                const typingNode = appendTyping();
+                window.setTimeout(() => {
+                    typingNode?.remove();
+                    appendAiMessage('bot', reply);
+                }, 420);
+            };
+
+            aiChatForm?.addEventListener('submit', (event) => {
+                event.preventDefault();
+                const question = aiChatInput?.value || '';
+                handleAiQuestion(question);
+                if (aiChatInput) aiChatInput.value = '';
+            });
+
+            aiPromptButtons.forEach((button) => {
+                button.addEventListener('click', () => {
+                    const question = button.dataset.prompt || '';
+                    handleAiQuestion(question);
+                });
             });
 
             const toLower = (val) => (val || '').toString().toLowerCase();
@@ -516,27 +2304,159 @@
             resPatient?.addEventListener('input', applyResFilter);
             resStatus?.addEventListener('change', applyResFilter);
 
+            /* ── pharmacy edit btn: open modal + populate fields ── */
             document.addEventListener('click', async (e) => {
-                const stockBtn = e.target.closest('.stock-save');
-                if (stockBtn) {
-                    const card = stockBtn.closest('[data-stock-id]');
-                    const qty = card.querySelector('.stock-qty').value;
-                    const price = card.querySelector('.stock-price').value;
-                    await apiFetch(`/api/pharmacien/stocks/${card.dataset.stockId}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ quantite: qty, prix: price })
-                    });
+                /* ── PHARMACY: open edit modal ── */
+                const pharmEditBtn = e.target.closest('.pharmacy-edit-btn');
+                if (pharmEditBtn) {
+                    const card = pharmEditBtn.closest('.pharmacy-card');
+                    document.getElementById('editPharmNom').value       = pharmEditBtn.dataset.nom || '';
+                    document.getElementById('editPharmAdresse').value   = pharmEditBtn.dataset.adresse || '';
+                    document.getElementById('editPharmTel').value       = pharmEditBtn.dataset.telephone || '';
+                    document.getElementById('editPharmEmail').value     = pharmEditBtn.dataset.email || '';
+                    document.getElementById('editPharmLat').value       = pharmEditBtn.dataset.latitude || '';
+                    document.getElementById('editPharmLng').value       = pharmEditBtn.dataset.longitude || '';
+                    document.getElementById('editPharmStatus').value    = pharmEditBtn.dataset.isActive || '1';
+                    parseScheduleToGrid(pharmEditBtn.dataset.horaires || '');
+                    const prevEl = document.getElementById('editPharmImgPreview');
+                    const img = pharmEditBtn.dataset.image;
+                    prevEl.innerHTML = img ? `<img src="/images/pharmacies/${img}" alt="Photo">` : '<i class="fas fa-clinic-medical"></i>';
+                    document.getElementById('modal-edit-pharmacy').dataset.pharmacyId = card.dataset.id;
+                    openModal('modal-edit-pharmacy');
+                    return;
                 }
 
+                /* ── PHARMACY: save from edit modal ── */
+                if (e.target.id === 'editPharmSave' || e.target.closest('#editPharmSave')) {
+                    const modal = document.getElementById('modal-edit-pharmacy');
+                    const nomEl = document.getElementById('editPharmNom');
+                    if (!nomEl.value.trim()) { nomEl.style.outline = '2px solid #ef4444'; nomEl.focus(); return; }
+                    nomEl.style.outline = '';
+                    const id = modal.dataset.pharmacyId;
+                    buildEditSchedule(); /* sync hidden horaires input before reading payload */
+                    const payload = {};
+                    modal.querySelectorAll('[data-field]').forEach((el) => { payload[el.dataset.field] = el.value; });
+                    const res = await apiFetch(`/api/pharmacien/pharmacies/${id}`, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+                    });
+                    let resData = null;
+                    try { resData = await res.clone().json(); } catch (_) {}
+                    if (res.ok) {
+                        const imgFile = document.getElementById('editPharmImgInput')?.files?.[0];
+                        if (imgFile) await uploadImage(imgFile, `/api/pharmacien/pharmacies/${id}/image`);
+                        window.showToast?.('success', 'Pharmacie modifiée avec succès.');
+                        closeModal('modal-edit-pharmacy'); reloadTo('list-pharmacies');
+                    } else {
+                        window.showToast?.('error', resData?.message || 'Erreur lors de la modification.');
+                    }
+                    return;
+                }
+
+                /* ── PHARMACY: delete ── */
+                const pharmacyDelete = e.target.closest('.pharmacy-delete');
+                if (pharmacyDelete) {
+                    const card = pharmacyDelete.closest('.pharmacy-card');
+                    const ok = await askConfirm(
+                        'La pharmacie et toutes ses données associées seront définitivement supprimées.',
+                        'Supprimer la pharmacie'
+                    );
+                    if (!ok) return;
+                    await apiFetch(`/api/pharmacien/pharmacies/${card.dataset.id}/delete`, { method: 'POST' });
+                    reloadTo('list-pharmacies');
+                    return;
+                }
+
+                /* ── MEDICAMENT: open edit modal ── */
+                const medEditBtn = e.target.closest('.med-edit-btn');
+                if (medEditBtn) {
+                    const card = medEditBtn.closest('.medicament-card');
+                    document.getElementById('editMedNom').value        = medEditBtn.dataset.nom || '';
+                    document.getElementById('editMedType').value       = medEditBtn.dataset.type || '';
+                    document.getElementById('editMedForme').value      = medEditBtn.dataset.forme || '';
+                    document.getElementById('editMedDosage').value     = medEditBtn.dataset.dosage || '';
+                    document.getElementById('editMedLab').value        = medEditBtn.dataset.laboratoire || '';
+                    document.getElementById('editMedCode').value       = medEditBtn.dataset.codeBarre || '';
+                    document.getElementById('editMedPrix').value       = medEditBtn.dataset.prix || '';
+                    const prevEl = document.getElementById('editMedImgPreview');
+                    const img = medEditBtn.dataset.image;
+                    prevEl.innerHTML = img ? `<img src="/images/medicaments/${img}" alt="Photo">` : '<i class="fas fa-pills"></i>';
+                    document.getElementById('modal-edit-medicament').dataset.medId = card.dataset.id;
+                    openModal('modal-edit-medicament');
+                    return;
+                }
+
+                /* ── MEDICAMENT: save from edit modal ── */
+                if (e.target.id === 'editMedSave' || e.target.closest('#editMedSave')) {
+                    const modal = document.getElementById('modal-edit-medicament');
+                    const nomEl = document.getElementById('editMedNom');
+                    if (!nomEl.value.trim()) { nomEl.style.outline = '2px solid #ef4444'; nomEl.focus(); return; }
+                    nomEl.style.outline = '';
+                    const id = modal.dataset.medId;
+                    const payload = {};
+                    modal.querySelectorAll('[data-field]').forEach((el) => { payload[el.dataset.field] = el.value; });
+                    const res = await apiFetch(`/api/pharmacien/medicaments/${id}`, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+                    });
+                    const imgFile = document.getElementById('editMedImgInput')?.files?.[0];
+                    if (imgFile) await uploadImage(imgFile, `/api/pharmacien/medicaments/${id}/image`);
+                    if (res.ok) { closeModal('modal-edit-medicament'); reloadTo('list-medicaments'); }
+                    return;
+                }
+
+                /* ── MEDICAMENT: delete ── */
+                const medDelete = e.target.closest('.med-delete');
+                if (medDelete) {
+                    const card = medDelete.closest('.medicament-card');
+                    const ok = await askConfirm(
+                        'Ce médicament sera définitivement supprimé du catalogue. Cette action est irréversible.',
+                        'Supprimer le médicament'
+                    );
+                    if (!ok) return;
+                    await apiFetch(`/api/pharmacien/medicaments/${card.dataset.id}/delete`, { method: 'POST' });
+                    reloadTo('list-medicaments');
+                    return;
+                }
+
+                /* ── STOCK: open edit modal ── */
+                const stockEditBtn = e.target.closest('.stock-edit-btn');
+                if (stockEditBtn) {
+                    const card = stockEditBtn.closest('[data-stock-id]');
+                    document.getElementById('editStockQty').value   = stockEditBtn.dataset.qty || '';
+                    document.getElementById('editStockPrice').value = stockEditBtn.dataset.price || '';
+                    document.getElementById('modal-edit-stock').dataset.stockId = card.dataset.stockId;
+                    openModal('modal-edit-stock');
+                    return;
+                }
+
+                /* ── STOCK: save from edit modal ── */
+                if (e.target.id === 'editStockSave' || e.target.closest('#editStockSave')) {
+                    const modal = document.getElementById('modal-edit-stock');
+                    const id = modal.dataset.stockId;
+                    const qty   = document.getElementById('editStockQty').value;
+                    const price = document.getElementById('editStockPrice').value;
+                    const res = await apiFetch(`/api/pharmacien/stocks/${id}`, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ quantite: qty, prix: price }),
+                    });
+                    if (res.ok) { closeModal('modal-edit-stock'); reloadTo('list-stocks'); }
+                    return;
+                }
+
+                /* ── STOCK: delete ── */
                 const stockDeleteBtn = e.target.closest('.stock-delete');
                 if (stockDeleteBtn) {
                     const card = stockDeleteBtn.closest('[data-stock-id]');
-                    if (!confirm('Supprimer ce stock ?')) return;
+                    const ok = await askConfirm(
+                        'Cette ligne de stock sera définitivement supprimée. Cette action est irréversible.',
+                        'Supprimer le stock'
+                    );
+                    if (!ok) return;
                     await apiFetch(`/api/pharmacien/stocks/${card.dataset.stockId}/delete`, { method: 'POST' });
-                    location.reload();
+                    reloadTo('list-stocks');
+                    return;
                 }
 
+                /* ── RESERVATIONS ── */
                 const confirmBtn = e.target.closest('.res-confirm');
                 if (confirmBtn) {
                     const card = confirmBtn.closest('[data-reservation-id]');
@@ -547,55 +2467,17 @@
                     const card = rejectBtn.closest('[data-reservation-id]');
                     await apiFetch(`/api/pharmacien/reservations/${card.dataset.reservationId}/reject`, { method: 'POST' });
                 }
-
-                const pharmacySave = e.target.closest('.pharmacy-save');
-                if (pharmacySave) {
-                    const card = pharmacySave.closest('.pharmacy-card');
-                    const payload = {};
-                    card.querySelectorAll('[data-field]').forEach((input) => {
-                        payload[input.dataset.field] = input.value;
-                    });
-                    await apiFetch(`/api/pharmacien/pharmacies/${card.dataset.id}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload),
-                    });
-                }
-
-                const pharmacyDelete = e.target.closest('.pharmacy-delete');
-                if (pharmacyDelete) {
-                    const card = pharmacyDelete.closest('.pharmacy-card');
-                    if (!confirm('Supprimer cette pharmacie ?')) return;
-                    await apiFetch(`/api/pharmacien/pharmacies/${card.dataset.id}/delete`, { method: 'POST' });
-                    location.reload();
-                }
-
-                const medSave = e.target.closest('.med-save');
-                if (medSave) {
-                    const card = medSave.closest('.medicament-card');
-                    const payload = {};
-                    card.querySelectorAll('[data-field]').forEach((input) => {
-                        payload[input.dataset.field] = input.value;
-                    });
-                    await apiFetch(`/api/pharmacien/medicaments/${card.dataset.id}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload),
-                    });
-                }
-
-                const medDelete = e.target.closest('.med-delete');
-                if (medDelete) {
-                    const card = medDelete.closest('.medicament-card');
-                    if (!confirm('Supprimer ce médicament ?')) return;
-                    await apiFetch(`/api/pharmacien/medicaments/${card.dataset.id}/delete`, { method: 'POST' });
-                    location.reload();
-                }
             });
 
             document.getElementById('medCreate')?.addEventListener('click', async () => {
+                const nomInput = document.getElementById('medName');
+                if (!nomInput?.value.trim()) {
+                    window.showToast?.('error', 'Le nom du médicament est obligatoire.');
+                    nomInput?.focus();
+                    return;
+                }
                 const payload = {
-                    nom: document.getElementById('medName').value,
+                    nom: nomInput.value.trim(),
                     type: document.getElementById('medType').value,
                     forme: document.getElementById('medForme').value,
                     dosage: document.getElementById('medDosage').value,
@@ -611,16 +2493,14 @@
                 let data = null;
                 try { data = await res.json(); } catch (_) {}
                 if (res.ok && (data?.success ?? true)) {
-                    window.showToast?.('success', data?.message || 'Médicament ajouté.');
-                    document.getElementById('medName').value = '';
-                    document.getElementById('medType').value = '';
-                    document.getElementById('medForme').value = '';
-                    document.getElementById('medDosage').value = '';
-                    document.getElementById('medLab').value = '';
-                    document.getElementById('medCode').value = '';
-                    document.getElementById('medPrice').value = '';
+                    const imgFile = document.getElementById('medImageInput')?.files?.[0];
+                    if (imgFile && data?.id) {
+                        await uploadImage(imgFile, `/api/pharmacien/medicaments/${data.id}/image`);
+                    }
+                    closeModal('modal-create-medicament');
+                    reloadTo('list-medicaments');
                 } else {
-                    window.showToast?.('error', data?.message || 'Erreur lors de l’ajout.');
+                    window.showToast?.('error', data?.message || "Erreur lors de l'ajout du médicament.");
                 }
             });
 
@@ -632,49 +2512,70 @@
             const closeScanBtn = document.getElementById('closeScanBtn');
             const codeInput = document.getElementById('medCode');
             let scanStream = null;
-            let scanning = false;
+            let zxingReader = null;
 
             const stopScan = () => {
-                scanning = false;
+                if (zxingReader) { try { zxingReader.reset(); } catch (_) {} zxingReader = null; }
                 if (scanStream) {
                     scanStream.getTracks().forEach((t) => t.stop());
                     scanStream = null;
                 }
-                if (scanVideo) {
-                    scanVideo.srcObject = null;
-                }
+                if (scanVideo) { scanVideo.srcObject = null; }
                 scanPanel?.classList.remove('is-active');
                 scanPanel?.setAttribute('aria-hidden', 'true');
             };
 
             const startScan = async () => {
-                if (!('BarcodeDetector' in window)) {
-                    scanHint.textContent = 'Scanner non supporté par ce navigateur.';
-                    scanPanel.classList.add('is-active');
-                    scanPanel.setAttribute('aria-hidden', 'false');
-                    return;
-                }
-                scanHint.textContent = 'Recherche du code...';
                 scanPanel.classList.add('is-active');
                 scanPanel.setAttribute('aria-hidden', 'false');
-                scanStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+
+                // ZXing (cross-browser: Chrome, Firefox, Safari)
+                if (window.ZXing) {
+                    try {
+                        zxingReader = new ZXing.BrowserMultiFormatReader();
+                        scanHint.textContent = 'Pointez la caméra sur le code barre / QR…';
+                        await zxingReader.decodeFromVideoDevice(null, scanVideo, (result, err) => {
+                            if (result) {
+                                codeInput.value = result.getText();
+                                scanHint.textContent = '✓ Code détecté : ' + result.getText();
+                                stopScan();
+                            } else if (err && !(err.name === 'NotFoundException')) {
+                                scanHint.textContent = 'Erreur de lecture, réessayez.';
+                            }
+                        });
+                    } catch (err) {
+                        scanHint.textContent = 'Accès caméra refusé : ' + (err.message || err);
+                    }
+                    return;
+                }
+                // Fallback: BarcodeDetector (Chrome only)
+                if (!('BarcodeDetector' in window)) {
+                    scanHint.textContent = 'Scanner non supporté. Entrez le code manuellement.';
+                    return;
+                }
+                scanHint.textContent = 'Recherche du code…';
+                try {
+                    scanStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                } catch (err) {
+                    scanHint.textContent = 'Accès caméra refusé : ' + (err.message || err);
+                    return;
+                }
                 scanVideo.srcObject = scanStream;
                 await scanVideo.play();
                 const detector = new BarcodeDetector({ formats: ['qr_code', 'ean_13', 'code_128', 'ean_8', 'upc_a', 'upc_e'] });
-                scanning = true;
+                let scanning = true;
                 const loop = async () => {
                     if (!scanning) return;
                     try {
                         const barcodes = await detector.detect(scanVideo);
                         if (barcodes.length) {
                             codeInput.value = barcodes[0].rawValue || '';
-                            scanHint.textContent = 'Code détecté.';
+                            scanHint.textContent = '✓ Code détecté.';
+                            scanning = false;
                             stopScan();
                             return;
                         }
-                    } catch (e) {
-                        scanHint.textContent = 'Impossible de scanner.';
-                    }
+                    } catch (_) {}
                     requestAnimationFrame(loop);
                 };
                 requestAnimationFrame(loop);
@@ -690,18 +2591,26 @@
             });
 
             document.getElementById('stockCreate')?.addEventListener('click', async () => {
-                const payload = {
-                    pharmacy_id: document.getElementById('stockPharmacyId').value,
-                    medicament_id: document.getElementById('stockMedId').value,
-                    quantite: document.getElementById('stockQty').value,
-                    prix: document.getElementById('stockPrice').value,
-                };
-                await apiFetch('/api/pharmacien/stocks', {
+                const pharmacyId = document.getElementById('stockPharmacyId').value;
+                const medId = document.getElementById('stockMedId').value;
+                const qty = document.getElementById('stockQty').value;
+                const price = document.getElementById('stockPrice').value;
+                if (!pharmacyId) { window.showToast?.('error', 'Veuillez sélectionner une pharmacie.'); return; }
+                if (!medId)       { window.showToast?.('error', 'Veuillez sélectionner un médicament.'); return; }
+                if (!qty)         { window.showToast?.('error', 'Veuillez saisir une quantité.'); return; }
+                const res = await apiFetch('/api/pharmacien/stocks', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload),
+                    body: JSON.stringify({ pharmacy_id: pharmacyId, medicament_id: medId, quantite: qty, prix: price }),
                 });
-                location.reload();
+                let data = null;
+                try { data = await res.json(); } catch (_) {}
+                if (res.ok && (data?.success ?? true)) {
+                    closeModal('modal-create-stock');
+                    reloadTo('list-stocks');
+                } else {
+                    window.showToast?.('error', data?.message || "Erreur lors de l'ajout du stock.");
+                }
             });
         })();
     </script>
