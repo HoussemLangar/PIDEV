@@ -5,8 +5,9 @@ namespace App\Controller\FrontOffice;
 use App\Entity\Contenu;
 use App\Entity\User;
 use App\Form\ContenuType;
+use App\Repository\ArticleScoreRepository;
+use App\Repository\ContenuRepository;
 use App\Security\ContentVoter;
-use App\Service\ContentRecommendationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -24,13 +25,41 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 class ContentController extends AbstractController
 {
     #[Route('', name: 'index', methods: ['GET'])]
-    public function index(ContentRecommendationService $recommendationService): Response
+    public function index(
+        ContenuRepository $contenuRepository,
+        ArticleScoreRepository $articleScoreRepository
+    ): Response
     {
         $this->denyAccessUnlessGranted(ContentVoter::VIEW);
 
         /** @var User $user */
         $user = $this->getUser();
-        $recommended = $recommendationService->getRecommendedFor($user, 6);
+        $showRecommended = $user->getRole() === 'ROLE_PATIENT';
+        $recommended = [];
+        if ($showRecommended) {
+            $publishedContents = $contenuRepository->findFiltered(null, null, null, null);
+            $contentIds = array_values(array_filter(array_map(
+                static fn (Contenu $content): ?int => $content->getId(),
+                $publishedContents
+            )));
+            $scoreMap = $articleScoreRepository->findScoreMapByContenuIds($contentIds);
+
+            usort($publishedContents, static function (Contenu $left, Contenu $right) use ($scoreMap): int {
+                $leftId = (int) $left->getId();
+                $rightId = (int) $right->getId();
+                $leftScore = $scoreMap[$leftId]['score'] ?? 0.0;
+                $rightScore = $scoreMap[$rightId]['score'] ?? 0.0;
+
+                $scoreComparison = $rightScore <=> $leftScore;
+                if ($scoreComparison !== 0) {
+                    return $scoreComparison;
+                }
+
+                return $rightId <=> $leftId;
+            });
+
+            $recommended = array_slice($publishedContents, 0, 4);
+        }
         $likedIds = [];
         foreach ($user->getLikes() as $like) {
             $likedIds[] = $like->getContenu()->getId();
@@ -40,6 +69,7 @@ class ContentController extends AbstractController
 
         return $this->render('front/content/index.html.twig', [
             'recommended' => $recommended,
+            'showRecommended' => $showRecommended,
             'canCreate' => $canCreate,
             'likedIds' => $likedIds,
         ]);
@@ -104,10 +134,11 @@ class ContentController extends AbstractController
         /** @var User $user */
         $user = $this->getUser();
         $isOwner = $user instanceof User && $contenu->getAuteur() && $contenu->getAuteur()->getId() === $user->getId();
+        $isPatient = $user instanceof User && $user->getRole() === 'ROLE_PATIENT';
 
         // Permettre à l'auteur de voir son propre contenu quel que soit le statut
-        // Les autres utilisateurs ne peuvent voir que les contenus publiés
-        if (!$isOwner && $contenu->getStatut() !== 'publie') {
+        // Les patients peuvent consulter tous les contenus
+        if (!$isOwner && !$isPatient && $contenu->getStatut() !== 'publie') {
             throw $this->createNotFoundException('Contenu introuvable.');
         }
 

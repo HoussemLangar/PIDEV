@@ -103,6 +103,14 @@
             const commentForm = card.querySelector('.comment-form');
             const commentCount = card.querySelector('.comment-count');
             const errorEl = card.querySelector('[data-comment-error]');
+            const formatSignedScore = (value) => {
+                const numeric = Number(value ?? 0);
+                if (!Number.isFinite(numeric)) {
+                    return '0.000';
+                }
+
+                return numeric.toFixed(3);
+            };
 
             const fetchComments = async () => {
                 const res = await fetch(`{{ path('api_content_list') }}/${contentId}/comments`);
@@ -111,11 +119,20 @@
                 (data.items || []).forEach((c) => {
                     const canDelete = currentUserId && c.user_id === currentUserId;
                     commentList.insertAdjacentHTML('beforeend', `
+<<<<<<< HEAD
                         <div class="comment-item" data-comment-id="${c.id}">
                             <div class="comment-meta">${c.user} · ${c.date}</div>
                             <div>${c.message}</div>
                             ${canDelete ? `<button class="btn btn-secondary btn-xs comment-delete" data-comment-id="${c.id}" style="margin-top:6px;">{{ 'common.delete'|trans }}</button>` : ''}
                         </div>`);
+=======
+                        <div class="comment-item" data-comment-id="${comment.id}">
+                            <div class="comment-meta">${comment.user} • ${comment.date} • Score: ${formatSignedScore(comment.score)} (${comment.sentiment ?? 'N/A'})</div>
+                            <div>${comment.message}</div>
+                            ${deleteBtn}
+                        </div>
+                    `);
+>>>>>>> origin/modificationintegration
                 });
             };
 
