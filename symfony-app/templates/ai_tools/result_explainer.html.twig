@@ -1,44 +1,137 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Explain AI Résultat{% endblock %}
+{% block title %}Explicateur de résultat IA – SANTÉA{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+{% include 'ai_tools/_styles.html.twig' %}
+<style>
+.ait-tool-color { --tool-color: #0D8ABC; --tool-bg: rgba(13,138,188,.1); }
+.ait-tool-header { background: linear-gradient(135deg,#0a3d5c 0%,#0D8ABC 55%,#38bdf8 100%); }
+.ait-btn-submit { background: linear-gradient(135deg,#0D8ABC,#38bdf8); }
+.ait-btn-submit:hover { background: linear-gradient(135deg,#0a6e97,#0D8ABC); }
+.ait-tag { background: rgba(13,138,188,.1); color:#0a4d6e; }
+.ait-explain-box { background: linear-gradient(135deg,rgba(13,138,188,.06),rgba(56,189,248,.06)); border:1px solid rgba(13,138,188,.2); border-radius:14px; padding:18px 20px; margin-bottom:12px; font-size:15px; line-height:1.7; color:#0f172a; }
+.ait-meaning-item { display:flex; gap:10px; align-items:flex-start; padding:9px 12px; border-radius:9px; margin-bottom:6px; background:#f0f9ff; border:1px solid #bae6fd; font-size:13.5px; color:#0c4a6e; }
+.ait-meaning-item i { color:#0D8ABC; flex-shrink:0; margin-top:2px; }
+.ait-next-step { display:flex; gap:10px; align-items:flex-start; padding:9px 12px; border-radius:9px; margin-bottom:6px; background:#f8fafc; border:1px solid #e2e8f0; font-size:13.5px; color:#334155; }
+.ait-step-num { background:#0D8ABC; color:#fff; width:22px; height:22px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex-shrink:0; margin-top:1px; }
+.ait-warning-box { display:flex; gap:12px; align-items:flex-start; background:#fff7ed; border:1px solid #fed7aa; border-radius:12px; padding:14px 16px; margin-top:16px; color:#9a3412; font-size:13.5px; line-height:1.5; }
+.ait-warning-box i { color:#f97316; font-size:18px; flex-shrink:0; margin-top:1px; }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="content-wrapper" style="padding: 30px 40px; max-width: 980px; margin: 0 auto;">
-    <h1 style="margin:0 0 8px 0; color:#1a1a2e;">Explain AI (résultat médical)</h1>
-    <form method="post" style="background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:16px;">
-        <input name="testName" placeholder="Nom du test (ex: Glycémie)" style="width:100%; margin-bottom:10px; border:1px solid #dbe2ea; border-radius:10px; padding:10px;">
-        <div style="display:flex; gap:8px; margin-bottom:10px;">
-            <input name="value" placeholder="Valeur" style="width:180px; border:1px solid #dbe2ea; border-radius:10px; padding:10px;">
-            <input name="unit" placeholder="Unité" style="width:180px; border:1px solid #dbe2ea; border-radius:10px; padding:10px;">
+<div class="ait-page ait-tool-color">
+
+    <div class="ait-tool-header">
+        <div class="ait-tool-header-inner">
+            <a href="{{ path('app_ai_tools_index') }}" class="ait-back-btn"><i class="fas fa-arrow-left"></i> Outils IA</a>
+            <div class="ait-tool-icon"><i class="fas fa-microscope"></i></div>
+            <h1 class="ait-tool-title">Explicateur de résultat</h1>
+            <p class="ait-tool-sub">Entrez une valeur médicale ou biologique — l'IA vous l'explique en langage simple.</p>
         </div>
-        <input name="referenceRange" placeholder="Intervalle de référence (ex: 0.7 - 1.1 g/L)" style="width:100%; margin-bottom:10px; border:1px solid #dbe2ea; border-radius:10px; padding:10px;">
-        <button type="submit" style="border:none; background:#0D8ABC; color:#fff; border-radius:10px; padding:10px 14px;">Expliquer</button>
-    </form>
+    </div>
 
-    {% if result %}
-        <div style="margin-top:18px; background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:16px;">
-            <h3 style="margin-top:0;">Explication simple</h3>
-            <p>{{ result.plainExplanation }}</p>
+    <div class="ait-tool-body">
 
-            <h4>Interprétations possibles</h4>
-            <ul>
-                {% for x in result.possibleMeaning %}
-                    <li>{{ x }}</li>
-                {% endfor %}
-            </ul>
+        <div class="ait-card-wrap">
+            <form method="post" id="aitForm" class="ait-form">
+                <div class="ait-field">
+                    <label class="ait-label"><i class="fas fa-vial"></i> Nom du test / analyse</label>
+                    <input name="testName" class="ait-input" placeholder="Ex : Glycémie, Cholestérol LDL, TSH, Créatinine…" value="{{ app.request.request.get('testName') }}">
+                </div>
+                <div class="ait-row">
+                    <div class="ait-field">
+                        <label class="ait-label"><i class="fas fa-hashtag"></i> Valeur obtenue</label>
+                        <input name="value" class="ait-input" placeholder="Ex : 1.26" value="{{ app.request.request.get('value') }}">
+                    </div>
+                    <div class="ait-field">
+                        <label class="ait-label"><i class="fas fa-ruler"></i> Unité</label>
+                        <input name="unit" class="ait-input" placeholder="Ex : g/L, UI/L, mmol/L…" value="{{ app.request.request.get('unit') }}">
+                    </div>
+                </div>
+                <div class="ait-field">
+                    <label class="ait-label"><i class="fas fa-sliders-h"></i> Intervalle de référence</label>
+                    <input name="referenceRange" class="ait-input" placeholder="Ex : 0.70 – 1.10 g/L" value="{{ app.request.request.get('referenceRange') }}">
+                </div>
+                <div class="ait-form-footer">
+                    <button type="submit" class="ait-btn-submit ait-btn" id="aitSubmitBtn">
+                        <span class="ait-btn-normal"><i class="fas fa-brain"></i> Expliquer ce résultat</span>
+                        <span class="ait-btn-loading" style="display:none"><span class="ait-spinner"></span> Analyse en cours…</span>
+                    </button>
+                </div>
+            </form>
+        </div>
 
-            <h4>Prochaines étapes</h4>
-            <ul>
-                {% for x in result.nextSteps %}
-                    <li>{{ x }}</li>
-                {% endfor %}
-            </ul>
-
-            <div style="margin-top:10px; background:#fff7ed; border:1px solid #fed7aa; color:#9a3412; border-radius:10px; padding:10px;">
-                {{ result.warning }}
+        {% if result is defined and result %}
+        <div class="ait-results">
+            <div class="ait-results-header">
+                <span class="ait-results-badge"><i class="fas fa-sparkles"></i> Explication IA</span>
             </div>
+
+            {% if result.plainExplanation is defined %}
+            <div class="ait-result-section">
+                <div class="ait-result-section-title"><i class="fas fa-comment-medical"></i> Explication simple</div>
+                <div class="ait-explain-box">{{ result.plainExplanation }}</div>
+            </div>
+            {% endif %}
+
+            {% if result.possibleMeaning is defined and result.possibleMeaning|length %}
+            <div class="ait-result-section">
+                <div class="ait-result-section-title"><i class="fas fa-search-plus"></i> Interprétations possibles</div>
+                {% for x in result.possibleMeaning %}
+                    <div class="ait-meaning-item"><i class="fas fa-circle-notch"></i>{{ x }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% if result.nextSteps is defined and result.nextSteps|length %}
+            <div class="ait-result-section">
+                <div class="ait-result-section-title"><i class="fas fa-route"></i> Prochaines étapes</div>
+                {% for x in result.nextSteps %}
+                    <div class="ait-next-step"><span class="ait-step-num">{{ loop.index }}</span>{{ x }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% if result.warning is defined and result.warning %}
+            <div class="ait-warning-box">
+                <i class="fas fa-exclamation-triangle"></i>
+                <div>{{ result.warning }}</div>
+            </div>
+            {% endif %}
         </div>
-    {% endif %}
+        {% endif %}
+
+    </div>
 </div>
+
+<script>
+(function(){
+    var form = document.getElementById('aitForm');
+    var btn  = document.getElementById('aitSubmitBtn');
+    if (!form || !btn) return;
+
+    form.addEventListener('submit', function(e) {
+        if (form.dataset.submitting === '1') { e.preventDefault(); return; }
+        form.dataset.submitting = '1';
+        requestAnimationFrame(function() {
+            btn.classList.add('ait-btn--loading');
+            btn.querySelector('.ait-btn-normal').style.display = 'none';
+            btn.querySelector('.ait-btn-loading').style.display = 'inline-flex';
+        });
+    });
+
+    window.addEventListener('pageshow', function(e) {
+        if (e.persisted) {
+            form.dataset.submitting = '0';
+            btn.classList.remove('ait-btn--loading');
+            btn.querySelector('.ait-btn-normal').style.display = '';
+            btn.querySelector('.ait-btn-loading').style.display = 'none';
+        }
+    });
+})();
+</script>
 {% endblock %}
 

@@ -74,6 +74,7 @@ class PharmacyApiController extends AbstractController
             'forme' => $m->getForme(),
             'dosage' => $m->getDosage(),
             'codeBarre' => $m->getCodeBarre(),
+            'imageName' => $m->getImageName(),
         ], $items);
 
         return new JsonResponse(['items' => $data]);
@@ -91,6 +92,7 @@ class PharmacyApiController extends AbstractController
             'adresse' => $s->getPharmecie()->getAdresse(),
             'prix' => $s->getPrixVente(),
             'quantite' => $s->getQuantite(),
+            'imageName' => $medicament->getImageName(),
         ], $stocks);
 
         return new JsonResponse(['items' => $data]);
@@ -114,6 +116,7 @@ class PharmacyApiController extends AbstractController
             'dosage' => $s->getMedicament()->getDosage(),
             'prix' => $s->getPrixVente(),
             'quantite' => $s->getQuantite(),
+            'imageName' => $s->getMedicament()->getImageName(),
         ], $stocks);
 
         return new JsonResponse(['items' => $data]);

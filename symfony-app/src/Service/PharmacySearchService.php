@@ -28,6 +28,7 @@ class PharmacySearchService
                 'latitude' => $pharmacy->getLatitude(),
                 'longitude' => $pharmacy->getLongitude(),
                 'distance' => $distance,
+                'imageName' => $pharmacy->getImageName(),
             ];
         }
 

@@ -23,6 +23,9 @@ class TeleconsultationType extends AbstractType
                 'choice_label' => function (User $user) {
                     return $user->getUsername() . ' (' . $user->getEmail() . ')';
                 },
+                'choice_attr' => function (User $user) {
+                    return ['data-role' => $user->getRole() ?? ''];
+                },
                 'label' => 'Destinataire',
                 'attr' => [
                     'class' => 'form-control',

@@ -2,233 +2,665 @@
 
 {% block title %}Créer un plan d'accompagnement{% endblock %}
 
+{% block stylesheets %}
+{{ parent() }}
+<style>
+/* ── Page layout ── */
+.plan-create-page {
+    padding: 32px 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+    animation: fadeInUp .45s ease-out;
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Hero header ── */
+.plan-hero {
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #0891b2 100%);
+    border-radius: 20px;
+    padding: 32px 36px;
+    margin-bottom: 28px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+.plan-hero::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 240px; height: 240px;
+    background: radial-gradient(circle, rgba(255,255,255,.06) 0%, transparent 70%);
+    border-radius: 50%;
+}
+.plan-hero-icon {
+    width: 64px; height: 64px;
+    background: rgba(255,255,255,.15);
+    border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    backdrop-filter: blur(8px);
+    flex-shrink: 0;
+    border: 1px solid rgba(255,255,255,.2);
+}
+.plan-hero-icon i { color: #fff; font-size: 28px; }
+.plan-hero-text h1 { margin: 0; font-size: 26px; font-weight: 800; color: #fff; }
+.plan-hero-text p  { margin: 6px 0 0; font-size: 14px; color: rgba(255,255,255,.7); }
+
+/* ── Patient info card ── */
+.patient-card {
+    background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%);
+    border: 1px solid #bae6fd;
+    border-radius: 16px;
+    padding: 20px 24px;
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+.patient-avatar {
+    width: 56px; height: 56px;
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 700; font-size: 20px;
+    flex-shrink: 0;
+}
+.patient-name  { font-weight: 700; font-size: 17px; color: #1e293b; margin-bottom: 4px; }
+.patient-meta  { display: flex; gap: 20px; color: #64748b; font-size: 13px; flex-wrap: wrap; }
+.patient-meta i { color: #94a3b8; margin-right: 4px; }
+
+/* ── Two-column layout ── */
+.plan-layout {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 24px;
+    align-items: start;
+}
+
+/* ── Form card ── */
+.form-card {
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 4px 24px rgba(15,23,42,.07);
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+}
+.form-section {
+    padding: 28px 32px;
+    border-bottom: 1px solid #f1f5f9;
+}
+.form-section:last-child { border-bottom: none; }
+.form-section-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 20px;
+}
+.form-section-icon {
+    width: 34px; height: 34px;
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}
+.form-section-icon i { color: #fff; font-size: 15px; }
+
+/* ── Field ── */
+.pf-field { margin-bottom: 18px; }
+.pf-field:last-child { margin-bottom: 0; }
+.pf-label {
+    display: block;
+    font-weight: 600;
+    color: #334155;
+    font-size: 13px;
+    margin-bottom: 7px;
+}
+.pf-label i { color: #94a3b8; margin-right: 5px; }
+.pf-hint { color: #94a3b8; font-size: 11px; margin-top: 4px; display: block; }
+.pf-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+/* ── Inputs ── */
+.plan-create-page .form-control,
+.plan-create-page .form-select {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 14px;
+    color: #1e293b;
+    background: #fff;
+    transition: border-color .2s, box-shadow .2s;
+    outline: none;
+}
+.plan-create-page .form-control:focus,
+.plan-create-page .form-select:focus {
+    border-color: #06b6d4;
+    box-shadow: 0 0 0 3px rgba(6,182,212,.12);
+}
+.plan-create-page textarea.form-control { resize: vertical; }
+
+/* ── Error ── */
+.plan-create-page .invalid-feedback,
+.plan-create-page .form-error-message { color: #dc2626; font-size: 12px; margin-top: 4px; display: block; }
+
+/* ── Action bar (sticky at the bottom of form) ── */
+.form-action-bar {
+    padding: 20px 32px;
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    gap: 12px;
+}
+.btn-create {
+    flex: 1;
+    padding: 13px 20px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: #fff !important;
+    border: none;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: transform .2s, box-shadow .2s;
+    text-decoration: none;
+    box-shadow: 0 4px 14px rgba(16,185,129,.28);
+}
+.btn-create:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(16,185,129,.38); }
+.btn-cancel {
+    padding: 13px 20px;
+    background: #f1f5f9;
+    color: #475569 !important;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background .2s;
+    text-decoration: none;
+    white-space: nowrap;
+}
+.btn-cancel:hover { background: #e2e8f0; }
+
+/* ── Sidebar ── */
+.plan-sidebar { display: flex; flex-direction: column; gap: 18px; position: sticky; top: 90px; }
+.sidebar-card {
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 12px rgba(15,23,42,.05);
+    overflow: hidden;
+}
+.sidebar-card-header {
+    padding: 14px 18px;
+    font-weight: 700;
+    font-size: 14px;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid #f1f5f9;
+}
+.sidebar-card-body { padding: 16px 18px; }
+
+/* ── Steps indicator ── */
+.steps-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; }
+.step-item   { display: flex; align-items: flex-start; gap: 12px; }
+.step-dot    { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 12px; font-weight: 700; }
+.step-done   { background: linear-gradient(135deg, #10b981, #059669); color: #fff; }
+.step-todo   { background: #f1f5f9; color: #94a3b8; border: 1.5px dashed #cbd5e1; }
+.step-label  { font-size: 13px; font-weight: 600; color: #334155; margin-top: 5px; line-height: 1.3; }
+
+/* ── Tip card ── */
+.tip-item { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
+.tip-item:last-child { margin-bottom: 0; }
+.tip-icon { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.tip-text  { font-size: 13px; color: #475569; line-height: 1.5; padding-top: 5px; }
+
+/* ── Error alert ── */
+.plan-alert-error {
+    background: #fee2e2;
+    border: 1px solid #fca5a5;
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-bottom: 24px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+}
+.plan-alert-error i { color: #dc2626; font-size: 18px; flex-shrink: 0; margin-top: 2px; }
+.plan-alert-error strong { color: #991b1b; font-size: 14px; }
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+    .plan-layout { grid-template-columns: 1fr; }
+    .plan-sidebar { position: static; }
+}
+@media (max-width: 768px) {
+    .plan-create-page { padding: 16px 20px; }
+    .plan-hero { padding: 20px; }
+    .plan-hero-text h1 { font-size: 20px; }
+    .form-section { padding: 20px; }
+    .form-action-bar { padding: 16px 20px; flex-direction: column; }
+    .btn-cancel { text-align: center; }
+    .pf-row-2 { grid-template-columns: 1fr; }
+}
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="content-wrapper" style="padding: 30px 40px; max-width: 1000px; margin: 0 auto;">
-    <!-- Page Header -->
-    <div class="page-header" style="margin-bottom: 32px;">
-        <div style="display: flex; align-items: center; gap: 16px;">
-            <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-                <i class="fas fa-plus-circle" style="color: white; font-size: 24px;"></i>
-            </div>
-            <div>
-                <h1 style="margin: 0; font-size: 28px; font-weight: 700; color: #1a1a2e;">Nouveau plan d'accompagnement</h1>
-                <p style="margin: 4px 0 0 0; color: #64748b; font-size: 14px;">Créez un programme personnalisé pour {{ patient.user.username }}</p>
+<div class="plan-create-page">
+
+    <!-- Hero -->
+    <div class="plan-hero">
+        <div class="plan-hero-icon"><i class="fas fa-plus-circle"></i></div>
+        <div class="plan-hero-text">
+            <h1>Nouveau plan d'accompagnement</h1>
+            <p>Programme personnalisé pour <strong style="color:#67e8f9;">{{ patient.user.prenom }} {{ patient.user.nom }}</strong></p>
+        </div>
+    </div>
+
+    <!-- Patient info -->
+    <div class="patient-card">
+        <div class="patient-avatar">{{ patient.user.username|slice(0,2)|upper }}</div>
+        <div>
+            <div class="patient-name"><i class="fas fa-user" style="color:#06b6d4;"></i> {{ patient.user.nom }} {{ patient.user.prenom }}</div>
+            <div class="patient-meta">
+                <span><i class="fas fa-envelope"></i>{{ patient.user.email }}</span>
+                {% if patient.user.telephone %}<span><i class="fas fa-phone"></i>{{ patient.user.telephone }}</span>{% endif %}
             </div>
         </div>
     </div>
 
-    <!-- Patient Info Card -->
-    <div style="background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%); border-radius: 14px; padding: 20px 24px; margin-bottom: 24px; border: 1px solid #bae6fd;">
-        <div style="display: flex; align-items: center; gap: 16px;">
-            <div style="width: 56px; height: 56px; background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 20px;">
-                {{ patient.user.username|slice(0, 2)|upper }}
-            </div>
-            <div style="flex: 1;">
-                <div style="font-weight: 700; font-size: 18px; color: #1e293b; margin-bottom: 4px;">
-                    <i class="fas fa-user" style="color: #06b6d4; margin-right: 6px;"></i>
-                    {{ patient.user.nom }} {{ patient.user.prenom }}
-                </div>
-                <div style="display: flex; gap: 20px; color: #64748b; font-size: 14px;">
-                    <span><i class="fas fa-envelope" style="color: #94a3b8; margin-right: 6px;"></i>{{ patient.user.email }}</span>
-                    {% if patient.user.telephone %}
-                        <span><i class="fas fa-phone" style="color: #94a3b8; margin-right: 6px;"></i>{{ patient.user.telephone }}</span>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Layout -->
+    <div class="plan-layout">
 
-    <!-- Form Card -->
-    <div style="background: white; border-radius: 16px; padding: 32px; box-shadow: 0 2px 8px rgba(15,23,42,0.06);">
-        {{ form_start(form, { attr: { novalidate: 'novalidate' } }) }}
-        
-        {% if form.vars.errors|length > 0 %}
-            <div style="background: #fee2e2; border: 1px solid #fca5a5; border-radius: 10px; padding: 16px; margin-bottom: 24px;">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <i class="fas fa-exclamation-circle" style="color: #dc2626; font-size: 20px;"></i>
-                    <div>
-                        <div style="font-weight: 700; color: #991b1b; margin-bottom: 4px;">Erreurs de validation</div>
-                        {{ form_errors(form) }}
+        <!-- ── FORM ── -->
+        <div class="form-card">
+            <!-- Section IA : placée avant Informations générales -->
+            <div class="form-section" style="margin:24px 32px 0;">
+                <div class="form-section-title">
+                    <div class="form-section-icon" style="background: linear-gradient(135deg,#8b5cf6,#7c3aed);">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    Assistant IA
+                </div>
+                {{ component('AccompanimentAiAssistant') }}
+            </div>
+
+            {{ form_start(form, { attr: { novalidate: 'novalidate', id: 'planCreateForm' } }) }}
+
+            {# Hidden div read by AI component JS to know where to inject suggestions #}
+            <div id="plan-ai-targets" hidden
+                 data-obj-id="{{ form.objectives.vars.id }}"
+                 data-desc-id="{{ form.description.vars.id }}"
+                 data-title-id="{{ form.title.vars.id }}"></div>
+
+            {% if form.vars.errors|length > 0 %}
+                <div class="plan-alert-error" style="margin: 24px 32px 0;">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <div><strong>Erreurs de validation</strong>{{ form_errors(form) }}</div>
+                </div>
+            {% endif %}
+
+            <!-- Section 1 : Informations générales -->
+            <div class="form-section">
+                <div class="form-section-title">
+                    <div class="form-section-icon" style="background: linear-gradient(135deg,#667eea,#764ba2);">
+                        <i class="fas fa-info-circle"></i>
+                    </div>
+                    Informations générales
+                </div>
+
+                <div class="pf-field">
+                    <label class="pf-label" for="{{ form.title.vars.id }}">
+                        <i class="fas fa-heading"></i>{{ form.title.vars.label }}
+                    </label>
+                    {{ form_widget(form.title, {attr: {class:'form-control', placeholder:'ex: Plan de remise en forme – 12 semaines'}}) }}
+                    {{ form_errors(form.title) }}
+                </div>
+
+                <div class="pf-field">
+                    <label class="pf-label" for="{{ form.objectives.vars.id }}">
+                        <i class="fas fa-bullseye"></i>{{ form.objectives.vars.label }}
+                    </label>
+                    {{ form_widget(form.objectives, {attr: {class:'form-control', rows:'4', placeholder:'Décrivez les objectifs principaux (perte de poids, rééducation, force…)'}}) }}
+                    {{ form_errors(form.objectives) }}
+                    <span class="pf-hint">Définissez des objectifs SMART — mesurables et atteignables</span>
+                </div>
+
+                <div class="pf-field">
+                    <label class="pf-label" for="{{ form.description.vars.id }}">
+                        <i class="fas fa-file-medical-alt"></i>{{ form.description.vars.label }}
+                    </label>
+                    {{ form_widget(form.description, {attr: {class:'form-control', rows:'3', placeholder:'Contexte médical, antécédents, notes importantes…'}}) }}
+                    {{ form_errors(form.description) }}
+                </div>
+            </div>
+
+            <!-- Section 2 : Configuration -->
+            <div class="form-section">
+                <div class="form-section-title">
+                    <div class="form-section-icon" style="background: linear-gradient(135deg,#3b82f6,#2563eb);">
+                        <i class="fas fa-sliders-h"></i>
+                    </div>
+                    Configuration du plan
+                </div>
+
+                <div class="pf-row-2">
+                    <div class="pf-field">
+                        <label class="pf-label" for="{{ form.durationWeeks.vars.id }}">
+                            <i class="fas fa-calendar-week"></i>{{ form.durationWeeks.vars.label }}
+                        </label>
+                        {{ form_widget(form.durationWeeks, {attr: {class:'form-control'}}) }}
+                        {{ form_errors(form.durationWeeks) }}
+                        <span class="pf-hint">Entre 1 et 52 semaines</span>
+                    </div>
+                    <div class="pf-field">
+                        <label class="pf-label" for="{{ form.status.vars.id }}">
+                            <i class="fas fa-flag"></i>{{ form.status.vars.label }}
+                        </label>
+                        {{ form_widget(form.status, {attr: {class:'form-select'}}) }}
+                        {{ form_errors(form.status) }}
                     </div>
                 </div>
             </div>
-        {% endif %}
 
-        <!-- Information générale -->
-        <div style="margin-bottom: 32px;">
-            <h2 style="font-size: 18px; font-weight: 700; color: #1a1a2e; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
-                <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-                    <i class="fas fa-info-circle" style="color: white; font-size: 14px;"></i>
+            <!-- Section 3 : Professionnel assigné automatiquement -->
+            {% if assignedLabel is defined and assignedLabel %}
+            <div class="form-section">
+                <div class="form-section-title">
+                    <div class="form-section-icon" style="background: linear-gradient(135deg,#f59e0b,#d97706);">
+                        <i class="fas fa-user-check"></i>
+                    </div>
+                    Professionnel assigné
                 </div>
-                Informations générales
-            </h2>
+                <div style="display:flex;align-items:center;gap:14px;padding:16px 20px;background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1.5px solid #86efac;border-radius:14px;">
+                    <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#10b981,#059669);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <i class="fas fa-{{ assignedLabel.role == 'Coach sportif' ? 'dumbbell' : 'apple-alt' }}" style="color:#fff;font-size:18px;"></i>
+                    </div>
+                    <div>
+                        <div style="font-size:12px;font-weight:700;color:#065f46;text-transform:uppercase;letter-spacing:.4px;">{{ assignedLabel.role }}</div>
+                        <div style="font-size:15px;font-weight:700;color:#1e293b;">{{ assignedLabel.name }}</div>
+                    </div>
+                    <div style="margin-left:auto;padding:5px 12px;background:#d1fae5;border-radius:20px;font-size:12px;font-weight:700;color:#059669;">
+                        <i class="fas fa-check-circle"></i> Assigné automatiquement
+                    </div>
+                </div>
+            </div>
+            {% endif %}
 
-            <div style="margin-bottom: 20px;">
-                <label for="{{ form.title.vars.id }}" style="display: block; font-weight: 600; color: #334155; margin-bottom: 8px; font-size: 14px;">
-                    <i class="fas fa-heading" style="color: #94a3b8; margin-right: 6px;"></i>
-                    {{ form.title.vars.label }}
-                </label>
-                {{ form_widget(form.title, {'attr': {'class': 'form-control', 'placeholder': 'ex: Plan de remise en forme', 'style': 'padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 14px;'}}) }}
-                {{ form_errors(form.title) }}
+            <!-- Action bar -->
+            <div class="form-action-bar">
+                <button type="submit" class="btn-create">
+                    <i class="fas fa-check-circle"></i> Créer le plan
+                </button>
+                <a href="{{ path('app_plan_professional_plans') }}" class="btn-cancel">
+                    <i class="fas fa-arrow-left"></i> Annuler
+                </a>
             </div>
 
-            <div style="margin-bottom: 20px;">
-                <label for="{{ form.objectives.vars.id }}" style="display: block; font-weight: 600; color: #334155; margin-bottom: 8px; font-size: 14px;">
-                    <i class="fas fa-bullseye" style="color: #94a3b8; margin-right: 6px;"></i>
-                    {{ form.objectives.vars.label }}
-                </label>
-                {{ form_widget(form.objectives, {'attr': {'class': 'form-control', 'rows': '4', 'placeholder': 'Décrivez les objectifs principaux du plan...', 'style': 'padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 14px;'}}) }}
-                {{ form_errors(form.objectives) }}
-                <small style="color: #94a3b8; font-size: 12px; margin-top: 4px; display: block;">Définissez des objectifs clairs et mesurables</small>
-            </div>
+            {{ form_end(form) }}
 
-            <div style="margin-bottom: 20px;">
-                <label for="{{ form.description.vars.id }}" style="display: block; font-weight: 600; color: #334155; margin-bottom: 8px; font-size: 14px;">
-                    <i class="fas fa-file-alt" style="color: #94a3b8; margin-right: 6px;"></i>
-                    {{ form.description.vars.label }}
-                </label>
-                {{ form_widget(form.description, {'attr': {'class': 'form-control', 'rows': '3', 'placeholder': 'Contexte médical, notes additionnelles...', 'style': 'padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 14px;'}}) }}
-                {{ form_errors(form.description) }}
-            </div>
+            {# ── Toast container ── #}
+            <div id="plan-toast-container" style="
+                position:fixed; bottom:28px; right:28px; z-index:9999;
+                display:flex; flex-direction:column; gap:10px; pointer-events:none;
+            "></div>
+
         </div>
 
-        <!-- Configuration du plan -->
-        <div style="margin-bottom: 32px;">
-            <h2 style="font-size: 18px; font-weight: 700; color: #1a1a2e; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
-                <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-                    <i class="fas fa-cog" style="color: white; font-size: 14px;"></i>
-                </div>
-                Configuration
-            </h2>
+        <!-- ── SIDEBAR ── -->
+        <div class="plan-sidebar">
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                <div>
-                    <label for="{{ form.durationWeeks.vars.id }}" style="display: block; font-weight: 600; color: #334155; margin-bottom: 8px; font-size: 14px;">
-                        <i class="fas fa-calendar-week" style="color: #94a3b8; margin-right: 6px;"></i>
-                        {{ form.durationWeeks.vars.label }}
-                    </label>
-                    {{ form_widget(form.durationWeeks, {'attr': {'class': 'form-control', 'value': '12', 'style': 'padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 14px;'}}) }}
-                    {{ form_errors(form.durationWeeks) }}
-                    <small style="color: #94a3b8; font-size: 12px; margin-top: 4px; display: block;">Entre 1 et 52 semaines</small>
+            <!-- Étapes -->
+            <div class="sidebar-card">
+                <div class="sidebar-card-header">
+                    <i class="fas fa-list-check" style="color:#10b981;"></i> Étapes du processus
                 </div>
-
-                <div>
-                    <label for="{{ form.status.vars.id }}" style="display: block; font-weight: 600; color: #334155; margin-bottom: 8px; font-size: 14px;">
-                        <i class="fas fa-flag" style="color: #94a3b8; margin-right: 6px;"></i>
-                        {{ form.status.vars.label }}
-                    </label>
-                    {{ form_widget(form.status, {'attr': {'class': 'form-select', 'style': 'padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 14px;'}}) }}
-                    {{ form_errors(form.status) }}
-                </div>
-            </div>
-        </div>
-
-        <!-- Professionnels assignés -->
-        <div style="margin-bottom: 32px;">
-            <h2 style="font-size: 18px; font-weight: 700; color: #1a1a2e; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
-                <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-                    <i class="fas fa-users" style="color: white; font-size: 14px;"></i>
-                </div>
-                Professionnels assignés
-            </h2>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                <div>
-                    <label for="{{ form.coach.vars.id }}" style="display: block; font-weight: 600; color: #334155; margin-bottom: 8px; font-size: 14px;">
-                        <i class="fas fa-dumbbell" style="color: #94a3b8; margin-right: 6px;"></i>
-                        {{ form.coach.vars.label }}
-                    </label>
-                    {{ form_widget(form.coach, {'attr': {'class': 'form-select', 'style': 'padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 14px;'}}) }}
-                    {{ form_errors(form.coach) }}
-                    <small style="color: #94a3b8; font-size: 12px; margin-top: 4px; display: block;">Optionnel - Coach sportif</small>
-                </div>
-
-                <div>
-                    <label for="{{ form.nutritionist.vars.id }}" style="display: block; font-weight: 600; color: #334155; margin-bottom: 8px; font-size: 14px;">
-                        <i class="fas fa-apple-alt" style="color: #94a3b8; margin-right: 6px;"></i>
-                        {{ form.nutritionist.vars.label }}
-                    </label>
-                    {{ form_widget(form.nutritionist, {'attr': {'class': 'form-select', 'style': 'padding: 12px 16px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 14px;'}}) }}
-                    {{ form_errors(form.nutritionist) }}
-                    <small style="color: #94a3b8; font-size: 12px; margin-top: 4px; display: block;">Optionnel - Nutritionniste</small>
+                <div class="sidebar-card-body">
+                    <ul class="steps-list">
+                        <li class="step-item">
+                            <div class="step-dot step-done"><i class="fas fa-check"></i></div>
+                            <div class="step-label">Créer le plan principal</div>
+                        </li>
+                        <li class="step-item">
+                            <div class="step-dot step-todo">2</div>
+                            <div class="step-label" style="color:#94a3b8;">Ajouter des exercices</div>
+                        </li>
+                        <li class="step-item">
+                            <div class="step-dot step-todo">3</div>
+                            <div class="step-label" style="color:#94a3b8;">Définir le régime nutritionnel</div>
+                        </li>
+                        <li class="step-item">
+                            <div class="step-dot step-todo">4</div>
+                            <div class="step-label" style="color:#94a3b8;">Suivre la progression du patient</div>
+                        </li>
+                    </ul>
                 </div>
             </div>
-        </div>
 
-        <!-- Info message -->
-        <div style="background: linear-gradient(135deg, #dbeafe 0%, #e0f2fe 100%); border: 1px solid #93c5fd; border-radius: 12px; padding: 16px 20px; margin-bottom: 24px;">
-            <div style="display: flex; align-items: start; gap: 12px;">
-                <i class="fas fa-lightbulb" style="color: #1e40af; font-size: 20px; margin-top: 2px;"></i>
-                <div>
-                    <div style="font-weight: 700; color: #1e3a8a; margin-bottom: 4px;">Conseil professionnel</div>
-                    <p style="margin: 0; color: #1e40af; font-size: 14px; line-height: 1.5;">
-                        Vous pourrez ajouter des plans d'exercice détaillés et des plans nutritionnels personnalisés après la création du plan principal.
-                    </p>
+            <!-- Conseils -->
+            <div class="sidebar-card">
+                <div class="sidebar-card-header">
+                    <i class="fas fa-lightbulb" style="color:#f59e0b;"></i> Conseils
+                </div>
+                <div class="sidebar-card-body">
+                    <div class="tip-item">
+                        <div class="tip-icon" style="background:#dcfce7;"><i class="fas fa-bullseye" style="color:#10b981; font-size:12px;"></i></div>
+                        <div class="tip-text">Définissez des objectifs <strong>SMART</strong> — spécifiques, mesurables et atteignables.</div>
+                    </div>
+                    <div class="tip-item">
+                        <div class="tip-icon" style="background:#dbeafe;"><i class="fas fa-robot" style="color:#3b82f6; font-size:12px;"></i></div>
+                        <div class="tip-text">Utilisez l'<strong>Assistant IA</strong> pour générer un plan nutrition + sport adapté.</div>
+                    </div>
+                    <div class="tip-item">
+                        <div class="tip-icon" style="background:#fef3c7;"><i class="fas fa-plus" style="color:#f59e0b; font-size:12px;"></i></div>
+                        <div class="tip-text">Les plans d'exercice et régimes s'ajoutent <strong>après</strong> la création.</div>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Action buttons -->
-        <div style="display: flex; gap: 12px; padding-top: 8px;">
-            <button type="submit" style="flex: 1; padding: 14px 24px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;">
-                <i class="fas fa-check-circle"></i>
-                Créer le plan
-            </button>
-            <a href="{{ path('app_plan_professional_plans') }}" style="flex: 1; padding: 14px 24px; background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; border-radius: 10px; font-weight: 600; font-size: 15px; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;">
-                <i class="fas fa-times-circle"></i>
-                Annuler
-            </a>
-        </div>
+            <!-- Infos patient résumé -->
+            <div class="sidebar-card">
+                <div class="sidebar-card-header">
+                    <i class="fas fa-id-card" style="color:#06b6d4;"></i> Patient
+                </div>
+                <div class="sidebar-card-body" style="font-size:13px; color:#475569; line-height:1.7;">
+                    <div><i class="fas fa-user" style="color:#94a3b8; margin-right:6px; width:14px;"></i>{{ patient.user.prenom }} {{ patient.user.nom }}</div>
+                    <div><i class="fas fa-envelope" style="color:#94a3b8; margin-right:6px; width:14px;"></i>{{ patient.user.email }}</div>
+                    {% if patient.user.telephone %}
+                    <div><i class="fas fa-phone" style="color:#94a3b8; margin-right:6px; width:14px;"></i>{{ patient.user.telephone }}</div>
+                    {% endif %}
+                </div>
+            </div>
 
-        {{ form_end(form) }}
-    </div>
+        </div>{# /sidebar #}
+    </div>{# /layout #}
 </div>
 
-<style>
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
+{% block javascripts %}
+{{ parent() }}
+<script>
+(function () {
+'use strict';
+
+/* ═══════════════════════════════════════════
+   TOAST SYSTEM
+═══════════════════════════════════════════ */
+const container = document.getElementById('plan-toast-container');
+
+window.planToast = function (msg, type) {
+    /* type: 'success' | 'error' | 'info' */
+    const colors = {
+        success: { bg:'#052e16', border:'#16a34a', icon:'✓', ic_c:'#4ade80' },
+        error:   { bg:'#3b0a0a', border:'#dc2626', icon:'✕', ic_c:'#f87171' },
+        info:    { bg:'#0c1a4b', border:'#3b82f6', icon:'ℹ', ic_c:'#93c5fd' },
+    };
+    const c = colors[type] || colors.info;
+    const t = document.createElement('div');
+    t.style.cssText = `
+        background:${c.bg}; border:1.5px solid ${c.border}; color:#f1f5f9;
+        border-radius:12px; padding:13px 18px; font-size:13.5px; font-weight:600;
+        display:flex; align-items:center; gap:10px; pointer-events:all;
+        box-shadow:0 8px 24px rgba(0,0,0,.45); min-width:240px; max-width:340px;
+        animation:toastIn .3s ease-out;
+    `;
+    t.innerHTML = `<span style="width:22px;height:22px;border-radius:50%;background:${c.border};
+        display:flex;align-items:center;justify-content:center;color:${c.ic_c};
+        font-size:12px;flex-shrink:0;">${c.icon}</span><span>${msg}</span>`;
+    container.appendChild(t);
+    setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity .4s'; }, 3200);
+    setTimeout(() => t.remove(), 3650);
+};
+
+/* inject CSS keyframe once */
+if (!document.getElementById('plan-toast-kf')) {
+    const s = document.createElement('style');
+    s.id = 'plan-toast-kf';
+    s.textContent = `@keyframes toastIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}`;
+    document.head.appendChild(s);
+}
+
+/* ═══════════════════════════════════════════
+   AI INJECT  (called by AI Live Component)
+═══════════════════════════════════════════ */
+window.planAiInject = function (field, text) {
+    const targets = document.getElementById('plan-ai-targets');
+    if (!targets) return;
+
+    let el;
+    if (field === 'title') el = document.getElementById(targets.dataset.titleId);
+    if (field === 'objectives') el = document.getElementById(targets.dataset.objId);
+    if (field === 'description') el = document.getElementById(targets.dataset.descId);
+    if (!el) return;
+
+    el.value = text;
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+
+    /* visual flash */
+    const orig = el.style.transition;
+    el.style.transition = 'box-shadow .15s, border-color .15s';
+    el.style.borderColor = '#10b981';
+    el.style.boxShadow   = '0 0 0 3px rgba(16,185,129,.2)';
+    el.scrollIntoView({ behavior:'smooth', block:'center' });
+    el.focus();
+    setTimeout(() => {
+        el.style.borderColor = '';
+        el.style.boxShadow   = '';
+        el.style.transition  = orig;
+    }, 1800);
+
+    const labels = {
+        title: '✅ Titre du plan injecté dans le formulaire !',
+        objectives: '✅ Objectifs injectés dans le formulaire !',
+        description: '✅ Description injectée dans le formulaire !',
+    };
+    planToast(labels[field] || '✅ Recommandation injectée dans le formulaire !', 'success');
+};
+
+/* ═══════════════════════════════════════════
+   REAL-TIME FIELD VALIDATION
+═══════════════════════════════════════════ */
+const targets = document.getElementById('plan-ai-targets');
+const requiredIds = targets
+    ? [targets.dataset.titleId, targets.dataset.objId]
+    : [];
+
+requiredIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+
+    const mark = function () {
+        const empty = el.value.trim() === '';
+        el.style.borderColor = empty ? '' : '#10b981';
+        el.style.boxShadow   = empty ? '' : '0 0 0 3px rgba(16,185,129,.12)';
+
+        /* green tick / red dot badge next to label */
+        const label = document.querySelector(`label[for="${id}"]`);
+        if (!label) return;
+        let badge = label.querySelector('.pf-valid-badge');
+        if (!badge) {
+            badge = document.createElement('span');
+            badge.className = 'pf-valid-badge';
+            badge.style.cssText = 'margin-left:6px;font-size:12px;transition:opacity .2s;';
+            label.appendChild(badge);
+        }
+        badge.textContent = empty ? '' : '✓';
+        badge.style.color = '#10b981';
+    };
+
+    el.addEventListener('input', mark);
+    el.addEventListener('blur', mark);
+});
+
+/* ═══════════════════════════════════════════
+   SUBMIT GUARD
+═══════════════════════════════════════════ */
+const planForm = document.getElementById('planCreateForm');
+if (planForm) {
+    planForm.addEventListener('submit', function (e) {
+        const missing = [];
+
+        requiredIds.forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            if (el.value.trim() === '') {
+                missing.push(el);
+                el.style.borderColor = '#ef4444';
+                el.style.boxShadow   = '0 0 0 3px rgba(239,68,68,.18)';
+                /* reset red outline after user starts typing */
+                el.addEventListener('input', function fix() {
+                    el.style.borderColor = '';
+                    el.style.boxShadow   = '';
+                    el.removeEventListener('input', fix);
+                });
+            }
+        });
+
+        if (missing.length > 0) {
+            e.preventDefault();
+            missing[0].scrollIntoView({ behavior:'smooth', block:'center' });
+            missing[0].focus();
+            planToast('⚠️ Veuillez remplir tous les champs obligatoires.', 'error');
+
+            /* shake animation */
+            missing.forEach(el => {
+                el.style.animation = 'none';
+                el.offsetHeight; /* reflow */
+                el.style.animation = 'planShake .4s ease';
+            });
+        }
+    });
+
+    if (!document.getElementById('plan-shake-kf')) {
+        const s = document.createElement('style');
+        s.id = 'plan-shake-kf';
+        s.textContent = `@keyframes planShake{
+            0%,100%{transform:translateX(0)}
+            20%{transform:translateX(-6px)}
+            40%{transform:translateX(6px)}
+            60%{transform:translateX(-4px)}
+            80%{transform:translateX(4px)}}`;
+        document.head.appendChild(s);
     }
 }
 
-.content-wrapper {
-    animation: fadeInUp 0.5s ease-out;
-}
-
-button[type="submit"]:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
-}
-
-a[href*="plan"]:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
-input:focus, textarea:focus, select:focus {
-    outline: none !important;
-    border-color: #06b6d4 !important;
-    box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1) !important;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .content-wrapper {
-        padding: 20px !important;
-    }
-    
-    .page-header h1 {
-        font-size: 22px !important;
-    }
-    
-    div[style*="grid-template-columns: 1fr 1fr"] {
-        grid-template-columns: 1fr !important;
-    }
-}
-</style>
+})();
+</script>
+{% endblock %}
 {% endblock %}

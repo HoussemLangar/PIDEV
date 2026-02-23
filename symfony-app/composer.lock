@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9a7f21ee06a45c8a54953998e95e79ee",
+    "content-hash": "7c9362ab3103fa4682361f9251fe0eaa",
     "packages": [
         {
             "name": "composer/semver",
@@ -5993,32 +5993,32 @@
         },
         {
             "name": "symfony/mercure-bundle",
-            "version": "v0.3.9",
+            "version": "v0.4.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/mercure-bundle.git",
-                "reference": "77435d740b228e9f5f3f065b6db564f85f2cdb64"
+                "reference": "eae8bf5a75b4e1203bd9aa4181c7950a4df4b3e3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/mercure-bundle/zipball/77435d740b228e9f5f3f065b6db564f85f2cdb64",
-                "reference": "77435d740b228e9f5f3f065b6db564f85f2cdb64",
+                "url": "https://api.github.com/repos/symfony/mercure-bundle/zipball/eae8bf5a75b4e1203bd9aa4181c7950a4df4b3e3",
+                "reference": "eae8bf5a75b4e1203bd9aa4181c7950a4df4b3e3",
                 "shasum": ""
             },
             "require": {
                 "lcobucci/jwt": "^3.4|^4.0|^5.0",
-                "php": ">=7.1.3",
-                "symfony/config": "^4.4|^5.0|^6.0|^7.0",
-                "symfony/dependency-injection": "^4.4|^5.4|^6.0|^7.0",
-                "symfony/http-kernel": "^4.4|^5.0|^6.0|^7.0",
-                "symfony/mercure": "^0.6.1",
-                "symfony/web-link": "^4.4|^5.0|^6.0|^7.0"
+                "php": ">=8.1",
+                "symfony/config": "^6.4|^7.3|^8.0",
+                "symfony/dependency-injection": "^6.4|^7.3|^8.0",
+                "symfony/http-kernel": "^6.4|^7.3|^8.0",
+                "symfony/mercure": "*",
+                "symfony/web-link": "^6.4|^7.3|^8.0"
             },
             "require-dev": {
-                "symfony/phpunit-bridge": "^4.3.7|^5.0|^6.0|^7.0",
-                "symfony/stopwatch": "^4.3.7|^5.0|^6.0|^7.0",
+                "symfony/phpunit-bridge": "^7.3.4|^8.0",
+                "symfony/stopwatch": "^6.4|^7.3|^8.0",
                 "symfony/ux-turbo": "*",
-                "symfony/var-dumper": "^4.3.7|^5.0|^6.0|^7.0"
+                "symfony/var-dumper": "^6.4|^7.3|^8.0"
             },
             "suggest": {
                 "symfony/messenger": "To use the Messenger integration"
@@ -6058,7 +6058,7 @@
             ],
             "support": {
                 "issues": "https://github.com/symfony/mercure-bundle/issues",
-                "source": "https://github.com/symfony/mercure-bundle/tree/v0.3.9"
+                "source": "https://github.com/symfony/mercure-bundle/tree/v0.4.2"
             },
             "funding": [
                 {
@@ -6070,7 +6070,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-05-31T09:07:18+00:00"
+            "time": "2025-11-25T12:51:49+00:00"
         },
         {
             "name": "symfony/messenger",

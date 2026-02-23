@@ -87,6 +87,7 @@ class TeleconsultationController extends AbstractController
                 $this->addFlash('error', 'Vous devez sélectionner un utilisateur valide.');
                 return $this->render('teleconsultation/schedule.html.twig', [
                     'form' => $form,
+                    'is_patient' => $this->isPatient(),
                 ]);
             }
 
@@ -94,6 +95,7 @@ class TeleconsultationController extends AbstractController
                 $this->addFlash('error', 'Le professionnel n\'est pas disponible à cette date et heure.');
                 return $this->render('teleconsultation/schedule.html.twig', [
                     'form' => $form,
+                    'is_patient' => $this->isPatient(),
                 ]);
             }
 
@@ -111,6 +113,7 @@ class TeleconsultationController extends AbstractController
 
         return $this->render('teleconsultation/schedule.html.twig', [
             'form' => $form,
+            'is_patient' => $this->isPatient(),
         ]);
     }
 

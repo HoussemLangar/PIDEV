@@ -3,10 +3,7 @@
 namespace App\Form;
 
 use App\Entity\AccompanimentPlan;
-use App\Entity\CoachSportif;
 use App\Entity\Patient;
-use App\Entity\Nutritionniste;
-use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
@@ -61,38 +58,6 @@ class AccompanimentPlanType extends AbstractType
                     'max' => 52,
                 ],
                 'data' => 12,
-            ])
-            ->add('coach', EntityType::class, [
-                'class' => CoachSportif::class,
-                'choice_label' => function (CoachSportif $coach) {
-                    return $coach->getUser()->getUsername() . ' (' . $coach->getUser()->getEmail() . ')';
-                },
-                'label' => 'Coach sportif (optionnel)',
-                'required' => false,
-                'attr' => [
-                    'class' => 'form-control',
-                ],
-                'query_builder' => function ($repo) {
-                    return $repo->createQueryBuilder('c')
-                        ->join('c.user', 'u')
-                        ->orderBy('u.username', 'ASC');
-                },
-            ])
-            ->add('nutritionist', EntityType::class, [
-                'class' => Nutritionniste::class,
-                'choice_label' => function (Nutritionniste $nutritionist) {
-                    return $nutritionist->getUser()->getUsername() . ' (' . $nutritionist->getUser()->getEmail() . ')';
-                },
-                'label' => 'Nutritionniste (optionnel)',
-                'required' => false,
-                'attr' => [
-                    'class' => 'form-control',
-                ],
-                'query_builder' => function ($repo) {
-                    return $repo->createQueryBuilder('n')
-                        ->join('n.user', 'u')
-                        ->orderBy('u.username', 'ASC');
-                },
             ])
             ->add('status', ChoiceType::class, [
                 'label' => 'Statut',

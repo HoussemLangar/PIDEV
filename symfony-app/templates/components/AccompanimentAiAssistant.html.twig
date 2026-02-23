@@ -1,0 +1,735 @@
+<style>
+/* ══════════════════════════════════════════
+   AI Assistant Component — Premium Design
+══════════════════════════════════════════ */
+.ai-assistant {
+    background: #fff;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(139,92,246,.10), 0 1px 4px rgba(0,0,0,.06);
+    border: 1px solid rgba(139,92,246,.15);
+    margin-top: 8px;
+}
+
+/* ── Header banner ── */
+.ai-header {
+    background: linear-gradient(135deg, #4c1d95 0%, #6d28d9 45%, #7c3aed 100%);
+    padding: 22px 28px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    position: relative;
+    overflow: hidden;
+}
+.ai-header::before {
+    content:'';
+    position:absolute; top:-40px; right:-40px;
+    width:180px; height:180px;
+    background:radial-gradient(circle, rgba(255,255,255,.08) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events:none;
+}
+.ai-header::after {
+    content:'';
+    position:absolute; bottom:-30px; left:30%;
+    width:120px; height:120px;
+    background:radial-gradient(circle, rgba(167,139,250,.12) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events:none;
+}
+.ai-header-icon {
+    width: 52px; height: 52px;
+    background: rgba(255,255,255,.15);
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,.25);
+    flex-shrink: 0;
+    position: relative;
+}
+.ai-header-icon i { color: #fff; font-size: 22px; }
+.ai-pulse {
+    position: absolute; top: -4px; right: -4px;
+    width: 14px; height: 14px;
+    background: #34d399;
+    border-radius: 50%;
+    border: 2px solid #6d28d9;
+    animation: ai-pulse-ring 1.8s ease-in-out infinite;
+}
+@keyframes ai-pulse-ring {
+    0%,100% { transform:scale(1); opacity:1; }
+    50%      { transform:scale(1.3); opacity:.7; }
+}
+.ai-header-text h3 { margin:0; font-size:19px; font-weight:800; color:#fff; letter-spacing:-.3px; }
+.ai-header-text p  { margin:4px 0 0; font-size:13px; color:rgba(255,255,255,.75); }
+.ai-badge {
+    margin-left:auto;
+    padding: 5px 12px;
+    background: rgba(255,255,255,.15);
+    border: 1px solid rgba(255,255,255,.25);
+    border-radius: 20px;
+    font-size: 11px; font-weight: 700;
+    color: #e9d5ff;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+}
+
+/* ── Body ── */
+.ai-body { padding: 24px 28px; }
+
+/* ── Profile groups ── */
+.ai-profile-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+.ai-group {
+    background: #faf5ff;
+    border: 1px solid #e9d5ff;
+    border-radius: 14px;
+    padding: 18px;
+}
+.ai-group.sport   { background:#f0fdf4; border-color:#bbf7d0; }
+.ai-group-title {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .5px;
+    color: #6d28d9; margin-bottom: 14px;
+}
+.ai-group.sport .ai-group-title { color: #059669; }
+.ai-group-title i { font-size: 14px; }
+
+/* ── Objective field (full width) ── */
+.ai-objective-wrap {
+    margin-bottom: 20px;
+}
+.ai-field-label {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 12px; font-weight: 700;
+    color: #475569; text-transform: uppercase; letter-spacing: .4px;
+    margin-bottom: 7px;
+}
+.ai-field-label i { color: #94a3b8; font-size: 12px; }
+.ai-input, .ai-select, .ai-textarea {
+    width: 100%;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 13.5px;
+    color: #1e293b;
+    background: #fff;
+    transition: border-color .2s, box-shadow .2s;
+    box-sizing: border-box;
+}
+.ai-group .ai-input, .ai-group .ai-select { background:#fff; }
+.ai-group.sport .ai-input, .ai-group.sport .ai-select { background:#fff; }
+.ai-input:focus, .ai-select:focus, .ai-textarea:focus {
+    outline: none;
+    border-color: #8b5cf6;
+    box-shadow: 0 0 0 3px rgba(139,92,246,.12);
+}
+.ai-group.sport .ai-input:focus, .ai-group.sport .ai-select:focus {
+    border-color: #10b981;
+    box-shadow: 0 0 0 3px rgba(16,185,129,.12);
+}
+.ai-textarea { resize: vertical; min-height: 64px; }
+.ai-num-wrapper {
+    display: flex; align-items: center; gap: 8px;
+}
+.ai-num-wrapper .ai-input { text-align:center; font-weight:700; padding:10px 6px; }
+.ai-num-suffix { font-size: 12px; font-weight: 600; color: #94a3b8; white-space: nowrap; }
+
+/* ── inner field rows ── */
+.ai-field-row { margin-bottom: 12px; }
+.ai-field-row:last-child { margin-bottom: 0; }
+
+/* ── Generate button ── */
+.ai-generate-btn {
+    width: 100%;
+    padding: 14px 20px;
+    background: linear-gradient(135deg, #6d28d9 0%, #7c3aed 50%, #8b5cf6 100%);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: .2px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    box-shadow: 0 4px 16px rgba(109,40,217,.35);
+    transition: transform .2s, box-shadow .2s;
+}
+.ai-generate-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(109,40,217,.45);
+}
+.ai-generate-btn:active { transform:translateY(0); }
+.ai-generate-btn i { font-size:17px; }
+.ai-generate-btn .btn-sub { font-size:12px; font-weight:400; opacity:.8; margin-left:4px; }
+
+/* ── Divider ── */
+.ai-divider {
+    display: flex; align-items: center; gap: 12px;
+    margin: 24px 0 20px;
+    color: #94a3b8; font-size: 12px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .5px;
+}
+.ai-divider::before, .ai-divider::after {
+    content:''; flex:1; height:1px;
+    background: linear-gradient(90deg, transparent, #e2e8f0, transparent);
+}
+
+/* ── Results ── */
+.ai-result-summary {
+    background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+    border: 1px solid #ddd6fe;
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+    display: flex; gap: 14px; align-items: flex-start;
+}
+.ai-result-summary-icon {
+    width: 38px; height: 38px; flex-shrink:0;
+    background: linear-gradient(135deg, #7c3aed, #6d28d9);
+    border-radius: 10px;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow: 0 2px 8px rgba(109,40,217,.25);
+}
+.ai-result-summary-icon i { color:#fff; font-size:16px; }
+.ai-result-summary-text strong {
+    display:block; color:#4c1d95; font-size:14px; font-weight:700; margin-bottom:5px;
+}
+.ai-result-summary-text span { color:#5b21b6; font-size:14px; line-height:1.5; }
+
+.ai-result-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 16px;
+}
+.ai-result-card {
+    border-radius: 14px;
+    padding: 18px;
+    border: 1px solid;
+}
+.ai-result-card.nutrition {
+    background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+    border-color: #bbf7d0;
+}
+.ai-result-card.workout {
+    background: linear-gradient(135deg, #eff6ff, #dbeafe);
+    border-color: #bfdbfe;
+}
+.ai-result-card-header {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 12px;
+}
+.ai-rc-icon {
+    width: 34px; height: 34px;
+    border-radius: 9px;
+    display:flex; align-items:center; justify-content:center;
+}
+.ai-result-card.nutrition .ai-rc-icon { background:linear-gradient(135deg,#10b981,#059669); }
+.ai-result-card.workout   .ai-rc-icon { background:linear-gradient(135deg,#3b82f6,#2563eb); }
+.ai-rc-icon i { color:#fff; font-size:15px; }
+.ai-result-card-header strong {
+    font-size: 14px; font-weight: 700;
+}
+.ai-result-card.nutrition .ai-result-card-header strong { color:#065f46; }
+.ai-result-card.workout   .ai-result-card-header strong { color:#1e3a8a; }
+.ai-result-card p {
+    font-size: 13px; color: #374151; line-height:1.55; margin:0 0 10px 0;
+}
+.ai-result-card ul {
+    margin:0; padding-left:16px; font-size:12.5px; color:#4b5563; line-height:1.6;
+}
+.ai-result-card li { margin-bottom:3px; }
+
+/* ── Suggested text blocks ── */
+.ai-suggest-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 8px;
+}
+.ai-suggest-block {}
+.ai-suggest-header {
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:8px;
+}
+.ai-suggest-label {
+    font-size:12px; font-weight:700; color:#475569;
+    text-transform:uppercase; letter-spacing:.4px;
+    display:flex; align-items:center; gap:6px;
+}
+.ai-suggest-label i { color:#8b5cf6; font-size:12px; }
+.ai-copy-btn {
+    padding: 4px 10px;
+    background: #ede9fe;
+    border: 1px solid #ddd6fe;
+    border-radius: 6px;
+    font-size:11px; font-weight:600; color:#6d28d9;
+    cursor:pointer; display:flex; align-items:center; gap:5px;
+    transition: background .15s;
+}
+.ai-copy-btn:hover { background:#ddd6fe; }
+.ai-copy-btn i { font-size:11px; }
+.ai-suggest-textarea {
+    width:100%; min-height:100px;
+    border:1.5px solid #e2e8f0; border-radius:10px;
+    padding:10px 12px; font-size:13px; color:#374151;
+    background:#fafafa; resize:vertical; box-sizing:border-box;
+    line-height:1.55;
+    font-family:inherit;
+}
+.ai-hint {
+    display:flex; align-items:center; gap:7px;
+    padding: 10px 14px;
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 10px;
+    font-size:12px; color:#92400e;
+}
+.ai-hint i { color:#f59e0b; flex-shrink:0; }
+
+@media (max-width:680px) {
+    .ai-profile-grid, .ai-result-grid, .ai-suggest-grid { grid-template-columns: 1fr; }
+    .ai-badge { display:none; }
+}
+</style>
+
+<div {{ attributes.defaults({ class: 'ai-assistant' }) }}
+    data-ai-endpoint="{{ path('app_plan_ai_suggestions') }}"
+    data-show-nutrition="{{ (is_granted('ROLE_NUTRITIONNISTE') or is_granted('ROLE_MEDECIN')) ? '1' : '0' }}"
+    data-show-sport="{{ (is_granted('ROLE_COACH') or is_granted('ROLE_MEDECIN')) ? '1' : '0' }}">
+
+    {# ── HEADER ── #}
+    <div class="ai-header">
+        <div class="ai-header-icon">
+            <i class="fas fa-robot"></i>
+            <div class="ai-pulse"></div>
+        </div>
+        <div class="ai-header-text">
+            <h3>Assistant IA d'accompagnement</h3>
+            <p>Recommandations personnalisées nutrition &amp; activité physique</p>
+        </div>
+        <span class="ai-badge"><i class="fas fa-bolt" style="margin-right:4px;"></i>IA Active</span>
+    </div>
+
+    {# ── Role guards — computed once, used in form AND results ── #}
+    {% set showNutrition = is_granted('ROLE_NUTRITIONNISTE') or is_granted('ROLE_MEDECIN') %}
+    {% set showSport     = is_granted('ROLE_COACH')          or is_granted('ROLE_MEDECIN') %}
+    {% if not showNutrition and not showSport %}
+        {% set showNutrition = true %}
+        {% set showSport     = true %}
+    {% endif %}
+
+    {# ── FORM ── #}
+    <div class="ai-body">
+        <form onsubmit="return false;">
+
+            {# Objectif global — pleine largeur #}
+            <div class="ai-objective-wrap">
+                <div class="ai-field-label">
+                    <i class="fas fa-crosshairs"></i> Objectif global du plan
+                </div>
+                <textarea data-model="goal" rows="2" class="ai-textarea" placeholder="Ex: Perte de poids progressive, renforcement musculaire, rééducation post-opératoire…">{{ this.goal }}</textarea>
+            </div>
+
+            {# Grid: 2 cols when both visible, 1 col when only one #}
+            <div class="ai-profile-grid" style="{{ (showNutrition and showSport) ? '' : 'grid-template-columns:1fr;' }}">
+
+                {# ── Profil nutrition — Nutritionniste / Médecin ── #}
+                {% if showNutrition %}
+                <div class="ai-group">
+                    <div class="ai-group-title">
+                        <i class="fas fa-utensils"></i> Profil Nutrition
+                    </div>
+
+                    <div class="ai-field-row">
+                        <div class="ai-field-label"><i class="fas fa-leaf"></i> Style alimentaire</div>
+                        <select data-model="dietStyle" class="ai-select">
+                            <option value="standard"     {% if this.dietStyle == 'standard'     %}selected{% endif %}>🍽 Standard</option>
+                            <option value="vegetarien"   {% if this.dietStyle == 'vegetarien'   %}selected{% endif %}>🥦 Végétarien</option>
+                            <option value="mediterraneen"{% if this.dietStyle == 'mediterraneen'%}selected{% endif %}>🫒 Méditerranéen</option>
+                            <option value="sans-gluten"  {% if this.dietStyle == 'sans-gluten'  %}selected{% endif %}>🌾 Sans gluten</option>
+                            <option value="cetogene"     {% if this.dietStyle == 'cetogene'     %}selected{% endif %}>🥑 Cétogène</option>
+                        </select>
+                    </div>
+
+                    <div class="ai-field-row">
+                        <div class="ai-field-label"><i class="fas fa-exclamation-triangle"></i> Allergies / Intolérances</div>
+                        <input data-model="allergies" type="text" class="ai-input" placeholder="Lactose, gluten, arachides…" value="{{ this.allergies }}">
+                    </div>
+
+                    <div class="ai-field-row">
+                        <div class="ai-field-label"><i class="fas fa-calendar-alt"></i> Durée du programme</div>
+                        <div class="ai-num-wrapper">
+                            <input data-model="nutritionDays" type="number" min="1" max="14" class="ai-input" style="max-width:70px;" value="{{ this.nutritionDays }}">
+                            <span class="ai-num-suffix">jours de menus détaillés</span>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {# ── Profil sport — Coach / Médecin ── #}
+                {% if showSport %}
+                <div class="ai-group sport">
+                    <div class="ai-group-title">
+                        <i class="fas fa-dumbbell"></i> Profil Sportif
+                    </div>
+
+                    <div class="ai-field-row">
+                        <div class="ai-field-label"><i class="fas fa-signal"></i> Niveau actuel</div>
+                        <select data-model="level" class="ai-select">
+                            <option value="debutant"      {% if this.level == 'debutant'      %}selected{% endif %}>🌱 Débutant</option>
+                            <option value="intermediaire" {% if this.level == 'intermediaire' %}selected{% endif %}>⚡ Intermédiaire</option>
+                            <option value="avance"        {% if this.level == 'avance'        %}selected{% endif %}>🏆 Avancé</option>
+                        </select>
+                    </div>
+
+                    <div class="ai-field-row">
+                        <div class="ai-field-label"><i class="fas fa-ban"></i> Contraintes physiques</div>
+                        <input data-model="constraints" type="text" class="ai-input" placeholder="Mal de dos, genou fragile…" value="{{ this.constraints }}">
+                    </div>
+
+                    <div class="ai-field-row">
+                        <div class="ai-field-label"><i class="fas fa-stopwatch"></i> Volume d'entraînement</div>
+                        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                            <div class="ai-num-wrapper" style="flex:1; min-width:90px;">
+                                <input data-model="daysPerWeek" type="number" min="1" max="7" class="ai-input" style="max-width:54px;" value="{{ this.daysPerWeek }}">
+                                <span class="ai-num-suffix">j/sem</span>
+                            </div>
+                            <div class="ai-num-wrapper" style="flex:1; min-width:90px;">
+                                <input data-model="minutes" type="number" min="10" max="120" class="ai-input" style="max-width:60px;" value="{{ this.minutes }}">
+                                <span class="ai-num-suffix">min/séance</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+            </div>{# /ai-profile-grid #}
+
+            {# Generate button — label adapts to active profiles #}
+                <button type="button" class="ai-generate-btn" id="ai-generate-btn"
+                    onclick="window.planAiGenerate && window.planAiGenerate(this)">
+                <span class="ai-generate-normal" style="display:flex;align-items:center;gap:10px;">
+                    <i class="fas fa-magic"></i>
+                    Générer les recommandations IA
+                    <span class="btn-sub">—
+                        {% if showNutrition and showSport %}nutrition + sport
+                        {% elseif showNutrition %}plan nutritionnel
+                        {% else %}programme sportif
+                        {% endif %}
+                    </span>
+                </span>
+                <span class="ai-generate-loading" style="display:none;align-items:center;gap:10px;">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    Génération en cours…
+                </span>
+            </button>
+
+        </form>
+
+        <div id="ai-fallback-results" style="display:none;"></div>
+
+        {% if this.hasResult %}
+
+            {% if this.result._error is defined and this.result._error %}
+                <div style="margin:16px 0;padding:14px 18px;background:#fef2f2;border:1.5px solid #fca5a5;border-radius:12px;color:#dc2626;font-size:14px;display:flex;gap:10px;align-items:center;">
+                    <i class="fas fa-exclamation-circle" style="flex-shrink:0;"></i>
+                    Erreur lors de la génération IA. Vérifiez la configuration de l'API ou réessayez.
+                </div>
+            {% else %}
+            <div style="margin: 2px 0 10px; font-size: 16px; font-weight: 800; color:#4c1d95; display:flex; align-items:center; gap:8px;">
+                <i class="fas fa-sparkles"></i>
+                Recommandations IA personnalisées
+            </div>
+            <div class="ai-divider"><i class="fas fa-star"></i> Résultats générés</div>
+
+            {# Synthèse #}
+            <div class="ai-result-summary">
+                <div class="ai-result-summary-icon"><i class="fas fa-lightbulb"></i></div>
+                <div class="ai-result-summary-text">
+                    <strong>Synthèse globale</strong>
+                    <span>{{ this.result.summary }}</span>
+                </div>
+            </div>
+
+            {# Cards Nutrition + Sport — conditionally shown by role #}
+            <div class="ai-result-grid" style="{{ (showNutrition and showSport) ? '' : 'grid-template-columns:1fr;' }}">
+                {% if showNutrition %}
+                <div class="ai-result-card nutrition">
+                    <div class="ai-result-card-header">
+                        <div class="ai-rc-icon"><i class="fas fa-apple-alt"></i></div>
+                        <strong>Plan Nutritionnel</strong>
+                    </div>
+                    <p>{{ this.result.nutrition.overview }}</p>
+                    <ul>
+                        {% for tip in this.result.nutrition.tips|slice(0, 4) %}
+                            <li>{{ tip }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+                {% if showSport %}
+                <div class="ai-result-card workout">
+                    <div class="ai-result-card-header">
+                        <div class="ai-rc-icon"><i class="fas fa-running"></i></div>
+                        <strong>Programme Sportif</strong>
+                    </div>
+                    <p>{{ this.result.workout.overview }}</p>
+                    <ul>
+                        {% for safe in this.result.workout.safety|slice(0, 4) %}
+                            <li>{{ safe }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+
+{# Suggested text — inject OR copy #}
+            <div class="ai-suggest-grid" style="grid-template-columns:1fr;">
+                <div class="ai-suggest-block">
+                    <div class="ai-suggest-header">
+                        <span class="ai-suggest-label"><i class="fas fa-heading"></i> Titre du plan suggéré</span>
+                        <div style="display:flex;gap:6px;">
+                            <button type="button" class="ai-copy-btn" style="background:linear-gradient(135deg,#10b981,#059669);color:#fff;border-color:#059669;"
+                                    onclick="
+                                        const txt=this.closest('.ai-suggest-block').querySelector('textarea').value;
+                                        if(window.planAiInject){planAiInject('title',txt);this.innerHTML='<i class=\'fas fa-check\'></i> Injecté !';}else{navigator.clipboard.writeText(txt);this.innerHTML='<i class=\'fas fa-check\'></i> Copié !';}
+                                    ">
+                                <i class="fas fa-file-import"></i> Injecter
+                            </button>
+                            <button type="button" class="ai-copy-btn"
+                                    onclick="navigator.clipboard.writeText(this.closest('.ai-suggest-block').querySelector('textarea').value);this.innerHTML='<i class=\'fas fa-check\'></i>';setTimeout(()=>this.innerHTML='<i class=\'fas fa-copy\'></i>',1500);">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <textarea class="ai-suggest-textarea" readonly>{{ this.result.suggestedTitle }}</textarea>
+                </div>
+
+                <div class="ai-suggest-block">
+                    <div class="ai-suggest-header">
+                        <span class="ai-suggest-label"><i class="fas fa-bullseye"></i> Objectifs suggérés</span>
+                        <div style="display:flex;gap:6px;">
+                            <button type="button" class="ai-copy-btn" style="background:linear-gradient(135deg,#10b981,#059669);color:#fff;border-color:#059669;"
+                                    onclick="
+                                        const txt=this.closest('.ai-suggest-block').querySelector('textarea').value;
+                                        if(window.planAiInject){planAiInject('objectives',txt);this.innerHTML='<i class=\'fas fa-check\'></i> Injecté !';}else{navigator.clipboard.writeText(txt);this.innerHTML='<i class=\'fas fa-check\'></i> Copié !';}
+                                    ">
+                                <i class="fas fa-file-import"></i> Injecter
+                            </button>
+                            <button type="button" class="ai-copy-btn"
+                                    onclick="navigator.clipboard.writeText(this.closest('.ai-suggest-block').querySelector('textarea').value);this.innerHTML='<i class=\'fas fa-check\'></i>';setTimeout(()=>this.innerHTML='<i class=\'fas fa-copy\'></i>',1500);">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <textarea class="ai-suggest-textarea" readonly>{{ this.result.suggestedObjectives }}</textarea>
+                </div>
+                <div class="ai-suggest-block">
+                    <div class="ai-suggest-header">
+                        <span class="ai-suggest-label"><i class="fas fa-align-left"></i> Description suggérée</span>
+                        <div style="display:flex;gap:6px;">
+                            <button type="button" class="ai-copy-btn" style="background:linear-gradient(135deg,#10b981,#059669);color:#fff;border-color:#059669;"
+                                    onclick="
+                                        const txt=this.closest('.ai-suggest-block').querySelector('textarea').value;
+                                        if(window.planAiInject){planAiInject('description',txt);this.innerHTML='<i class=\'fas fa-check\'></i> Injecté !';}else{navigator.clipboard.writeText(txt);this.innerHTML='<i class=\'fas fa-check\'></i> Copié !';}
+                                    ">
+                                <i class="fas fa-file-import"></i> Injecter
+                            </button>
+                            <button type="button" class="ai-copy-btn"
+                                    onclick="navigator.clipboard.writeText(this.closest('.ai-suggest-block').querySelector('textarea').value);this.innerHTML='<i class=\'fas fa-check\'></i>';setTimeout(()=>this.innerHTML='<i class=\'fas fa-copy\'></i>',1500);">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <textarea class="ai-suggest-textarea" readonly>{{ this.result.suggestedDescription }}</textarea>
+                </div>
+            </div>
+
+            <div class="ai-hint">
+                <i class="fas fa-info-circle"></i>
+                Cliquez <strong>Injecter</strong> pour remplir automatiquement les champs du formulaire, ou <strong><i class="fas fa-copy"></i></strong> pour copier manuellement.
+            </div>
+
+            {% endif %}{# /not _error #}
+
+        {% endif %}
+    </div>{# /ai-body #}
+</div>{# /ai-assistant #}
+
+<script>
+(function () {
+    if (window.planAiGenerate) {
+        return;
+    }
+
+    const escapeHtml = (value) => String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+
+    const asList = (items) => Array.isArray(items)
+        ? items.slice(0, 4).map((item) => `<li>${escapeHtml(item)}</li>`).join('')
+        : '';
+
+    window.planAiGenerate = async function (button) {
+        const root = button.closest('.ai-assistant');
+        if (!root) return;
+
+        const endpoint = root.dataset.aiEndpoint || '';
+        const showNutrition = root.dataset.showNutrition === '1';
+        const showSport = root.dataset.showSport === '1';
+
+        const getValue = (model, fallback) => {
+            const node = root.querySelector(`[data-model="${model}"]`);
+            if (!node) return fallback;
+            return (node.value ?? '').toString().trim();
+        };
+
+        const goal = getValue('goal', '');
+        if (goal === '') {
+            if (window.planToast) {
+                window.planToast('⚠️ Veuillez saisir un objectif global avant de générer.', 'error');
+            }
+            return;
+        }
+
+        const normal = button.querySelector('.ai-generate-normal');
+        const loading = button.querySelector('.ai-generate-loading');
+        if (normal && loading) {
+            normal.style.display = 'none';
+            loading.style.display = 'flex';
+        }
+        button.disabled = true;
+
+        const payload = {
+            goal,
+            dietStyle: getValue('dietStyle', 'standard'),
+            allergies: getValue('allergies', ''),
+            nutritionDays: parseInt(getValue('nutritionDays', '7'), 10) || 7,
+            level: getValue('level', 'intermediaire'),
+            daysPerWeek: parseInt(getValue('daysPerWeek', '3'), 10) || 3,
+            minutes: parseInt(getValue('minutes', '30'), 10) || 30,
+            constraints: getValue('constraints', ''),
+        };
+
+        try {
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: JSON.stringify(payload),
+                credentials: 'same-origin',
+            });
+
+            const data = await response.json();
+            if (!response.ok || !data || data.ok !== true) {
+                throw new Error((data && data.error) ? data.error : 'Erreur de génération');
+            }
+
+            const result = data.result || {};
+            const resultsHost = root.querySelector('#ai-fallback-results');
+            if (!resultsHost) return;
+
+            const nutritionBlock = showNutrition ? `
+                <div class="ai-result-card nutrition">
+                    <div class="ai-result-card-header">
+                        <div class="ai-rc-icon"><i class="fas fa-apple-alt"></i></div>
+                        <strong>Plan Nutritionnel</strong>
+                    </div>
+                    <p>${escapeHtml(result.nutrition?.overview || '')}</p>
+                    <ul>${asList(result.nutrition?.tips || [])}</ul>
+                </div>
+            ` : '';
+
+            const sportBlock = showSport ? `
+                <div class="ai-result-card workout">
+                    <div class="ai-result-card-header">
+                        <div class="ai-rc-icon"><i class="fas fa-running"></i></div>
+                        <strong>Programme Sportif</strong>
+                    </div>
+                    <p>${escapeHtml(result.workout?.overview || '')}</p>
+                    <ul>${asList(result.workout?.safety || [])}</ul>
+                </div>
+            ` : '';
+
+            resultsHost.innerHTML = `
+                <div style="margin: 2px 0 10px; font-size: 16px; font-weight: 800; color:#4c1d95; display:flex; align-items:center; gap:8px;">
+                    <i class="fas fa-sparkles"></i>
+                    Recommandations IA personnalisées
+                </div>
+                <div class="ai-divider"><i class="fas fa-star"></i> Résultats générés</div>
+                <div class="ai-result-summary">
+                    <div class="ai-result-summary-icon"><i class="fas fa-lightbulb"></i></div>
+                    <div class="ai-result-summary-text">
+                        <strong>Synthèse globale</strong>
+                        <span>${escapeHtml(result.summary || '')}</span>
+                    </div>
+                </div>
+                <div class="ai-result-grid" style="${(showNutrition && showSport) ? '' : 'grid-template-columns:1fr;'}">
+                    ${nutritionBlock}
+                    ${sportBlock}
+                </div>
+                <div class="ai-suggest-grid">
+                    <div class="ai-suggest-block">
+                        <div class="ai-suggest-header">
+                            <span class="ai-suggest-label"><i class="fas fa-heading"></i> Titre du plan suggéré</span>
+                        </div>
+                        <textarea class="ai-suggest-textarea" readonly>${escapeHtml(result.suggestedTitle || '')}</textarea>
+                    </div>
+                    <div class="ai-suggest-block">
+                        <div class="ai-suggest-header">
+                            <span class="ai-suggest-label"><i class="fas fa-bullseye"></i> Objectifs suggérés</span>
+                        </div>
+                        <textarea class="ai-suggest-textarea" readonly>${escapeHtml(result.suggestedObjectives || '')}</textarea>
+                    </div>
+                    <div class="ai-suggest-block">
+                        <div class="ai-suggest-header">
+                            <span class="ai-suggest-label"><i class="fas fa-align-left"></i> Description suggérée</span>
+                        </div>
+                        <textarea class="ai-suggest-textarea" readonly>${escapeHtml(result.suggestedDescription || '')}</textarea>
+                    </div>
+                </div>
+            `;
+            resultsHost.style.display = 'block';
+
+            if (window.planAiInject) {
+                if (result.suggestedTitle) {
+                    window.planAiInject('title', result.suggestedTitle);
+                }
+                if (result.suggestedObjectives) {
+                    window.planAiInject('objectives', result.suggestedObjectives);
+                }
+                if (result.suggestedDescription) {
+                    window.planAiInject('description', result.suggestedDescription);
+                }
+            }
+
+            if (window.planToast) {
+                window.planToast('✅ Recommandations générées avec succès.', 'success');
+            }
+        } catch (error) {
+            if (window.planToast) {
+                window.planToast(`❌ ${error.message || 'Erreur lors de la génération IA.'}`, 'error');
+            }
+        } finally {
+            button.disabled = false;
+            if (normal && loading) {
+                normal.style.display = 'flex';
+                loading.style.display = 'none';
+            }
+        }
+    };
+})();
+</script>

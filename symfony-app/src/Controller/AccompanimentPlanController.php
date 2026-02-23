@@ -10,8 +10,10 @@ use App\Form\AccompanimentPlanType;
 use App\Repository\AccompanimentPlanRepository;
 use App\Repository\CoachSportifRepository;
 use App\Repository\PatientRepository;
+use App\Service\Accompaniment\AccompanimentAiAdvisorService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -26,6 +28,7 @@ class AccompanimentPlanController extends AbstractController
         private PatientRepository $patientRepository,
         private CoachSportifRepository $coachRepository,
         private EntityManagerInterface $em,
+        private AccompanimentAiAdvisorService $aiAdvisor,
     ) {
     }
 
@@ -75,9 +78,10 @@ class AccompanimentPlanController extends AbstractController
         $isPatient = $plan->getPatient()->getUser() === $user;
         $isCoach = $plan->getCoach() && $plan->getCoach()->getUser() === $user;
         $isNutritionist = $plan->getNutritionist() && $plan->getNutritionist()->getUser() === $user;
+        $isMedecin = $this->isMedecinRole($user);
 
-        // Verify access (patient or assigned professional)
-        if (!$isPatient && !$isCoach && !$isNutritionist) {
+        // Verify access: patient, assigned professional, or any doctor (read-only)
+        if (!$isPatient && !$isCoach && !$isNutritionist && !$isMedecin) {
             throw $this->createAccessDeniedException();
         }
 
@@ -95,8 +99,8 @@ class AccompanimentPlanController extends AbstractController
         $user = $this->getUser();
         assert($user instanceof User);
 
-        if (!$this->isProfessionalRole($user)) {
-            throw $this->createAccessDeniedException();
+        if (!$this->isProfessionalRole($user) || $this->isMedecinRole($user)) {
+            throw $this->createAccessDeniedException('Les médecins ne peuvent pas créer de plans. Accès en lecture seule uniquement.');
         }
 
         $patient = $this->patientRepository->find($patientId);
@@ -108,20 +112,24 @@ class AccompanimentPlanController extends AbstractController
         $plan->setPatient($patient);
         $plan->setStartDate(new \DateTimeImmutable());
 
+        // Auto-assign the professional before form creation
+        $assignedLabel = null;
+        if ($this->isCoachRole($user)) {
+            $coach = $this->coachRepository->findOneBy(['user' => $user]);
+            $plan->setCoach($coach);
+            $plan->setNutritionist(null);
+            $assignedLabel = ['role' => 'Coach sportif', 'name' => $user->getUsername()];
+        } elseif ($this->isNutritionnisteRole($user)) {
+            $nutritionniste = $user->getNutritionniste();
+            $plan->setNutritionist($nutritionniste);
+            $plan->setCoach(null);
+            $assignedLabel = ['role' => 'Nutritionniste', 'name' => $user->getUsername()];
+        }
+
         $form = $this->createForm(AccompanimentPlanType::class, $plan);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            if ($this->isCoachRole($user)) {
-                $coach = $this->coachRepository->findOneBy(['user' => $user]);
-                $plan->setCoach($coach);
-                $plan->setNutritionist(null);
-            } elseif ($this->isNutritionnisteRole($user)) {
-                $nutritionniste = $user->getNutritionniste();
-                $plan->setNutritionist($nutritionniste);
-                $plan->setCoach(null);
-            }
-
             $this->em->persist($plan);
             $this->em->flush();
 
@@ -130,8 +138,9 @@ class AccompanimentPlanController extends AbstractController
         }
 
         return $this->render('plan/create.html.twig', [
-            'form' => $form,
-            'patient' => $patient,
+            'form'          => $form,
+            'patient'       => $patient,
+            'assignedLabel' => $assignedLabel,
         ]);
     }
 
@@ -208,14 +217,19 @@ class AccompanimentPlanController extends AbstractController
 
         $plans = [];
 
-        $coach = $this->coachRepository->findOneBy(['user' => $user]);
-        if ($coach) {
-            $plans = array_merge($plans, $this->planRepository->findByCoach($coach));
-        }
+        if ($this->isMedecinRole($user)) {
+            // Médecin: read-only access to all plans
+            $plans = $this->planRepository->findAll();
+        } else {
+            $coach = $this->coachRepository->findOneBy(['user' => $user]);
+            if ($coach) {
+                $plans = array_merge($plans, $this->planRepository->findByCoach($coach));
+            }
 
-        $nutritionniste = $user->getNutritionniste();
-        if ($nutritionniste) {
-            $plans = array_merge($plans, $this->planRepository->findByNutritionist($nutritionniste));
+            $nutritionniste = $user->getNutritionniste();
+            if ($nutritionniste) {
+                $plans = array_merge($plans, $this->planRepository->findByNutritionist($nutritionniste));
+            }
         }
 
         // Sort by most recent first
@@ -240,6 +254,59 @@ class AccompanimentPlanController extends AbstractController
         ]);
     }
 
+    #[Route('/ai/suggestions', name: 'ai_suggestions', methods: ['POST'])]
+    public function aiSuggestions(Request $request): JsonResponse
+    {
+        $user = $this->getUser();
+        assert($user instanceof User);
+
+        if (!$this->isProfessionalRole($user)) {
+            return $this->json([
+                'ok' => false,
+                'error' => 'Accès refusé.',
+            ], 403);
+        }
+
+        $payload = json_decode($request->getContent(), true);
+        if (!is_array($payload)) {
+            return $this->json([
+                'ok' => false,
+                'error' => 'Payload invalide.',
+            ], 400);
+        }
+
+        $goal = trim((string) ($payload['goal'] ?? ''));
+        if ($goal === '') {
+            return $this->json([
+                'ok' => false,
+                'error' => 'Veuillez saisir un objectif global.',
+            ], 422);
+        }
+
+        try {
+            $result = $this->aiAdvisor->buildSuggestions(
+                $goal,
+                trim((string) ($payload['dietStyle'] ?? 'standard')),
+                trim((string) ($payload['allergies'] ?? '')),
+                (int) ($payload['nutritionDays'] ?? 7),
+                trim((string) ($payload['level'] ?? 'intermediaire')),
+                (int) ($payload['daysPerWeek'] ?? 3),
+                (int) ($payload['minutes'] ?? 30),
+                trim((string) ($payload['constraints'] ?? '')),
+            );
+
+            return $this->json([
+                'ok' => true,
+                'result' => $result,
+            ]);
+        } catch (\Throwable) {
+            return $this->json([
+                'ok' => false,
+                'error' => 'Erreur lors de la génération IA. Réessayez dans quelques secondes.',
+            ], 500);
+        }
+    }
+
     private function getEffectiveRole(User $user): string
     {
         return $user->getSubscriptionType() ?: $user->getRole();
@@ -260,8 +327,13 @@ class AccompanimentPlanController extends AbstractController
         return $this->getEffectiveRole($user) === 'ROLE_NUTRITIONNISTE';
     }
 
+    private function isMedecinRole(User $user): bool
+    {
+        return $this->getEffectiveRole($user) === 'ROLE_MEDECIN';
+    }
+
     private function isProfessionalRole(User $user): bool
     {
-        return in_array($this->getEffectiveRole($user), ['ROLE_COACH', 'ROLE_NUTRITIONNISTE'], true);
+        return in_array($this->getEffectiveRole($user), ['ROLE_MEDECIN', 'ROLE_COACH', 'ROLE_NUTRITIONNISTE'], true);
     }
 }

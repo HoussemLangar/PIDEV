@@ -41,7 +41,8 @@ class AiGatewayService
                         ['role' => 'user', 'content' => $userPrompt],
                     ],
                 ],
-                'timeout' => 25,
+                'timeout' => 8,
+                'max_duration' => 10,
             ]);
 
             $payload = $response->toArray(false);

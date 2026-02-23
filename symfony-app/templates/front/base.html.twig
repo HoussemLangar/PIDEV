@@ -612,6 +612,8 @@
                                 {% set _roleLabel = 'Pharmacien' %} {% set _roleIcon = 'fas fa-pills' %}
                             {% elseif _userRole == 'ROLE_COACH' %}
                                 {% set _roleLabel = 'Coach' %} {% set _roleIcon = 'fas fa-dumbbell' %}
+                            {% elseif _userRole == 'ROLE_NUTRITIONNISTE' %}
+                                {% set _roleLabel = 'Nutritionniste' %} {% set _roleIcon = 'fas fa-apple-alt' %}
                             {% else %}
                                 {% set _roleLabel = 'Patient' %} {% set _roleIcon = 'fas fa-user' %}
                             {% endif %}
@@ -627,8 +629,9 @@
                             {# ── body ── #}
                             <div class="acc-body">
                                 {% set canTeleconsult = is_granted('ROLE_PATIENT') or is_granted('ROLE_MEDECIN') %}
-                                {% set canPlan = is_granted('ROLE_PATIENT') or is_granted('ROLE_COACH') %}
+                                {% set canPlan = is_granted('ROLE_PATIENT') or is_granted('ROLE_MEDECIN') or is_granted('ROLE_COACH') or is_granted('ROLE_NUTRITIONNISTE') %}
                                 {% set isPatient = app.user and (app.user.subscriptionType ?? app.user.role) == 'ROLE_PATIENT' %}
+                                {% set isProfessionalPlanRole = app.user and (app.user.subscriptionType ?? app.user.role) in ['ROLE_MEDECIN', 'ROLE_COACH', 'ROLE_NUTRITIONNISTE'] %}
 
                                 <a href="{{ path('profile_edit') }}" class="dropdown-item">
                                     <i class="fas fa-user-circle"></i> {{ 'nav.settings'|trans }}
@@ -658,10 +661,13 @@
                                         </a>
                                         {% endif %}
                                         {% if canPlan %}
-                                        <a href="{{ path('app_plan_index') }}" class="dropdown-item">
+                                        <a href="{{ isProfessionalPlanRole ? path('app_plan_professional_plans') : path('app_plan_index') }}" class="dropdown-item">
                                             <i class="fas fa-calendar-check"></i> Mes plans
                                         </a>
                                         {% endif %}
+                                        <a href="{{ path('app_ai_tools_index') }}" class="dropdown-item">
+                                            <i class="fas fa-robot"></i> Outils IA
+                                        </a>
                                     </div>
                                 </div>
 
@@ -874,7 +880,7 @@
 
                 window.addEventListener('load', hide);
             })();
-            document.addEventListener("DOMContentLoaded", () => {
+            function __santea_initNav() {
 
             // ─── Generic dropdown helpers ─────────────────────────────────────────
             const allDropdowns = [];
@@ -906,10 +912,12 @@
                 dropdown.addEventListener('click', (e) => e.stopPropagation());
             }
 
-            document.addEventListener('click', () => {
-                closeAllDropdowns();
-                closeAllSubmenus();
-            });
+            // Single persistent document click listener — updated on each Turbo re-init
+            if (!window.__navClickBound) {
+                window.__navClickBound = true;
+                document.addEventListener('click', () => window.__navCloseAll && window.__navCloseAll());
+            }
+            window.__navCloseAll = () => { closeAllDropdowns(); closeAllSubmenus(); };
 
             // ─── Account dropdown submenus ─────────────────────────────────────
             const accountDropdown      = document.getElementById('accountDropdown');
@@ -1243,8 +1251,11 @@
 
             window.openChatPopup = openChatPopup;
 
-        });
-        
+        } // end __santea_initNav
+
+        document.addEventListener("DOMContentLoaded", __santea_initNav);
+        document.addEventListener("turbo:load", __santea_initNav);
+
         const form = document.getElementById("registerForm");
         if (form) {
         form.addEventListener("submit", async function(e) {
@@ -1320,6 +1331,8 @@
             </div>
         </footer>
     {% endblock %}
+
+    {{ importmap('app') }}
 
     {# ──── SANTÉA 3D Layer ────────────────────────────────────────── #}
     {# Three.js WebGL background (async, idle-loaded) #}

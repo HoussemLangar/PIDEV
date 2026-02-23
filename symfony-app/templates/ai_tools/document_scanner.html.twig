@@ -1,60 +1,136 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Scanner Document IA{% endblock %}
+{% block title %}Scanner Document IA – SANTÉA{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+{% include 'ai_tools/_styles.html.twig' %}
+<style>
+.ait-tool-color { --tool-color: #6366f1; --tool-bg: rgba(99,102,241,.1); }
+.ait-tool-header { background: linear-gradient(135deg,#3730a3 0%,#6366f1 60%,#818cf8 100%); }
+.ait-btn-submit { background: linear-gradient(135deg,#6366f1,#818cf8); }
+.ait-btn-submit:hover { background: linear-gradient(135deg,#4f46e5,#6366f1); }
+.ait-table th { background: rgba(99,102,241,.08); color:#4338ca; }
+.ait-tag { background: rgba(99,102,241,.1); color:#4338ca; }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="content-wrapper" style="padding: 30px 40px; max-width: 980px; margin: 0 auto;">
-    <h1 style="margin:0 0 8px 0; color:#1a1a2e;">Scanner de document médical (IA)</h1>
-    <p style="margin:0 0 20px 0; color:#64748b;">Collez un texte médical ou chargez un fichier texte.</p>
+<div class="ait-page ait-tool-color">
 
-    <form method="post" enctype="multipart/form-data" style="background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:16px;">
-        <textarea name="content" rows="8" placeholder="Collez ici le contenu du document..." style="width:100%; border:1px solid #dbe2ea; border-radius:10px; padding:12px;"></textarea>
-        <div style="margin-top:10px;">
-            <input type="file" name="document" accept=".txt,.csv,.log" />
+    <div class="ait-tool-header">
+        <div class="ait-tool-header-inner">
+            <a href="{{ path('app_ai_tools_index') }}" class="ait-back-btn"><i class="fas fa-arrow-left"></i> Outils IA</a>
+            <div class="ait-tool-icon"><i class="fas fa-file-medical-alt"></i></div>
+            <h1 class="ait-tool-title">Scanner de document</h1>
+            <p class="ait-tool-sub">Collez du texte médical ou chargez un fichier — l'IA extrait résumé, valeurs et actions.</p>
         </div>
-        <button type="submit" style="margin-top:12px; border:none; background:#0D8ABC; color:#fff; border-radius:10px; padding:10px 14px;">Analyser</button>
-    </form>
+    </div>
 
-    {% if result %}
-        <div style="margin-top:18px; background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:16px;">
-            <h3 style="margin-top:0;">Résumé</h3>
-            <p>{{ result.summary }}</p>
+    <div class="ait-tool-body">
 
-            <h4>Points clés</h4>
-            <ul>
-                {% for p in result.keyPoints %}
-                    <li>{{ p }}</li>
-                {% else %}
-                    <li>Aucun point clé.</li>
-                {% endfor %}
-            </ul>
-
-            <h4>Valeurs extraites</h4>
-            <table style="width:100%; border-collapse:collapse;">
-                <thead>
-                    <tr><th style="text-align:left;">Libellé</th><th style="text-align:left;">Valeur</th><th style="text-align:left;">Unité</th></tr>
-                </thead>
-                <tbody>
-                {% for v in result.values %}
-                    <tr>
-                        <td>{{ v.label }}</td>
-                        <td>{{ v.value }}</td>
-                        <td>{{ v.unit }}</td>
-                    </tr>
-                {% else %}
-                    <tr><td colspan="3">Aucune valeur extraite.</td></tr>
-                {% endfor %}
-                </tbody>
-            </table>
-
-            <h4>Actions suggérées</h4>
-            <ul>
-                {% for a in result.suggestedActions %}
-                    <li>{{ a }}</li>
-                {% endfor %}
-            </ul>
+        {# ── Form card ─────────────────────────────────── #}
+        <div class="ait-card-wrap">
+            <form method="post" enctype="multipart/form-data" id="aitForm" class="ait-form">
+                <div class="ait-field">
+                    <label class="ait-label"><i class="fas fa-paste"></i> Contenu du document</label>
+                    <textarea name="content" rows="8" class="ait-input ait-textarea" placeholder="Collez ici le contenu du document médical (ordonnance, bilan sanguin, compte-rendu…)">{{ app.request.request.get('content') }}</textarea>
+                </div>
+                <div class="ait-field">
+                    <label class="ait-label"><i class="fas fa-upload"></i> Ou chargez un fichier <span class="ait-hint">.txt · .csv · .log</span></label>
+                    <input type="file" name="document" accept=".txt,.csv,.log" class="ait-file-input">
+                </div>
+                <div class="ait-form-footer">
+                    <button type="submit" class="ait-btn-submit ait-btn" id="aitSubmitBtn">
+                        <span class="ait-btn-normal"><i class="fas fa-search"></i> Analyser le document</span>
+                        <span class="ait-btn-loading" style="display:none"><span class="ait-spinner"></span> Analyse en cours…</span>
+                    </button>
+                </div>
+            </form>
         </div>
-    {% endif %}
+
+        {# ── Results ────────────────────────────────────── #}
+        {% if result is defined and result %}
+        <div class="ait-results">
+            <div class="ait-results-header">
+                <span class="ait-results-badge"><i class="fas fa-sparkles"></i> Résultats IA</span>
+            </div>
+
+            <div class="ait-result-section">
+                <div class="ait-result-section-title"><i class="fas fa-align-left"></i> Résumé</div>
+                <p class="ait-result-text">{{ result.summary }}</p>
+            </div>
+
+            {% if result.keyPoints is defined and result.keyPoints|length %}
+            <div class="ait-result-section">
+                <div class="ait-result-section-title"><i class="fas fa-list-ul"></i> Points clés</div>
+                <ul class="ait-bullet-list">
+                    {% for p in result.keyPoints %}
+                        <li><i class="fas fa-check-circle"></i> {{ p }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            {% if result.values is defined and result.values|length %}
+            <div class="ait-result-section">
+                <div class="ait-result-section-title"><i class="fas fa-table"></i> Valeurs extraites</div>
+                <div class="ait-table-wrap">
+                    <table class="ait-table">
+                        <thead><tr><th>Libellé</th><th>Valeur</th><th>Unité</th></tr></thead>
+                        <tbody>
+                        {% for v in result.values %}
+                            <tr><td>{{ v.label }}</td><td><strong>{{ v.value }}</strong></td><td class="ait-tag">{{ v.unit }}</td></tr>
+                        {% else %}
+                            <tr><td colspan="3" style="text-align:center;color:#94a3b8;">Aucune valeur extraite.</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if result.suggestedActions is defined and result.suggestedActions|length %}
+            <div class="ait-result-section">
+                <div class="ait-result-section-title"><i class="fas fa-tasks"></i> Actions suggérées</div>
+                <ul class="ait-action-list">
+                    {% for a in result.suggestedActions %}
+                        <li><span class="ait-action-num">{{ loop.index }}</span> {{ a }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+    </div>{# /ait-tool-body #}
 </div>
+
+<script>
+(function(){
+    var form = document.getElementById('aitForm');
+    var btn  = document.getElementById('aitSubmitBtn');
+    if (!form || !btn) return;
+
+    form.addEventListener('submit', function(e) {
+        if (form.dataset.submitting === '1') { e.preventDefault(); return; }
+        form.dataset.submitting = '1';
+        requestAnimationFrame(function() {
+            btn.classList.add('ait-btn--loading');
+            btn.querySelector('.ait-btn-normal').style.display = 'none';
+            btn.querySelector('.ait-btn-loading').style.display = 'inline-flex';
+        });
+    });
+
+    window.addEventListener('pageshow', function(e) {
+        if (e.persisted) {
+            form.dataset.submitting = '0';
+            btn.classList.remove('ait-btn--loading');
+            btn.querySelector('.ait-btn-normal').style.display = '';
+            btn.querySelector('.ait-btn-loading').style.display = 'none';
+        }
+    });
+})();
+</script>
 {% endblock %}
 

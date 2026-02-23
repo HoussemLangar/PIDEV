@@ -1,46 +1,147 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Assistant Exercice IA{% endblock %}
+{% block title %}Assistant Exercice IA – SANTÉA{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+{% include 'ai_tools/_styles.html.twig' %}
+<style>
+.ait-tool-color { --tool-color: #f59e0b; --tool-bg: rgba(245,158,11,.1); }
+.ait-tool-header { background: linear-gradient(135deg,#78350f 0%,#d97706 55%,#f59e0b 100%); }
+.ait-btn-submit { background: linear-gradient(135deg,#d97706,#f59e0b); }
+.ait-btn-submit:hover { background: linear-gradient(135deg,#b45309,#d97706); }
+.ait-tag { background: rgba(245,158,11,.1); color:#92400e; }
+.ait-session-num { background: linear-gradient(135deg,#d97706,#f59e0b); color:#fff; width:28px; height:28px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0; }
+.ait-session-card { background:#fffbeb; border:1px solid #fde68a; border-radius:12px; padding:14px 16px; margin-bottom:10px; }
+.ait-session-head { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+.ait-session-day { font-weight:700; color:#92400e; font-size:14px; }
+.ait-session-meta { font-size:12px; color:#b45309; background:rgba(245,158,11,.15); border-radius:100px; padding:2px 10px; }
+.ait-session-steps { list-style:none; margin:0; padding:0; }
+.ait-session-steps li { font-size:13px; color:#44403c; padding:4px 0 4px 20px; position:relative; }
+.ait-session-steps li::before { content:'▸'; position:absolute; left:4px; color:#f59e0b; }
+.ait-safety-item { display:flex; gap:10px; align-items:flex-start; padding:10px; background:#fff7ed; border-radius:9px; margin-bottom:6px; font-size:13px; color:#78350f; }
+.ait-safety-item i { color:#f59e0b; margin-top:2px; flex-shrink:0; }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="content-wrapper" style="padding: 30px 40px; max-width: 980px; margin: 0 auto;">
-    <h1 style="margin:0 0 8px 0; color:#1a1a2e;">Assistant exercice (IA)</h1>
-    <form method="post" style="background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:16px;">
-        <input name="goal" placeholder="Objectif (ex: endurance)" style="width:100%; margin-bottom:10px; border:1px solid #dbe2ea; border-radius:10px; padding:10px;">
-        <select name="level" style="width:100%; margin-bottom:10px; border:1px solid #dbe2ea; border-radius:10px; padding:10px;">
-            <option value="debutant">Débutant</option>
-            <option value="intermediaire">Intermédiaire</option>
-            <option value="avance">Avancé</option>
-        </select>
-        <div style="display:flex; gap:8px; margin-bottom:10px;">
-            <input type="number" name="daysPerWeek" min="1" max="7" value="3" style="width:180px; border:1px solid #dbe2ea; border-radius:10px; padding:10px;">
-            <input type="number" name="minutes" min="10" max="120" value="30" style="width:180px; border:1px solid #dbe2ea; border-radius:10px; padding:10px;">
-        </div>
-        <input name="constraints" placeholder="Contraintes physiques" style="width:100%; margin-bottom:10px; border:1px solid #dbe2ea; border-radius:10px; padding:10px;">
-        <button type="submit" style="border:none; background:#0D8ABC; color:#fff; border-radius:10px; padding:10px 14px;">Générer</button>
-    </form>
+<div class="ait-page ait-tool-color">
 
-    {% if result %}
-        <div style="margin-top:18px; background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:16px;">
-            <h3 style="margin-top:0;">{{ result.overview }}</h3>
-            {% for s in result.sessions %}
-                <div style="margin-bottom:12px; padding:10px; border:1px solid #eef2f7; border-radius:10px;">
-                    <strong>{{ s.day }}</strong> - {{ s.focus }} ({{ s.durationMin }} min)
-                    <ul>
-                        {% for step in s.plan %}
-                            <li>{{ step }}</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            {% endfor %}
-            <h4>Sécurité</h4>
-            <ul>
-                {% for x in result.safety %}
-                    <li>{{ x }}</li>
-                {% endfor %}
-            </ul>
+    <div class="ait-tool-header">
+        <div class="ait-tool-header-inner">
+            <a href="{{ path('app_ai_tools_index') }}" class="ait-back-btn"><i class="fas fa-arrow-left"></i> Outils IA</a>
+            <div class="ait-tool-icon"><i class="fas fa-dumbbell"></i></div>
+            <h1 class="ait-tool-title">Assistant Exercice</h1>
+            <p class="ait-tool-sub">Générez un programme d'entraînement sur mesure adapté à votre niveau et vos objectifs.</p>
         </div>
-    {% endif %}
+    </div>
+
+    <div class="ait-tool-body">
+
+        <div class="ait-card-wrap">
+            <form method="post" id="aitForm" class="ait-form">
+                <div class="ait-field">
+                    <label class="ait-label"><i class="fas fa-bullseye"></i> Objectif sportif</label>
+                    <input name="goal" class="ait-input" placeholder="Ex : endurance, prise de muscle, perte de poids, souplesse…" value="{{ app.request.request.get('goal') }}">
+                </div>
+                <div class="ait-row">
+                    <div class="ait-field">
+                        <label class="ait-label"><i class="fas fa-signal"></i> Niveau</label>
+                        <select name="level" class="ait-input">
+                            <option value="debutant" {{ app.request.request.get('level') == 'debutant' ? 'selected' }}>Débutant</option>
+                            <option value="intermediaire" {{ app.request.request.get('level') == 'intermediaire' ? 'selected' }}>Intermédiaire</option>
+                            <option value="avance" {{ app.request.request.get('level') == 'avance' ? 'selected' }}>Avancé</option>
+                        </select>
+                    </div>
+                    <div class="ait-field">
+                        <label class="ait-label"><i class="fas fa-calendar-week"></i> Séances / semaine</label>
+                        <input type="number" name="daysPerWeek" min="1" max="7" value="{{ app.request.request.get('daysPerWeek', 3) }}" class="ait-input">
+                    </div>
+                    <div class="ait-field">
+                        <label class="ait-label"><i class="fas fa-clock"></i> Minutes / séance</label>
+                        <input type="number" name="minutes" min="10" max="120" value="{{ app.request.request.get('minutes', 30) }}" class="ait-input">
+                    </div>
+                </div>
+                <div class="ait-field">
+                    <label class="ait-label"><i class="fas fa-band-aid"></i> Contraintes physiques <span class="ait-hint">optionnel</span></label>
+                    <input name="constraints" class="ait-input" placeholder="Ex : douleur genou, dos fragile…" value="{{ app.request.request.get('constraints') }}">
+                </div>
+                <div class="ait-form-footer">
+                    <button type="submit" class="ait-btn-submit ait-btn" id="aitSubmitBtn">
+                        <span class="ait-btn-normal"><i class="fas fa-running"></i> Générer le programme</span>
+                        <span class="ait-btn-loading" style="display:none"><span class="ait-spinner"></span> Génération en cours…</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        {% if result is defined and result %}
+        <div class="ait-results">
+            <div class="ait-results-header">
+                <span class="ait-results-badge"><i class="fas fa-sparkles"></i> Programme IA</span>
+                {% if result.overview is defined %}<p class="ait-result-overview">{{ result.overview }}</p>{% endif %}
+            </div>
+
+            {% if result.sessions is defined %}
+            <div class="ait-result-section">
+                <div class="ait-result-section-title"><i class="fas fa-calendar-alt"></i> Séances d'entraînement</div>
+                {% for s in result.sessions %}
+                <div class="ait-session-card">
+                    <div class="ait-session-head">
+                        <span class="ait-session-num">{{ loop.index }}</span>
+                        <span class="ait-session-day">{{ s.day }}</span>
+                        <span class="ait-session-meta"><i class="fas fa-crosshairs"></i> {{ s.focus }}</span>
+                        <span class="ait-session-meta"><i class="fas fa-clock"></i> {{ s.durationMin }} min</span>
+                    </div>
+                    {% if s.plan is defined %}
+                    <ul class="ait-session-steps">
+                        {% for step in s.plan %}<li>{{ step }}</li>{% endfor %}
+                    </ul>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% if result.safety is defined and result.safety|length %}
+            <div class="ait-result-section">
+                <div class="ait-result-section-title"><i class="fas fa-shield-alt"></i> Consignes de sécurité</div>
+                {% for x in result.safety %}
+                    <div class="ait-safety-item"><i class="fas fa-exclamation-circle"></i>{{ x }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+    </div>
 </div>
+
+<script>
+(function(){
+    var form = document.getElementById('aitForm');
+    var btn  = document.getElementById('aitSubmitBtn');
+    if (!form || !btn) return;
+
+    form.addEventListener('submit', function(e) {
+        if (form.dataset.submitting === '1') { e.preventDefault(); return; }
+        form.dataset.submitting = '1';
+        requestAnimationFrame(function() {
+            btn.classList.add('ait-btn--loading');
+            btn.querySelector('.ait-btn-normal').style.display = 'none';
+            btn.querySelector('.ait-btn-loading').style.display = 'inline-flex';
+        });
+    });
+
+    window.addEventListener('pageshow', function(e) {
+        if (e.persisted) {
+            form.dataset.submitting = '0';
+            btn.classList.remove('ait-btn--loading');
+            btn.querySelector('.ait-btn-normal').style.display = '';
+            btn.querySelector('.ait-btn-loading').style.display = 'none';
+        }
+    });
+})();
+</script>
 {% endblock %}
 

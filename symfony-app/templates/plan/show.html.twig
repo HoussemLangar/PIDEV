@@ -167,6 +167,13 @@
                     </div>
                 </div>
             {% endif %}
+
+            {% if not (app.user and (app.user.subscriptionType ?? app.user.role) == 'ROLE_MEDECIN') %}
+            {{ component('AccompanimentAiAssistant', {
+                goal: plan.objectives,
+                constraints: plan.description ?? ''
+            }) }}
+            {% endif %}
         </div>
 
         <!-- Sidebar -->
@@ -220,6 +227,8 @@
                 </h3>
 
                 <div style="display: flex; flex-direction: column; gap: 10px;">
+                    {% set _isMedecin = app.user and (app.user.subscriptionType ?? app.user.role) == 'ROLE_MEDECIN' %}
+                    {% if not _isMedecin %}
                     <a href="{{ path('app_plan_edit', {id: plan.id}) }}" style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 16px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; border-radius: 10px; text-decoration: none; font-weight: 600; font-size: 14px; transition: all 0.2s;">
                         <i class="fas fa-edit"></i>
                         Modifier le plan
@@ -232,6 +241,7 @@
                             Supprimer
                         </button>
                     </form>
+                    {% endif %}{# /not _isMedecin #}
 
                     <a href="{{ path('app_plan_professional_plans') }}" style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 16px; background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; border-radius: 10px; text-decoration: none; font-weight: 600; font-size: 14px; transition: all 0.2s;">
                         <i class="fas fa-arrow-left"></i>

@@ -66,6 +66,8 @@ security:
         - { path: ^/theme, roles: PUBLIC_ACCESS }
         - { path: ^/locale, roles: PUBLIC_ACCESS }
         - { path: ^/2fa, roles: IS_AUTHENTICATED_2FA_IN_PROGRESS }
+        # Live Component AJAX endpoint — allow remembered sessions too
+        - { path: ^/_components, roles: IS_AUTHENTICATED_REMEMBERED }
         - { path: ^/appointments, roles: ROLE_USER }
         - { path: ^/rendez-vous, roles: ROLE_USER }
         - { path: ^/api/appointments, roles: ROLE_USER }

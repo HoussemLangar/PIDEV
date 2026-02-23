@@ -23,6 +23,9 @@ class DocumentAccessType extends AbstractType
                 'choice_label' => function (User $user) {
                     return $user->getUsername() . ' (' . $user->getEmail() . ')';
                 },
+                'choice_attr' => function (User $user) {
+                    return ['data-role' => $user->getRole() ?? ''];
+                },
                 'label' => 'Partager avec',
                 'attr' => [
                     'class' => 'form-control',
