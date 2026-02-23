@@ -6,6 +6,7 @@ use App\Entity\GoogleFitAccount;
 use App\Repository\GoogleFitAccountRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use KnpU\OAuth2ClientBundle\Client\ClientRegistry;
+use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -36,7 +37,8 @@ class GoogleFitController extends AbstractController
         Request $request,
         ClientRegistry $clientRegistry,
         GoogleFitAccountRepository $repository,
-        EntityManagerInterface $em
+        EntityManagerInterface $em,
+        GoogleFitService $googleFitService
     ): Response {
         $user = $this->getUser();
         if (!$user instanceof \App\Entity\User) {
@@ -44,8 +46,19 @@ class GoogleFitController extends AbstractController
         }
 
         $client = $clientRegistry->getClient('google_fit');
-        $accessToken = $client->getAccessToken();
-        $googleUser = $client->fetchUserFromToken($accessToken);
+        try {
+            $accessToken = $client->getAccessToken();
+            $googleUser = $client->fetchUserFromToken($accessToken);
+        } catch (IdentityProviderException $e) {
+            $message = $e->getMessage();
+            if (str_contains($message, 'invalid_grant')) {
+                $this->addFlash('error', 'Session Google expirée ou code déjà utilisé. Veuillez reconnecter Google Fit.');
+            } else {
+                $this->addFlash('error', 'Connexion Google Fit échouée: ' . $message);
+            }
+
+            return $this->redirectToRoute('app_sante_quotidienne_index');
+        }
 
         $account = $repository->findOneBy(['user' => $user]) ?? new GoogleFitAccount();
         $account->setUser($user);
@@ -67,7 +80,14 @@ class GoogleFitController extends AbstractController
         $repository->save($account);
         $em->flush();
 
-        $this->addFlash('success', 'Google Fit connecté avec succès.');
+        $syncResult = $googleFitService->syncForUser($user, 7);
+        if ($syncResult['ok']) {
+            $this->addFlash('success', 'Google Fit connecté avec succès. ' . $syncResult['message']);
+        } else {
+            $this->addFlash('success', 'Google Fit connecté avec succès.');
+            $this->addFlash('error', 'Synchronisation automatique impossible: ' . $syncResult['message']);
+        }
+
         return $this->redirectToRoute('app_sante_quotidienne_index');
     }
 

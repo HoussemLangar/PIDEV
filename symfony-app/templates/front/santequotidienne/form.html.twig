@@ -21,6 +21,232 @@
       background: #f5f7fb;
       border-color: #e5e7eb;
       box-shadow: none;
+      width: 100%;
+    }
+    .content-page {
+      padding-left: 0.15vw;
+      padding-right: 0.15vw;
+      width: 85%;
+    }
+    .container-wide {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 0 20px 28px;
+    }
+    .summary-cards {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+    .main-content-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      align-items: start;
+      margin-top: 10px;
+    }
+    .form-section-beautiful {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 3px 15px rgba(0,0,0,0.1);
+      height: fit-content;
+      margin-top: 0 !important;
+    }
+    .form-card-beautiful {
+      max-width: 100% !important;
+      width: 100% !important;
+      margin: 0 !important;
+    }
+    .recent-entries-beautiful {
+      margin-top: 0 !important;
+      height: auto !important;
+      max-height: none !important;
+    }
+    .recommendations-section {
+      margin-top: 22px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+    .recommendation-box {
+      color: #fff;
+      padding: 14px 16px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      background: var(--rec-grad, linear-gradient(135deg, #4facfe 0%, #00f2fe 100%));
+    }
+    .form-header-beautiful {
+      margin-bottom: 18px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #f0f0f0;
+    }
+    .form-header-beautiful h2 {
+      font-size: 1.3rem;
+      color: #2c3e50;
+      margin: 0;
+      font-weight: 700;
+    }
+    .form-beautiful {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    .form-group-beautiful {
+      display: flex;
+      flex-direction: column;
+    }
+    .form-group-beautiful label {
+      font-size: 0.9rem;
+      color: #2c3e50;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .form-group-beautiful input,
+    .form-group-beautiful select,
+    .form-group-beautiful textarea {
+      padding: 10px 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      transition: all 0.3s ease;
+      background: #f8f9fa;
+    }
+    .form-group-beautiful input:focus,
+    .form-group-beautiful select:focus,
+    .form-group-beautiful textarea:focus {
+      outline: none;
+      border-color: #4ecdc4;
+      box-shadow: 0 0 0 3px rgba(78, 205, 196, 0.1);
+      background: white;
+    }
+    .form-row-beautiful {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .btn-save-beautiful {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 3px 15px rgba(102, 126, 234, 0.4);
+      transition: all 0.3s ease;
+      flex: 1;
+    }
+    .btn-save-beautiful:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(102, 126, 234, 0.5);
+    }
+    .history-section-beautiful {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      height: fit-content;
+    }
+    .chart-beautiful {
+      background: white;
+      border-radius: 12px;
+      padding: 18px;
+      box-shadow: 0 3px 15px rgba(0,0,0,0.1);
+      height: fit-content;
+    }
+    .stats-visual {
+      margin: 14px 0 22px;
+    }
+    .stats-visual .chart-beautiful h3 {
+      margin: 0 0 10px;
+      font-size: 1rem;
+      color: #2c3e50;
+      font-weight: 700;
+    }
+    .stats-visual canvas {
+      width: 100% !important;
+      height: 250px !important;
+    }
+    .risk-widget {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 3px 15px rgba(0,0,0,0.08);
+      padding: 16px;
+      margin: 8px 0 20px;
+      border-left: 4px solid #2563eb;
+    }
+    .risk-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 10px;
+    }
+    .risk-item {
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 10px;
+      background: #f9fafb;
+    }
+    .risk-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .risk-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 999px;
+      text-transform: uppercase;
+    }
+    .risk-badge.low {
+      background: #dcfce7;
+      color: #166534;
+    }
+    .risk-badge.moderate {
+      background: #fef3c7;
+      color: #92400e;
+    }
+    .risk-badge.high {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    .risk-score {
+      font-weight: 700;
+      color: #1f2937;
+      margin-bottom: 4px;
+    }
+    .risk-note {
+      font-size: 12px;
+      color: #4b5563;
+      margin: 0;
+    }
+    @media (max-width: 1100px) {
+      .summary-cards {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .main-content-grid {
+        grid-template-columns: 1fr;
+      }
+      .form-row-beautiful {
+        grid-template-columns: 1fr;
+      }
+      .recommendations-section {
+        grid-template-columns: 1fr;
+      }
+    }
+    @media (max-width: 640px) {
+      .summary-cards {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 {% endblock %}
@@ -84,7 +310,7 @@
           <div class="card-emoji">⚖️</div>
           <div class="card-info">
             <span class="card-label">Mon Poids</span>
-            <span class="card-value" id="current-weight">--</span>
+            <span class="card-value" id="current-weight">{{ summaryStats.latestWeight is not null ? summaryStats.latestWeight|number_format(1, '.', ' ') : '--' }}</span>
             <span class="card-unit">kg</span>
           </div>
         </div>
@@ -93,7 +319,7 @@
           <div class="card-emoji">😴</div>
           <div class="card-info">
             <span class="card-label">Sommeil</span>
-            <span class="card-value" id="avg-sleep">--</span>
+            <span class="card-value" id="avg-sleep">{{ averageSommeil is not null ? averageSommeil|number_format(1, '.', ' ') : '--' }}</span>
             <span class="card-unit">heures/nuit</span>
           </div>
         </div>
@@ -102,7 +328,7 @@
           <div class="card-emoji">🏃</div>
           <div class="card-info">
             <span class="card-label">Activité</span>
-            <span class="card-value" id="total-activity">--</span>
+            <span class="card-value" id="total-activity">{{ summaryStats.weeklyActivityMinutes > 0 ? summaryStats.weeklyActivityMinutes|number_format(0, '.', ' ') : '--' }}</span>
             <span class="card-unit">min/semaine</span>
           </div>
         </div>
@@ -111,7 +337,7 @@
           <div class="card-emoji">💧</div>
           <div class="card-info">
             <span class="card-label">Hydratation</span>
-            <span class="card-value" id="total-water">--</span>
+            <span class="card-value" id="total-water">{{ summaryStats.averageWater is not null ? summaryStats.averageWater|number_format(1, '.', ' ') : '--' }}</span>
             <span class="card-unit">L/jour</span>
           </div>
         </div>
@@ -161,11 +387,54 @@
       </div>
       {% endif %}
 
+      {% if riskPrediction is defined %}
+      <section class="risk-widget">
+        <h3 style="margin:0; font-size:1.05rem; color:#1f2937;">Risque santé aujourd'hui</h3>
+        <p style="margin:6px 0 0; color:#6b7280; font-size:0.9rem;">
+          Aide à l'orientation (pas un diagnostic). Mise à jour: {{ riskPrediction.updatedAt }}
+        </p>
+        <div class="risk-grid">
+          {% set riskItems = [
+            {'label':'Hypertension (HTA)','key':'htn'},
+            {'label':'Risque diabète','key':'diabetes'},
+            {'label':'Dépression légère','key':'depression'},
+            {'label':'Alimentation équilibrée','key':'nutrition'}
+          ] %}
+          {% for item in riskItems %}
+            {% set data = attribute(riskPrediction, item.key) %}
+            {% set lvl = data.level|lower %}
+            <article class="risk-item">
+              <div class="risk-head">
+                <strong style="font-size:0.92rem;">{{ item.label }}</strong>
+                <span class="risk-badge {{ lvl == 'low' ? 'low' : (lvl == 'moderate' ? 'moderate' : 'high') }}">
+                  {{ lvl == 'low' ? 'faible' : (lvl == 'moderate' ? 'modéré' : 'élevé') }}
+                </span>
+              </div>
+              <div class="risk-score">{{ data.score|number_format(1, '.', ' ') }} / 100</div>
+              {% if item.key == 'nutrition' %}
+                <div class="risk-note" style="margin-bottom:4px; color:#1f2937; font-weight:600;">Score d'équilibre alimentaire</div>
+              {% endif %}
+              <p class="risk-note">
+                {{ data.explanations is defined and data.explanations|length > 0 ? data.explanations|first : 'Aucun signal majeur détecté.' }}
+              </p>
+            </article>
+          {% endfor %}
+        </div>
+      </section>
+      {% endif %}
+
+      <section class="stats-visual">
+        <div class="chart-beautiful">
+          <h3>Tension (7 derniers jours)</h3>
+          <canvas id="weeklySimpleChart"></canvas>
+        </div>
+      </section>
+
       <!-- Contenu principal en 2 colonnes -->
-      <div class="main-content-grid" style="display:grid; grid-template-columns: 1fr 400px; gap:30px; align-items:stretch;">
+      <div class="main-content-grid">
         <!-- Colonne gauche - Formulaire Symfony -->
-        <div class="form-section-beautiful" id="form-section" style="grid-column: 1; max-width:100%; margin-top:-135px;">
-          <div class="form-card-beautiful" style="max-width:1050px; width:100%; margin:0 auto;">
+        <div class="form-section-beautiful" id="form-section" style="grid-column: 1;">
+          <div class="form-card-beautiful">
             <div class="form-header-beautiful">
               <h2>📝 Comment allez-vous aujourd'hui ?</h2>
               <p style="font-size:0.9em; color:#666; margin-top:5px;">
@@ -391,7 +660,7 @@
         </div>
 
         <!-- Colonne droite - Mes dernières journées -->
-        <div class="recent-entries-beautiful" style="grid-column: 2; height:13cm; display:flex; flex-direction:column; margin-top:-137px;">
+        <div class="recent-entries-beautiful history-section-beautiful chart-beautiful" style="grid-column: 2; display:flex; flex-direction:column;">
           <div class="section-header-beautiful">
             <h3>📔 Mes dernières journées</h3>
           </div>
@@ -575,10 +844,10 @@
       </div>
 
       <!-- Section des recommandations personnalisées -->
-      <div class="recommendations-section" style="margin-top: 30px; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+      <div class="recommendations-section">
         
         {% if moodStats.showRecommendation %}
-        <div class="recommendation-box" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-top: 20px ; ">
+        <div class="recommendation-box" style="--rec-grad: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
           <div class="box-header" style="display: flex; align-items: center; margin-bottom: 15px;">
             <span style="font-size: 2em; margin-right: 10px;">🧠</span>
             <div>
@@ -597,7 +866,7 @@
         {% endif %}
 
         {% if activityStats.total_entries > 0 %}
-        <div class="recommendation-box" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; margin-top: 20px ; padding: 12px 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+        <div class="recommendation-box" style="--rec-grad: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
           <div class="box-header" style="display: flex; align-items: center; margin-bottom: 15px;">
             <span style="font-size: 2em; margin-right: 10px;">🏃‍♀️</span>
             <div>
@@ -627,7 +896,7 @@
         {% endif %}
 
         {% if nutritionStats.showRecommendation %}
-        <div class="recommendation-box" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 12px 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+        <div class="recommendation-box" style="--rec-grad: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
           <div class="box-header" style="display: flex; align-items: center; margin-bottom: 15px;">
             <span style="font-size: 2em; margin-right: 10px;">🥗</span>
             <div>
@@ -1412,7 +1681,6 @@
       }
     });
   </script>
-      <p>2026 SANTÉA - All Rights Reserved</p>
     </div>
   </footer>
 
@@ -1693,4 +1961,41 @@
 {% block javascripts %}
   {{ parent() }}
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (typeof Chart === 'undefined') return;
+
+      const chartStats = {{ chartStats|json_encode(constant('JSON_UNESCAPED_UNICODE'))|raw }};
+      const labels = chartStats.labels || [];
+
+      const ctx = document.getElementById('weeklySimpleChart');
+      if (!ctx) return;
+
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Tension',
+              data: chartStats.tension || [],
+              borderColor: '#ef4444',
+              backgroundColor: 'rgba(239, 68, 68, 0.15)',
+              borderWidth: 2,
+              tension: 0.35,
+              spanGaps: true,
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'top' } },
+          scales: {
+            y: { beginAtZero: false, title: { display: true, text: 'mmHg' } }
+          }
+        }
+      });
+    });
+  </script>
 {% endblock %}

@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Entity\Patient;
 use App\Entity\SymptomeQuotidien;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -302,5 +303,96 @@ class SymptomeQuotidienRepository extends ServiceEntityRepository
             ->getSingleScalarResult();
 
         return $result ? round((float) $result, 1) : 0.0;
+    }
+
+    /**
+     * @return array{
+     *   totalSymptoms:int,
+     *   avgIntensity:float,
+     *   feverCount:int,
+     *   coughCount:int,
+     *   fatigueCount:int,
+     *   moodCount:int,
+     *   feverCoughCoOccurrenceDays:int
+     * }
+     */
+    public function getRiskFeatureSnapshot(Patient $patient, int $days = 7): array
+    {
+        $days = max(1, min(60, $days));
+        $start = (new \DateTimeImmutable('today'))->modify(sprintf('-%d days', $days - 1));
+
+        $rows = $this->createQueryBuilder('sq')
+            ->select('sq.dateSymptome AS dateSymptome, sq.intensite AS intensite, sq.notes AS notes, sl.nom AS symptomName')
+            ->leftJoin('sq.symptome', 'sl')
+            ->where('sq.patient = :patient')
+            ->andWhere('sq.dateSymptome >= :start')
+            ->setParameter('patient', $patient)
+            ->setParameter('start', $start)
+            ->getQuery()
+            ->getArrayResult();
+
+        $total = count($rows);
+        $sumIntensity = 0.0;
+        $feverCount = 0;
+        $coughCount = 0;
+        $fatigueCount = 0;
+        $moodCount = 0;
+        $daysFlags = [];
+
+        foreach ($rows as $row) {
+            $sumIntensity += (float) ($row['intensite'] ?? 0);
+            $dayKey = null;
+            if (isset($row['dateSymptome'])) {
+                $rawDate = $row['dateSymptome'];
+                if ($rawDate instanceof \DateTimeInterface) {
+                    $dayKey = $rawDate->format('Y-m-d');
+                } else {
+                    $dayKey = (new \DateTimeImmutable((string) $rawDate))->format('Y-m-d');
+                }
+            }
+            if ($dayKey !== null && !isset($daysFlags[$dayKey])) {
+                $daysFlags[$dayKey] = ['fever' => false, 'cough' => false];
+            }
+
+            $haystack = mb_strtolower(trim((string) ($row['symptomName'] ?? '')) . ' ' . trim((string) ($row['notes'] ?? '')));
+
+            if ($haystack !== '') {
+                if (preg_match('/\b(fievre|fi[eè]vre|fever|temperature)\b/u', $haystack)) {
+                    $feverCount++;
+                    if ($dayKey !== null) {
+                        $daysFlags[$dayKey]['fever'] = true;
+                    }
+                }
+                if (preg_match('/\b(toux|cough|grippe|rhume|gorge)\b/u', $haystack)) {
+                    $coughCount++;
+                    if ($dayKey !== null) {
+                        $daysFlags[$dayKey]['cough'] = true;
+                    }
+                }
+                if (preg_match('/\b(fatigue|fatigu[eé]|epuise|faiblesse)\b/u', $haystack)) {
+                    $fatigueCount++;
+                }
+                if (preg_match('/\b(triste|deprime|depress|anxie|stress|angoiss)\b/u', $haystack)) {
+                    $moodCount++;
+                }
+            }
+        }
+
+        $coOccurrence = 0;
+        foreach ($daysFlags as $flags) {
+            if (($flags['fever'] ?? false) && ($flags['cough'] ?? false)) {
+                $coOccurrence++;
+            }
+        }
+
+        return [
+            'totalSymptoms' => $total,
+            'avgIntensity' => $total > 0 ? round($sumIntensity / $total, 2) : 0.0,
+            'feverCount' => $feverCount,
+            'coughCount' => $coughCount,
+            'fatigueCount' => $fatigueCount,
+            'moodCount' => $moodCount,
+            'feverCoughCoOccurrenceDays' => $coOccurrence,
+        ];
     }
 }

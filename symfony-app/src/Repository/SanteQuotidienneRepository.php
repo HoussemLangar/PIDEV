@@ -431,4 +431,386 @@ class SanteQuotidienneRepository extends ServiceEntityRepository
 
         return $result ? (float) $result : null;
     }
+
+    /**
+     * Résumé des statistiques affichées dans les cartes du dashboard.
+     *
+     * @return array{latestWeight:?float,weeklyActivityMinutes:int,averageWater:?float}
+     */
+    public function getDashboardSummaryStats(object $user): array
+    {
+        return [
+            'latestWeight' => $this->getLatestWeightForUser($user),
+            'weeklyActivityMinutes' => $this->getWeeklyActivityMinutesForUser($user, 7),
+            'averageWater' => $this->getAverageWaterForUser($user),
+        ];
+    }
+
+    /**
+     * @return array{
+     *   avgSleep7:float,
+     *   avgWater7:float,
+     *   avgTension7:float,
+     *   highTensionDays7:int,
+     *   nutritionGoodDays7:int,
+     *   nutritionPoorDays7:int,
+     *   nutritionEntries7:int,
+     *   moodNegativeEntries7:int,
+     *   moodSevereEntries7:int,
+     *   moodPositiveEntries7:int,
+     *   moodNegativeDays7:int,
+     *   latestImc:float,
+     *   weightChange30:float,
+     *   activityMinutes7:int
+     * }
+     */
+    public function getRiskFeatureSnapshot(object $user): array
+    {
+        $start7 = (new \DateTimeImmutable('today'))->modify('-6 days');
+
+        $rows7 = $this->createQueryBuilder('s')
+            ->select('s.date AS dateValue, s.sommeil AS sommeil, s.eauBue AS eau, s.tensionArterielle AS tension, s.alimentation AS alimentation, s.humeur AS humeur')
+            ->where('s.user = :user')
+            ->andWhere('s.date >= :start7')
+            ->setParameter('user', $user)
+            ->setParameter('start7', $start7)
+            ->getQuery()
+            ->getArrayResult();
+
+        $sleepSum = 0.0;
+        $sleepCount = 0;
+        $waterSum = 0.0;
+        $waterCount = 0;
+        $tensionSum = 0.0;
+        $tensionCount = 0;
+        $highTensionDays = [];
+        $nutritionGoodDays = 0;
+        $nutritionPoorDays = 0;
+        $nutritionEntries = 0;
+        $moodNegativeEntries = 0;
+        $moodSevereEntries = 0;
+        $moodPositiveEntries = 0;
+        $moodNegativeDays = [];
+        $negativeMoods = ['fatiguee', 'ennuyee', 'stressee', 'anxieuse', 'irritee', 'frustree', 'triste', 'deprimee', 'en_colere'];
+        $severeMoods = ['triste', 'deprimee', 'anxieuse'];
+        $positiveMoods = ['excellente', 'heureuse', 'joyeuse', 'contente', 'calme', 'paisible'];
+
+        foreach ($rows7 as $row) {
+            if (isset($row['sommeil']) && is_numeric($row['sommeil'])) {
+                $sleepSum += (float) $row['sommeil'];
+                $sleepCount++;
+            }
+            if (isset($row['eau']) && is_numeric($row['eau'])) {
+                $waterSum += (float) $row['eau'];
+                $waterCount++;
+            }
+            if (isset($row['tension']) && is_numeric($row['tension'])) {
+                $normalized = $this->normalizeTension((float) $row['tension']);
+                $tensionSum += $normalized;
+                $tensionCount++;
+                if ($normalized >= 14.0 && isset($row['dateValue'])) {
+                    $rawDate = $row['dateValue'];
+                    if ($rawDate instanceof \DateTimeInterface) {
+                        $highTensionDays[$rawDate->format('Y-m-d')] = true;
+                    } else {
+                        $highTensionDays[(new \DateTimeImmutable((string) $rawDate))->format('Y-m-d')] = true;
+                    }
+                }
+            }
+            if (array_key_exists('alimentation', $row) && $row['alimentation'] !== null) {
+                $rawAlimentation = $row['alimentation'];
+                $alimentation = $rawAlimentation instanceof \BackedEnum
+                    ? mb_strtolower((string) $rawAlimentation->value)
+                    : mb_strtolower(trim((string) $rawAlimentation));
+
+                $nutritionEntries++;
+                if (in_array($alimentation, ['bonne', 'tres_bonne', 'excellente'], true)) {
+                    $nutritionGoodDays++;
+                } elseif ($alimentation === 'faible') {
+                    $nutritionPoorDays++;
+                }
+            }
+            if (array_key_exists('humeur', $row) && $row['humeur'] !== null) {
+                $moods = [];
+                if (is_array($row['humeur'])) {
+                    $moods = $row['humeur'];
+                } elseif ($row['humeur'] instanceof \BackedEnum) {
+                    $moods = [$row['humeur']->value];
+                } else {
+                    $rawMoods = trim((string) $row['humeur']);
+                    if ($rawMoods !== '') {
+                        $moods = array_map('trim', explode(',', $rawMoods));
+                    }
+                }
+
+                $dayHasNegativeMood = false;
+                foreach ($moods as $moodRaw) {
+                    $mood = $moodRaw instanceof \BackedEnum
+                        ? mb_strtolower((string) $moodRaw->value)
+                        : mb_strtolower(trim((string) $moodRaw));
+                    if ($mood === '') {
+                        continue;
+                    }
+
+                    if (in_array($mood, $negativeMoods, true)) {
+                        $moodNegativeEntries++;
+                        $dayHasNegativeMood = true;
+                    }
+                    if (in_array($mood, $severeMoods, true)) {
+                        $moodSevereEntries++;
+                    }
+                    if (in_array($mood, $positiveMoods, true)) {
+                        $moodPositiveEntries++;
+                    }
+                }
+
+                if ($dayHasNegativeMood && isset($row['dateValue'])) {
+                    $rawDate = $row['dateValue'];
+                    if ($rawDate instanceof \DateTimeInterface) {
+                        $moodNegativeDays[$rawDate->format('Y-m-d')] = true;
+                    } else {
+                        $moodNegativeDays[(new \DateTimeImmutable((string) $rawDate))->format('Y-m-d')] = true;
+                    }
+                }
+            }
+        }
+
+        $latestImcRow = $this->createQueryBuilder('s')
+            ->select('s.imc AS imc')
+            ->where('s.user = :user')
+            ->andWhere('s.imc IS NOT NULL')
+            ->setParameter('user', $user)
+            ->orderBy('s.date', 'DESC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+
+        return [
+            'avgSleep7' => $sleepCount > 0 ? round($sleepSum / $sleepCount, 2) : 0.0,
+            'avgWater7' => $waterCount > 0 ? round($waterSum / $waterCount, 2) : 0.0,
+            'avgTension7' => $tensionCount > 0 ? round($tensionSum / $tensionCount, 2) : 0.0,
+            'highTensionDays7' => count($highTensionDays),
+            'nutritionGoodDays7' => $nutritionGoodDays,
+            'nutritionPoorDays7' => $nutritionPoorDays,
+            'nutritionEntries7' => $nutritionEntries,
+            'moodNegativeEntries7' => $moodNegativeEntries,
+            'moodSevereEntries7' => $moodSevereEntries,
+            'moodPositiveEntries7' => $moodPositiveEntries,
+            'moodNegativeDays7' => count($moodNegativeDays),
+            'latestImc' => (isset($latestImcRow['imc']) && is_numeric($latestImcRow['imc'])) ? (float) $latestImcRow['imc'] : 0.0,
+            'weightChange30' => $this->getWeightChangeLast30Days($user) ?? 0.0,
+            'activityMinutes7' => $this->getWeeklyActivityMinutesForUser($user, 7),
+        ];
+    }
+
+    /**
+     * Séries de stats (7 jours) pour affichage en graphiques.
+     *
+     * @return array{
+     *   labels: array<int, string>,
+     *   weights: array<int, ?float>,
+     *   sleep: array<int, ?float>,
+     *   tension: array<int, ?float>,
+     *   water: array<int, ?float>,
+     *   activity: array<int, int>
+     * }
+     */
+    public function getDashboardChartSeries(object $user, int $days = 7): array
+    {
+        $days = max(3, min(30, $days));
+        $today = new \DateTimeImmutable('today');
+        $start = $today->modify(sprintf('-%d days', $days - 1));
+
+        $defaultSeries = [
+            'labels' => [],
+            'weights' => [],
+            'sleep' => [],
+            'tension' => [],
+            'water' => [],
+            'activity' => [],
+        ];
+
+        $userId = $this->resolveUserId($user);
+        if ($userId === null) {
+            return $defaultSeries;
+        }
+
+        $rows = $this->getEntityManager()->getConnection()->executeQuery(
+            'SELECT date, poids, sommeil, tension_arterielle, eau_bue, duree_activite_minutes, activite_physique
+             FROM sante_quotidienne
+             WHERE user_id = :userId AND date >= :start
+             ORDER BY date ASC',
+            [
+                'userId' => $userId,
+                'start' => $start->format('Y-m-d 00:00:00'),
+            ]
+        )->fetchAllAssociative();
+
+        $byDay = [];
+        foreach ($rows as $row) {
+            $dateValue = (string) ($row['date'] ?? '');
+            $dayKey = substr($dateValue, 0, 10);
+            if ($dayKey === '') {
+                continue;
+            }
+
+            if (!isset($byDay[$dayKey])) {
+                $byDay[$dayKey] = [
+                    'poids_sum' => 0.0,
+                    'poids_count' => 0,
+                    'sleep_sum' => 0.0,
+                    'sleep_count' => 0,
+                    'tension_sum' => 0.0,
+                    'tension_count' => 0,
+                    'water_sum' => 0.0,
+                    'water_count' => 0,
+                    'activity' => 0,
+                ];
+            }
+
+            if (isset($row['poids']) && is_numeric($row['poids'])) {
+                $byDay[$dayKey]['poids_sum'] += (float) $row['poids'];
+                $byDay[$dayKey]['poids_count']++;
+            }
+            if (isset($row['sommeil']) && is_numeric($row['sommeil'])) {
+                $byDay[$dayKey]['sleep_sum'] += (float) $row['sommeil'];
+                $byDay[$dayKey]['sleep_count']++;
+            }
+            if (isset($row['tension_arterielle']) && is_numeric($row['tension_arterielle'])) {
+                $byDay[$dayKey]['tension_sum'] += (float) $row['tension_arterielle'];
+                $byDay[$dayKey]['tension_count']++;
+            }
+            if (isset($row['eau_bue']) && is_numeric($row['eau_bue'])) {
+                $byDay[$dayKey]['water_sum'] += (float) $row['eau_bue'];
+                $byDay[$dayKey]['water_count']++;
+            }
+
+            if (isset($row['duree_activite_minutes']) && is_numeric($row['duree_activite_minutes'])) {
+                $byDay[$dayKey]['activity'] += (int) round((float) $row['duree_activite_minutes']);
+            } else {
+                $level = mb_strtolower((string) ($row['activite_physique'] ?? ''));
+                $byDay[$dayKey]['activity'] += match ($level) {
+                    'sedentaire' => 10,
+                    'leger' => 25,
+                    'modere' => 45,
+                    'intense' => 70,
+                    default => 0,
+                };
+            }
+        }
+
+        for ($i = 0; $i < $days; $i++) {
+            $day = $start->modify(sprintf('+%d days', $i));
+            $dayKey = $day->format('Y-m-d');
+            $stats = $byDay[$dayKey] ?? null;
+
+            $defaultSeries['labels'][] = $day->format('d/m');
+            $defaultSeries['weights'][] = $stats && $stats['poids_count'] > 0
+                ? round($stats['poids_sum'] / $stats['poids_count'], 1)
+                : null;
+            $defaultSeries['sleep'][] = $stats && $stats['sleep_count'] > 0
+                ? round($stats['sleep_sum'] / $stats['sleep_count'], 1)
+                : null;
+            $defaultSeries['tension'][] = $stats && $stats['tension_count'] > 0
+                ? round($stats['tension_sum'] / $stats['tension_count'], 1)
+                : null;
+            $defaultSeries['water'][] = $stats && $stats['water_count'] > 0
+                ? round($stats['water_sum'] / $stats['water_count'], 1)
+                : null;
+            $defaultSeries['activity'][] = $stats ? (int) $stats['activity'] : 0;
+        }
+
+        return $defaultSeries;
+    }
+
+    private function getLatestWeightForUser(object $user): ?float
+    {
+        $row = $this->createQueryBuilder('s')
+            ->select('s.poids AS poids')
+            ->where('s.user = :user')
+            ->andWhere('s.poids IS NOT NULL')
+            ->setParameter('user', $user)
+            ->orderBy('s.date', 'DESC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+
+        return isset($row['poids']) && is_numeric($row['poids']) ? (float) $row['poids'] : null;
+    }
+
+    private function getAverageWaterForUser(object $user): ?float
+    {
+        $result = $this->createQueryBuilder('s')
+            ->select('AVG(s.eauBue) AS avgWater')
+            ->where('s.user = :user')
+            ->andWhere('s.eauBue IS NOT NULL')
+            ->setParameter('user', $user)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return $result !== null ? (float) $result : null;
+    }
+
+    private function resolveUserId(object $user): ?int
+    {
+        if (method_exists($user, 'getId')) {
+            $id = $user->getId();
+            return is_numeric($id) ? (int) $id : null;
+        }
+
+        return null;
+    }
+
+    private function normalizeTension(float $raw): float
+    {
+        if ($raw <= 0) {
+            return 0.0;
+        }
+
+        // Autorise saisie type "120" (systolique) ou "12" (échelle locale).
+        return $raw > 30.0 ? ($raw / 10.0) : $raw;
+    }
+
+    private function getWeeklyActivityMinutesForUser(object $user, int $days = 7): int
+    {
+        $start = (new \DateTimeImmutable('today'))->modify(sprintf('-%d days', max(1, $days - 1)));
+
+        $rows = $this->createQueryBuilder('s')
+            ->select('s.dureeActiviteMinutes AS duration, s.activitePhysique AS level')
+            ->where('s.user = :user')
+            ->andWhere('s.date >= :start')
+            ->andWhere('s.dureeActiviteMinutes IS NOT NULL OR s.activitePhysique IS NOT NULL')
+            ->setParameter('user', $user)
+            ->setParameter('start', $start)
+            ->getQuery()
+            ->getArrayResult();
+
+        $fallbackByLevel = [
+            'sedentaire' => 10,
+            'leger' => 25,
+            'modere' => 45,
+            'intense' => 70,
+        ];
+
+        $total = 0;
+        foreach ($rows as $row) {
+            $duration = $row['duration'] ?? null;
+            if (is_numeric($duration)) {
+                $total += (int) round((float) $duration);
+                continue;
+            }
+
+            $rawLevel = $row['level'] ?? '';
+            if ($rawLevel instanceof \BackedEnum) {
+                $level = mb_strtolower((string) $rawLevel->value);
+            } elseif ($rawLevel instanceof \UnitEnum) {
+                $level = mb_strtolower($rawLevel->name);
+            } else {
+                $level = mb_strtolower((string) $rawLevel);
+            }
+            $total += $fallbackByLevel[$level] ?? 0;
+        }
+
+        return max(0, $total);
+    }
 }
