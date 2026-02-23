@@ -3,14 +3,19 @@
 namespace App\Service;
 
 use App\Entity\User;
+use App\Entity\UserScoreHistory;
+use App\Repository\UserScoreHistoryRepository;
 use App\Repository\UserSessionRepository;
 
 class UserAiScoreService
 {
     private const PREMIUM_THRESHOLD = 70;
+    private const FREE_MONTH_THRESHOLD = 95;
 
-    public function __construct(private UserSessionRepository $userSessionRepository)
-    {
+    public function __construct(
+        private UserSessionRepository $userSessionRepository,
+        private UserScoreHistoryRepository $userScoreHistoryRepository
+    ) {
     }
 
     public function calculateScore(User $user): int
@@ -77,7 +82,7 @@ class UserAiScoreService
         }
 
         if ($score >= 55) {
-            return 'Bon profil : priorité support normale. Continuez votre activité pour débloquer les offres premium.';
+            return 'Bon profil : priorité support normale. Continuez votre activité pour atteindre 95/100 et obtenir 1 mois gratuit.';
         }
 
         return 'Profil en progression : augmentez votre activité et le respect des règles pour obtenir des offres premium.';
@@ -93,7 +98,64 @@ class UserAiScoreService
             'premiumEligible' => $this->isPremiumEligible($user),
             'benefitsMessage' => $this->getBenefitsMessage($user),
             'premiumThreshold' => self::PREMIUM_THRESHOLD,
+            'freeMonthThreshold' => self::FREE_MONTH_THRESHOLD,
+            'freeMonthGrantedAt' => $user->getAiFreeMonthGrantedAt(),
         ];
+    }
+
+    public function isEligibleForFreeMonth(User $user): bool
+    {
+        return $this->calculateScore($user) >= self::FREE_MONTH_THRESHOLD;
+    }
+
+    public function hasReceivedFreeMonth(User $user): bool
+    {
+        return $user->getAiFreeMonthGrantedAt() !== null;
+    }
+
+    public function grantFreeMonthIfEligible(User $user): bool
+    {
+        if (!$this->isEligibleForFreeMonth($user) || $this->hasReceivedFreeMonth($user)) {
+            return false;
+        }
+
+        $now = new \DateTimeImmutable();
+        $currentEnd = $user->getSubscriptionEndAt();
+        $baseDate = ($currentEnd !== null && $currentEnd > $now) ? $currentEnd : $now;
+
+        $user->setAiFreeMonthGrantedAt($now);
+        $user->setSubscriptionStatus('ACTIVE');
+        $user->setSubscriptionEndAt($baseDate->modify('+1 month'));
+        $user->setUpdatedAt($now);
+
+        return true;
+    }
+
+    public function recordDailyHistory(User $user): bool
+    {
+        $today = new \DateTimeImmutable('today');
+        if ($this->userScoreHistoryRepository->hasSnapshotForDate($user, $today)) {
+            return false;
+        }
+
+        $breakdown = $this->getBreakdown($user);
+        $history = new UserScoreHistory();
+        $history->setUser($user);
+        $history->setScore($this->calculateScore($user));
+        $history->setActivityScore($breakdown['activity']);
+        $history->setSeniorityScore($breakdown['seniority']);
+        $history->setRuleComplianceScore($breakdown['ruleCompliance']);
+        $history->setSanctionsHistoryScore($breakdown['sanctionsHistory']);
+        $history->setSnapshotType('daily');
+
+        $this->userScoreHistoryRepository->getEntityManager()->persist($history);
+
+        return true;
+    }
+
+    public function getRecentHistory(User $user, int $limit = 10): array
+    {
+        return $this->userScoreHistoryRepository->findRecentForUser($user, $limit);
     }
 
     private function computeActivityScore(User $user): int

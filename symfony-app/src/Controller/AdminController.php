@@ -12,8 +12,10 @@ use App\Entity\Nutritionniste;
 use App\Repository\AbonnementRepository;
 use App\Repository\ContenuRepository;
 use App\Repository\SuspiciousLoginRepository;
+use App\Repository\UserScoreHistoryRepository;
 use App\Repository\UserSessionRepository;
 use App\Repository\UserRepository;
+use App\Service\UserAiScoreService;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -40,7 +42,8 @@ class AdminController extends AbstractController
         AbonnementRepository $abonnementRepository,
         ContenuRepository $contenuRepository,
         SuspiciousLoginRepository $suspiciousLoginRepository,
-        EntityManagerInterface $em
+        EntityManagerInterface $em,
+        UserAiScoreService $userAiScoreService
     ): Response
     {
         $userStats = $userRepository->getUserStats();
@@ -157,6 +160,62 @@ class AdminController extends AbstractController
         $suspiciousRecent = $suspiciousLoginRepository->findRecent(6);
         $suspiciousCount = $suspiciousLoginRepository->countBlocked();
 
+        $allUsers = $userRepository->createQueryBuilder('u')
+            ->andWhere('u.deletedAt IS NULL')
+            ->getQuery()
+            ->getResult();
+
+        $scoreTotal = 0;
+        $premiumEligibleCount = 0;
+        $freeMonthEligibleCount = 0;
+        $freeMonthGrantedCount = 0;
+        $freeMonthActiveCount = 0;
+        $scoreRows = [];
+        $now = new \DateTimeImmutable();
+
+        foreach ($allUsers as $dashboardUser) {
+            if (!$dashboardUser instanceof User) {
+                continue;
+            }
+
+            $score = $userAiScoreService->calculateScore($dashboardUser);
+            $scoreTotal += $score;
+
+            if ($score >= 70) {
+                $premiumEligibleCount++;
+            }
+            if ($score >= 95) {
+                $freeMonthEligibleCount++;
+            }
+            if ($dashboardUser->getAiFreeMonthGrantedAt() !== null) {
+                $freeMonthGrantedCount++;
+            }
+            if ($dashboardUser->getAiFreeMonthGrantedAt() !== null
+                && $dashboardUser->getSubscriptionEndAt() !== null
+                && $dashboardUser->getSubscriptionEndAt() > $now
+            ) {
+                $freeMonthActiveCount++;
+            }
+
+            $scoreRows[] = [
+                'user' => $dashboardUser,
+                'score' => $score,
+                'supportPriorityLabel' => $userAiScoreService->getSupportPriorityLabel($dashboardUser),
+            ];
+        }
+
+        usort($scoreRows, static fn(array $a, array $b) => $b['score'] <=> $a['score']);
+
+        $usersCount = count($allUsers);
+        $aiScoreStats = [
+            'averageScore' => $usersCount > 0 ? round($scoreTotal / $usersCount, 1) : 0,
+            'premiumEligibleCount' => $premiumEligibleCount,
+            'freeMonthEligibleCount' => $freeMonthEligibleCount,
+            'freeMonthGrantedCount' => $freeMonthGrantedCount,
+            'freeMonthActiveCount' => $freeMonthActiveCount,
+        ];
+        $topAiUsers = array_slice($scoreRows, 0, 6);
+
         // Activités récentes pour le tableau
         $recentActivities = [
             [
@@ -220,6 +279,8 @@ class AdminController extends AbstractController
             'recentActivities' => $recentActivities,
             'suspiciousRecent' => $suspiciousRecent,
             'suspiciousCount' => $suspiciousCount,
+            'aiScoreStats' => $aiScoreStats,
+            'topAiUsers' => $topAiUsers,
         ]);
     }
 
@@ -361,7 +422,11 @@ class AdminController extends AbstractController
     }
     // ========== GESTION UTILISATEURS ==========
     #[Route('/users', name: 'admin_users')]
-    public function users(Request $request, UserRepository $userRepository): Response
+    public function users(
+        Request $request,
+        UserRepository $userRepository,
+        UserAiScoreService $userAiScoreService
+    ): Response
     {
         $page = max(1, (int) $request->query->get('page', 1));
         $limit = 12;
@@ -382,12 +447,76 @@ class AdminController extends AbstractController
         $total = count($paginator);
         $pages = (int) max(1, ceil($total / $limit));
 
+        $userScores = [];
+        $scoreTotal = 0;
+        $premiumEligible = 0;
+        $freeMonthEligible = 0;
+        $supportHighPriority = 0;
+        $freeMonthGranted = 0;
+        $listedCount = 0;
+
+        foreach ($paginator as $listedUser) {
+            if (!$listedUser instanceof User) {
+                continue;
+            }
+
+            $score = $userAiScoreService->calculateScore($listedUser);
+            $supportPriority = $userAiScoreService->getSupportPriorityLabel($listedUser);
+            $isPremiumEligible = $userAiScoreService->isPremiumEligible($listedUser);
+            $isFreeMonthEligible = $userAiScoreService->isEligibleForFreeMonth($listedUser);
+            $hasFreeMonthGranted = $userAiScoreService->hasReceivedFreeMonth($listedUser);
+
+            $userScores[$listedUser->getId()] = [
+                'score' => $score,
+                'supportPriority' => $supportPriority,
+                'premiumEligible' => $isPremiumEligible,
+                'freeMonthEligible' => $isFreeMonthEligible,
+                'freeMonthGranted' => $hasFreeMonthGranted,
+            ];
+
+            $recentHistory = $userAiScoreService->getRecentHistory($listedUser, 2);
+            $lastSnapshot = $recentHistory[0] ?? null;
+            $previousSnapshot = $recentHistory[1] ?? null;
+
+            $userScores[$listedUser->getId()]['lastSnapshotAt'] = $lastSnapshot?->getCreatedAt();
+            $userScores[$listedUser->getId()]['delta'] = $previousSnapshot
+                ? ($score - $previousSnapshot->getScore())
+                : null;
+
+            $scoreTotal += $score;
+            $listedCount++;
+
+            if ($isPremiumEligible) {
+                $premiumEligible++;
+            }
+            if ($isFreeMonthEligible) {
+                $freeMonthEligible++;
+            }
+            if ($supportPriority === 'Haute') {
+                $supportHighPriority++;
+            }
+            if ($hasFreeMonthGranted) {
+                $freeMonthGranted++;
+            }
+        }
+
+        $scoreSummary = [
+            'average' => $listedCount > 0 ? round($scoreTotal / $listedCount, 1) : 0,
+            'premiumEligible' => $premiumEligible,
+            'freeMonthEligible' => $freeMonthEligible,
+            'supportHighPriority' => $supportHighPriority,
+            'freeMonthGranted' => $freeMonthGranted,
+            'listedCount' => $listedCount,
+        ];
+
         return $this->render('admin/users/index.html.twig', [
             'users' => $paginator,
             'page' => $page,
             'pages' => $pages,
             'total' => $total,
             'filters' => $filters,
+            'userScores' => $userScores,
+            'scoreSummary' => $scoreSummary,
         ]);
     }
 
@@ -537,6 +666,39 @@ class AdminController extends AbstractController
         return $this->render('admin/users/stats.html.twig', [
             'stats' => $stats,
             'chart' => $chart,
+        ]);
+    }
+
+    #[Route('/users/score-history', name: 'admin_users_score_history')]
+    public function usersScoreHistory(Request $request, UserScoreHistoryRepository $userScoreHistoryRepository): Response
+    {
+        $page = max(1, (int) $request->query->get('page', 1));
+        $limit = 20;
+        $q = trim((string) $request->query->get('q', ''));
+
+        $qb = $userScoreHistoryRepository->createQueryBuilder('h')
+            ->leftJoin('h.user', 'u')
+            ->addSelect('u')
+            ->orderBy('h.createdAt', 'DESC');
+
+        if ($q !== '') {
+            $qb->andWhere('u.email LIKE :q OR u.nom LIKE :q OR u.prenom LIKE :q')
+                ->setParameter('q', '%' . $q . '%');
+        }
+
+        $qb->setFirstResult(($page - 1) * $limit)
+            ->setMaxResults($limit);
+
+        $paginator = new Paginator($qb);
+        $total = count($paginator);
+        $pages = (int) max(1, ceil($total / $limit));
+
+        return $this->render('admin/users/score_history.html.twig', [
+            'rows' => $paginator,
+            'page' => $page,
+            'pages' => $pages,
+            'total' => $total,
+            'q' => $q,
         ]);
     }
 

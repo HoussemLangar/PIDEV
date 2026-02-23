@@ -60,6 +60,7 @@ class ProfileController extends AbstractController
         return $this->render('front/profile/edit.html.twig', [
             'form' => $form->createView(),
             'aiScore' => $userAiScoreService->getProfileSummary($user),
+            'scoreHistory' => $userAiScoreService->getRecentHistory($user, 10),
         ]);
     }
 

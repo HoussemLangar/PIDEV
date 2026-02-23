@@ -4,6 +4,7 @@ namespace App\EventSubscriber;
 
 use App\Entity\User;
 use App\Repository\AbonnementRepository;
+use App\Service\UserAiScoreService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -20,7 +21,8 @@ class SubscriptionGateSubscriber implements EventSubscriberInterface
         private UrlGeneratorInterface $urlGenerator,
         private EntityManagerInterface $em,
         private RequestStack $requestStack,
-        private AbonnementRepository $abonnementRepository
+        private AbonnementRepository $abonnementRepository,
+        private UserAiScoreService $userAiScoreService
     ) {}
 
     public static function getSubscribedEvents(): array
@@ -58,6 +60,17 @@ class SubscriptionGateSubscriber implements EventSubscriberInterface
 
         $session = $this->requestStack->getSession();
         $mustFlush = false;
+
+        if ($this->userAiScoreService->grantFreeMonthIfEligible($user)) {
+            $mustFlush = true;
+            if ($session) {
+                $session->getFlashBag()->add('success', 'Félicitations ! Vous avez atteint un score IA de 95+ et gagné 1 mois d\'utilisation gratuit.');
+            }
+        }
+
+        if ($this->userAiScoreService->recordDailyHistory($user)) {
+            $mustFlush = true;
+        }
 
         if ($user->getSubscriptionStatus() === 'ACTIVE' && $this->isExpiredByData($user)) {
             $this->revokeExpiredSubscriptionAccess($user);
@@ -170,6 +183,14 @@ class SubscriptionGateSubscriber implements EventSubscriberInterface
     {
         if ($user->isSubscriptionExpired()) {
             return true;
+        }
+
+        $hasFreeMonth = $user->getAiFreeMonthGrantedAt() !== null
+            && $user->getSubscriptionEndAt() !== null
+            && $user->getSubscriptionEndAt() > new \DateTimeImmutable();
+
+        if ($hasFreeMonth) {
+            return false;
         }
 
         if ($user->getSubscriptionStatus() !== 'ACTIVE') {

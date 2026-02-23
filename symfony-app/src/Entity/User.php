@@ -176,6 +176,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     #[ORM\Column(type: 'datetime_immutable', nullable: true)]
     private ?\DateTimeImmutable $subscriptionEndAt = null;
 
+    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $aiFreeMonthGrantedAt = null;
+
     #[ORM\Column(type: 'boolean', options: ['default' => false])]
     private bool $isBanned = false;
 
@@ -362,6 +365,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
 
     public function getSubscriptionEndAt(): ?\DateTimeImmutable { return $this->subscriptionEndAt; }
     public function setSubscriptionEndAt(?\DateTimeImmutable $subscriptionEndAt): void { $this->subscriptionEndAt = $subscriptionEndAt; }
+
+    public function getAiFreeMonthGrantedAt(): ?\DateTimeImmutable { return $this->aiFreeMonthGrantedAt; }
+    public function setAiFreeMonthGrantedAt(?\DateTimeImmutable $aiFreeMonthGrantedAt): void { $this->aiFreeMonthGrantedAt = $aiFreeMonthGrantedAt; }
 
     public function isSubscriptionActive(): bool
     {

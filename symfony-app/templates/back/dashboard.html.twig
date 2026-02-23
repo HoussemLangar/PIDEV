@@ -287,6 +287,47 @@
                 </div>
             </div>
         </div>
+
+        <div class="quick-stat-card">
+            <div class="quick-stat-header">
+                <h3>Gestion Score IA</h3>
+                <a href="{{ path('admin_users') }}" class="quick-stat-btn">Gérer</a>
+            </div>
+            <div class="quick-stat-list">
+                <div class="quick-stat-item">
+                    <span><i class="fas fa-brain"></i> Score moyen</span>
+                    <strong>{{ aiScoreStats.averageScore }}/100</strong>
+                </div>
+                <div class="quick-stat-item">
+                    <span><i class="fas fa-crown"></i> Éligibles premium (≥70)</span>
+                    <strong>{{ aiScoreStats.premiumEligibleCount }}</strong>
+                </div>
+                <div class="quick-stat-item {{ aiScoreStats.freeMonthEligibleCount > 0 ? 'alert' : '' }}">
+                    <span><i class="fas fa-gift"></i> Éligibles mois gratuit (≥95)</span>
+                    <strong class="{{ aiScoreStats.freeMonthEligibleCount > 0 ? 'alert-badge' : '' }}">{{ aiScoreStats.freeMonthEligibleCount }}</strong>
+                </div>
+                <div class="quick-stat-item">
+                    <span><i class="fas fa-calendar-check"></i> Mois gratuit actif</span>
+                    <strong>{{ aiScoreStats.freeMonthActiveCount }}</strong>
+                </div>
+
+                {% for row in topAiUsers %}
+                    <div class="quick-stat-item">
+                        <span>
+                            <i class="fas fa-user"></i>
+                            {{ row.user.prenom }} {{ row.user.nom }}
+                            <small style="opacity:.7;">({{ row.supportPriorityLabel }})</small>
+                        </span>
+                        <strong>{{ row.score }}/100</strong>
+                    </div>
+                {% else %}
+                    <div class="quick-stat-item">
+                        <span><i class="fas fa-user"></i> Aucun utilisateur</span>
+                        <strong>0</strong>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
     </section>
 
     {% set trackerEntries = recentActivity.trackerEntries ?? 0 %}

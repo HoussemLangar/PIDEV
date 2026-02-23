@@ -10,6 +10,7 @@
     </div>
     <div class="admin-actions-row">
         <a class="btn btn-secondary" href="{{ path('admin_users_stats') }}">📊 Statistiques</a>
+        <a class="btn btn-secondary" href="{{ path('admin_users_score_history') }}">🕒 Historique scoring</a>
         <a class="btn btn-primary" href="{{ path('admin_users_new') }}">➕ Nouvel utilisateur</a>
     </div>
 </div>
@@ -68,12 +69,45 @@
         <div>Total: <strong>{{ total }}</strong> utilisateurs</div>
     </div>
 
+    <div style="margin:14px 0 18px;padding:14px 16px;border:1px solid #e2e8f0;border-radius:12px;background:#f8fafc;">
+        <div style="font-weight:700;color:#0f172a;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+                <i class="fas fa-brain" style="color:#0ea5e9;"></i>
+                Gestion score
+            </div>
+            <a class="btn btn-secondary" href="{{ path('admin_users_score_history') }}">Historique scoring</a>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;">
+            <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:10px 12px;">
+                <div style="font-size:12px;color:#64748b;">Score moyen</div>
+                <div style="font-size:18px;font-weight:700;color:#0f172a;">{{ scoreSummary.average }}/100</div>
+            </div>
+            <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:10px 12px;">
+                <div style="font-size:12px;color:#64748b;">Premium (≥70)</div>
+                <div style="font-size:18px;font-weight:700;color:#0f172a;">{{ scoreSummary.premiumEligible }}</div>
+            </div>
+            <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:10px 12px;">
+                <div style="font-size:12px;color:#64748b;">Mois gratuit (≥95)</div>
+                <div style="font-size:18px;font-weight:700;color:#0f172a;">{{ scoreSummary.freeMonthEligible }}</div>
+            </div>
+            <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:10px 12px;">
+                <div style="font-size:12px;color:#64748b;">Support prioritaire</div>
+                <div style="font-size:18px;font-weight:700;color:#0f172a;">{{ scoreSummary.supportHighPriority }}</div>
+            </div>
+            <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:10px 12px;">
+                <div style="font-size:12px;color:#64748b;">Mois gratuits accordés</div>
+                <div style="font-size:18px;font-weight:700;color:#0f172a;">{{ scoreSummary.freeMonthGranted }}</div>
+            </div>
+        </div>
+    </div>
+
     <div style="overflow-x: auto;">
         <table class="admin-table">
             <thead>
                 <tr>
                     <th>Utilisateur</th>
                     <th>Rôle</th>
+                    <th>Score IA</th>
                     <th>Statut</th>
                     <th>Créé le</th>
                     <th>Actions</th>
@@ -81,12 +115,34 @@
             </thead>
             <tbody>
             {% for user in users %}
+                {% set score = userScores[user.id] ?? null %}
                 <tr>
                     <td>
                         <div style="font-weight: 600;">{{ user.fullName }}</div>
                         <div style="color: var(--admin-muted); font-size: 0.9rem;">{{ user.email }}</div>
                     </td>
                     <td>{{ user.role }}</td>
+                    <td>
+                        {% if score %}
+                            <div style="font-weight:700;color:#0f172a;">{{ score.score }}/100</div>
+                            <div style="font-size:12px;color:#64748b;">Support {{ score.supportPriority }}</div>
+                            {% if score.lastSnapshotAt %}
+                                <div style="font-size:11px;color:#94a3b8;">Snapshot: {{ score.lastSnapshotAt|date('d/m H:i') }}</div>
+                            {% endif %}
+                            {% if score.delta is not null %}
+                                <div style="font-size:11px;color:{{ score.delta >= 0 ? '#16a34a' : '#dc2626' }};">
+                                    {{ score.delta >= 0 ? '+' : '' }}{{ score.delta }} pts vs dernier snapshot
+                                </div>
+                            {% endif %}
+                            {% if score.freeMonthEligible %}
+                                <span class="admin-badge success" style="margin-top:4px;display:inline-flex;">Éligible 1 mois gratuit</span>
+                            {% elseif score.premiumEligible %}
+                                <span class="admin-badge" style="margin-top:4px;display:inline-flex;">Éligible premium</span>
+                            {% endif %}
+                        {% else %}
+                            <span style="color:var(--admin-muted);">N/A</span>
+                        {% endif %}
+                    </td>
                     <td>
                         {% if user.deletedAt %}
                             <span class="admin-badge danger">Supprimé</span>
@@ -125,7 +181,7 @@
                 </tr>
             {% else %}
                 <tr>
-                    <td colspan="5" style="text-align: center; color: var(--admin-muted);">Aucun utilisateur trouvé.</td>
+                    <td colspan="6" style="text-align: center; color: var(--admin-muted);">Aucun utilisateur trouvé.</td>
                 </tr>
             {% endfor %}
             </tbody>

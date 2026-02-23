@@ -1,0 +1,82 @@
+{% extends 'back/base.html.twig' %}
+
+{% block title %}Historique scoring utilisateurs{% endblock %}
+
+{% block admin_content %}
+<div class="admin-page-header">
+    <div class="admin-page-title">
+        <h1>Historique scoring</h1>
+        <p>Consultez l'évolution des scores IA des utilisateurs.</p>
+    </div>
+    <div class="admin-actions-row">
+        <a class="btn btn-secondary" href="{{ path('admin_users') }}">Retour utilisateurs</a>
+    </div>
+</div>
+
+<div class="admin-card">
+    <form method="get" class="admin-form" style="display:flex;gap:10px;align-items:end;">
+        <div style="min-width:280px;">
+            <label>Recherche utilisateur</label>
+            <input type="text" name="q" value="{{ q }}" placeholder="Nom, prénom ou email">
+        </div>
+        <button class="btn btn-primary" type="submit">Filtrer</button>
+        <a class="btn btn-secondary" href="{{ path('admin_users_score_history') }}">Réinitialiser</a>
+    </form>
+</div>
+
+<div class="admin-card">
+    <div class="admin-actions-row" style="justify-content:space-between;align-items:center;">
+        <div>Total snapshots: <strong>{{ total }}</strong></div>
+    </div>
+
+    <div style="overflow-x:auto;">
+        <table class="admin-table">
+            <thead>
+            <tr>
+                <th>Utilisateur</th>
+                <th>Score</th>
+                <th>Activité</th>
+                <th>Ancienneté</th>
+                <th>Règles</th>
+                <th>Sanctions</th>
+                <th>Type</th>
+                <th>Date</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for row in rows %}
+                <tr>
+                    <td>
+                        <div style="font-weight:600;">{{ row.user.fullName }}</div>
+                        <div style="font-size:12px;color:var(--admin-muted);">{{ row.user.email }}</div>
+                    </td>
+                    <td><strong>{{ row.score }}/100</strong></td>
+                    <td>{{ row.activityScore }}/35</td>
+                    <td>{{ row.seniorityScore }}/25</td>
+                    <td>{{ row.ruleComplianceScore }}/25</td>
+                    <td>{{ row.sanctionsHistoryScore }}/15</td>
+                    <td><span class="admin-badge">{{ row.snapshotType }}</span></td>
+                    <td>{{ row.createdAt|date('d/m/Y H:i') }}</td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="8" style="text-align:center;color:var(--admin-muted);">Aucun historique trouvé.</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if pages > 1 %}
+        <div class="admin-pagination" style="margin-top:16px;">
+            {% for p in 1..pages %}
+                {% if p == page %}
+                    <span class="active">{{ p }}</span>
+                {% else %}
+                    <a href="{{ path('admin_users_score_history', {page: p, q: q}) }}">{{ p }}</a>
+                {% endif %}
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

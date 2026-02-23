@@ -780,7 +780,16 @@
             appt_rescheduled: '{{ "appt.reschedule_title"|trans|e("js") }}',
         };
 
-        (function () {
+        function __initAppointmentsPage() {
+            const pageRoot = document.querySelector('.appointment-page');
+            if (!pageRoot) {
+                return;
+            }
+            if (pageRoot.dataset.jsInitialized === '1') {
+                return;
+            }
+            pageRoot.dataset.jsInitialized = '1';
+
             const canBook = {{ isPatient ? 'true' : 'false' }};
             const canMedecin = {{ isMedecin ? 'true' : 'false' }};
 
@@ -790,10 +799,21 @@
 
             let map = null;
             if (canBook) {
-                map = L.map('map').setView([36.8, 10.18], 10);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    maxZoom: 18
-                }).addTo(map);
+                const mapEl = document.getElementById('map');
+                if (mapEl && typeof L !== 'undefined') {
+                    try {
+                        if (mapEl._leaflet_id !== undefined) {
+                            mapEl._leaflet_id = undefined;
+                        }
+                        map = L.map(mapEl).setView([36.8, 10.18], 10);
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            maxZoom: 18
+                        }).addTo(map);
+                    } catch (e) {
+                        console.warn('Leaflet init skipped:', e);
+                        map = null;
+                    }
+                }
             }
 
             const doctorSelect = document.getElementById('doctorSelect');
@@ -1038,7 +1058,7 @@
                     doctorOptions.appendChild(opt);
                     doctorLabelToId.set(label, String(doc.id));
 
-                    if (doc.lat && doc.lng) {
+                    if (map && doc.lat && doc.lng) {
                         const marker = L.marker([doc.lat, doc.lng]).addTo(map);
                         marker.bindPopup(`<strong>${doc.nom} ${doc.prenom}</strong><br>${doc.specialite}<br>${doc.ville || ''}`);
                         marker.on('click', () => {
@@ -1601,6 +1621,12 @@
                 showAlert('Veuillez replanifier ce rendez-vous.', 'success');
                 rescheduleDoctor(resId);
             }
-        })();
+        }
+
+        document.addEventListener('DOMContentLoaded', __initAppointmentsPage);
+        document.addEventListener('turbo:load', __initAppointmentsPage);
+        if (document.readyState !== 'loading') {
+            __initAppointmentsPage();
+        }
     </script>
 {% endblock %}

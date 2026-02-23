@@ -116,7 +116,6 @@
     .btn-danger:hover { box-shadow:0 6px 18px rgba(239,68,68,.4); transform:translateY(-1px); }
 
     .ai-score-panel {
-        margin-top:20px;
         background:linear-gradient(135deg,#f0f9ff,#f8fafc);
         border:1px solid #bae6fd;
         border-radius:14px;
@@ -203,32 +202,6 @@
                         <div style="font-weight:700;font-size:13px;">{{ (app.user.subscriptionType ?? app.user.role)|replace({'ROLE_': '', '_': ' '})|capitalize }}</div>
                     </div>
                 </div>
-
-                <div class="ai-score-panel">
-                    <div class="ai-score-head">
-                        <div>
-                            <div class="ai-score-label">Score IA Utilisateur</div>
-                            <div class="ai-score-value">{{ ai.score }}/100</div>
-                        </div>
-                        <div class="ai-score-chip">Support {{ ai.supportPriorityLabel }}</div>
-                    </div>
-
-                    <div class="ai-score-meta">
-                        <div><span>Activité</span><strong>{{ ai.breakdown.activity }}/35</strong></div>
-                        <div><span>Ancienneté</span><strong>{{ ai.breakdown.seniority }}/25</strong></div>
-                        <div><span>Respect des règles</span><strong>{{ ai.breakdown.ruleCompliance }}/25</strong></div>
-                        <div><span>Historique sanctions</span><strong>{{ ai.breakdown.sanctionsHistory }}/15</strong></div>
-                    </div>
-
-                    <div class="ai-score-benefit">
-                        {% if ai.premiumEligible %}
-                            <strong>Offre active :</strong> vous bénéficiez d'un accès premium IA grâce à votre score.
-                        {% else %}
-                            <strong>Offre à débloquer :</strong> atteignez 70/100 pour activer l'accès premium IA.
-                        {% endif %}
-                        <div style="margin-top:6px;">{{ ai.benefitsMessage }}</div>
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -247,6 +220,51 @@
                 <i class="fas fa-crown" style="color:#f59e0b;"></i> Abonnement
             </a>
         </nav>
+
+        <div class="profile-card">
+            <div class="profile-section-title">
+                <i class="fas fa-brain"></i> Score IA Utilisateur
+            </div>
+            <div class="ai-score-panel">
+                <div class="ai-score-head">
+                    <div>
+                        <div class="ai-score-label">Score global</div>
+                        <div class="ai-score-value">{{ ai.score }}/100</div>
+                    </div>
+                    <div class="ai-score-chip">Support {{ ai.supportPriorityLabel }}</div>
+                </div>
+
+                <div class="ai-score-meta">
+                    <div><span>Activité</span><strong>{{ ai.breakdown.activity }}/35</strong></div>
+                    <div><span>Ancienneté</span><strong>{{ ai.breakdown.seniority }}/25</strong></div>
+                    <div><span>Respect des règles</span><strong>{{ ai.breakdown.ruleCompliance }}/25</strong></div>
+                    <div><span>Historique sanctions</span><strong>{{ ai.breakdown.sanctionsHistory }}/15</strong></div>
+                </div>
+
+                <div class="ai-score-benefit">
+                    {% if ai.premiumEligible %}
+                        <strong>Offre active :</strong> vous bénéficiez d'un accès premium IA grâce à votre score.
+                    {% else %}
+                            <strong>Offre à débloquer :</strong> atteignez 70/100 pour activer l'accès premium IA, puis 95/100 pour obtenir 1 mois gratuit.
+                    {% endif %}
+                    <div style="margin-top:6px;">{{ ai.benefitsMessage }}</div>
+                </div>
+
+                <div class="ai-score-benefit" style="margin-top:12px;">
+                    <strong>Historique de scoring</strong>
+                    <div style="margin-top:8px;display:grid;gap:6px;">
+                        {% for item in scoreHistory|default([]) %}
+                            <div style="display:flex;justify-content:space-between;gap:10px;font-size:12px;color:#334155;">
+                                <span>{{ item.createdAt|date('d/m/Y H:i') }}</span>
+                                <span style="font-weight:700;color:#0f172a;">{{ item.score }}/100</span>
+                            </div>
+                        {% else %}
+                            <div style="font-size:12px;color:#64748b;">Aucun historique disponible pour le moment.</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <div class="profile-card">
             {{ form_start(form, { attr: { class: 'profile-form', id: 'profileForm' } }) }}

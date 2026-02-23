@@ -308,6 +308,27 @@
             position: relative; z-index:1;
         }
         #accountDropdown .acc-role-badge i { font-size: 9px; opacity: .85; }
+        #accountDropdown .acc-score {
+            margin-top: 7px;
+            font-size: 11.5px;
+            color: rgba(255,255,255,.90);
+            position: relative; z-index:1;
+            display: flex; align-items: center; gap: 6px;
+        }
+        #accountDropdown .acc-score strong {
+            font-weight: 800;
+            font-size: 13px;
+            color: #fff;
+        }
+        #accountDropdown .acc-score-bar-wrap {
+            flex: 1; height: 4px; border-radius: 99px;
+            background: rgba(255,255,255,.25); overflow: hidden;
+        }
+        #accountDropdown .acc-score-bar-fill {
+            height: 100%; border-radius: 99px;
+            background: linear-gradient(90deg, #7dd3fc, #38bdf8);
+            transition: width .4s ease;
+        }
 
         /* ─ Body ───────────────────────────────────────────────────── */
         #accountDropdown .acc-body {
@@ -624,6 +645,16 @@
                                 <div class="acc-name">{{ app.user.nom }} {{ app.user.prenom }}</div>
                                 <div class="acc-email">{{ app.user.email }}</div>
                                 <span class="acc-role-badge"><i class="{{ _roleIcon }}"></i> {{ _roleLabel }}</span>
+                                {% if app.user %}
+                                {% set _aiScore = user_ai_score(app.user) %}
+                                <div class="acc-score">
+                                    <strong>{{ _aiScore }}/100</strong>
+                                    <span style="opacity:.8;">Score IA</span>
+                                    <div class="acc-score-bar-wrap">
+                                        <div class="acc-score-bar-fill" style="width:{{ _aiScore }}%;"></div>
+                                    </div>
+                                </div>
+                                {% endif %}
                             </div>
 
                             {# ── body ── #}
@@ -882,6 +913,7 @@
                 });
 
                 window.addEventListener('load', hide);
+                document.addEventListener('turbo:load', hide);
             })();
             function __santea_initNav() {
 
