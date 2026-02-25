@@ -34,6 +34,26 @@ class UserScoreHistoryRepository extends ServiceEntityRepository
             ->getSingleScalarResult() > 0;
     }
 
+    public function hasReachedThresholdBetween(
+        User $user,
+        int $threshold,
+        \DateTimeImmutable $start,
+        \DateTimeImmutable $end
+    ): bool {
+        return (int) $this->createQueryBuilder('h')
+            ->select('COUNT(h.id)')
+            ->andWhere('h.user = :user')
+            ->andWhere('h.score >= :threshold')
+            ->andWhere('h.createdAt >= :start')
+            ->andWhere('h.createdAt < :end')
+            ->setParameter('user', $user)
+            ->setParameter('threshold', $threshold)
+            ->setParameter('start', $start)
+            ->setParameter('end', $end)
+            ->getQuery()
+            ->getSingleScalarResult() > 0;
+    }
+
     /**
      * @return UserScoreHistory[]
      */

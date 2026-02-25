@@ -37,8 +37,8 @@
                     <textarea name="content" rows="8" class="ait-input ait-textarea" placeholder="Collez ici le contenu du document médical (ordonnance, bilan sanguin, compte-rendu…)">{{ app.request.request.get('content') }}</textarea>
                 </div>
                 <div class="ait-field">
-                    <label class="ait-label"><i class="fas fa-upload"></i> Ou chargez un fichier <span class="ait-hint">.txt · .csv · .log</span></label>
-                    <input type="file" name="document" accept=".txt,.csv,.log" class="ait-file-input">
+                    <label class="ait-label"><i class="fas fa-upload"></i> Ou chargez un fichier <span class="ait-hint">.pdf · .txt · .csv · .log · .md</span></label>
+                    <input type="file" name="document" accept=".pdf,.txt,.csv,.log,.md,application/pdf,text/plain,text/csv,text/markdown" class="ait-file-input">
                 </div>
                 <div class="ait-form-footer">
                     <button type="submit" class="ait-btn-submit ait-btn" id="aitSubmitBtn">
@@ -60,6 +60,24 @@
                 <div class="ait-result-section-title"><i class="fas fa-align-left"></i> Résumé</div>
                 <p class="ait-result-text">{{ result.summary }}</p>
             </div>
+
+            {% if result.analysisPrediction is defined and result.analysisPrediction %}
+            <div class="ait-result-section">
+                <div class="ait-result-section-title"><i class="fas fa-stethoscope"></i> Prédiction d'analyse</div>
+                <p class="ait-result-text">{{ result.analysisPrediction }}</p>
+            </div>
+            {% endif %}
+
+            {% if result.abnormalFindings is defined and result.abnormalFindings|length %}
+            <div class="ait-result-section">
+                <div class="ait-result-section-title"><i class="fas fa-exclamation-circle"></i> Écarts détectés</div>
+                <ul class="ait-bullet-list">
+                    {% for p in result.abnormalFindings %}
+                        <li><i class="fas fa-circle"></i> {{ p }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
 
             {% if result.keyPoints is defined and result.keyPoints|length %}
             <div class="ait-result-section">

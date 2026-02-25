@@ -371,6 +371,181 @@
         #accountDropdown .dropdown-item:hover i:first-child {
             background: rgba(13,138,188,.18);
         }
+        /* ── Global Report Modal ── */
+        .global-report-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(8, 18, 40, .55);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 120000;
+            padding: 20px;
+            transition: opacity .2s;
+        }
+        .global-report-modal.show { display: flex; }
+        .global-report-modal-card {
+            width: min(480px, 100%);
+            background: #fff;
+            border-radius: 22px;
+            box-shadow: 0 24px 64px rgba(13,138,188,.22), 0 4px 16px rgba(15,23,42,.14);
+            overflow: hidden;
+            animation: grm-in .25s cubic-bezier(.34,1.4,.64,1) both;
+        }
+        @keyframes grm-in {
+            from { opacity: 0; transform: scale(.92) translateY(12px); }
+            to   { opacity: 1; transform: scale(1)  translateY(0); }
+        }
+        [data-theme="dark"] .global-report-modal-card {
+            background: #1a2744;
+            box-shadow: 0 24px 64px rgba(0,0,0,.55);
+        }
+        .global-report-modal-hero {
+            background: linear-gradient(135deg, #0D8ABC 0%, #0653a0 100%);
+            padding: 28px 24px 46px;
+            position: relative;
+            text-align: center;
+        }
+        .global-report-modal-hero::after {
+            content: '';
+            position: absolute;
+            bottom: -1px; left: 0; right: 0; height: 32px;
+            background: #fff;
+            border-radius: 22px 22px 0 0;
+        }
+        [data-theme="dark"] .global-report-modal-hero::after { background: #1a2744; }
+        .global-report-modal-icon {
+            width: 56px; height: 56px;
+            background: rgba(255,255,255,.18);
+            border-radius: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            color: #fff;
+            margin-bottom: 10px;
+            border: 2px solid rgba(255,255,255,.28);
+        }
+        .global-report-modal-hero h3 {
+            margin: 0;
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: .01em;
+        }
+        .global-report-modal-hero p {
+            margin: 5px 0 0;
+            font-size: .82rem;
+            color: rgba(255,255,255,.78);
+        }
+        .global-report-close {
+            position: absolute;
+            top: 12px; right: 14px;
+            border: none;
+            background: rgba(255,255,255,.18);
+            cursor: pointer;
+            font-size: 13px;
+            color: #fff;
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background .15s;
+        }
+        .global-report-close:hover { background: rgba(255,255,255,.32); }
+        .global-report-modal-body {
+            padding: 22px 24px 24px;
+        }
+        /* Period pill buttons */
+        .grm-period-label {
+            font-size: .78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: #64748b;
+            margin: 0 0 9px;
+        }
+        [data-theme="dark"] .grm-period-label { color: #94a3b8; }
+        .grm-period-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .grm-period-group input[type="radio"] { display: none; }
+        .grm-period-group label {
+            flex: 1;
+            text-align: center;
+            padding: 9px 0;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: .88rem;
+            font-weight: 600;
+            color: #475569;
+            cursor: pointer;
+            transition: all .15s;
+            user-select: none;
+            background: #f8fafc;
+        }
+        [data-theme="dark"] .grm-period-group label {
+            border-color: #334155;
+            color: #94a3b8;
+            background: #0f172a;
+        }
+        .grm-period-group input[type="radio"]:checked + label {
+            border-color: #0D8ABC;
+            background: linear-gradient(135deg, #e0f4fb 0%, #dbeafe 100%);
+            color: #0653a0;
+            box-shadow: 0 2px 8px rgba(13,138,188,.18);
+        }
+        [data-theme="dark"] .grm-period-group input[type="radio"]:checked + label {
+            background: rgba(13,138,188,.18);
+            color: #38bdf8;
+        }
+        .grm-period-group label:hover:not(.checked) { border-color: #0D8ABC; color: #0D8ABC; }
+        /* Features row */
+        .grm-features {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+        }
+        .grm-feature-chip {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: .78rem;
+            color: #475569;
+            background: #f1f5f9;
+            border-radius: 20px;
+            padding: 4px 10px;
+        }
+        [data-theme="dark"] .grm-feature-chip { background: #1e293b; color: #94a3b8; }
+        .grm-feature-chip i { color: #16a34a; font-size: .72rem; }
+        /* Download button */
+        .grm-download-btn {
+            width: 100%;
+            padding: 13px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #0D8ABC 0%, #0653a0 100%);
+            color: #fff;
+            font-size: .95rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            letter-spacing: .01em;
+            transition: opacity .15s, transform .12s;
+            box-shadow: 0 4px 16px rgba(13,138,188,.35);
+        }
+        .grm-download-btn:hover { opacity: .9; transform: translateY(-1px); }
+        .grm-download-btn:active { transform: translateY(0); }
+        .grm-download-btn i { font-size: 1rem; }
         /* danger item */
         #accountDropdown .dropdown-item.danger {
             color: #dc2626;
@@ -554,6 +729,9 @@
                     <li><a href="#quick-info"><i class="fas fa-info-circle" style="margin-right:5px;color:#0D8ABC;"></i>{{ 'nav.about'|trans }}</a></li>
                     <li><a href="#appointment-section"><i class="fas fa-stethoscope" style="margin-right:5px;color:#0D8ABC;"></i>{{ 'nav.services'|trans }}</a></li>
                     <li><a href="{{ path('front_content_index') }}"><i class="fas fa-newspaper" style="margin-right:5px;color:#0D8ABC;"></i>{{ 'nav.blog'|trans }}</a></li>
+                    {% if app.user %}
+                        <li><a href="{{ path('app_ai_tools_index') }}"><i class="fas fa-robot" style="margin-right:5px;color:#0D8ABC;"></i>Outils IA</a></li>
+                    {% endif %}
                     {% if app.user and (app.user.subscriptionType ?? app.user.role) == 'ROLE_PATIENT' %}
                         <li><a href="{{ path('app_sante_quotidienne_index') }}"><i class="fas fa-book-medical" style="margin-right:5px;color:#0D8ABC;"></i>Mon journal santé</a></li>
                         <li><a href="{{ path('app_symptomes') }}"><i class="fas fa-diagnoses" style="margin-right:5px;color:#0D8ABC;"></i>Mes symptômes</a></li>
@@ -671,6 +849,11 @@
                                 <a href="{{ path('profile_mfa') }}" class="dropdown-item">
                                     <i class="fas fa-key"></i> {{ 'nav.mfa'|trans }}
                                 </a>
+                                {% if canAiTools %}
+                                <a href="{{ path('app_ai_tools_index') }}" class="dropdown-item">
+                                    <i class="fas fa-robot"></i> Outils IA
+                                </a>
+                                {% endif %}
 
                                 <div class="dropdown-divider"></div>
 
@@ -695,11 +878,6 @@
                                         {% if canPlan %}
                                         <a href="{{ isProfessionalPlanRole ? path('app_plan_professional_plans') : path('app_plan_index') }}" class="dropdown-item">
                                             <i class="fas fa-calendar-check"></i> Mes plans
-                                        </a>
-                                        {% endif %}
-                                        {% if canAiTools %}
-                                        <a href="{{ path('app_ai_tools_index') }}" class="dropdown-item">
-                                            <i class="fas fa-robot"></i> Outils IA
                                         </a>
                                         {% endif %}
                                     </div>
@@ -729,6 +907,9 @@
                                 {% if isPatient %}
                                 <a href="{{ path('app_appointments') }}" class="dropdown-item">
                                     <i class="fas fa-calendar-alt"></i> Rendez-vous
+                                </a>
+                                <a href="#" class="dropdown-item" id="openGlobalReportModal">
+                                    <i class="fas fa-file-medical"></i> Rapport global
                                 </a>
                                 {% endif %}
                                 {% if app.user and (app.user.subscriptionType ?? app.user.role) == 'ROLE_MEDECIN' %}
@@ -820,6 +1001,51 @@
         </div>
     {% endif %}
 
+    {% if app.user and (app.user.subscriptionType ?? app.user.role) == 'ROLE_PATIENT' %}
+    <div class="global-report-modal" id="globalReportModal" aria-hidden="true">
+        <div class="global-report-modal-card" role="dialog" aria-modal="true" aria-labelledby="globalReportTitle">
+
+            <!-- Hero header -->
+            <div class="global-report-modal-hero">
+                <button type="button" class="global-report-close" id="closeGlobalReportModal" aria-label="Fermer">
+                    <i class="fas fa-times"></i>
+                </button>
+                <div class="global-report-modal-icon"><i class="fas fa-file-medical-alt"></i></div>
+                <h3 id="globalReportTitle">Rapport global de santé</h3>
+                <p>Votre bilan de santé personnalisé en un seul fichier PDF</p>
+            </div>
+
+            <!-- Body -->
+            <form method="get" action="{{ path('app_sante_quotidienne_total_report_download') }}" class="global-report-modal-body" id="globalReportDownloadForm" data-download="1">
+
+                <!-- Feature chips -->
+                <div class="grm-features">
+                    <span class="grm-feature-chip"><i class="fas fa-check-circle"></i> Résumé &amp; stats</span>
+                    <span class="grm-feature-chip"><i class="fas fa-check-circle"></i> Risques estimés</span>
+                    <span class="grm-feature-chip"><i class="fas fa-check-circle"></i> Historique complet</span>
+                    <span class="grm-feature-chip"><i class="fas fa-check-circle"></i> Envoi par e-mail</span>
+                </div>
+
+                <!-- Period selection -->
+                <p class="grm-period-label">Période couverte</p>
+                <div class="grm-period-group">
+                    <input type="radio" name="period" id="grp7"  value="7">
+                    <label for="grp7">7 jours</label>
+                    <input type="radio" name="period" id="grp30" value="30" checked>
+                    <label for="grp30">30 jours</label>
+                    <input type="radio" name="period" id="grp90" value="90">
+                    <label for="grp90">90 jours</label>
+                </div>
+
+                <button type="submit" class="grm-download-btn">
+                    <i class="fas fa-file-download"></i>
+                    Générer &amp; Télécharger le PDF
+                </button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
     {% if app.user %}
     <!-- Messenger popup container (Messenger desktop style) -->
     <div id="messengerContainer"></div>
@@ -889,6 +1115,7 @@
 
                 document.querySelectorAll('form').forEach((form) => {
                     if (form.dataset.ajax === '1') return;
+                    if (form.dataset.download === '1') return;
                     form.addEventListener('submit', () => {
                         show();
                     });
@@ -1113,6 +1340,77 @@
 
             // ─── Account button ─────────────────────────────────────────────────
             setupDropdown('accountBtn', 'accountDropdown');
+
+            // ─── Global Report Modal (patient) ─────────────────────────────────
+            const globalReportModal = document.getElementById('globalReportModal');
+            const openGlobalReportModalBtn = document.getElementById('openGlobalReportModal');
+            const closeGlobalReportModalBtn = document.getElementById('closeGlobalReportModal');
+            const globalReportDownloadForm = document.getElementById('globalReportDownloadForm');
+
+            const closeGlobalReportModal = () => {
+                if (!globalReportModal) return;
+                globalReportModal.classList.remove('show');
+                globalReportModal.setAttribute('aria-hidden', 'true');
+            };
+
+            if (openGlobalReportModalBtn && globalReportModal) {
+                if (openGlobalReportModalBtn._openReportModalHandler) {
+                    openGlobalReportModalBtn.removeEventListener('click', openGlobalReportModalBtn._openReportModalHandler);
+                }
+                openGlobalReportModalBtn._openReportModalHandler = (e) => {
+                    e.preventDefault();
+                    closeAllDropdowns();
+                    closeAllSubmenus();
+                    globalReportModal.classList.add('show');
+                    globalReportModal.setAttribute('aria-hidden', 'false');
+                };
+                openGlobalReportModalBtn.addEventListener('click', openGlobalReportModalBtn._openReportModalHandler);
+
+                if (closeGlobalReportModalBtn) {
+                    if (closeGlobalReportModalBtn._closeReportModalHandler) {
+                        closeGlobalReportModalBtn.removeEventListener('click', closeGlobalReportModalBtn._closeReportModalHandler);
+                    }
+                    closeGlobalReportModalBtn._closeReportModalHandler = (e) => {
+                        e.preventDefault();
+                        closeGlobalReportModal();
+                    };
+                    closeGlobalReportModalBtn.addEventListener('click', closeGlobalReportModalBtn._closeReportModalHandler);
+                }
+
+                if (globalReportDownloadForm) {
+                    if (globalReportDownloadForm._submitCloseHandler) {
+                        globalReportDownloadForm.removeEventListener('submit', globalReportDownloadForm._submitCloseHandler);
+                    }
+                    globalReportDownloadForm._submitCloseHandler = () => {
+                        setTimeout(() => {
+                            closeGlobalReportModal();
+                            if (typeof window.setLoading === 'function') {
+                                window.setLoading(false);
+                            }
+                        }, 150);
+                    };
+                    globalReportDownloadForm.addEventListener('submit', globalReportDownloadForm._submitCloseHandler);
+                }
+
+                if (globalReportModal._overlayCloseHandler) {
+                    globalReportModal.removeEventListener('click', globalReportModal._overlayCloseHandler);
+                }
+                globalReportModal._overlayCloseHandler = (event) => {
+                    if (event.target === globalReportModal) {
+                        closeGlobalReportModal();
+                    }
+                };
+                globalReportModal.addEventListener('click', globalReportModal._overlayCloseHandler);
+
+                if (!window.__globalReportEscBound) {
+                    window.__globalReportEscBound = true;
+                    document.addEventListener('keydown', (event) => {
+                        if (event.key === 'Escape') {
+                            closeGlobalReportModal();
+                        }
+                    });
+                }
+            }
 
             // ─── Portal Nav Dropdowns to <body> ──────────────────────────────────
             // backdrop-filter on <header> creates a stacking context that traps

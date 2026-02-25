@@ -9,7 +9,7 @@
             <div class="payment-title">
                 <div class="payment-badge">Paiement sécurisé</div>
                 <h1>Finalisez votre abonnement</h1>
-                <p>Abonnement sélectionné : <strong>{{ type }}</strong> — 10 DT / mois</p>
+                <p>Abonnement sélectionné : <strong>{{ planLabel|default(type) }}</strong> — {{ price|default(10)|number_format(2, '.', ' ') }} DT / mois</p>
             </div>
 
             {% for message in app.flashes('error') %}
@@ -20,32 +20,18 @@
             {% endfor %}
 
             <form method="post" class="payment-form">
-                <div class="payment-field">
-                    <label>Nom du titulaire</label>
-                    <input type="text" name="card_name" placeholder="Ex: Iheb Hadded" required>
-                </div>
-                <div class="payment-field">
-                    <label>Numéro de carte</label>
-                    <input type="text" name="card_number" inputmode="numeric" maxlength="19" placeholder="1234 5678 9012 3456" required>
-                </div>
-                <div class="payment-grid">
-                    <div class="payment-field">
-                        <label>Mois</label>
-                        <input type="number" name="exp_month" min="1" max="12" placeholder="MM" required>
-                    </div>
-                    <div class="payment-field">
-                        <label>Année</label>
-                        <input type="number" name="exp_year" min="2024" max="2100" placeholder="YYYY" required>
-                    </div>
-                    <div class="payment-field">
-                        <label>CVV</label>
-                        <input type="password" name="cvv" minlength="3" maxlength="4" placeholder="***" required>
-                    </div>
-                </div>
                 <div class="payment-actions">
-                    <button class="btn-appointment" type="submit">Payer 10 DT</button>
+                    <button class="btn-appointment" type="submit">Payer {{ price|default(10)|number_format(2, '.', ' ') }} DT</button>
                     <a class="btn-ghost" href="{{ path('app_subscription') }}">Retour</a>
                 </div>
+                <p style="margin-top:12px;color:#64748b;font-size:13px;">
+                    Vous serez redirigé vers la page sécurisée du fournisseur de paiement.
+                </p>
+                {% if providerCurrency is defined and providerAmount is defined %}
+                    <p style="margin-top:4px;color:#64748b;font-size:13px;">
+                        Affichage local: {{ price|default(10)|number_format(2, '.', ' ') }} DT · Débit API estimé: {{ providerAmount|number_format(2, '.', ' ') }} {{ providerCurrency }}.
+                    </p>
+                {% endif %}
             </form>
         </div>
         <aside class="payment-right">
@@ -53,7 +39,7 @@
                 <h3>Résumé</h3>
                 <div class="summary-row">
                     <span>Plan</span>
-                    <strong>{{ type }}</strong>
+                    <strong>{{ planLabel|default(type) }}</strong>
                 </div>
                 <div class="summary-row">
                     <span>Durée</span>
@@ -65,7 +51,7 @@
                 </div>
                 <div class="summary-total">
                     <span>Total</span>
-                    <strong>10 DT</strong>
+                    <strong>{{ price|default(10)|number_format(2, '.', ' ') }} DT</strong>
                 </div>
             </div>
             <div class="payment-trust">

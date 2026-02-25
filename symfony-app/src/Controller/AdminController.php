@@ -614,7 +614,7 @@ class AdminController extends AbstractController
             $score = $userAiScoreService->calculateScore($dashboardUser);
             $scoreTotal += $score;
 
-            if ($score >= 70) {
+            if ($score >= 80) {
                 $premiumEligibleCount++;
             }
             if ($score >= 95) {

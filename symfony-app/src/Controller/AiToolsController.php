@@ -2,12 +2,14 @@
 
 namespace App\Controller;
 
+use App\Entity\Abonnement;
 use App\Entity\User;
+use App\Repository\AbonnementRepository;
 use App\Service\Ai\DocumentScannerService;
 use App\Service\Ai\NutritionPlannerService;
 use App\Service\Ai\ResultExplainerService;
 use App\Service\Ai\WorkoutPlannerService;
-use App\Service\UserAiScoreService;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -18,14 +20,19 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_USER')]
 class AiToolsController extends AbstractController
 {
-    public function __construct(private readonly UserAiScoreService $userAiScoreService)
+    private const AI_TOOLS_SUBSCRIPTION_TYPE = 'AI_TOOLS';
+    private const AI_TOOLS_PRICE = '5.00';
+
+    public function __construct(private readonly AbonnementRepository $abonnementRepository)
     {
     }
 
     #[Route('', name: 'index', methods: ['GET'])]
     public function index(): Response
     {
-        $this->denyAiToolsAccessIfNeeded();
+        if ($redirect = $this->redirectToAiSubscriptionIfNeeded()) {
+            return $redirect;
+        }
 
         return $this->render('ai_tools/index.html.twig');
     }
@@ -33,7 +40,9 @@ class AiToolsController extends AbstractController
     #[Route('/document-scanner', name: 'document_scanner', methods: ['GET', 'POST'])]
     public function documentScanner(Request $request, DocumentScannerService $scannerService): Response
     {
-        $this->denyAiToolsAccessIfNeeded();
+        if ($redirect = $this->redirectToAiSubscriptionIfNeeded()) {
+            return $redirect;
+        }
 
         $result = null;
 
@@ -42,15 +51,10 @@ class AiToolsController extends AbstractController
             $file = $request->files->get('document');
 
             if ($content === '' && $file) {
-                $mime = (string) $file->getMimeType();
-                $ext = strtolower((string) $file->getClientOriginalExtension());
-                $isTextLike = str_starts_with($mime, 'text/') || in_array($ext, ['txt', 'csv', 'log', 'md'], true);
-
-                if ($isTextLike) {
-                    $raw = file_get_contents($file->getPathname());
-                    $content = is_string($raw) ? $raw : '';
-                } else {
-                    $this->addFlash('warning', 'Format non textuel detecte. Collez le contenu texte pour une extraction fiable.');
+                $extracted = $scannerService->extractContentFromUpload($file);
+                $content = $extracted['content'] ?? '';
+                if (!empty($extracted['warning'])) {
+                    $this->addFlash('warning', (string) $extracted['warning']);
                 }
             }
 
@@ -65,7 +69,9 @@ class AiToolsController extends AbstractController
     #[Route('/nutrition-planner', name: 'nutrition_planner', methods: ['GET', 'POST'])]
     public function nutritionPlanner(Request $request, NutritionPlannerService $service): Response
     {
-        $this->denyAiToolsAccessIfNeeded();
+        if ($redirect = $this->redirectToAiSubscriptionIfNeeded()) {
+            return $redirect;
+        }
 
         $result = null;
         if ($request->isMethod('POST')) {
@@ -85,7 +91,9 @@ class AiToolsController extends AbstractController
     #[Route('/workout-planner', name: 'workout_planner', methods: ['GET', 'POST'])]
     public function workoutPlanner(Request $request, WorkoutPlannerService $service): Response
     {
-        $this->denyAiToolsAccessIfNeeded();
+        if ($redirect = $this->redirectToAiSubscriptionIfNeeded()) {
+            return $redirect;
+        }
 
         $result = null;
         if ($request->isMethod('POST')) {
@@ -106,7 +114,9 @@ class AiToolsController extends AbstractController
     #[Route('/result-explainer', name: 'result_explainer', methods: ['GET', 'POST'])]
     public function resultExplainer(Request $request, ResultExplainerService $service): Response
     {
-        $this->denyAiToolsAccessIfNeeded();
+        if ($redirect = $this->redirectToAiSubscriptionIfNeeded()) {
+            return $redirect;
+        }
 
         $result = null;
         if ($request->isMethod('POST')) {
@@ -123,10 +133,49 @@ class AiToolsController extends AbstractController
         ]);
     }
 
-    private function denyAiToolsAccessIfNeeded(): void
+    #[Route('/subscription', name: 'subscription', methods: ['GET'])]
+    public function subscription(AbonnementRepository $abonnementRepository): Response
+    {
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            throw $this->createAccessDeniedException('Accès non autorisé aux outils IA.');
+        }
+
+        $activeSubscription = $abonnementRepository->findActiveForUserAndType($user, self::AI_TOOLS_SUBSCRIPTION_TYPE);
+
+        return $this->render('ai_tools/subscription.html.twig', [
+            'activeSubscription' => $activeSubscription,
+            'price' => self::AI_TOOLS_PRICE,
+        ]);
+    }
+
+    #[Route('/subscription/activate', name: 'subscription_activate', methods: ['POST'])]
+    public function activateSubscription(Request $request): RedirectResponse
+    {
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            throw $this->createAccessDeniedException('Accès non autorisé aux outils IA.');
+        }
+
+        if (!$this->isCsrfTokenValid('ai_tools_subscription_activate', (string) $request->request->get('_token'))) {
+            $this->addFlash('error', 'Action non autorisée. Veuillez réessayer.');
+            return $this->redirectToRoute('app_ai_tools_subscription');
+        }
+
+        if ($this->getActiveAiSubscription($user) !== null) {
+            $this->addFlash('info', 'Votre abonnement IA est déjà actif.');
+            return $this->redirectToRoute('app_ai_tools_index');
+        }
+
+        $request->getSession()->set('subscription_type', self::AI_TOOLS_SUBSCRIPTION_TYPE);
+
+        return $this->redirectToRoute('app_subscription_payment');
+    }
+
+    private function redirectToAiSubscriptionIfNeeded(): ?RedirectResponse
     {
         if ($this->isGranted('ROLE_ADMIN')) {
-            return;
+            return null;
         }
 
         $user = $this->getUser();
@@ -134,26 +183,17 @@ class AiToolsController extends AbstractController
             throw $this->createAccessDeniedException('Accès non autorisé aux outils IA.');
         }
 
-        $effectiveRole = $user->getSubscriptionType() ?: $user->getRole();
-        $allowedRoles = [
-            'ROLE_PATIENT',
-            'ROLE_MEDECIN',
-            'ROLE_COACH',
-            'ROLE_NUTRITIONNISTE',
-        ];
-
-        $isAllowed = $user->getSubscriptionStatus() === 'ACTIVE'
-            && in_array($effectiveRole, $allowedRoles, true);
-
-        if (!$isAllowed && $this->userAiScoreService->isPremiumEligible($user)) {
-            $isAllowed = true;
+        $activeAiSubscription = $this->getActiveAiSubscription($user);
+        if ($activeAiSubscription !== null) {
+            return null;
         }
 
-        if (!$isAllowed) {
-            $score = $this->userAiScoreService->calculateScore($user);
-            throw $this->createAccessDeniedException(
-                sprintf('Accès refusé aux outils IA. Score actuel: %d/100 (minimum 70) ou abonnement actif requis.', $score)
-            );
-        }
+        $this->addFlash('warning', 'L\'accès aux Outils IA SANTÉA nécessite un abonnement IA actif (5 DT / mois).');
+        return $this->redirectToRoute('app_ai_tools_subscription');
+    }
+
+    private function getActiveAiSubscription(User $user): ?Abonnement
+    {
+        return $this->abonnementRepository->findActiveForUserAndType($user, self::AI_TOOLS_SUBSCRIPTION_TYPE);
     }
 }

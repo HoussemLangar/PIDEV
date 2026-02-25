@@ -11,9 +11,14 @@ use App\Service\RiskPredictionService;
 use App\Enum\NiveauActivite;
 use App\Enum\Humeur;
 use App\Enum\Alimentation;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormInterface;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\Address;
+use Symfony\Component\Mime\Email;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -51,6 +56,112 @@ class SanteQuotidienneController extends AbstractController
         $form = $this->createForm(SanteQuotidienneType::class, $sante);
 
         return $this->render('front/santequotidienne/form.html.twig', $this->buildFormPageData($form, $repository));
+    }
+
+    #[Route('/rapport-total/download', name: 'app_sante_quotidienne_total_report_download', methods: ['GET'])]
+    public function downloadTotalHealthReport(
+        Request $request,
+        SanteQuotidienneRepository $repository,
+        MailerInterface $mailer
+    ): Response
+    {
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $requestedPeriod = (int) $request->query->get('period', 30);
+        $allowedPeriods = [7, 30, 90];
+        $periodDays = in_array($requestedPeriod, $allowedPeriods, true) ? $requestedPeriod : 30;
+
+        $entries = $repository->findBy(['user' => $user], ['date' => 'DESC']);
+        $cutoff = (new \DateTimeImmutable('today'))->modify(sprintf('-%d days', $periodDays - 1));
+        $entries = array_values(array_filter(
+            $entries,
+            static fn(SanteQuotidienne $entry) => $entry->getDate() instanceof \DateTimeInterface
+                && \DateTimeImmutable::createFromInterface($entry->getDate()) >= $cutoff
+        ));
+
+        if (count($entries) === 0) {
+            $this->addFlash('error', sprintf('Aucune donnée santé disponible pour la période %d jours.', $periodDays));
+            return $this->redirectToRoute('app_sante_quotidienne_index');
+        }
+
+        $summaryStats = $repository->getDashboardSummaryStats($user);
+        $averageSommeil = $repository->getAverageSommeilForUser($user);
+        $activityStats = $repository->getActivityStatistics($user);
+        $nutritionStats = $repository->getNutritionStatistics($user);
+        $moodStats = $repository->getMoodStatistics($user);
+
+        $prediction = $this->riskPredictionService->recalculateForUser($user);
+
+        $entriesForReport = array_map(static function (SanteQuotidienne $entry): array {
+            $humeurs = array_map(static fn($h) => $h instanceof \BackedEnum ? $h->value : (string) $h, $entry->getHumeur());
+
+            return [
+                'date' => $entry->getDate()?->format('d/m/Y'),
+                'poids' => $entry->getPoids(),
+                'imc' => $entry->getImc(),
+                'tension' => $entry->getTensionArterielle(),
+                'sommeil' => $entry->getSommeil(),
+                'eauBue' => $entry->getEauBue(),
+                'activite' => $entry->getActivitePhysique()?->value,
+                'alimentation' => $entry->getAlimentation()?->value,
+                'humeurs' => $humeurs,
+            ];
+        }, array_slice($entries, 0, 60));
+
+        $html = $this->renderView('front/santequotidienne/report_total.pdf.twig', [
+            'user' => $user,
+            'generatedAt' => new \DateTimeImmutable(),
+            'periodDays' => $periodDays,
+            'totalEntries' => count($entries),
+            'summaryStats' => $summaryStats,
+            'averageSommeil' => $averageSommeil,
+            'activityStats' => $activityStats,
+            'nutritionStats' => $nutritionStats,
+            'moodStats' => $moodStats,
+            'riskPrediction' => [
+                'htn' => ['score' => $prediction->getRiskHtn(), 'level' => $prediction->getLevelHtn()],
+                'diabetes' => ['score' => $prediction->getRiskDiabetes(), 'level' => $prediction->getLevelDiabetes()],
+                'depression' => ['score' => $prediction->getRiskDepression(), 'level' => $prediction->getLevelDepression()],
+                'nutrition' => ['score' => $prediction->getRiskRespiratory(), 'level' => $prediction->getLevelRespiratory()],
+            ],
+            'entries' => $entriesForReport,
+        ]);
+
+        $options = new Options();
+        $options->set('isRemoteEnabled', true);
+        $options->set('defaultFont', 'DejaVu Sans');
+
+        $dompdf = new Dompdf($options);
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+
+        $filename = sprintf('rapport-sante-total-%dj-%s.pdf', $periodDays, (new \DateTimeImmutable())->format('Ymd-His'));
+        $pdfContent = $dompdf->output();
+
+        try {
+            $email = (new Email())
+                ->from(new Address('houssemlangar17@gmail.com', 'SANTÉA'))
+                ->to($user->getEmail())
+                ->subject('Votre rapport global de santé')
+                ->text(sprintf(
+                    "Bonjour %s,\n\nVotre rapport global de santé (%d jours) est en pièce jointe.\n\nCordialement,\nSANTÉA",
+                    trim($user->getPrenom() ?: $user->getNom() ?: 'utilisateur'),
+                    $periodDays
+                ))
+                ->attach($pdfContent, $filename, 'application/pdf');
+
+            $mailer->send($email);
+        } catch (\Throwable) {
+        }
+
+        return new Response($pdfContent, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
     }
 
     #[Route('/sante-quotidienne/calc-imc', name: 'app_sante_quotidienne_calc_imc', methods: ['GET'])]

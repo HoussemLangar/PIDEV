@@ -1,4 +1,5 @@
 version: '3.8'
+
 services:
   # Service PHP/Apache avec Symfony
   web:
@@ -14,25 +15,11 @@ services:
     environment:
       - APP_ENV=dev
       - DATABASE_URL=mysql://symfony:symfony@db:3306/pidev?serverVersion=8.0
-      - TOXICITY_MODEL_ENDPOINT=http://toxicity-api:8002/moderate
-      - TOXICITY_MODEL_NAME=textdetox/xlmr-large-toxicity-classifier
-      - TOXICITY_THRESHOLD=0.60
     depends_on:
       - db
-      - toxicity-api
     networks:
       - pidev-network
-
-  toxicity-api:
-    build:
-      context: ./symfony-app/ml/toxicity-api
-      dockerfile: Dockerfile
-    container_name: pidev-toxicity-api
-    ports:
-      - "8002:8002"
     restart: unless-stopped
-    networks:
-      - pidev-network
 
   # Service MySQL 8.0
   db:
@@ -50,6 +37,7 @@ services:
     networks:
       - pidev-network
     command: --default-authentication-plugin=mysql_native_password
+    restart: unless-stopped
 
   # Service phpMyAdmin
   phpmyadmin:
@@ -67,8 +55,9 @@ services:
       - db
     networks:
       - pidev-network
+    restart: unless-stopped
 
-  # Service JavaFX (OpenJDK avec JavaFX)
+  # Service JavaFX
   javafx:
     image: eclipse-temurin:17-jdk
     container_name: pidev-javafx
@@ -78,6 +67,7 @@ services:
     command: tail -f /dev/null
     networks:
       - pidev-network
+    restart: unless-stopped
 
 networks:
   pidev-network:

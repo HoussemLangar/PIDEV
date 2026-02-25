@@ -78,6 +78,26 @@ class AbonnementRepository extends ServiceEntityRepository
             ->getOneOrNullResult();
     }
 
+    public function findActiveForUserAndType(User $user, string $type): ?Abonnement
+    {
+        $today = new \DateTime('today');
+
+        return $this->createQueryBuilder('a')
+            ->andWhere('a.user = :user')
+            ->andWhere('a.typeAbonnement = :type')
+            ->andWhere('LOWER(a.statut) = :status')
+            ->andWhere('a.dateDebut <= :today')
+            ->andWhere('a.dateFin >= :today')
+            ->setParameter('user', $user)
+            ->setParameter('type', $type)
+            ->setParameter('status', 'actif')
+            ->setParameter('today', $today)
+            ->orderBy('a.dateFin', 'DESC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
     public function createFilteredQueryBuilder(array $filters): QueryBuilder
     {
         $qb = $this->createQueryBuilder('a')

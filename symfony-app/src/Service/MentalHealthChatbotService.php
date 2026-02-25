@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\Service\Ai\AiGatewayService;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
@@ -9,6 +10,7 @@ class MentalHealthChatbotService
 {
     public function __construct(
         private readonly HttpClientInterface $httpClient,
+        private readonly ?AiGatewayService $aiGateway = null,
         private readonly string $hfEmotionApiUrl = '',
         private readonly string $hfEmotionApiToken = '',
         private readonly string $hfEmotionModel = 'astrosbd/french_emotion_camembert',
@@ -84,6 +86,11 @@ class MentalHealthChatbotService
 
     private function detectIntent(string $rawText, string $normalizedText): string
     {
+        $aiIntent = $this->detectIntentWithAiGateway($rawText);
+        if ($aiIntent !== null) {
+            return $aiIntent;
+        }
+
         $remoteIntent = $this->detectIntentWithHuggingFace($rawText);
         if ($remoteIntent !== null) {
             return $remoteIntent;
@@ -114,6 +121,11 @@ class MentalHealthChatbotService
 
     private function detectEmotion(string $rawText, string $normalizedText): string
     {
+        $aiEmotion = $this->detectEmotionWithAiGateway($rawText);
+        if ($aiEmotion !== null) {
+            return $aiEmotion;
+        }
+
         $remoteEmotion = $this->detectEmotionWithHuggingFace($rawText);
         if ($remoteEmotion !== null) {
             return $remoteEmotion;
@@ -271,6 +283,11 @@ class MentalHealthChatbotService
 
     private function buildEmpathicResponse(string $rawMessage, string $normalizedMessage, string $emotion, string $intent): string
     {
+        $aiResponse = $this->generateEmpathicResponseWithAiGateway($rawMessage, $emotion, $intent);
+        if ($aiResponse !== null) {
+            return $aiResponse;
+        }
+
         $remoteResponse = $this->generateEmpathicResponseWithHuggingFace($rawMessage, $emotion, $intent);
         if ($remoteResponse !== null) {
             return $remoteResponse;
@@ -422,6 +439,60 @@ class MentalHealthChatbotService
         return $normalized;
     }
 
+    private function detectIntentWithAiGateway(string $text): ?string
+    {
+        if (!$this->aiGateway?->isEnabled()) {
+            return null;
+        }
+
+        $payload = $this->aiGateway->askForJson(
+            'Tu classes lintention dun message de soutien psychologique. Reponds strictement en JSON: {"intent":"rupture_amoureuse|anxiete|deprime|colere|general"}.',
+            'Message utilisateur: ' . $text
+        );
+
+        if (!is_array($payload)) {
+            return null;
+        }
+
+        $intent = mb_strtolower(trim((string) ($payload['intent'] ?? '')));
+        if ($intent === '') {
+            return null;
+        }
+
+        if (!in_array($intent, ['rupture_amoureuse', 'anxiete', 'deprime', 'colere', 'general'], true)) {
+            return 'general';
+        }
+
+        return $intent;
+    }
+
+    private function detectEmotionWithAiGateway(string $text): ?string
+    {
+        if (!$this->aiGateway?->isEnabled()) {
+            return null;
+        }
+
+        $payload = $this->aiGateway->askForJson(
+            'Tu classes lemotion principale dun message. Reponds strictement en JSON: {"emotion":"tristesse|anxiete|colere|joie|neutre"}.',
+            'Message utilisateur: ' . $text
+        );
+
+        if (!is_array($payload)) {
+            return null;
+        }
+
+        $emotion = mb_strtolower(trim((string) ($payload['emotion'] ?? '')));
+        if ($emotion === '') {
+            return null;
+        }
+
+        if (!in_array($emotion, ['tristesse', 'anxiete', 'colere', 'joie', 'neutre'], true)) {
+            return 'neutre';
+        }
+
+        return $emotion;
+    }
+
     private function generateEmpathicResponseWithHuggingFace(string $text, string $emotion, string $intent): ?string
     {
         [$endpoint, $token] = $this->resolveEndpointAndToken($this->hfChatApiUrl, $this->hfChatModel);
@@ -473,6 +544,38 @@ class MentalHealthChatbotService
         }
 
         return $generated;
+    }
+
+    private function generateEmpathicResponseWithAiGateway(string $text, string $emotion, string $intent): ?string
+    {
+        if (!$this->aiGateway?->isEnabled()) {
+            return null;
+        }
+
+        $payload = $this->aiGateway->askForJson(
+            'Tu es un assistant empathique francophone en sante mentale. Reponds strictement en JSON: {"response":"..."}. Regles: 3 phrases max, ton bienveillant, 1 question ouverte, 1 conseil concret, pas de diagnostic medical.',
+            'Contexte: emotion=' . $emotion . ', intent=' . $intent . '. Message utilisateur: ' . $text
+        );
+
+        if (!is_array($payload)) {
+            return null;
+        }
+
+        $response = trim((string) ($payload['response'] ?? ''));
+        if ($response === '') {
+            return null;
+        }
+
+        $response = trim(preg_replace('/\s+/', ' ', $response) ?? '');
+        if ($response === '') {
+            return null;
+        }
+
+        if (mb_strlen($response) > 700) {
+            $response = mb_substr($response, 0, 700);
+        }
+
+        return $response;
     }
 
     /**

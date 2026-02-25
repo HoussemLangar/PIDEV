@@ -96,6 +96,8 @@ class SubscriptionGateSubscriber implements EventSubscriberInterface
             'app_subscription_overview',
             'app_subscription_checkout',
             'app_subscription_payment',
+            'app_subscription_payment_success',
+            'app_subscription_payment_cancel',
             'app_subscription_subscribe',
             'app_subscription_skip',
             'login',

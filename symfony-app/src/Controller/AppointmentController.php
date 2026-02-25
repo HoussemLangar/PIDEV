@@ -11,6 +11,7 @@ use App\Repository\DisponibiliteRepository;
 use App\Repository\MedecinRepository;
 use App\Repository\RendezVousRepository;
 use App\Service\AppointmentService;
+use App\Service\Ai\AiGatewayService;
 use App\Service\NotificationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -33,7 +34,8 @@ class AppointmentController extends AbstractController
         private RendezVousRepository $rendezVousRepository,
         private EntityManagerInterface $em,
         private NotificationService $notificationService,
-        private MailerInterface $mailer
+        private MailerInterface $mailer,
+        private AiGatewayService $aiGatewayService,
     ) {}
 
     #[Route('/doctors', name: 'doctors', methods: ['GET'])]
@@ -499,8 +501,13 @@ class AppointmentController extends AbstractController
                 return new JsonResponse(['success' => false, 'message' => 'Commande vocale vide'], 422);
             }
 
+            $aiExtraction = $this->extractVoiceIntentWithAi($rawText);
             $normalizedText = $this->normalizeVoiceText($rawText);
-            $date = $this->extractDateFromVoiceText($normalizedText);
+            $date = null;
+            if (is_array($aiExtraction) && isset($aiExtraction['date']) && is_string($aiExtraction['date'])) {
+                $date = $this->parseIsoDate($aiExtraction['date']);
+            }
+            $date ??= $this->extractDateFromVoiceText($normalizedText);
             if (!$date) {
                 return new JsonResponse([
                     'success' => false,
@@ -509,6 +516,9 @@ class AppointmentController extends AbstractController
             }
 
             $doctorHint = $this->extractDoctorNameFromVoiceText($normalizedText);
+            if (is_array($aiExtraction) && isset($aiExtraction['doctor_query']) && is_string($aiExtraction['doctor_query'])) {
+                $doctorHint = trim($aiExtraction['doctor_query']) !== '' ? trim($aiExtraction['doctor_query']) : $doctorHint;
+            }
             $doctor = $this->matchDoctorFromVoiceText($doctorHint ?: $normalizedText);
             if (!$doctor) {
                 return new JsonResponse([
@@ -530,7 +540,11 @@ class AppointmentController extends AbstractController
                 ], 409);
             }
 
-            $requestedTime = $this->extractTimeFromVoiceText($normalizedText, $date);
+            $requestedTime = null;
+            if (is_array($aiExtraction) && isset($aiExtraction['requested_time']) && is_string($aiExtraction['requested_time'])) {
+                $requestedTime = $this->normalizeAiTime($aiExtraction['requested_time']);
+            }
+            $requestedTime ??= $this->extractTimeFromVoiceText($normalizedText, $date);
             $selectedSlot = $this->pickVoiceSlot($slots, $requestedTime);
             if (!$selectedSlot) {
                 return new JsonResponse([
@@ -655,6 +669,68 @@ class AppointmentController extends AbstractController
         $text = str_replace(['ـ'], '', $text);
         $text = preg_replace('/\s+/u', ' ', $text) ?? $text;
         return trim(mb_strtolower($text));
+    }
+
+    /**
+     * @return array{date?:string,doctor_query?:string,requested_time?:string}|null
+     */
+    private function extractVoiceIntentWithAi(string $rawText): ?array
+    {
+        if (!$this->aiGatewayService->isEnabled()) {
+            return null;
+        }
+
+        $payload = $this->aiGatewayService->askForJson(
+            'Tu extrais les informations de prise de rendez-vous médical depuis une commande vocale (fr/ar dialecte). Reponds STRICTEMENT en JSON: {"date":"YYYY-MM-DD|", "doctor_query":"nom du medecin ou specialite|", "requested_time":"HH:MM|"}. Si inconnu, laisse chaine vide.',
+            'Commande vocale: ' . $rawText
+        );
+
+        if (!is_array($payload)) {
+            return null;
+        }
+
+        return [
+            'date' => isset($payload['date']) ? trim((string) $payload['date']) : '',
+            'doctor_query' => isset($payload['doctor_query']) ? trim((string) $payload['doctor_query']) : '',
+            'requested_time' => isset($payload['requested_time']) ? trim((string) $payload['requested_time']) : '',
+        ];
+    }
+
+    private function parseIsoDate(string $value): ?\DateTimeImmutable
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return null;
+        }
+
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $value)) {
+            return null;
+        }
+
+        $date = \DateTimeImmutable::createFromFormat('Y-m-d', $value);
+        if (!$date) {
+            return null;
+        }
+
+        return $date;
+    }
+
+    private function normalizeAiTime(string $value): ?string
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return null;
+        }
+
+        if (preg_match('/^(\d{1,2})[:h](\d{2})$/i', $value, $m)) {
+            $hours = (int) $m[1];
+            $minutes = (int) $m[2];
+            if ($hours >= 0 && $hours <= 23 && $minutes >= 0 && $minutes <= 59) {
+                return sprintf('%02d:%02d', $hours, $minutes);
+            }
+        }
+
+        return null;
     }
 
     private function extractDateFromVoiceText(string $text): ?\DateTimeImmutable

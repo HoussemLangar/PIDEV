@@ -70,6 +70,103 @@
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 16px;
     }
+    /* Health Report Section */
+    .health-report-section {
+      margin: 14px 0;
+      background: linear-gradient(135deg, #f0f9ff 0%, #e8f4fd 100%);
+      border: 1px solid #bae6fd;
+      border-left: 4px solid #0D8ABC;
+      border-radius: 14px;
+      padding: 18px 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      flex-wrap: wrap;
+      box-shadow: 0 4px 18px rgba(13,138,188,.1);
+      overflow: visible;
+    }
+    .health-report-icon-wrap {
+      flex-shrink: 0;
+      width: 52px; height: 52px;
+      background: linear-gradient(135deg, #0D8ABC, #0653a0);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(13,138,188,.3);
+      margin-top: 2px;
+    }
+    .health-report-info {
+      flex: 1;
+      min-width: 200px;
+    }
+    .health-report-title {
+      margin: 0 0 5px;
+      font-size: 1rem;
+      color: #0c3a5c;
+      font-weight: 800;
+      line-height: 1.3;
+    }
+    .health-report-sub {
+      margin: 0 0 10px;
+      font-size: .83rem;
+      color: #2563ab;
+      opacity: .85;
+      line-height: 1.5;
+    }
+    .health-report-chips {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .health-report-chip {
+      font-size: .75rem;
+      color: #0653a0;
+      background: rgba(13,138,188,.12);
+      border-radius: 20px;
+      padding: 2px 9px;
+      font-weight: 600;
+    }
+    .health-report-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      flex-shrink: 0;
+      margin-top: 4px;
+    }
+    .health-report-period-select {
+      border: 1.5px solid #7dd3f8;
+      border-radius: 9px;
+      padding: 8px 12px;
+      font-size: .86rem;
+      background: #fff;
+      color: #0c3a5c;
+      font-weight: 600;
+      cursor: pointer;
+      outline: none;
+    }
+    .health-report-period-select:focus { border-color: #0D8ABC; }
+    .health-report-dl-btn {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 9px 18px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #0D8ABC, #0653a0);
+      color: #fff;
+      font-size: .88rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 3px 12px rgba(13,138,188,.35);
+      transition: opacity .15s, transform .12s;
+      white-space: nowrap;
+    }
+    .health-report-dl-btn:hover { opacity: .9; transform: translateY(-1px); }
+    .health-report-dl-btn:active { transform: none; }
     .recommendation-box {
       color: #fff;
       padding: 14px 16px;
@@ -399,6 +496,30 @@
             {% endif %}
           </div>
         </div>
+      </section>
+
+      <section class="health-report-section">
+        <div class="health-report-icon-wrap"><i class="fas fa-file-medical-alt"></i></div>
+        <div class="health-report-info">
+          <h3 class="health-report-title">Rapport global de santé</h3>
+          <p class="health-report-sub">Bilan PDF personnalisé — résumé, risques estimés &amp; historique de vos entrées</p>
+          <div class="health-report-chips">
+            <span class="health-report-chip"><i class="fas fa-chart-bar" style="margin-right:3px"></i> Statistiques</span>
+            <span class="health-report-chip"><i class="fas fa-exclamation-triangle" style="margin-right:3px"></i> Risques</span>
+            <span class="health-report-chip"><i class="fas fa-history" style="margin-right:3px"></i> Historique</span>
+            <span class="health-report-chip"><i class="fas fa-envelope" style="margin-right:3px"></i> Mail auto</span>
+          </div>
+        </div>
+        <form method="get" action="{{ path('app_sante_quotidienne_total_report_download') }}" class="health-report-actions" data-download="1">
+          <select id="report-period" name="period" class="health-report-period-select">
+            <option value="7">7 jours</option>
+            <option value="30" selected>30 jours</option>
+            <option value="90">90 jours</option>
+          </select>
+          <button type="submit" class="health-report-dl-btn">
+            <i class="fas fa-file-download"></i> Télécharger
+          </button>
+        </form>
       </section>
 
       <!-- Résumé rapide avec emojis -->

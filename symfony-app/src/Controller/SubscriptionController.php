@@ -13,6 +13,7 @@ use App\Repository\AbonnementRepository;
 use App\Repository\SuspiciousLoginRepository;
 use App\Entity\Facture;
 use App\Service\InvoiceService;
+use App\Service\Payment\StripeCheckoutService;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Mime\Address;
@@ -23,10 +24,13 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 #[AsController]
 class SubscriptionController extends AbstractController
 {
+    private const AI_TOOLS_TYPE = 'AI_TOOLS';
+
     #[Route('/subscription', name: 'app_subscription')]
     public function choice(): Response
     {
@@ -101,6 +105,7 @@ class SubscriptionController extends AbstractController
             'ROLE_COACH',
             'ROLE_NUTRITIONNISTE',
             'ROLE_PATIENT',
+            self::AI_TOOLS_TYPE,
         ];
 
         if (!in_array($type, $allowed, true)) {
@@ -133,7 +138,11 @@ class SubscriptionController extends AbstractController
     }
 
     #[Route('/subscription/payment', name: 'app_subscription_payment', methods: ['GET', 'POST'])]
-    public function payment(Request $request, EntityManagerInterface $em, InvoiceService $invoiceService, MailerInterface $mailer): Response
+    public function payment(
+        Request $request,
+        AbonnementRepository $abonnementRepository,
+        StripeCheckoutService $stripeCheckoutService
+    ): Response
     {
         /** @var User $user */
         $user = $this->getUser();
@@ -146,70 +155,133 @@ class SubscriptionController extends AbstractController
             return $this->redirectToRoute('app_subscription');
         }
 
+        $planLabel = $this->labelFromRole($type);
+        $price = $this->priceFromType($type);
+
+        if ($type === self::AI_TOOLS_TYPE && $abonnementRepository->findActiveForUserAndType($user, self::AI_TOOLS_TYPE)) {
+            $this->addFlash('info', 'Votre abonnement IA est déjà actif.');
+            $request->getSession()->remove('subscription_type');
+            return $this->redirectToRoute('app_ai_tools_index');
+        }
+
         if ($request->isMethod('POST')) {
-            $cardNumber = preg_replace('/\\D+/', '', (string) $request->request->get('card_number', ''));
-            $cardName = trim((string) $request->request->get('card_name', ''));
-            $expMonth = (int) $request->request->get('exp_month', 0);
-            $expYear = (int) $request->request->get('exp_year', 0);
-            $cvv = preg_replace('/\\D+/', '', (string) $request->request->get('cvv', ''));
+            $successUrl = $this->generateUrl('app_subscription_payment_success', [], UrlGeneratorInterface::ABSOLUTE_URL)
+                . '?session_id={CHECKOUT_SESSION_ID}';
+            $cancelUrl = $this->generateUrl('app_subscription_payment_cancel', [], UrlGeneratorInterface::ABSOLUTE_URL);
 
-            $now = new \DateTimeImmutable();
-            $currentYear = (int) $now->format('Y');
-            $currentMonth = (int) $now->format('n');
+            $checkoutUrl = $stripeCheckoutService->createCheckoutSession(
+                planLabel: $planLabel,
+                amount: $price,
+                successUrl: $successUrl,
+                cancelUrl: $cancelUrl,
+                customerEmail: $user->getEmail(),
+                metadata: [
+                    'subscription_type' => $type,
+                    'user_id' => (string) $user->getId(),
+                ]
+            );
 
-            $errors = [];
-            if (strlen($cardNumber) < 16) {
-                $errors[] = 'Numéro de carte invalide.';
-            }
-            if ($cardName === '') {
-                $errors[] = 'Nom du titulaire requis.';
-            }
-            if ($expMonth < 1 || $expMonth > 12) {
-                $errors[] = 'Mois d\'expiration invalide.';
-            }
-            if ($expYear < $currentYear || ($expYear === $currentYear && $expMonth < $currentMonth)) {
-                $errors[] = 'Carte expirée.';
-            }
-            if (strlen($cvv) < 3) {
-                $errors[] = 'CVV invalide.';
-            }
-
-            if ($errors) {
-                foreach ($errors as $error) {
-                    $this->addFlash('error', $error);
-                }
+            if ($checkoutUrl === null) {
+                $this->addFlash('error', 'API de paiement indisponible. Vérifiez la configuration Stripe.');
                 return $this->render('front/subscription_payment.html.twig', [
                     'type' => $type,
+                    'planLabel' => $planLabel,
+                    'price' => $price,
+                    'providerCurrency' => strtoupper($stripeCheckoutService->getCurrency()),
+                    'providerAmount' => $stripeCheckoutService->convertFromTnd($price),
                 ]);
             }
 
-            $abonnement = new Abonnement();
-            $abonnement->setNom($this->labelFromRole($type));
-            $abonnement->setTypeAbonnement($type);
-            $abonnement->setPrix('10.00');
-            $abonnement->setDureeMois(1);
-            $abonnement->setDateDebut(new \DateTime());
-            $abonnement->setDateFin((new \DateTime())->modify('+1 month'));
-            $abonnement->setStatut('actif');
-            $abonnement->setUser($user);
+            return $this->redirect($checkoutUrl);
+        }
 
-            $em->persist($abonnement);
+        return $this->render('front/subscription_payment.html.twig', [
+            'type' => $type,
+            'planLabel' => $planLabel,
+            'price' => $price,
+            'providerCurrency' => strtoupper($stripeCheckoutService->getCurrency()),
+            'providerAmount' => $stripeCheckoutService->convertFromTnd($price),
+        ]);
+    }
 
-            $tvaTaux = 19.0;
-            $montantHt = 10.00;
-            $tvaMontant = round($montantHt * $tvaTaux / 100, 2);
-            $montantTtc = $montantHt + $tvaMontant;
+    #[Route('/subscription/payment/success', name: 'app_subscription_payment_success', methods: ['GET'])]
+    public function paymentSuccess(
+        Request $request,
+        EntityManagerInterface $em,
+        InvoiceService $invoiceService,
+        MailerInterface $mailer,
+        AbonnementRepository $abonnementRepository,
+        StripeCheckoutService $stripeCheckoutService
+    ): RedirectResponse {
+        /** @var User $user */
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->redirectToRoute('login');
+        }
 
-            $facture = new Facture();
-            $facture->setNumero('INV-' . date('Ymd') . '-' . strtoupper(bin2hex(random_bytes(3))));
-            $facture->setUser($user);
-            $facture->setAbonnement($abonnement);
-            $facture->setMontantHt(number_format($montantHt, 2, '.', ''));
-            $facture->setTvaTaux(number_format($tvaTaux, 2, '.', ''));
-            $facture->setTvaMontant(number_format($tvaMontant, 2, '.', ''));
-            $facture->setMontantTtc(number_format($montantTtc, 2, '.', ''));
-            $em->persist($facture);
+        $type = (string) $request->getSession()->get('subscription_type', '');
+        if ($type === '') {
+            return $this->redirectToRoute('app_subscription');
+        }
 
+        $sessionId = trim((string) $request->query->get('session_id', ''));
+        if ($sessionId === '') {
+            $this->addFlash('error', 'Session de paiement invalide.');
+            return $this->redirectToRoute('app_subscription_payment');
+        }
+
+        $checkoutSession = $stripeCheckoutService->fetchSession($sessionId);
+        if (!$checkoutSession || (($checkoutSession['payment_status'] ?? null) !== 'paid')) {
+            $this->addFlash('error', 'Paiement non confirmé.');
+            return $this->redirectToRoute('app_subscription_payment');
+        }
+
+        $alreadyProcessed = (array) $request->getSession()->get('processed_stripe_sessions', []);
+        if (in_array($sessionId, $alreadyProcessed, true)) {
+            if ($type === self::AI_TOOLS_TYPE) {
+                return $this->redirectToRoute('app_ai_tools_index');
+            }
+
+            return $this->redirectToRoute('app_subscription_overview');
+        }
+
+        if ($type === self::AI_TOOLS_TYPE && $abonnementRepository->findActiveForUserAndType($user, self::AI_TOOLS_TYPE)) {
+            $request->getSession()->remove('subscription_type');
+            $this->addFlash('info', 'Votre abonnement IA est déjà actif.');
+            return $this->redirectToRoute('app_ai_tools_index');
+        }
+
+        $planLabel = $this->labelFromRole($type);
+        $price = $this->priceFromType($type);
+
+        $abonnement = new Abonnement();
+        $abonnement->setNom($planLabel);
+        $abonnement->setTypeAbonnement($type);
+        $abonnement->setPrix(number_format($price, 2, '.', ''));
+        $abonnement->setDureeMois(1);
+        $abonnement->setDateDebut(new \DateTime());
+        $abonnement->setDateFin((new \DateTime())->modify('+1 month'));
+        $abonnement->setStatut('actif');
+        $abonnement->setUser($user);
+
+        $em->persist($abonnement);
+
+        $tvaTaux = 19.0;
+        $montantHt = $price;
+        $tvaMontant = round($montantHt * $tvaTaux / 100, 2);
+        $montantTtc = $montantHt + $tvaMontant;
+
+        $facture = new Facture();
+        $facture->setNumero('INV-' . date('Ymd') . '-' . strtoupper(bin2hex(random_bytes(3))));
+        $facture->setUser($user);
+        $facture->setAbonnement($abonnement);
+        $facture->setMontantHt(number_format($montantHt, 2, '.', ''));
+        $facture->setTvaTaux(number_format($tvaTaux, 2, '.', ''));
+        $facture->setTvaMontant(number_format($tvaMontant, 2, '.', ''));
+        $facture->setMontantTtc(number_format($montantTtc, 2, '.', ''));
+        $em->persist($facture);
+
+        if ($type !== self::AI_TOOLS_TYPE) {
             $user->setRole($type);
             $user->setSubscriptionStatus('ACTIVE');
             $user->setSubscriptionType($type);
@@ -217,35 +289,53 @@ class SubscriptionController extends AbstractController
             $user->setUpdatedAt(new \DateTimeImmutable());
 
             $this->ensureRoleEntity($user, $type, $em);
-
-            $em->flush();
-
-            $pdfPath = $invoiceService->generatePdf($facture);
-            $facture->setPdfPath($pdfPath);
-            $em->flush();
-
-            $email = (new TemplatedEmail())
-                ->from(new Address('houssemlangar17@gmail.com', 'SANTÉA'))
-                ->to($user->getEmail())
-                ->subject('Votre facture - ' . $facture->getNumero())
-                ->htmlTemplate('emails/invoice.html.twig')
-                ->context([
-                    'user' => $user,
-                    'facture' => $facture,
-                ])
-                ->attachFromPath($pdfPath, 'facture-' . $facture->getNumero() . '.pdf');
-
-            $mailer->send($email);
-            $request->getSession()->remove('subscription_type');
-            $request->getSession()->remove('subscription_expired_notice_shown');
-
-            $this->addFlash('success', 'Paiement réussi. Abonnement activé.');
-            return $this->redirectToRoute('app_subscription_overview');
         }
 
-        return $this->render('front/subscription_payment.html.twig', [
-            'type' => $type,
-        ]);
+        $em->flush();
+
+        $pdfPath = $invoiceService->generatePdf($facture);
+        $facture->setPdfPath($pdfPath);
+        $em->flush();
+
+        $email = (new TemplatedEmail())
+            ->from(new Address('houssemlangar17@gmail.com', 'SANTÉA'))
+            ->to($user->getEmail())
+            ->subject('Votre facture - ' . $facture->getNumero())
+            ->htmlTemplate('emails/invoice.html.twig')
+            ->context([
+                'user' => $user,
+                'facture' => $facture,
+            ])
+            ->attachFromPath($pdfPath, 'facture-' . $facture->getNumero() . '.pdf');
+
+        $mailer->send($email);
+
+        $alreadyProcessed[] = $sessionId;
+        $request->getSession()->set('processed_stripe_sessions', array_values(array_unique($alreadyProcessed)));
+        $request->getSession()->remove('subscription_type');
+        $request->getSession()->remove('subscription_expired_notice_shown');
+
+        $this->addFlash('success', 'Paiement réussi. Abonnement activé.');
+
+        if ($type === self::AI_TOOLS_TYPE) {
+            return $this->redirectToRoute('app_ai_tools_index');
+        }
+
+        return $this->redirectToRoute('app_subscription_overview');
+    }
+
+    #[Route('/subscription/payment/cancel', name: 'app_subscription_payment_cancel', methods: ['GET'])]
+    public function paymentCancel(Request $request): RedirectResponse
+    {
+        $type = (string) $request->getSession()->get('subscription_type', '');
+
+        $this->addFlash('warning', 'Paiement annulé.');
+
+        if ($type === self::AI_TOOLS_TYPE) {
+            return $this->redirectToRoute('app_ai_tools_subscription');
+        }
+
+        return $this->redirectToRoute('app_subscription_payment');
     }
 
     private function labelFromRole(string $role): string
@@ -256,8 +346,18 @@ class SubscriptionController extends AbstractController
             'ROLE_COACH' => 'Coach sportif',
             'ROLE_NUTRITIONNISTE' => 'Nutritionniste',
             'ROLE_PATIENT' => 'Patient',
+            self::AI_TOOLS_TYPE => 'Outils IA SANTÉA',
             default => 'Abonnement',
         };
+    }
+
+    private function priceFromType(string $type): float
+    {
+        if ($type === self::AI_TOOLS_TYPE) {
+            return 5.00;
+        }
+
+        return 10.00;
     }
 
     private function ensureRoleEntity(User $user, string $role, EntityManagerInterface $em): void

@@ -9,7 +9,7 @@ use App\Repository\UserSessionRepository;
 
 class UserAiScoreService
 {
-    private const PREMIUM_THRESHOLD = 70;
+    private const PREMIUM_THRESHOLD = 80;
     private const FREE_MONTH_THRESHOLD = 95;
 
     public function __construct(
@@ -69,6 +69,23 @@ class UserAiScoreService
         return $this->calculateScore($user) >= self::PREMIUM_THRESHOLD;
     }
 
+    public function isPremiumEligibleForCurrentMonth(User $user): bool
+    {
+        $monthStart = new \DateTimeImmutable('first day of this month 00:00:00');
+        $monthEnd = $monthStart->modify('first day of next month 00:00:00');
+
+        if ($this->userScoreHistoryRepository->hasReachedThresholdBetween(
+            $user,
+            self::PREMIUM_THRESHOLD,
+            $monthStart,
+            $monthEnd
+        )) {
+            return true;
+        }
+
+        return $this->calculateScore($user) >= self::PREMIUM_THRESHOLD;
+    }
+
     public function getBenefitsMessage(User $user): string
     {
         $score = $this->calculateScore($user);
@@ -78,7 +95,7 @@ class UserAiScoreService
         }
 
         if ($score >= self::PREMIUM_THRESHOLD) {
-            return 'Très bon profil : accès premium IA activé et traitement support prioritaire.';
+            return 'Très bon profil : offre premium IA active grâce à votre score et traitement support prioritaire.';
         }
 
         if ($score >= 55) {
@@ -95,7 +112,7 @@ class UserAiScoreService
             'breakdown' => $this->getBreakdown($user),
             'supportPriority' => $this->getSupportPriority($user),
             'supportPriorityLabel' => $this->getSupportPriorityLabel($user),
-            'premiumEligible' => $this->isPremiumEligible($user),
+            'premiumEligible' => $this->isPremiumEligibleForCurrentMonth($user),
             'benefitsMessage' => $this->getBenefitsMessage($user),
             'premiumThreshold' => self::PREMIUM_THRESHOLD,
             'freeMonthThreshold' => self::FREE_MONTH_THRESHOLD,
