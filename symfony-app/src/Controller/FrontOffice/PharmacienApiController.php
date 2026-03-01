@@ -86,7 +86,7 @@ class PharmacienApiController extends AbstractController
         if (isset($payload['prix'])) {
             $stock->setPrixVente((string) $payload['prix']);
         }
-        $stock->setUpdatedAt(new \DateTime());
+        $stock->forceUpdatedAt(new \DateTime());
         $this->em->flush();
 
         if ($stock->getQuantite() <= 5) {
@@ -169,7 +169,7 @@ class PharmacienApiController extends AbstractController
         if (array_key_exists('latitude', $payload)) $pharmacy->setLatitude($payload['latitude'] !== '' ? $payload['latitude'] : null);
         if (array_key_exists('longitude', $payload)) $pharmacy->setLongitude($payload['longitude'] !== '' ? $payload['longitude'] : null);
         if (array_key_exists('is_active', $payload)) $pharmacy->setIsActive((bool) $payload['is_active']);
-        $pharmacy->setUpdatedAt(new \DateTime());
+        $pharmacy->forceUpdatedAt(new \DateTime());
 
         try {
             $this->em->flush();
@@ -230,7 +230,7 @@ class PharmacienApiController extends AbstractController
         if (array_key_exists('laboratoire', $payload)) $med->setLaboratoire($payload['laboratoire']);
         if (array_key_exists('code_barre', $payload)) $med->setCodeBarre($payload['code_barre']);
         if (array_key_exists('prix', $payload)) $med->setPrix($payload['prix']);
-        $med->setUpdatedAt(new \DateTime());
+        $med->forceUpdatedAt(new \DateTime());
         $this->em->flush();
 
         return new JsonResponse(['success' => true]);
@@ -298,7 +298,7 @@ class PharmacienApiController extends AbstractController
         }
 
         $pharmacy->setImageName($result['filename']);
-        $pharmacy->setUpdatedAt(new \DateTime());
+        $pharmacy->forceUpdatedAt(new \DateTime());
         $this->em->flush();
 
         return new JsonResponse(['success' => true, 'imageUrl' => '/images/pharmacies/' . $result['filename']]);
@@ -320,7 +320,7 @@ class PharmacienApiController extends AbstractController
         }
 
         $med->setImageName($result['filename']);
-        $med->setUpdatedAt(new \DateTime());
+        $med->forceUpdatedAt(new \DateTime());
         $this->em->flush();
 
         return new JsonResponse(['success' => true, 'imageUrl' => '/images/medicaments/' . $result['filename']]);

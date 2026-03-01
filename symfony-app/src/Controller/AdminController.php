@@ -195,7 +195,7 @@ class AdminController extends AbstractController
 
             $needle = $targetNormalized;
             $candidates = $userRepository->createQueryBuilder('u')
-                ->andWhere('u.deletedAt IS NULL')
+                ->andWhere('u.removedAt IS NULL')
                 ->andWhere('LOWER(u.email) LIKE :q OR LOWER(u.username) LIKE :q OR LOWER(u.nom) LIKE :q OR LOWER(u.prenom) LIKE :q')
                 ->setParameter('q', '%' . $needle . '%')
                 ->setMaxResults(1)
@@ -208,7 +208,7 @@ class AdminController extends AbstractController
             }
 
             $pool = $userRepository->createQueryBuilder('u')
-                ->andWhere('u.deletedAt IS NULL')
+                ->andWhere('u.removedAt IS NULL')
                 ->getQuery()
                 ->getResult();
 
@@ -346,8 +346,8 @@ class AdminController extends AbstractController
 
             $targetUser->setIsBanned(true);
             $targetUser->setBanReason('Bannissement via assistant admin');
-            $targetUser->setBanUntil(null);
-            $targetUser->setUpdatedAt(new \DateTimeImmutable());
+            $targetUser->applyBanUntil(null);
+            $targetUser->forceUpdatedAt(new \DateTimeImmutable());
             $em->flush();
 
             return new JsonResponse([
@@ -372,8 +372,8 @@ class AdminController extends AbstractController
 
             $targetUser->setIsBanned(false);
             $targetUser->setBanReason(null);
-            $targetUser->setBanUntil(null);
-            $targetUser->setUpdatedAt(new \DateTimeImmutable());
+            $targetUser->applyBanUntil(null);
+            $targetUser->forceUpdatedAt(new \DateTimeImmutable());
             $em->flush();
 
             return new JsonResponse([
@@ -406,7 +406,7 @@ class AdminController extends AbstractController
             }
 
             $targetUser->setRole($newRole);
-            $targetUser->setUpdatedAt(new \DateTimeImmutable());
+            $targetUser->forceUpdatedAt(new \DateTimeImmutable());
             $em->flush();
 
             return new JsonResponse([
@@ -418,7 +418,7 @@ class AdminController extends AbstractController
 
         if ($intent === 'autopilot') {
             $users = $userRepository->createQueryBuilder('u')
-                ->andWhere('u.deletedAt IS NULL')
+                ->andWhere('u.removedAt IS NULL')
                 ->getQuery()
                 ->getResult();
 
@@ -434,7 +434,7 @@ class AdminController extends AbstractController
 
                 if (!$user->isAdminApproved()) {
                     $user->setAdminApproved(true);
-                    $user->setUpdatedAt($now);
+                    $user->forceUpdatedAt($now);
                     $approvedCount++;
                 }
 
@@ -511,7 +511,7 @@ class AdminController extends AbstractController
         $pendingPayments = (int) $em->createQueryBuilder()
             ->select('COUNT(u.id)')
             ->from(User::class, 'u')
-            ->andWhere('u.deletedAt IS NULL')
+            ->andWhere('u.removedAt IS NULL')
             ->andWhere('u.subscriptionStatus = :status')
             ->setParameter('status', 'PENDING')
             ->getQuery()
@@ -594,7 +594,7 @@ class AdminController extends AbstractController
         $suspiciousCount = $suspiciousLoginRepository->countBlocked();
 
         $allUsers = $userRepository->createQueryBuilder('u')
-            ->andWhere('u.deletedAt IS NULL')
+            ->andWhere('u.removedAt IS NULL')
             ->getQuery()
             ->getResult();
 
@@ -756,7 +756,7 @@ class AdminController extends AbstractController
         $pendingPayments = (int) $em->createQueryBuilder()
             ->select('COUNT(u.id)')
             ->from(User::class, 'u')
-            ->andWhere('u.deletedAt IS NULL')
+            ->andWhere('u.removedAt IS NULL')
             ->andWhere('u.subscriptionStatus = :status')
             ->setParameter('status', 'PENDING')
             ->getQuery()
@@ -828,7 +828,7 @@ class AdminController extends AbstractController
         }
 
         if (!$session->isRevoked()) {
-            $session->setRevokedAt(new \DateTimeImmutable());
+            $session->markRevokedAt(new \DateTimeImmutable());
             $em->flush();
         }
 
@@ -1002,7 +1002,7 @@ class AdminController extends AbstractController
             if ($plainPassword !== '') {
                 $user->setPassword($passwordHasher->hashPassword($user, $plainPassword));
             }
-            $user->setUpdatedAt(new \DateTimeImmutable());
+            $user->forceUpdatedAt(new \DateTimeImmutable());
             $em->flush();
             $this->addFlash('success', 'Utilisateur mis à jour.');
             return $this->redirectToRoute('admin_users');
@@ -1028,7 +1028,7 @@ class AdminController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $plainPassword = (string) $form->get('plainPassword')->getData();
             $user->setPassword($passwordHasher->hashPassword($user, $plainPassword));
-            $user->setUpdatedAt(new \DateTimeImmutable());
+            $user->forceUpdatedAt(new \DateTimeImmutable());
             $em->flush();
             $this->addFlash('success', 'Mot de passe réinitialisé.');
             return $this->redirectToRoute('admin_users_edit', ['id' => $user->getId()]);
@@ -1062,8 +1062,8 @@ class AdminController extends AbstractController
 
         $user->setIsBanned($isBanned);
         $user->setBanReason($isBanned ? ($banReason !== '' ? $banReason : null) : null);
-        $user->setBanUntil($isBanned ? $banUntil : null);
-        $user->setUpdatedAt(new \DateTimeImmutable());
+        $user->applyBanUntil($isBanned ? $banUntil : null);
+        $user->forceUpdatedAt(new \DateTimeImmutable());
 
         $em->flush();
         $this->addFlash('success', $isBanned ? 'Utilisateur banni.' : 'Utilisateur débanni.');
@@ -1084,7 +1084,7 @@ class AdminController extends AbstractController
         }
 
         $user->softDelete();
-        $user->setUpdatedAt(new \DateTimeImmutable());
+        $user->forceUpdatedAt(new \DateTimeImmutable());
         $em->flush();
 
         $this->addFlash('success', 'Utilisateur supprimé (soft delete).');
@@ -1168,7 +1168,7 @@ class AdminController extends AbstractController
         }
 
         $user->setAdminApproved(true);
-        $user->setUpdatedAt(new \DateTimeImmutable());
+        $user->forceUpdatedAt(new \DateTimeImmutable());
         $em->flush();
 
         $this->addFlash('success', 'Compte approuvé.');
@@ -1185,7 +1185,7 @@ class AdminController extends AbstractController
         $users = $userRepository->findPendingApprovals();
         foreach ($users as $user) {
             $user->setAdminApproved(true);
-            $user->setUpdatedAt(new \DateTimeImmutable());
+            $user->forceUpdatedAt(new \DateTimeImmutable());
         }
 
         $em->flush();
@@ -1212,8 +1212,8 @@ class AdminController extends AbstractController
 
         $token = bin2hex(random_bytes(32));
         $user->setEmailVerificationToken($token);
-        $user->setEmailVerificationExpiresAt((new \DateTimeImmutable())->modify('+2 days'));
-        $user->setUpdatedAt(new \DateTimeImmutable());
+        $user->defineEmailVerificationExpiry((new \DateTimeImmutable())->modify('+2 days'));
+        $user->forceUpdatedAt(new \DateTimeImmutable());
 
         $verifyUrl = $this->generateUrl('app_verify_email', [
             'token' => $token,
@@ -1249,7 +1249,7 @@ class AdminController extends AbstractController
         }
 
         $users = $userRepository->createQueryBuilder('u')
-            ->andWhere('u.deletedAt IS NULL')
+            ->andWhere('u.removedAt IS NULL')
             ->andWhere('u.emailVerified = false')
             ->getQuery()
             ->getResult();
@@ -1257,8 +1257,8 @@ class AdminController extends AbstractController
         foreach ($users as $user) {
             $token = bin2hex(random_bytes(32));
             $user->setEmailVerificationToken($token);
-            $user->setEmailVerificationExpiresAt((new \DateTimeImmutable())->modify('+2 days'));
-            $user->setUpdatedAt(new \DateTimeImmutable());
+            $user->defineEmailVerificationExpiry((new \DateTimeImmutable())->modify('+2 days'));
+            $user->forceUpdatedAt(new \DateTimeImmutable());
 
             $verifyUrl = $this->generateUrl('app_verify_email', [
                 'token' => $token,
@@ -1361,10 +1361,10 @@ class AdminController extends AbstractController
         $user = $abonnement->getUser();
         if ($user) {
             $user->setSubscriptionType($abonnement->getTypeAbonnement());
-            $user->setSubscriptionEndAt(\DateTimeImmutable::createFromInterface($abonnement->getDateFin()));
+            $user->defineSubscriptionEndAt(\DateTimeImmutable::createFromInterface($abonnement->getDateFin()));
             $user->setSubscriptionStatus($abonnement->getStatut() === 'actif' ? 'ACTIVE' : 'EXPIRED');
             $user->setRole($abonnement->getTypeAbonnement());
-            $user->setUpdatedAt(new \DateTimeImmutable());
+            $user->forceUpdatedAt(new \DateTimeImmutable());
             $this->ensureRoleEntity($user, $abonnement->getTypeAbonnement(), $em);
         }
 
@@ -1398,8 +1398,8 @@ class AdminController extends AbstractController
             $user->setRole('ROLE_USER');
             $user->setSubscriptionStatus('EXPIRED');
             $user->setSubscriptionType(null);
-            $user->setSubscriptionEndAt(null);
-            $user->setUpdatedAt(new \DateTimeImmutable());
+            $user->defineSubscriptionEndAt(null);
+            $user->forceUpdatedAt(new \DateTimeImmutable());
         }
 
         $em->flush();
@@ -1800,7 +1800,7 @@ class AdminController extends AbstractController
         // Liste des coaches pour le filtre
         $coaches = $em->getRepository(CoachSportif::class)->createQueryBuilder('c')
             ->leftJoin('c.user', 'u')->addSelect('u')
-            ->where('u.deletedAt IS NULL')
+            ->where('u.removedAt IS NULL')
             ->orderBy('u.nom', 'ASC')
             ->setMaxResults(50)
             ->getQuery()->getResult();
@@ -1808,7 +1808,7 @@ class AdminController extends AbstractController
         // Liste des nutritionnistes pour le filtre
         $nutritionists = $em->getRepository(Nutritionniste::class)->createQueryBuilder('n')
             ->leftJoin('n.user', 'u')->addSelect('u')
-            ->where('u.deletedAt IS NULL')
+            ->where('u.removedAt IS NULL')
             ->orderBy('u.nom', 'ASC')
             ->setMaxResults(50)
             ->getQuery()->getResult();

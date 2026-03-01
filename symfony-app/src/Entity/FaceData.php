@@ -19,7 +19,7 @@ class FaceData
     #[ORM\Column(type: 'text')]
     private string $faceDescriptor = '';
 
-    #[ORM\Column]
+    #[ORM\Column(type: 'datetimetz_immutable')]
     private \DateTimeImmutable $createdAt;
 
     public function __construct()

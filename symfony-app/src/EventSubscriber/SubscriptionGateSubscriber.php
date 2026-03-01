@@ -154,8 +154,8 @@ class SubscriptionGateSubscriber implements EventSubscriberInterface
         $user->setRole('ROLE_USER');
         $user->setSubscriptionStatus('EXPIRED');
         $user->setSubscriptionType(null);
-        $user->setSubscriptionEndAt(null);
-        $user->setUpdatedAt(new \DateTimeImmutable());
+        $user->defineSubscriptionEndAt(null);
+        $user->forceUpdatedAt(new \DateTimeImmutable());
     }
 
     private function normalizeInactiveUserAccess(User $user): bool
@@ -171,12 +171,12 @@ class SubscriptionGateSubscriber implements EventSubscriberInterface
             $changed = true;
         }
         if ($user->getSubscriptionEndAt() !== null && $user->getSubscriptionStatus() !== 'ACTIVE') {
-            $user->setSubscriptionEndAt(null);
+            $user->defineSubscriptionEndAt(null);
             $changed = true;
         }
 
         if ($changed) {
-            $user->setUpdatedAt(new \DateTimeImmutable());
+            $user->forceUpdatedAt(new \DateTimeImmutable());
         }
 
         return $changed;

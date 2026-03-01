@@ -30,11 +30,11 @@ class GoogleFitAccount
     #[Ignore]
     private ?string $refreshToken = null;
 
-    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    #[ORM\Column(type: 'datetimetz_immutable', nullable: true)]
     #[Ignore]
     private ?\DateTimeImmutable $tokenExpiration = null;
 
-    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    #[ORM\Column(type: 'datetimetz_immutable', nullable: true)]
     private ?\DateTimeImmutable $lastSyncAt = null;
 
     #[ORM\Column(type: 'text', nullable: true)]
@@ -94,7 +94,7 @@ class GoogleFitAccount
         return $this->tokenExpiration;
     }
 
-    public function setTokenExpiration(?\DateTimeImmutable $tokenExpiration): self
+    public function updateTokenExpiration(?\DateTimeImmutable $tokenExpiration): self
     {
         $this->tokenExpiration = $tokenExpiration;
         return $this;
@@ -105,7 +105,7 @@ class GoogleFitAccount
         return $this->lastSyncAt;
     }
 
-    public function setLastSyncAt(?\DateTimeImmutable $lastSyncAt): self
+    public function markLastSyncAt(?\DateTimeImmutable $lastSyncAt): self
     {
         $this->lastSyncAt = $lastSyncAt;
         return $this;

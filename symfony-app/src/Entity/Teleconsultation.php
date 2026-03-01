@@ -29,13 +29,13 @@ class Teleconsultation
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
 
-    #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
+    #[ORM\Column(type: Types::DATETIMETZ_IMMUTABLE)]
     private \DateTimeImmutable $scheduledAt;
 
-    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    #[ORM\Column(type: Types::DATETIMETZ_IMMUTABLE, nullable: true)]
     private ?\DateTimeImmutable $startedAt = null;
 
-    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    #[ORM\Column(type: Types::DATETIMETZ_IMMUTABLE, nullable: true)]
     private ?\DateTimeImmutable $endedAt = null;
 
     #[ORM\Column(type: 'string', length: 50, options: ['default' => 'pending'])]
@@ -47,7 +47,7 @@ class Teleconsultation
     #[ORM\Column(type: 'string', length: 50, nullable: true)]
     private ?string $type = 'general'; // general, emergency, follow_up, etc.
 
-    #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
+    #[ORM\Column(type: Types::DATETIMETZ_IMMUTABLE)]
     private \DateTimeImmutable $createdAt;
 
     public function __construct()
@@ -109,7 +109,7 @@ class Teleconsultation
         return $this->scheduledAt;
     }
 
-    public function setScheduledAt(\DateTimeImmutable $scheduledAt): self
+    public function scheduleAt(\DateTimeImmutable $scheduledAt): self
     {
         $this->scheduledAt = $scheduledAt;
         return $this;
@@ -120,7 +120,7 @@ class Teleconsultation
         return $this->startedAt;
     }
 
-    public function setStartedAt(?\DateTimeImmutable $startedAt): self
+    public function startAt(?\DateTimeImmutable $startedAt): self
     {
         $this->startedAt = $startedAt;
         return $this;
@@ -131,7 +131,7 @@ class Teleconsultation
         return $this->endedAt;
     }
 
-    public function setEndedAt(?\DateTimeImmutable $endedAt): self
+    public function endAt(?\DateTimeImmutable $endedAt): self
     {
         $this->endedAt = $endedAt;
         return $this;

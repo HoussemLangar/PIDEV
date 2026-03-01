@@ -109,7 +109,7 @@ class RegistrationController extends AbstractController
             $user->setAdminApproved(false);
             $verificationToken = bin2hex(random_bytes(32));
             $user->setEmailVerificationToken($verificationToken);
-            $user->setEmailVerificationExpiresAt((new \DateTimeImmutable())->modify('+2 days'));
+            $user->defineEmailVerificationExpiry((new \DateTimeImmutable())->modify('+2 days'));
 
             $em->flush();
 

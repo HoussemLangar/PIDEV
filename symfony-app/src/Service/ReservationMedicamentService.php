@@ -38,7 +38,7 @@ class ReservationMedicamentService
             $reservation->setPrixTotal((string) ((float) $stock->getPrixVente() * $quantite));
         }
         $reservation->setStatut('en_attente');
-        $reservation->setExpiresAt((new \DateTime())->modify('+2 hours'));
+        $reservation->expireAt((new \DateTime())->modify('+2 hours'));
 
         $this->em->persist($reservation);
         $this->em->flush();
@@ -86,8 +86,8 @@ class ReservationMedicamentService
 
         $stock->setQuantite($stock->getQuantite() - $reservation->getQuantite());
         $reservation->setStatut('confirmee');
-        $reservation->setConfirmedAt(new \DateTime());
-        $reservation->setUpdatedAt(new \DateTime());
+        $reservation->confirmAt(new \DateTime());
+        $reservation->forceUpdatedAt(new \DateTime());
 
         $this->em->flush();
 
@@ -125,8 +125,8 @@ class ReservationMedicamentService
             return;
         }
         $reservation->setStatut('refusee');
-        $reservation->setRejectedAt(new \DateTime());
-        $reservation->setUpdatedAt(new \DateTime());
+        $reservation->rejectAt(new \DateTime());
+        $reservation->forceUpdatedAt(new \DateTime());
         $this->em->flush();
 
         $this->notificationService->notify(
@@ -151,8 +151,8 @@ class ReservationMedicamentService
             return;
         }
         $reservation->setStatut('annulee');
-        $reservation->setCancelledAt(new \DateTime());
-        $reservation->setUpdatedAt(new \DateTime());
+        $reservation->cancelAt(new \DateTime());
+        $reservation->forceUpdatedAt(new \DateTime());
         $this->em->flush();
     }
 
@@ -171,7 +171,7 @@ class ReservationMedicamentService
         $count = 0;
         foreach ($reservations as $reservation) {
             $reservation->setStatut('expiree');
-            $reservation->setUpdatedAt(new \DateTime());
+            $reservation->forceUpdatedAt(new \DateTime());
             $count++;
         }
         if ($count > 0) {

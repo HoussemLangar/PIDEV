@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Doctrine\Id\ManualIntId;
 use Scheb\TwoFactorBundle\Model\Google\TwoFactorInterface;
 use App\Repository\UserRepository;
 use App\Entity\GoogleFitAccount;
@@ -27,7 +28,6 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFactorInterface
 {
     #[ORM\Id]
-    #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
     private ?int $id = null;
 
@@ -168,7 +168,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     #[Ignore]
     private ?string $emailVerificationToken = null;
 
-    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    #[ORM\Column(type: 'datetimetz_immutable', nullable: true)]
     private ?\DateTimeImmutable $emailVerificationExpiresAt = null;
 
     #[ORM\Column(type: 'string', length: 20, options: ['default' => 'PENDING'])]
@@ -177,10 +177,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     #[ORM\Column(type: 'string', length: 50, nullable: true)]
     private ?string $subscriptionType = null;
 
-    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    #[ORM\Column(type: 'datetimetz_immutable', nullable: true)]
     private ?\DateTimeImmutable $subscriptionEndAt = null;
 
-    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    #[ORM\Column(type: 'datetimetz_immutable', nullable: true)]
     private ?\DateTimeImmutable $aiFreeMonthGrantedAt = null;
 
     #[ORM\Column(type: 'boolean', options: ['default' => false])]
@@ -189,13 +189,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private ?string $banReason = null;
 
-    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    #[ORM\Column(type: 'datetimetz_immutable', nullable: true)]
     private ?\DateTimeImmutable $banUntil = null;
 
-    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    #[ORM\Column(type: 'datetimetz_immutable', nullable: true)]
     private ?\DateTimeImmutable $deletedAt = null;
 
-    #[ORM\Column(type: 'datetime_immutable', options: ['default' => 'CURRENT_TIMESTAMP'])]
+    #[ORM\Column(type: 'datetimetz_immutable', options: ['default' => 'CURRENT_TIMESTAMP'])]
     #[Assert\NotBlank(message: 'La date de création est obligatoire.')]
     #[Assert\Type(
         type: \DateTimeImmutable::class,
@@ -203,7 +203,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     )]
     private \DateTimeImmutable $createdAt;
 
-    #[ORM\Column(type: 'datetime_immutable', options: ['default' => 'CURRENT_TIMESTAMP'])]
+    #[ORM\Column(type: 'datetimetz_immutable', options: ['default' => 'CURRENT_TIMESTAMP'])]
     #[Assert\NotBlank(message: 'La date de mise à jour est obligatoire.')]
     #[Assert\Type(
         type: \DateTimeImmutable::class,
@@ -265,6 +265,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
 
     public function __construct()
     {
+        $this->id = ManualIntId::generate();
         $this->createdAt = new \DateTimeImmutable();
         $this->updatedAt = new \DateTimeImmutable();
         $this->contenus = new ArrayCollection();
@@ -355,7 +356,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     public function setEmailVerificationToken(?string $token): void { $this->emailVerificationToken = $token; }
 
     public function getEmailVerificationExpiresAt(): ?\DateTimeImmutable { return $this->emailVerificationExpiresAt; }
-    public function setEmailVerificationExpiresAt(?\DateTimeImmutable $expiresAt): void { $this->emailVerificationExpiresAt = $expiresAt; }
+    public function defineEmailVerificationExpiry(?\DateTimeImmutable $expiresAt): void { $this->emailVerificationExpiresAt = $expiresAt; }
 
     public function getSubscriptionStatus(): string { return $this->subscriptionStatus; }
     public function setSubscriptionStatus(string $subscriptionStatus): void { $this->subscriptionStatus = $subscriptionStatus; }
@@ -364,10 +365,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     public function setSubscriptionType(?string $subscriptionType): void { $this->subscriptionType = $subscriptionType; }
 
     public function getSubscriptionEndAt(): ?\DateTimeImmutable { return $this->subscriptionEndAt; }
-    public function setSubscriptionEndAt(?\DateTimeImmutable $subscriptionEndAt): void { $this->subscriptionEndAt = $subscriptionEndAt; }
+    public function defineSubscriptionEndAt(?\DateTimeImmutable $subscriptionEndAt): void { $this->subscriptionEndAt = $subscriptionEndAt; }
 
     public function getAiFreeMonthGrantedAt(): ?\DateTimeImmutable { return $this->aiFreeMonthGrantedAt; }
-    public function setAiFreeMonthGrantedAt(?\DateTimeImmutable $aiFreeMonthGrantedAt): void { $this->aiFreeMonthGrantedAt = $aiFreeMonthGrantedAt; }
+    public function markAiFreeMonthGrantedAt(?\DateTimeImmutable $aiFreeMonthGrantedAt): void { $this->aiFreeMonthGrantedAt = $aiFreeMonthGrantedAt; }
 
     public function isSubscriptionActive(): bool
     {
@@ -398,7 +399,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     public function setBanReason(?string $banReason): void { $this->banReason = $banReason; }
 
     public function getBanUntil(): ?\DateTimeImmutable { return $this->banUntil; }
-    public function setBanUntil(?\DateTimeImmutable $banUntil): void { $this->banUntil = $banUntil; }
+    public function applyBanUntil(?\DateTimeImmutable $banUntil): void { $this->banUntil = $banUntil; }
 
     public function getDeletedAt(): ?\DateTimeImmutable { return $this->deletedAt; }
     public function softDelete(): void { $this->deletedAt = new \DateTimeImmutable(); }
@@ -431,10 +432,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     }
 
     public function getCreatedAt(): \DateTimeImmutable { return $this->createdAt; }
-    public function setCreatedAt(\DateTimeImmutable $createdAt): void { $this->createdAt = $createdAt; }
+    public function forceCreatedAt(\DateTimeImmutable $createdAt): void { $this->createdAt = $createdAt; }
 
     public function getUpdatedAt(): \DateTimeImmutable { return $this->updatedAt; }
-    public function setUpdatedAt(\DateTimeImmutable $updatedAt): void { $this->updatedAt = $updatedAt; }
+    public function forceUpdatedAt(\DateTimeImmutable $updatedAt): void { $this->updatedAt = $updatedAt; }
 
     // Relation getters/setters
     public function getPatient(): ?Patient { return $this->patient; }

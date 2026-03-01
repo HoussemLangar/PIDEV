@@ -36,7 +36,7 @@ class SuspiciousLogin
     #[ORM\Column(type: 'boolean', options: ['default' => false])]
     private bool $notified = false;
 
-    #[ORM\Column(type: 'datetime_immutable')]
+    #[ORM\Column(type: 'datetimetz_immutable')]
     private \DateTimeImmutable $createdAt;
 
     public function __construct()
@@ -68,5 +68,5 @@ class SuspiciousLogin
     public function setNotified(bool $notified): void { $this->notified = $notified; }
 
     public function getCreatedAt(): \DateTimeImmutable { return $this->createdAt; }
-    public function setCreatedAt(\DateTimeImmutable $createdAt): void { $this->createdAt = $createdAt; }
+    public function forceCreatedAt(\DateTimeImmutable $createdAt): void { $this->createdAt = $createdAt; }
 }

@@ -3,6 +3,7 @@
 
 namespace App\EventSubscriber;
 
+use App\Entity\User;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
@@ -31,11 +32,10 @@ class FaceVerificationSubscriber implements EventSubscriberInterface
         }
 
         $request = $event->getRequest();
-        $session = $request->getSession();
-        
+
         // Vérifier si l'utilisateur est banni (géré par BannedUserSubscriber avec priorité plus haute)
         $user = $this->security->getUser();
-        if ($user && method_exists($user, 'isBannedEffective') && $user->isBannedEffective()) {
+        if ($user instanceof User && $user->isBannedEffective()) {
             return;
         }
         
@@ -62,11 +62,12 @@ class FaceVerificationSubscriber implements EventSubscriberInterface
 
         // Vérifier si l'utilisateur est admin
         $user = $this->security->getUser();
-        if (!$user || !in_array('ROLE_ADMIN', $user->getRoles(), true)) {
+        if (!$user instanceof User || !in_array('ROLE_ADMIN', $user->getRoles(), true)) {
             return;
         }
 
         // Vérifier si la reconnaissance faciale a été validée
+        $session = $request->getSession();
         $faceVerified = $session->get('face_verified', false);
 
         if (!$faceVerified) {

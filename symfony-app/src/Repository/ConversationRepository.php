@@ -56,6 +56,32 @@ class ConversationRepository extends ServiceEntityRepository
     }
 
     /**
+     * Optimized summary list for API usage (scalar hydration, no entity graph).
+     *
+     * @return array<int, array{id:int, otherUserId:int, otherPrenom:string, otherNom:string, lastMessageAt:\DateTimeInterface}>
+     */
+    public function findUserConversationSummaries(User $user, int $limit = 50): array
+    {
+        return $this->createQueryBuilder('c')
+            ->select(
+                'c.id AS id',
+                'c.lastMessageAt AS lastMessageAt',
+                'CASE WHEN u1.id = :userId THEN u2.id ELSE u1.id END AS otherUserId',
+                'CASE WHEN u1.id = :userId THEN u2.prenom ELSE u1.prenom END AS otherPrenom',
+                'CASE WHEN u1.id = :userId THEN u2.nom ELSE u1.nom END AS otherNom'
+            )
+            ->innerJoin('c.userOne', 'u1')
+            ->innerJoin('c.userTwo', 'u2')
+            ->where('u1 = :user OR u2 = :user')
+            ->setParameter('user', $user)
+            ->setParameter('userId', $user->getId())
+            ->orderBy('c.lastMessageAt', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getArrayResult();
+    }
+
+    /**
      * Get unread message count for a user in a conversation
      */
     public function getUnreadCount(User $user): int

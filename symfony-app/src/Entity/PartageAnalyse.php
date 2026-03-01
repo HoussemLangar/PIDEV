@@ -31,10 +31,10 @@ class PartageAnalyse
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private ?string $fichierUrl = null;
 
-    #[ORM\Column(type: 'datetime', nullable: true)]
+    #[ORM\Column(type: 'datetimetz', nullable: true)]
     private ?\DateTimeInterface $datePartage = null;
 
-    #[ORM\Column(type: 'datetime', options: ['default' => 'CURRENT_TIMESTAMP'])]
+    #[ORM\Column(type: 'datetimetz', options: ['default' => 'CURRENT_TIMESTAMP'])]
     private \DateTimeInterface $createdAt;
 
     public function __construct()
@@ -54,7 +54,7 @@ class PartageAnalyse
     public function getFichierUrl(): ?string { return $this->fichierUrl; }
     public function setFichierUrl(?string $fichierUrl): void { $this->fichierUrl = $fichierUrl; }
     public function getDatePartage(): ?\DateTimeInterface { return $this->datePartage; }
-    public function setDatePartage(?\DateTimeInterface $datePartage): void { $this->datePartage = $datePartage; }
+    public function markSharedAt(?\DateTimeInterface $datePartage): void { $this->datePartage = $datePartage; }
     public function getCreatedAt(): \DateTimeInterface { return $this->createdAt; }
-    public function setCreatedAt(\DateTimeInterface $createdAt): void { $this->createdAt = $createdAt; }
+    public function forceCreatedAt(\DateTimeInterface $createdAt): void { $this->createdAt = $createdAt; }
 }

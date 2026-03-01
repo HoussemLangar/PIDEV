@@ -57,10 +57,10 @@ class AccompanimentPlan
     #[Assert\Range(min: 1, max: 52, notInRangeMessage: "La durée doit être entre {{ min }} et {{ max }} semaines")]
     private int $durationWeeks = 12;
 
-    #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
+    #[ORM\Column(type: Types::DATETIMETZ_IMMUTABLE)]
     private \DateTimeImmutable $createdAt;
 
-    #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
+    #[ORM\Column(type: Types::DATETIMETZ_IMMUTABLE)]
     private \DateTimeImmutable $updatedAt;
 
     #[ORM\OneToMany(mappedBy: 'plan', targetEntity: PlanExercice::class, cascade: ['persist'])]
@@ -203,7 +203,7 @@ class AccompanimentPlan
         return $this->updatedAt;
     }
 
-    public function setUpdatedAt(\DateTimeImmutable $updatedAt): self
+    public function forceUpdatedAt(\DateTimeImmutable $updatedAt): self
     {
         $this->updatedAt = $updatedAt;
         return $this;

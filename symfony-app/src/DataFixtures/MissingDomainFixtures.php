@@ -13,6 +13,8 @@ use App\Entity\UserScoreHistory;
 use App\Enum\Alimentation;
 use App\Enum\Humeur;
 use App\Enum\NiveauActivite;
+use App\Enum\SanteDataSource;
+use App\Enum\UserScoreSnapshotType;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Bundle\FixturesBundle\FixtureGroupInterface;
@@ -62,8 +64,8 @@ class MissingDomainFixtures extends Fixture implements DependentFixtureInterface
                     $entry->setPas(4500 + ($day * 900) + ($patientIndex * 120));
                     $entry->setCalories((float) (1750 + ($day * 60) + ($patientIndex * 10)));
                     $entry->setDureeActiviteMinutes(20 + (($day + $patientIndex) % 5) * 10);
-                    $entry->setSourceDonnees($day % 2 === 0 ? 'manuel' : 'google_fit');
-                    $entry->setDate((new \DateTime())->modify(sprintf('-%d day', 6 - $day)));
+                    $entry->setSourceDonnees($day % 2 === 0 ? SanteDataSource::MANUEL : SanteDataSource::GOOGLE_FIT);
+                    $entry->recordDate((new \DateTime())->modify(sprintf('-%d day', 6 - $day)));
                     $manager->persist($entry);
                 }
             }
@@ -100,8 +102,8 @@ class MissingDomainFixtures extends Fixture implements DependentFixtureInterface
                     $history->setRuleComplianceScore($compliance);
                     $history->setSanctionsHistoryScore($sanctions);
                     $history->setScore($total);
-                    $history->setSnapshotType('daily');
-                    $history->setCreatedAt((new \DateTimeImmutable())->modify(sprintf('-%d day', 4 - $day)));
+                    $history->setSnapshotType(UserScoreSnapshotType::DAILY);
+                    $history->forceCreatedAt((new \DateTimeImmutable())->modify(sprintf('-%d day', 4 - $day)));
                     $manager->persist($history);
                 }
             }
@@ -119,7 +121,7 @@ class MissingDomainFixtures extends Fixture implements DependentFixtureInterface
                 $tele->setRecipient($medecinUser);
                 $tele->setRoomName(sprintf('tele-room-%d-%d', $patientUser->getId() ?? $i, $i + 1));
                 $tele->setDescription('Consultation de suivi automatique (fixture).');
-                $tele->setScheduledAt((new \DateTimeImmutable())->modify(sprintf('+%d day', $i + 1)));
+                $tele->scheduleAt((new \DateTimeImmutable())->modify(sprintf('+%d day', $i + 1)));
                 $tele->setStatus($i % 2 === 0 ? 'pending' : 'requested');
                 $tele->setType($i % 2 === 0 ? 'follow_up' : 'general');
 

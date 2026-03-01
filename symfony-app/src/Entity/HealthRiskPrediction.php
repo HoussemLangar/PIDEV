@@ -53,7 +53,7 @@ class HealthRiskPrediction
     #[ORM\Column(type: Types::JSON, nullable: true)]
     private ?array $featureSnapshot = null;
 
-    #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
+    #[ORM\Column(type: Types::DATETIMETZ_IMMUTABLE)]
     private \DateTimeImmutable $updatedAt;
 
     public function __construct()
@@ -88,6 +88,6 @@ class HealthRiskPrediction
     public function getFeatureSnapshot(): ?array { return $this->featureSnapshot; }
     public function setFeatureSnapshot(?array $featureSnapshot): self { $this->featureSnapshot = $featureSnapshot; return $this; }
     public function getUpdatedAt(): \DateTimeImmutable { return $this->updatedAt; }
-    public function setUpdatedAt(\DateTimeImmutable $updatedAt): self { $this->updatedAt = $updatedAt; return $this; }
+    public function forceUpdatedAt(\DateTimeImmutable $updatedAt): self { $this->updatedAt = $updatedAt; return $this; }
 }
 

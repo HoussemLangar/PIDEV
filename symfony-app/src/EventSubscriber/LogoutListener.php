@@ -30,7 +30,7 @@ class LogoutListener
         if ($sessionId) {
             $sessionEntity = $this->userSessionRepository->findBySessionId($sessionId);
             if ($sessionEntity && !$sessionEntity->isRevoked()) {
-                $sessionEntity->setRevokedAt(new \DateTimeImmutable());
+                $sessionEntity->markRevokedAt(new \DateTimeImmutable());
                 $this->em->flush();
             }
         }

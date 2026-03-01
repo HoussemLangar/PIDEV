@@ -4,6 +4,9 @@ FROM php:8.1-apache
 RUN apt-get update && apt-get install -y \
     git \
     unzip \
+    curl \
+    ca-certificates \
+    gnupg \
     libicu-dev \
     libzip-dev \
     libpng-dev \
@@ -18,6 +21,14 @@ RUN apt-get update && apt-get install -y \
     zip \
     gd \
     opcache
+
+# Installation Blackfire PHP Probe
+RUN install -m 0755 -d /etc/apt/keyrings \
+    && curl -fsSL https://packages.blackfire.io/gpg.key | gpg --dearmor -o /etc/apt/keyrings/blackfire.gpg \
+    && echo "deb [signed-by=/etc/apt/keyrings/blackfire.gpg] https://packages.blackfire.io/debian any main" > /etc/apt/sources.list.d/blackfire.list \
+    && apt-get update \
+    && apt-get install -y blackfire-php \
+    && rm -rf /var/lib/apt/lists/*
 
 # Générer certificat SSL local
 RUN make-ssl-cert generate-default-snakeoil --force-overwrite

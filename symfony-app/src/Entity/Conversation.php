@@ -10,6 +10,8 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: ConversationRepository::class)]
 #[ORM\Table(name: 'conversations')]
+#[ORM\Index(name: 'idx_conversation_user_one_last', columns: ['user_one_id', 'last_message_at'])]
+#[ORM\Index(name: 'idx_conversation_user_two_last', columns: ['user_two_id', 'last_message_at'])]
 class Conversation
 {
     #[ORM\Id]
@@ -28,10 +30,10 @@ class Conversation
     #[ORM\OneToMany(mappedBy: 'conversation', targetEntity: Message::class, cascade: ['persist'], orphanRemoval: true)]
     private Collection $messages;
 
-    #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
+    #[ORM\Column(type: Types::DATETIMETZ_IMMUTABLE)]
     private \DateTimeImmutable $createdAt;
 
-    #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
+    #[ORM\Column(type: Types::DATETIMETZ_IMMUTABLE)]
     private \DateTimeImmutable $lastMessageAt;
 
     public function __construct(User $userOne, User $userTwo)
@@ -101,7 +103,7 @@ class Conversation
         return $this->lastMessageAt;
     }
 
-    public function setLastMessageAt(\DateTimeImmutable $lastMessageAt): self
+    public function touchLastMessageAt(\DateTimeImmutable $lastMessageAt): self
     {
         $this->lastMessageAt = $lastMessageAt;
         return $this;

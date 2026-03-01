@@ -90,9 +90,9 @@ class ContentController extends AbstractController
 
         $contenu->setStatut('valide');
         if ($contenu->getDatePublication() === null) {
-            $contenu->setDatePublication(new \DateTime());
+            $contenu->schedulePublicationAt(new \DateTime());
         }
-        $contenu->setUpdatedAt(new \DateTime());
+        $contenu->forceUpdatedAt(new \DateTime());
         $this->em->flush();
 
         $auteur = $contenu->getAuteur();
@@ -121,7 +121,7 @@ class ContentController extends AbstractController
         }
 
         $contenu->setStatut('rejete');
-        $contenu->setUpdatedAt(new \DateTime());
+        $contenu->forceUpdatedAt(new \DateTime());
         $this->em->flush();
 
         return new JsonResponse(['success' => true, 'status' => 'rejete']);
@@ -149,11 +149,11 @@ class ContentController extends AbstractController
             
             // Définir la date de publication si ce n'est pas déjà fait
             if ($contenu->getDatePublication() === null) {
-                $contenu->setDatePublication(new \DateTime());
+                $contenu->schedulePublicationAt(new \DateTime());
             }
         }
         
-        $contenu->setUpdatedAt(new \DateTime());
+        $contenu->forceUpdatedAt(new \DateTime());
         $this->em->flush();
 
         return new JsonResponse([
@@ -181,10 +181,10 @@ class ContentController extends AbstractController
         
         // Définir la date de publication si le statut est publie ou valide
         if (in_array($newStatus, ['publie', 'valide'], true) && $contenu->getDatePublication() === null) {
-            $contenu->setDatePublication(new \DateTime());
+            $contenu->schedulePublicationAt(new \DateTime());
         }
         
-        $contenu->setUpdatedAt(new \DateTime());
+        $contenu->forceUpdatedAt(new \DateTime());
         $this->em->flush();
 
         $statusLabels = [

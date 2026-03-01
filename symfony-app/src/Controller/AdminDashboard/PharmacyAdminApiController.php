@@ -65,7 +65,7 @@ class PharmacyAdminApiController extends AbstractController
         if (array_key_exists('latitude', $payload)) $pharmacy->setLatitude($payload['latitude']);
         if (array_key_exists('longitude', $payload)) $pharmacy->setLongitude($payload['longitude']);
         if (array_key_exists('is_active', $payload)) $pharmacy->setIsActive((bool) $payload['is_active']);
-        $pharmacy->setUpdatedAt(new \DateTime());
+        $pharmacy->forceUpdatedAt(new \DateTime());
         $this->em->flush();
 
         return new JsonResponse(['success' => true]);
@@ -119,7 +119,7 @@ class PharmacyAdminApiController extends AbstractController
         if (array_key_exists('laboratoire', $payload)) $med->setLaboratoire($payload['laboratoire']);
         if (array_key_exists('code_barre', $payload)) $med->setCodeBarre($payload['code_barre']);
         if (array_key_exists('prix', $payload)) $med->setPrix($payload['prix']);
-        $med->setUpdatedAt(new \DateTime());
+        $med->forceUpdatedAt(new \DateTime());
         $this->em->flush();
 
         return new JsonResponse(['success' => true]);
@@ -169,7 +169,7 @@ class PharmacyAdminApiController extends AbstractController
         $payload = json_decode($request->getContent(), true) ?: [];
         if (isset($payload['quantite'])) $stock->setQuantite((int) $payload['quantite']);
         if (isset($payload['prix'])) $stock->setPrixVente($payload['prix']);
-        $stock->setUpdatedAt(new \DateTime());
+        $stock->forceUpdatedAt(new \DateTime());
         $this->em->flush();
         return new JsonResponse(['success' => true]);
     }

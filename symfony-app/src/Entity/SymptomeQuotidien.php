@@ -37,7 +37,7 @@ class SymptomeQuotidien
     #[Assert\Length(max: 100, maxMessage: 'Les notes ne peuvent pas dépasser {{ limit }} caractères.')]
     private ?string $notes = null;
 
-    #[ORM\Column(type: 'datetime', options: ['default' => 'CURRENT_TIMESTAMP'])]
+    #[ORM\Column(type: 'datetimetz', options: ['default' => 'CURRENT_TIMESTAMP'])]
     private \DateTimeInterface $createdAt;
 
     public function __construct()
@@ -59,5 +59,5 @@ class SymptomeQuotidien
     public function getNotes(): ?string { return $this->notes; }
     public function setNotes(?string $notes): void { $this->notes = $notes; }
     public function getCreatedAt(): \DateTimeInterface { return $this->createdAt; }
-    public function setCreatedAt(\DateTimeInterface $createdAt): void { $this->createdAt = $createdAt; }
+    public function forceCreatedAt(\DateTimeInterface $createdAt): void { $this->createdAt = $createdAt; }
 }

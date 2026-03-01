@@ -65,13 +65,13 @@ class Contenu
     #[ORM\Column(type: 'string', length: 20, options: ['default' => 'en_attente'])]
     private string $statut = 'en_attente';
 
-    #[ORM\Column(type: 'datetime', nullable: true)]
+    #[ORM\Column(type: 'datetimetz', nullable: true)]
     private ?\DateTimeInterface $datePublication = null;
 
-    #[ORM\Column(type: 'datetime', options: ['default' => 'CURRENT_TIMESTAMP'])]
+    #[ORM\Column(type: 'datetimetz', options: ['default' => 'CURRENT_TIMESTAMP'])]
     private \DateTimeInterface $createdAt;
 
-    #[ORM\Column(type: 'datetime', options: ['default' => 'CURRENT_TIMESTAMP'])]
+    #[ORM\Column(type: 'datetimetz', options: ['default' => 'CURRENT_TIMESTAMP'])]
     private \DateTimeInterface $updatedAt;
 
     #[ORM\OneToMany(mappedBy: 'contenu', targetEntity: Like::class, cascade: ['persist'], orphanRemoval: true)]
@@ -106,11 +106,11 @@ class Contenu
     public function getStatut(): string { return $this->statut; }
     public function setStatut(string $statut): void { $this->statut = $statut; }
     public function getDatePublication(): ?\DateTimeInterface { return $this->datePublication; }
-    public function setDatePublication(?\DateTimeInterface $datePublication): void { $this->datePublication = $datePublication; }
+    public function schedulePublicationAt(?\DateTimeInterface $datePublication): void { $this->datePublication = $datePublication; }
     public function getCreatedAt(): \DateTimeInterface { return $this->createdAt; }
-    public function setCreatedAt(\DateTimeInterface $createdAt): void { $this->createdAt = $createdAt; }
+    public function forceCreatedAt(\DateTimeInterface $createdAt): void { $this->createdAt = $createdAt; }
     public function getUpdatedAt(): \DateTimeInterface { return $this->updatedAt; }
-    public function setUpdatedAt(\DateTimeInterface $updatedAt): void { $this->updatedAt = $updatedAt; }
+    public function forceUpdatedAt(\DateTimeInterface $updatedAt): void { $this->updatedAt = $updatedAt; }
     public function getLikes(): Collection { return $this->likes; }
     public function getCommentaires(): Collection { return $this->commentaires; }
 }

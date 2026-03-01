@@ -73,7 +73,7 @@ class TeleconsultationController extends AbstractController
         $consultation = new Teleconsultation();
         $consultation->setInitiator($user);
         // Set a default scheduled time to avoid null value
-        $consultation->setScheduledAt(new \DateTimeImmutable('+1 hour'));
+        $consultation->scheduleAt(new \DateTimeImmutable('+1 hour'));
 
         $recipientRoles = $this->isPatient() ? self::PROFESSIONAL_ROLES : ['ROLE_PATIENT'];
         $form = $this->createForm(TeleconsultationType::class, $consultation, [
@@ -175,7 +175,7 @@ class TeleconsultationController extends AbstractController
         // Update status if not started
         if (!$consultation->getStartedAt()) {
             $consultation->setStatus('ongoing');
-            $consultation->setStartedAt(new \DateTimeImmutable());
+            $consultation->startAt(new \DateTimeImmutable());
             $this->em->flush();
         }
 
@@ -214,7 +214,7 @@ class TeleconsultationController extends AbstractController
         }
 
         $consultation->setStatus('completed');
-        $consultation->setEndedAt(new \DateTimeImmutable());
+        $consultation->endAt(new \DateTimeImmutable());
 
         // Calculate duration
         if ($consultation->getStartedAt()) {
@@ -253,7 +253,7 @@ class TeleconsultationController extends AbstractController
         }
 
         $consultation->setStatus('cancelled');
-        $consultation->setEndedAt(new \DateTimeImmutable());
+        $consultation->endAt(new \DateTimeImmutable());
         if ($consultation->getStartedAt()) {
             $duration = $consultation->getEndedAt()->getTimestamp() - $consultation->getStartedAt()->getTimestamp();
             $consultation->setDurationSeconds($duration);
@@ -304,7 +304,7 @@ class TeleconsultationController extends AbstractController
         }
 
         $consultation->setStatus('cancelled');
-        $consultation->setEndedAt(new \DateTimeImmutable());
+        $consultation->endAt(new \DateTimeImmutable());
         $this->em->flush();
 
         $this->addFlash('success', 'Demande de téléconsultation refusée.');
@@ -351,7 +351,7 @@ class TeleconsultationController extends AbstractController
             return $this->redirectToRoute('app_teleconsultation_show', ['id' => $consultation->getId()]);
         }
 
-        $consultation->setScheduledAt($newScheduledAt);
+        $consultation->scheduleAt($newScheduledAt);
         if ($consultation->isRequested() && $this->isProfessionalRole($user)) {
             $consultation->setStatus('pending');
         }

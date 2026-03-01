@@ -279,7 +279,7 @@ class DocumentController extends AbstractController
 
             if ($existing) {
                 // Update existing access
-                $existing->setExpiresAt($documentAccess->getExpiresAt());
+                $existing->expireAt($documentAccess->getExpiresAt());
                 $existing->setPermission($documentAccess->getPermission());
                 $existing->setActive(true);
             } else {

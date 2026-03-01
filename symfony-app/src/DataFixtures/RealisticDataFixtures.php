@@ -247,7 +247,7 @@ class RealisticDataFixtures extends Fixture
         $user->setEmailVerified(true);
         $user->setAdminApproved(true);
         $user->setPassword($this->passwordHasher->hashPassword($user, $plainPassword));
-        $user->setUpdatedAt(new \DateTimeImmutable());
+        $user->forceUpdatedAt(new \DateTimeImmutable());
 
         return $user;
     }
@@ -257,7 +257,7 @@ class RealisticDataFixtures extends Fixture
         if (!$active) {
             $user->setSubscriptionStatus('PENDING');
             $user->setSubscriptionType(null);
-            $user->setSubscriptionEndAt(null);
+            $user->defineSubscriptionEndAt(null);
             return;
         }
 
@@ -278,7 +278,7 @@ class RealisticDataFixtures extends Fixture
 
         $user->setSubscriptionStatus('ACTIVE');
         $user->setSubscriptionType($role);
-        $user->setSubscriptionEndAt($end);
+        $user->defineSubscriptionEndAt($end);
 
         $manager->persist($abonnement);
     }

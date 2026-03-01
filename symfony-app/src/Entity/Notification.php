@@ -30,7 +30,7 @@ class Notification
     #[ORM\Column(type: 'boolean', options: ['default' => false])]
     private bool $lu = false;
 
-    #[ORM\Column(type: 'datetime')]
+    #[ORM\Column(type: 'datetimetz')]
     private \DateTimeInterface $dateEnvoi;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
@@ -39,7 +39,7 @@ class Notification
     #[ORM\Column(type: 'string', length: 20, options: ['default' => 'normal'])]
     private string $priorite = 'normal';
 
-    #[ORM\Column(type: 'datetime', options: ['default' => 'CURRENT_TIMESTAMP'])]
+    #[ORM\Column(type: 'datetimetz', options: ['default' => 'CURRENT_TIMESTAMP'])]
     private \DateTimeInterface $createdAt;
 
     public function __construct()
@@ -60,11 +60,11 @@ class Notification
     public function isLu(): bool { return $this->lu; }
     public function setLu(bool $lu): void { $this->lu = $lu; }
     public function getDateEnvoi(): \DateTimeInterface { return $this->dateEnvoi; }
-    public function setDateEnvoi(\DateTimeInterface $dateEnvoi): void { $this->dateEnvoi = $dateEnvoi; }
+    public function scheduleEnvoiAt(\DateTimeInterface $dateEnvoi): void { $this->dateEnvoi = $dateEnvoi; }
     public function getLien(): ?string { return $this->lien; }
     public function setLien(?string $lien): void { $this->lien = $lien; }
     public function getPrioritee(): string { return $this->priorite; }
     public function setPrioritee(string $priorite): void { $this->priorite = $priorite; }
     public function getCreatedAt(): \DateTimeInterface { return $this->createdAt; }
-    public function setCreatedAt(\DateTimeInterface $createdAt): void { $this->createdAt = $createdAt; }
+    public function forceCreatedAt(\DateTimeInterface $createdAt): void { $this->createdAt = $createdAt; }
 }

@@ -165,7 +165,7 @@ class AccompanimentPlanController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $plan->setUpdatedAt(new \DateTimeImmutable());
+            $plan->forceUpdatedAt(new \DateTimeImmutable());
             $this->em->flush();
 
             $this->addFlash('success', 'Plan mis à jour avec succès!');

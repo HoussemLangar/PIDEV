@@ -215,8 +215,8 @@ class SecurityController extends AbstractController
 
         $user->setEmailVerified(true);
         $user->setEmailVerificationToken(null);
-        $user->setEmailVerificationExpiresAt(null);
-        $user->setUpdatedAt(new \DateTimeImmutable());
+        $user->defineEmailVerificationExpiry(null);
+        $user->forceUpdatedAt(new \DateTimeImmutable());
         $em->flush();
 
         $this->addFlash('success', 'Email confirmé. En attente de validation admin.');

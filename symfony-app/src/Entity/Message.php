@@ -9,6 +9,8 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: MessageRepository::class)]
 #[ORM\Table(name: 'messages')]
+#[ORM\Index(name: 'idx_message_recipient_read', columns: ['recipient_id', 'is_read'])]
+#[ORM\Index(name: 'idx_message_conversation_created', columns: ['conversation_id', 'created_at'])]
 class Message
 {
     #[ORM\Id]
@@ -33,10 +35,10 @@ class Message
     #[Assert\Length(min: 1, max: 5000)]
     private string $content;
 
-    #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
+    #[ORM\Column(type: Types::DATETIMETZ_IMMUTABLE)]
     private \DateTimeImmutable $createdAt;
 
-    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    #[ORM\Column(type: Types::DATETIMETZ_IMMUTABLE, nullable: true)]
     private ?\DateTimeImmutable $readAt = null;
 
     #[ORM\Column(type: 'boolean', options: ['default' => false])]
@@ -110,7 +112,7 @@ class Message
         return $this->readAt;
     }
 
-    public function setReadAt(?\DateTimeImmutable $readAt): self
+    public function markReadAt(?\DateTimeImmutable $readAt): self
     {
         $this->readAt = $readAt;
         return $this;

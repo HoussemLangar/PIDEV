@@ -37,7 +37,7 @@ class MessagingService
         $message = new Message($conversation, $sender, $recipient, $content);
 
         $this->em->persist($message);
-        $conversation->setLastMessageAt(new \DateTimeImmutable());
+        $conversation->touchLastMessageAt(new \DateTimeImmutable());
         $this->em->flush();
 
         return $message;

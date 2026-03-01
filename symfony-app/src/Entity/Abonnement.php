@@ -46,10 +46,10 @@ class Abonnement
     #[ORM\Column(type: 'string', length: 255, nullable: true, unique: true)]
     private ?string $paymentSessionId = null;
 
-    #[ORM\Column(type: 'datetime', options: ['default' => 'CURRENT_TIMESTAMP'])]
+    #[ORM\Column(type: 'datetimetz', options: ['default' => 'CURRENT_TIMESTAMP'])]
     private \DateTimeInterface $createdAt;
 
-    #[ORM\Column(type: 'datetime', options: ['default' => 'CURRENT_TIMESTAMP'])]
+    #[ORM\Column(type: 'datetimetz', options: ['default' => 'CURRENT_TIMESTAMP'])]
     private \DateTimeInterface $updatedAt;
 
     #[ORM\OneToMany(mappedBy: 'abonnement', targetEntity: Accompagnement::class, cascade: ['persist'], orphanRemoval: true)]
@@ -88,9 +88,9 @@ class Abonnement
     public function getPaymentSessionId(): ?string { return $this->paymentSessionId; }
     public function setPaymentSessionId(?string $paymentSessionId): void { $this->paymentSessionId = $paymentSessionId; }
     public function getCreatedAt(): \DateTimeInterface { return $this->createdAt; }
-    public function setCreatedAt(\DateTimeInterface $createdAt): void { $this->createdAt = $createdAt; }
+    public function forceCreatedAt(\DateTimeInterface $createdAt): void { $this->createdAt = $createdAt; }
     public function getUpdatedAt(): \DateTimeInterface { return $this->updatedAt; }
-    public function setUpdatedAt(\DateTimeInterface $updatedAt): void { $this->updatedAt = $updatedAt; }
+    public function forceUpdatedAt(\DateTimeInterface $updatedAt): void { $this->updatedAt = $updatedAt; }
     public function getAccompagnements(): Collection { return $this->accompagnements; }
 
     public function getUser(): ?User { return $this->user; }

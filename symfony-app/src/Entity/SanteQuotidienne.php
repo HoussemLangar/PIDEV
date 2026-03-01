@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Enum\Alimentation;
 use App\Enum\NiveauActivite;
 use App\Enum\Humeur;
+use App\Enum\SanteDataSource;
 use App\Entity\User;
 use App\Repository\SanteQuotidienneRepository;
 use Doctrine\DBAL\Types\Types;
@@ -96,10 +97,10 @@ class SanteQuotidienne
     #[ORM\Column(type: Types::INTEGER, nullable: true)]
     private ?int $dureeActiviteMinutes = null;
 
-    #[ORM\Column(type: Types::STRING, length: 20)]
-    private string $sourceDonnees = 'manuel';
+    #[ORM\Column(type: 'sante_data_source', length: 20)]
+    private SanteDataSource $sourceDonnees = SanteDataSource::MANUEL;
 
-    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
+    #[ORM\Column(type: Types::DATETIMETZ_MUTABLE, nullable: true)]
     #[Assert\NotBlank(message: "La date est obligatoire")]
     #[Assert\LessThanOrEqual('today', message: 'Veuillez choisir une date valide (aujourd\'hui ou avant).')]
     private ?\DateTimeInterface $date = null;
@@ -239,15 +240,15 @@ class SanteQuotidienne
     public function getDureeActiviteMinutes(): ?int { return $this->dureeActiviteMinutes; }
     public function setDureeActiviteMinutes(?int $dureeActiviteMinutes): static { $this->dureeActiviteMinutes = $dureeActiviteMinutes; return $this; }
 
-    public function getSourceDonnees(): string { return $this->sourceDonnees; }
-    public function setSourceDonnees(string $sourceDonnees): static { $this->sourceDonnees = $sourceDonnees; return $this; }
+    public function getSourceDonnees(): SanteDataSource { return $this->sourceDonnees; }
+    public function setSourceDonnees(SanteDataSource $sourceDonnees): static { $this->sourceDonnees = $sourceDonnees; return $this; }
 
     public function getDate(): ?\DateTimeInterface
     {
         return $this->date;
     }
 
-    public function setDate(\DateTimeInterface $date): static
+    public function recordDate(\DateTimeInterface $date): static
     {
         $this->date = $date;
         return $this;

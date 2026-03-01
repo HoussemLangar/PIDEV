@@ -677,7 +677,7 @@ foreach ($contenusData as $data) {
     $contenu->setStatut(rand(0, 100) < 90 ? 'published' : 'draft');
     
     $date = new DateTime('-' . rand(1, 180) . ' days');
-    $contenu->setDatePublication($date);
+    $contenu->schedulePublicationAt($date);
     
     $em->persist($contenu);
     $contenus[] = $contenu;
@@ -818,7 +818,7 @@ foreach ($users as $user) {
         $notif->setLu(rand(0, 100) < 60); // 60% lues
         
         $date = new DateTime('-' . rand(1, 30) . ' days');
-        $notif->setDateEnvoi($date);
+        $notif->scheduleEnvoiAt($date);
         
         $em->persist($notif);
         $notifications[] = $notif;
@@ -918,7 +918,7 @@ if (!empty($medecins) && !empty($patients)) {
                 $teleco->setDescription('Consultation en ligne pour suivi médical');
                 
                 $date = new DateTimeImmutable(rand(0, 1) ? '+' : '-' . rand(1, 30) . ' days');
-                $teleco->setScheduledAt($date);
+                $teleco->scheduleAt($date);
                 
                 $statuts = ['scheduled', 'in_progress', 'completed', 'cancelled'];
                 $weights = [40, 10, 40, 10]; // Pondération

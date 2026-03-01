@@ -32,10 +32,10 @@ class Patient
     #[ORM\Column(type: 'text', nullable: true)]
     private ?string $antecedentsMedicaux = null;
 
-    #[ORM\Column(type: 'datetime', options: ['default' => 'CURRENT_TIMESTAMP'])]
+    #[ORM\Column(type: 'datetimetz', options: ['default' => 'CURRENT_TIMESTAMP'])]
     private \DateTimeInterface $createdAt;
 
-    #[ORM\Column(type: 'datetime', options: ['default' => 'CURRENT_TIMESTAMP'])]
+    #[ORM\Column(type: 'datetimetz', options: ['default' => 'CURRENT_TIMESTAMP'])]
     private \DateTimeInterface $updatedAt;
 
     #[ORM\OneToMany(mappedBy: 'patient', targetEntity: RendezVous::class, cascade: ['persist'], orphanRemoval: true)]
@@ -84,9 +84,9 @@ class Patient
     public function getAntecedentsMedicaux(): ?string { return $this->antecedentsMedicaux; }
     public function setAntecedentsMedicaux(?string $antecedentsMedicaux): void { $this->antecedentsMedicaux = $antecedentsMedicaux; }
     public function getCreatedAt(): \DateTimeInterface { return $this->createdAt; }
-    public function setCreatedAt(\DateTimeInterface $createdAt): void { $this->createdAt = $createdAt; }
+    public function forceCreatedAt(\DateTimeInterface $createdAt): void { $this->createdAt = $createdAt; }
     public function getUpdatedAt(): \DateTimeInterface { return $this->updatedAt; }
-    public function setUpdatedAt(\DateTimeInterface $updatedAt): void { $this->updatedAt = $updatedAt; }
+    public function forceUpdatedAt(\DateTimeInterface $updatedAt): void { $this->updatedAt = $updatedAt; }
     public function getRendezVous(): Collection { return $this->rendezVous; }
     public function getRapportsAnalyses(): Collection { return $this->rapportsAnalyses; }
     public function getRapportsMedicaux(): Collection { return $this->rapportsMedicaux; }

@@ -49,7 +49,7 @@ class SymptomeListe
     )]
     private string $categorie;
 
-    #[ORM\Column(type: 'datetime', options: ['default' => 'CURRENT_TIMESTAMP'])]
+    #[ORM\Column(type: 'datetimetz', options: ['default' => 'CURRENT_TIMESTAMP'])]
     #[Assert\NotNull]
     private \DateTimeInterface $createdAt;
 
@@ -97,7 +97,7 @@ class SymptomeListe
     /**
      * On empêche la modification manuelle de createdAt
      */
-    public function setCreatedAt(\DateTimeInterface $createdAt): never
+    public function forceCreatedAt(\DateTimeInterface $createdAt): never
     {
         throw new \LogicException('La date de création ne peut pas être modifiée manuellement.');
     }

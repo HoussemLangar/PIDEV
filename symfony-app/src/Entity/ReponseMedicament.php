@@ -28,16 +28,16 @@ class ReponseMedicament
     #[ORM\Column(type: 'text', nullable: true)]
     private ?string $reponse = null;
 
-    #[ORM\Column(type: 'datetime')]
+    #[ORM\Column(type: 'datetimetz')]
     private \DateTimeInterface $dateQuestion;
 
-    #[ORM\Column(type: 'datetime', nullable: true)]
+    #[ORM\Column(type: 'datetimetz', nullable: true)]
     private ?\DateTimeInterface $dateReponse = null;
 
     #[ORM\Column(type: 'string', length: 20, options: ['default' => 'en_attente'])]
     private string $statut = 'en_attente';
 
-    #[ORM\Column(type: 'datetime', options: ['default' => 'CURRENT_TIMESTAMP'])]
+    #[ORM\Column(type: 'datetimetz', options: ['default' => 'CURRENT_TIMESTAMP'])]
     private \DateTimeInterface $createdAt;
 
     public function __construct()
@@ -56,11 +56,11 @@ class ReponseMedicament
     public function getReponse(): ?string { return $this->reponse; }
     public function setReponse(?string $reponse): void { $this->reponse = $reponse; }
     public function getDateQuestion(): \DateTimeInterface { return $this->dateQuestion; }
-    public function setDateQuestion(\DateTimeInterface $dateQuestion): void { $this->dateQuestion = $dateQuestion; }
+    public function markQuestionDate(\DateTimeInterface $dateQuestion): void { $this->dateQuestion = $dateQuestion; }
     public function getDateReponse(): ?\DateTimeInterface { return $this->dateReponse; }
-    public function setDateReponse(?\DateTimeInterface $dateReponse): void { $this->dateReponse = $dateReponse; }
+    public function markResponseDate(?\DateTimeInterface $dateReponse): void { $this->dateReponse = $dateReponse; }
     public function getStatut(): string { return $this->statut; }
     public function setStatut(string $statut): void { $this->statut = $statut; }
     public function getCreatedAt(): \DateTimeInterface { return $this->createdAt; }
-    public function setCreatedAt(\DateTimeInterface $createdAt): void { $this->createdAt = $createdAt; }
+    public function forceCreatedAt(\DateTimeInterface $createdAt): void { $this->createdAt = $createdAt; }
 }

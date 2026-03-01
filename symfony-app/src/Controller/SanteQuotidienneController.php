@@ -319,7 +319,7 @@ class SanteQuotidienneController extends AbstractController
 
         $sante = new SanteQuotidienne();
         $sante->setUser($user);           // ← très important
-        $sante->setDate(new \DateTime());             // date du jour par défaut
+        $sante->recordDate(new \DateTime());             // date du jour par défaut
 
         $form = $this->createForm(SanteQuotidienneType::class, $sante);
         $form->handleRequest($request);

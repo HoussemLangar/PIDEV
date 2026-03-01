@@ -1,6 +1,9 @@
 doctrine:
     dbal:
         url: '%env(resolve:DATABASE_URL)%'
+        types:
+            sante_data_source: App\Doctrine\Type\SanteDataSourceType
+            user_score_snapshot_type: App\Doctrine\Type\UserScoreSnapshotTypeType
         options:
             1002: "SET time_zone = '+00:00'"
 

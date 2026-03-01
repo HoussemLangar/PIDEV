@@ -34,7 +34,6 @@ foreach ($symptomes as $data) {
     $symptome = new SymptomeListe();
     $symptome->setNom($data['nom']);
     $symptome->setCategorie($data['categorie']);
-    $symptome->setCreatedAt(new \DateTime());
 
     $entityManager->persist($symptome);
 }

@@ -23,13 +23,13 @@ class DocumentAccess
     #[ORM\JoinColumn(name: 'shared_with_id', nullable: false, onDelete: 'CASCADE')]
     private User $sharedWith;
 
-    #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
+    #[ORM\Column(type: Types::DATETIMETZ_IMMUTABLE)]
     private \DateTimeImmutable $sharedAt;
 
-    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    #[ORM\Column(type: Types::DATETIMETZ_IMMUTABLE, nullable: true)]
     private ?\DateTimeImmutable $expiresAt = null;
 
-    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    #[ORM\Column(type: Types::DATETIMETZ_IMMUTABLE, nullable: true)]
     private ?\DateTimeImmutable $accessedAt = null;
 
     #[ORM\Column(type: 'integer', options: ['default' => 0])]
@@ -85,7 +85,7 @@ class DocumentAccess
         return $this->expiresAt;
     }
 
-    public function setExpiresAt(?\DateTimeImmutable $expiresAt): self
+    public function expireAt(?\DateTimeImmutable $expiresAt): self
     {
         $this->expiresAt = $expiresAt;
         return $this;
@@ -96,7 +96,7 @@ class DocumentAccess
         return $this->accessedAt;
     }
 
-    public function setAccessedAt(?\DateTimeImmutable $accessedAt): self
+    public function markAccessedAt(?\DateTimeImmutable $accessedAt): self
     {
         $this->accessedAt = $accessedAt;
         return $this;

@@ -21,7 +21,7 @@ class ArticleScore
     #[ORM\Column(name: 'nb_commentaires', type: 'integer', options: ['default' => 0])]
     private int $nbCommentaires = 0;
 
-    #[ORM\Column(name: 'updated_at', type: 'datetime')]
+    #[ORM\Column(name: 'updated_at', type: 'datetimetz')]
     private \DateTimeInterface $updatedAt;
 
     public function getContenu(): Contenu { return $this->contenu; }
@@ -34,7 +34,7 @@ class ArticleScore
     public function setNbCommentaires(int $nbCommentaires): self { $this->nbCommentaires = $nbCommentaires; return $this; }
 
     public function getUpdatedAt(): \DateTimeInterface { return $this->updatedAt; }
-    public function setUpdatedAt(\DateTimeInterface $updatedAt): self { $this->updatedAt = $updatedAt; return $this; }
+    public function forceUpdatedAt(\DateTimeInterface $updatedAt): self { $this->updatedAt = $updatedAt; return $this; }
 
     #[ORM\PrePersist]
     #[ORM\PreUpdate]

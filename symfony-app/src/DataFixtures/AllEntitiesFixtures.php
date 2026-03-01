@@ -38,6 +38,7 @@ use App\Entity\Commentaire;
 use App\Enum\Alimentation;
 use App\Enum\Humeur;
 use App\Enum\NiveauActivite;
+use App\Enum\SanteDataSource;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Bundle\FixturesBundle\FixtureGroupInterface;
 use Doctrine\Common\DataFixtures\DependentFixtureInterface;
@@ -161,8 +162,8 @@ class AllEntitiesFixtures extends Fixture implements DependentFixtureInterface, 
             $account->setGoogleAccountId('gf-' . ($users[$i]->getId() ?? $i + 1));
             $account->setAccessToken('demo-access-token-' . ($i + 1));
             $account->setRefreshToken('demo-refresh-token-' . ($i + 1));
-            $account->setTokenExpiration((new \DateTimeImmutable())->modify('+30 days'));
-            $account->setLastSyncAt(new \DateTimeImmutable('-1 day'));
+            $account->updateTokenExpiration((new \DateTimeImmutable())->modify('+30 days'));
+            $account->markLastSyncAt(new \DateTimeImmutable('-1 day'));
             $account->setScopes('fitness.activity.read fitness.body.read');
             $manager->persist($account);
         }
@@ -219,8 +220,8 @@ class AllEntitiesFixtures extends Fixture implements DependentFixtureInterface, 
             $accompagnement->setDateFin((new \DateTime())->modify('+' . (20 + $index) . ' days'));
             $accompagnement->setTypeAccompagnement('global');
             $accompagnement->setStatut('en_cours');
-            $accompagnement->setCreatedAt(new \DateTime());
-            $accompagnement->setUpdatedAt(new \DateTime());
+            $accompagnement->forceCreatedAt(new \DateTime());
+            $accompagnement->forceUpdatedAt(new \DateTime());
             $manager->persist($accompagnement);
         }
 
@@ -278,8 +279,8 @@ class AllEntitiesFixtures extends Fixture implements DependentFixtureInterface, 
             $ex->setDureMinutes(40);
             $ex->setNiveau('modere');
             $ex->setObjectifs('Améliorer endurance et récupération.');
-            $ex->setCreatedAt(new \DateTime());
-            $ex->setUpdatedAt(new \DateTime());
+            $ex->forceCreatedAt(new \DateTime());
+            $ex->forceUpdatedAt(new \DateTime());
             $manager->persist($ex);
         }
     }
@@ -301,8 +302,8 @@ class AllEntitiesFixtures extends Fixture implements DependentFixtureInterface, 
             $diet->setObjectif('Stabilité métabolique');
             $diet->setRestrictions('Limiter sucres rapides et sodas.');
             $diet->setCaloriesJour(1900 + ($index % 4) * 120);
-            $diet->setCreatedAt(new \DateTime());
-            $diet->setUpdatedAt(new \DateTime());
+            $diet->forceCreatedAt(new \DateTime());
+            $diet->forceUpdatedAt(new \DateTime());
             $manager->persist($diet);
         }
     }
@@ -345,8 +346,8 @@ class AllEntitiesFixtures extends Fixture implements DependentFixtureInterface, 
             $rapport->setLaboratoire('Laboratoire Central');
             $rapport->setResultats('Résultats dans les intervalles de référence, contrôle recommandé dans 3 mois.');
             $rapport->setFichierPath('/documents/analyses/rapport-' . ($index + 1) . '.pdf');
-            $rapport->setCreatedAt(new \DateTime());
-            $rapport->setUpdatedAt(new \DateTime());
+            $rapport->forceCreatedAt(new \DateTime());
+            $rapport->forceUpdatedAt(new \DateTime());
             $manager->persist($rapport);
         }
     }
@@ -367,8 +368,8 @@ class AllEntitiesFixtures extends Fixture implements DependentFixtureInterface, 
             $rapport->setObservations('Aucune alerte majeure. Revoir dans 4 semaines.');
             $rapport->setDateRapport((new \DateTime())->modify('-' . (2 + $index) . ' days'));
             $rapport->setFichierPath('/documents/rapports/medical-' . ($index + 1) . '.pdf');
-            $rapport->setCreatedAt(new \DateTime());
-            $rapport->setUpdatedAt(new \DateTime());
+            $rapport->forceCreatedAt(new \DateTime());
+            $rapport->forceUpdatedAt(new \DateTime());
             $manager->persist($rapport);
         }
     }
@@ -387,8 +388,8 @@ class AllEntitiesFixtures extends Fixture implements DependentFixtureInterface, 
             $partage->setTitre('Partage analyse #' . ($index + 1));
             $partage->setDescription('Résultats transmis pour avis médical.');
             $partage->setFichierUrl('/documents/analyses/shared-' . ($index + 1) . '.pdf');
-            $partage->setDatePartage((new \DateTime())->modify('-' . ($index % 5) . ' day'));
-            $partage->setCreatedAt(new \DateTime());
+            $partage->markSharedAt((new \DateTime())->modify('-' . ($index % 5) . ' day'));
+            $partage->forceCreatedAt(new \DateTime());
             $manager->persist($partage);
         }
 
@@ -408,8 +409,8 @@ class AllEntitiesFixtures extends Fixture implements DependentFixtureInterface, 
             $rep->setPartage($partage);
             $rep->setMedecin($medecins[$index % count($medecins)]);
             $rep->setReponse('Analyse reçue. Ajustement léger recommandé et contrôle dans 2 semaines.');
-            $rep->setDateReponse(new \DateTime('-' . ($index % 3) . ' day'));
-            $rep->setCreatedAt(new \DateTime());
+            $rep->markResponseDate(new \DateTime('-' . ($index % 3) . ' day'));
+            $rep->forceCreatedAt(new \DateTime());
             $manager->persist($rep);
         }
     }
@@ -428,8 +429,8 @@ class AllEntitiesFixtures extends Fixture implements DependentFixtureInterface, 
             $rm->setQuestion('Comment prendre ce médicament en toute sécurité ?');
             $rm->setReponse('Respecter la posologie indiquée et éviter l’automédication prolongée.');
             $rm->setStatut('repondu');
-            $rm->setDateQuestion(new \DateTime('-' . ($i + 1) . ' days'));
-            $rm->setDateReponse(new \DateTime('-' . max(0, $i) . ' days'));
+            $rm->markQuestionDate(new \DateTime('-' . ($i + 1) . ' days'));
+            $rm->markResponseDate(new \DateTime('-' . max(0, $i) . ' days'));
             $manager->persist($rm);
         }
     }
@@ -477,7 +478,7 @@ class AllEntitiesFixtures extends Fixture implements DependentFixtureInterface, 
 
             $access = new DocumentAccess($document, $recipient);
             $access->setPermission($index % 2 === 0 ? 'view' : 'download');
-            $access->setExpiresAt((new \DateTimeImmutable())->modify('+20 days'));
+            $access->expireAt((new \DateTimeImmutable())->modify('+20 days'));
             $access->setAccessCount($index % 3);
             $manager->persist($access);
         }
@@ -507,8 +508,8 @@ class AllEntitiesFixtures extends Fixture implements DependentFixtureInterface, 
             $entry->setPas(7000 + ($index * 150));
             $entry->setCalories(2000 + ($index * 15));
             $entry->setDureeActiviteMinutes(35);
-            $entry->setSourceDonnees('manuel');
-            $entry->setDate(new \DateTime('-1 day'));
+            $entry->setSourceDonnees(SanteDataSource::MANUEL);
+            $entry->recordDate(new \DateTime('-1 day'));
             $manager->persist($entry);
         }
     }
@@ -544,7 +545,7 @@ class AllEntitiesFixtures extends Fixture implements DependentFixtureInterface, 
             $tele->setRecipient($medecins[$i % count($medecins)]->getUser());
             $tele->setRoomName('tc-fallback-' . ($i + 1));
             $tele->setDescription('Téléconsultation de fallback pour seed complet.');
-            $tele->setScheduledAt((new \DateTimeImmutable())->modify('+' . ($i + 1) . ' day'));
+            $tele->scheduleAt((new \DateTimeImmutable())->modify('+' . ($i + 1) . ' day'));
             $tele->setStatus('pending');
             $tele->setType('general');
             $manager->persist($tele);
@@ -608,8 +609,8 @@ class AllEntitiesFixtures extends Fixture implements DependentFixtureInterface, 
             $comment->setCommentaire('Commentaire de démonstration pour peupler les entités sociales.');
             $comment->setNote(3 + ($i % 3));
             $comment->setStatut('publie');
-            $comment->setCreatedAt((new \DateTime())->modify('-' . ($i % 4) . ' day'));
-            $comment->setUpdatedAt(new \DateTime());
+            $comment->forceCreatedAt((new \DateTime())->modify('-' . ($i % 4) . ' day'));
+            $comment->forceUpdatedAt(new \DateTime());
             $manager->persist($comment);
         }
     }
@@ -630,7 +631,7 @@ class AllEntitiesFixtures extends Fixture implements DependentFixtureInterface, 
             $like = new Like();
             $like->setUser($users[$i]);
             $like->setContenu($contenus[$i % count($contenus)]);
-            $like->setCreatedAt((new \DateTime())->modify('-' . ($i % 2) . ' day'));
+            $like->forceCreatedAt((new \DateTime())->modify('-' . ($i % 2) . ' day'));
             $manager->persist($like);
         }
     }
@@ -661,7 +662,7 @@ class AllEntitiesFixtures extends Fixture implements DependentFixtureInterface, 
             $reservation->setPrixUnitaire('8.50');
             $reservation->setPrixTotal((string) ((1 + ($i % 3)) * 8.5));
             $reservation->setStatut('en_attente');
-            $reservation->setExpiresAt((new \DateTime())->modify('+2 days'));
+            $reservation->expireAt((new \DateTime())->modify('+2 days'));
             $manager->persist($reservation);
         }
 

@@ -68,7 +68,7 @@ class ArticleScoreRepository extends ServiceEntityRepository
 
         $articleScore->setScoreArticle($score);
         $articleScore->setNbCommentaires($count);
-        $articleScore->setUpdatedAt(new \DateTime());
+        $articleScore->forceUpdatedAt(new \DateTime());
 
         if ($flush) {
             $em->flush();

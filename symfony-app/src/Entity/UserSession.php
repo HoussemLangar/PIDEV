@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Doctrine\Id\ManualIntId;
 use App\Repository\UserSessionRepository;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -10,7 +11,6 @@ use Doctrine\ORM\Mapping as ORM;
 class UserSession
 {
     #[ORM\Id]
-    #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
     private ?int $id = null;
 
@@ -30,17 +30,18 @@ class UserSession
     #[ORM\Column(type: 'string', length: 64, nullable: true)]
     private ?string $country = null;
 
-    #[ORM\Column(type: 'datetime_immutable')]
+    #[ORM\Column(type: 'datetimetz_immutable')]
     private \DateTimeImmutable $createdAt;
 
-    #[ORM\Column(type: 'datetime_immutable')]
+    #[ORM\Column(type: 'datetimetz_immutable')]
     private \DateTimeImmutable $lastActivityAt;
 
-    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    #[ORM\Column(type: 'datetimetz_immutable', nullable: true)]
     private ?\DateTimeImmutable $revokedAt = null;
 
     public function __construct()
     {
+        $this->id = ManualIntId::generate();
         $now = new \DateTimeImmutable();
         $this->createdAt = $now;
         $this->lastActivityAt = $now;
@@ -64,13 +65,13 @@ class UserSession
     public function setCountry(?string $country): void { $this->country = $country; }
 
     public function getCreatedAt(): \DateTimeImmutable { return $this->createdAt; }
-    public function setCreatedAt(\DateTimeImmutable $createdAt): void { $this->createdAt = $createdAt; }
+    public function forceCreatedAt(\DateTimeImmutable $createdAt): void { $this->createdAt = $createdAt; }
 
     public function getLastActivityAt(): \DateTimeImmutable { return $this->lastActivityAt; }
-    public function setLastActivityAt(\DateTimeImmutable $lastActivityAt): void { $this->lastActivityAt = $lastActivityAt; }
+    public function markLastActivityAt(\DateTimeImmutable $lastActivityAt): void { $this->lastActivityAt = $lastActivityAt; }
 
     public function getRevokedAt(): ?\DateTimeImmutable { return $this->revokedAt; }
-    public function setRevokedAt(?\DateTimeImmutable $revokedAt): void { $this->revokedAt = $revokedAt; }
+    public function markRevokedAt(?\DateTimeImmutable $revokedAt): void { $this->revokedAt = $revokedAt; }
 
     public function isRevoked(): bool { return $this->revokedAt !== null; }
 }

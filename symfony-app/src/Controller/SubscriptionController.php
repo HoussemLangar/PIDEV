@@ -78,8 +78,8 @@ class SubscriptionController extends AbstractController
                 $user->setRole('ROLE_USER');
                 $user->setSubscriptionStatus('EXPIRED');
                 $user->setSubscriptionType(null);
-                $user->setSubscriptionEndAt(null);
-                $user->setUpdatedAt(new \DateTimeImmutable());
+                $user->defineSubscriptionEndAt(null);
+                $user->forceUpdatedAt(new \DateTimeImmutable());
 
                 $em->flush();
 
@@ -130,8 +130,8 @@ class SubscriptionController extends AbstractController
 
         $user->setSubscriptionStatus('SKIPPED');
         $user->setSubscriptionType(null);
-        $user->setSubscriptionEndAt(null);
-        $user->setUpdatedAt(new \DateTimeImmutable());
+        $user->defineSubscriptionEndAt(null);
+        $user->forceUpdatedAt(new \DateTimeImmutable());
 
         $em->flush();
 
@@ -452,8 +452,8 @@ class SubscriptionController extends AbstractController
             $user->setRole($type);
             $user->setSubscriptionStatus('ACTIVE');
             $user->setSubscriptionType($type);
-            $user->setSubscriptionEndAt((new \DateTimeImmutable())->modify('+1 month'));
-            $user->setUpdatedAt(new \DateTimeImmutable());
+            $user->defineSubscriptionEndAt((new \DateTimeImmutable())->modify('+1 month'));
+            $user->forceUpdatedAt(new \DateTimeImmutable());
 
             $this->ensureRoleEntity($user, $type, $em);
         }
@@ -541,8 +541,8 @@ class SubscriptionController extends AbstractController
         $user->setRole('ROLE_USER');
         $user->setSubscriptionStatus('EXPIRED');
         $user->setSubscriptionType(null);
-        $user->setSubscriptionEndAt(null);
-        $user->setUpdatedAt(new \DateTimeImmutable());
+        $user->defineSubscriptionEndAt(null);
+        $user->forceUpdatedAt(new \DateTimeImmutable());
 
         $em->flush();
 

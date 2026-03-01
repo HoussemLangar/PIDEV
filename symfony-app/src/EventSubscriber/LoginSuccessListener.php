@@ -113,7 +113,7 @@ class LoginSuccessListener
             $existing->setIpAddress($ip ?: null);
             $existing->setUserAgent($userAgent ?: null);
             $existing->setCountry($country);
-            $existing->setLastActivityAt(new \DateTimeImmutable());
+            $existing->markLastActivityAt(new \DateTimeImmutable());
             $this->em->persist($existing);
             $this->em->flush();
         }

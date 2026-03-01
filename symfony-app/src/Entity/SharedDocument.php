@@ -42,7 +42,7 @@ class SharedDocument
     #[Assert\Length(max: 2000, maxMessage: "La description ne peut pas dépasser {{ limit }} caractères")]
     private ?string $description = null;
 
-    #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
+    #[ORM\Column(type: Types::DATETIMETZ_IMMUTABLE)]
     private \DateTimeImmutable $uploadedAt;
 
     #[ORM\Column(type: 'string', length: 50)]

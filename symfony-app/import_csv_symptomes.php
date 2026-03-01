@@ -43,8 +43,6 @@ while (($data = fgetcsv($handle, 1000, ',')) !== false) {
                 $symptome = new SymptomeListe();
                 $symptome->setNom($nom);
                 $symptome->setCategorie($categorie ?: null);
-                $symptome->setCreatedAt(new \DateTime());
-
                 $entityManager->persist($symptome);
                 $imported++;
             } catch (Exception $e) {

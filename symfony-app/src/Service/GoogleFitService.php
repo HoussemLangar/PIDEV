@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Entity\GoogleFitAccount;
 use App\Entity\SanteQuotidienne;
+use App\Enum\SanteDataSource;
 use App\Repository\GoogleFitAccountRepository;
 use App\Repository\SanteQuotidienneRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -105,12 +106,12 @@ class GoogleFitService
             }
 
             $source = $entry->getSourceDonnees();
-            if ($source === 'google_fit' || $source === 'manuel') {
+            if ($source === SanteDataSource::GOOGLE_FIT || $source === SanteDataSource::MANUEL) {
                 $entry->setPas($steps);
                 $entry->setCalories(round($calories, 2));
                 $entry->setDureeActiviteMinutes($activeMinutes);
-                if ($source === 'manuel' && ($steps || $calories || $activeMinutes)) {
-                    $entry->setSourceDonnees('google_fit');
+                if ($source === SanteDataSource::MANUEL && ($steps || $calories || $activeMinutes)) {
+                    $entry->setSourceDonnees(SanteDataSource::GOOGLE_FIT);
                 }
             }
 
@@ -118,7 +119,7 @@ class GoogleFitService
             $synced++;
         }
 
-        $account->setLastSyncAt(new \DateTimeImmutable());
+        $account->markLastSyncAt(new \DateTimeImmutable());
         $this->em->persist($account);
         $this->em->flush();
 
@@ -146,7 +147,7 @@ class GoogleFitService
             $account->setRefreshToken($newToken->getRefreshToken() ?: $refreshToken);
             $expires = $newToken->getExpires();
             if ($expires) {
-                $account->setTokenExpiration((new \DateTimeImmutable())->setTimestamp($expires));
+                $account->updateTokenExpiration((new \DateTimeImmutable())->setTimestamp($expires));
             }
             $this->googleFitAccountRepository->save($account);
         }

@@ -64,7 +64,7 @@ class UserSessionSubscriber
             $sessionEntity->setSessionId($sessionId);
         }
 
-        $sessionEntity->setLastActivityAt(new \DateTimeImmutable());
+        $sessionEntity->markLastActivityAt(new \DateTimeImmutable());
         $this->em->persist($sessionEntity);
         $this->em->flush();
     }

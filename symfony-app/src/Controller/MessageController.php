@@ -89,7 +89,7 @@ class MessageController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $this->em->persist($message);
-            $conversation->setLastMessageAt(new \DateTimeImmutable());
+            $conversation->touchLastMessageAt(new \DateTimeImmutable());
             $this->em->flush();
             $this->messageRealtimePublisher->publishNewMessage($message);
 
@@ -169,7 +169,7 @@ class MessageController extends AbstractController
         try {
             $message = new Message($conversation, $sender, $recipient, $data['content']);
             $this->em->persist($message);
-            $conversation->setLastMessageAt(new \DateTimeImmutable());
+            $conversation->touchLastMessageAt(new \DateTimeImmutable());
             $this->em->flush();
             $this->messageRealtimePublisher->publishNewMessage($message);
 
@@ -196,17 +196,19 @@ class MessageController extends AbstractController
         $user = $this->getUser();
         assert($user instanceof User);
 
-        $conversations = $this->conversationRepository->findUserConversations($user);
-        $unreadCount   = $this->conversationRepository->getUnreadCount($user);
+        $conversations = $this->conversationRepository->findUserConversationSummaries($user);
+        $unreadCount = $this->messageRepository->countUnreadForUser($user);
 
-        $data = array_map(function (Conversation $conv) use ($user) {
-            $other = $conv->getOtherUser($user);
+        $data = array_map(function (array $conv) {
+            $avatarName = urlencode(($conv['otherNom'] ?? '') . '+' . ($conv['otherPrenom'] ?? ''));
             return [
-                'id'              => $conv->getId(),
-                'otherUserId'     => $other->getId(),
-                'otherUserName'   => $other->getPrenom() . ' ' . $other->getNom(),
-                'otherUserAvatar' => $other->getAvatarDataUri() ?: ('https://ui-avatars.com/api/?name=' . urlencode($other->getNom() . '+' . $other->getPrenom()) . '&background=0D8ABC&color=fff&size=40'),
-                'lastMessageAt'   => $conv->getLastMessageAt()?->format('Y-m-d H:i:s'),
+                'id' => (int) $conv['id'],
+                'otherUserId' => (int) $conv['otherUserId'],
+                'otherUserName' => trim(($conv['otherPrenom'] ?? '') . ' ' . ($conv['otherNom'] ?? '')),
+                'otherUserAvatar' => 'https://ui-avatars.com/api/?name=' . $avatarName . '&background=0D8ABC&color=fff&size=40',
+                'lastMessageAt' => isset($conv['lastMessageAt']) && $conv['lastMessageAt'] instanceof \DateTimeInterface
+                    ? $conv['lastMessageAt']->format('Y-m-d H:i:s')
+                    : null,
             ];
         }, $conversations);
 

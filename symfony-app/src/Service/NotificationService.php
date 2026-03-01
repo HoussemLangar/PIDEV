@@ -32,7 +32,7 @@ class NotificationService
         $notification->setType($type);
         $notification->setLien($link);
         $notification->setPrioritee($priority);
-        $notification->setDateEnvoi(new \DateTime());
+        $notification->scheduleEnvoiAt(new \DateTime());
 
         $this->em->persist($notification);
         $this->em->flush();

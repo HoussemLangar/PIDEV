@@ -171,7 +171,7 @@ class ContentController extends AbstractController
             $existingContenu = $isEdit ? $contenu->getContenu() : null;
             
             $contenu->setStatut('en_attente');
-            $contenu->setDatePublication(null);
+            $contenu->schedulePublicationAt(null);
 
             $type = $contenu->getType();
             

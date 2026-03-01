@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Entity\User;
 use App\Entity\UserScoreHistory;
+use App\Enum\UserScoreSnapshotType;
 use App\Repository\AbonnementRepository;
 use App\Repository\UserScoreHistoryRepository;
 use App\Repository\UserSessionRepository;
@@ -153,10 +154,10 @@ class UserAiScoreService
         $currentEnd = $user->getSubscriptionEndAt();
         $baseDate = ($currentEnd !== null && $currentEnd > $now) ? $currentEnd : $now;
 
-        $user->setAiFreeMonthGrantedAt($now);
+        $user->markAiFreeMonthGrantedAt($now);
         $user->setSubscriptionStatus('ACTIVE');
-        $user->setSubscriptionEndAt($baseDate->modify('+1 month'));
-        $user->setUpdatedAt($now);
+        $user->defineSubscriptionEndAt($baseDate->modify('+1 month'));
+        $user->forceUpdatedAt($now);
 
         return true;
     }
@@ -176,7 +177,7 @@ class UserAiScoreService
         $history->setSeniorityScore($breakdown['seniority']);
         $history->setRuleComplianceScore($breakdown['ruleCompliance']);
         $history->setSanctionsHistoryScore($breakdown['sanctionsHistory']);
-        $history->setSnapshotType('daily');
+        $history->setSnapshotType(UserScoreSnapshotType::DAILY);
 
         $this->entityManager->persist($history);
 

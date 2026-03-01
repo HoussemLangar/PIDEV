@@ -81,7 +81,7 @@ class MessageThread
         $message = new Message($conversation, $user, $recipient, $content);
 
         $this->em->persist($message);
-        $conversation->setLastMessageAt(new \DateTimeImmutable());
+        $conversation->touchLastMessageAt(new \DateTimeImmutable());
         $this->em->flush();
 
         $this->publisher->publishNewMessage($message);

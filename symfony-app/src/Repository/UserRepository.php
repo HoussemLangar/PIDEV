@@ -65,7 +65,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
     {
         return $this->createQueryBuilder('u')
             ->andWhere('u.email = :email')
-            ->andWhere('u.deletedAt IS NULL')
+            ->andWhere('u.removedAt IS NULL')
             ->setParameter('email', $email)
             ->getQuery()
             ->getOneOrNullResult();
@@ -78,7 +78,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
     {
         return $this->createQueryBuilder('u')
             ->andWhere('u.username = :username')
-            ->andWhere('u.deletedAt IS NULL')
+            ->andWhere('u.removedAt IS NULL')
             ->setParameter('username', $username)
             ->getQuery()
             ->getOneOrNullResult();
@@ -91,7 +91,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
     {
         return $this->createQueryBuilder('u')
             ->andWhere('u.role = :role')
-            ->andWhere('u.deletedAt IS NULL')
+            ->andWhere('u.removedAt IS NULL')
             ->setParameter('role', $role)
             ->orderBy('u.createdAt', 'DESC')
             ->getQuery()
@@ -104,7 +104,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
     public function findRecentUsers(int $limit = 10): array
     {
         return $this->createQueryBuilder('u')
-            ->andWhere('u.deletedAt IS NULL')
+            ->andWhere('u.removedAt IS NULL')
             ->orderBy('u.createdAt', 'DESC')
             ->setMaxResults($limit)
             ->getQuery()
@@ -119,7 +119,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         return $this->createQueryBuilder('u')
             ->select('COUNT(u.id)')
             ->andWhere('u.role = :role')
-            ->andWhere('u.deletedAt IS NULL')
+            ->andWhere('u.removedAt IS NULL')
             ->setParameter('role', $role)
             ->getQuery()
             ->getSingleScalarResult();
@@ -145,7 +145,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
     {
         return $this->createQueryBuilder('u')
             ->andWhere('u.nom LIKE :search OR u.prenom LIKE :search OR u.username LIKE :search')
-            ->andWhere('u.deletedAt IS NULL')
+            ->andWhere('u.removedAt IS NULL')
             ->setParameter('search', '%' . $searchTerm . '%')
             ->orderBy('u.nom', 'ASC')
             ->getQuery()
@@ -160,7 +160,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
     {
         return $this->createQueryBuilder('u')
             ->andWhere('u.role = :role')
-            ->andWhere('u.deletedAt IS NULL')
+            ->andWhere('u.removedAt IS NULL')
             ->setParameter('role', $role)
             ->orderBy('u.nom', 'ASC')
             ->getQuery()
@@ -174,7 +174,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
     {
         return $this->createQueryBuilder('u')
             ->andWhere('u.email = :identifier')
-            ->andWhere('u.deletedAt IS NULL')
+            ->andWhere('u.removedAt IS NULL')
             ->setParameter('identifier', $identifier)
             ->getQuery()
             ->getOneOrNullResult();
@@ -183,7 +183,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
     public function findPendingApprovals(): array
     {
         return $this->createQueryBuilder('u')
-            ->andWhere('u.deletedAt IS NULL')
+            ->andWhere('u.removedAt IS NULL')
             ->andWhere('u.adminApproved = false')
             ->orderBy('u.createdAt', 'ASC')
             ->getQuery()
@@ -202,7 +202,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
     public function createValidationQueryBuilder(array $filters): \Doctrine\ORM\QueryBuilder
     {
         $qb = $this->createQueryBuilder('u')
-            ->andWhere('u.deletedAt IS NULL');
+            ->andWhere('u.removedAt IS NULL');
 
         if (!empty($filters['q'])) {
             $qb->andWhere('u.email LIKE :q OR u.nom LIKE :q OR u.prenom LIKE :q')
@@ -228,34 +228,34 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
     {
         $total = (int) $this->createQueryBuilder('u')
             ->select('COUNT(u.id)')
-            ->andWhere('u.deletedAt IS NULL')
+            ->andWhere('u.removedAt IS NULL')
             ->getQuery()
             ->getSingleScalarResult();
 
         $emailVerified = (int) $this->createQueryBuilder('u')
             ->select('COUNT(u.id)')
-            ->andWhere('u.deletedAt IS NULL')
+            ->andWhere('u.removedAt IS NULL')
             ->andWhere('u.emailVerified = true')
             ->getQuery()
             ->getSingleScalarResult();
 
         $emailNotVerified = (int) $this->createQueryBuilder('u')
             ->select('COUNT(u.id)')
-            ->andWhere('u.deletedAt IS NULL')
+            ->andWhere('u.removedAt IS NULL')
             ->andWhere('u.emailVerified = false')
             ->getQuery()
             ->getSingleScalarResult();
 
         $adminApproved = (int) $this->createQueryBuilder('u')
             ->select('COUNT(u.id)')
-            ->andWhere('u.deletedAt IS NULL')
+            ->andWhere('u.removedAt IS NULL')
             ->andWhere('u.adminApproved = true')
             ->getQuery()
             ->getSingleScalarResult();
 
         $adminPending = (int) $this->createQueryBuilder('u')
             ->select('COUNT(u.id)')
-            ->andWhere('u.deletedAt IS NULL')
+            ->andWhere('u.removedAt IS NULL')
             ->andWhere('u.adminApproved = false')
             ->getQuery()
             ->getSingleScalarResult();
@@ -275,9 +275,9 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
 
         $status = $filters['status'] ?? '';
         if ($status === 'deleted') {
-            $qb->andWhere('u.deletedAt IS NOT NULL');
+            $qb->andWhere('u.removedAt IS NOT NULL');
         } else {
-            $qb->andWhere('u.deletedAt IS NULL');
+            $qb->andWhere('u.removedAt IS NULL');
         }
 
         if (!empty($filters['role'])) {
@@ -321,20 +321,20 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
     {
         $total = (int) $this->createQueryBuilder('u')
             ->select('COUNT(u.id)')
-            ->andWhere('u.deletedAt IS NULL')
+            ->andWhere('u.removedAt IS NULL')
             ->getQuery()
             ->getSingleScalarResult();
 
         $active = (int) $this->createQueryBuilder('u')
             ->select('COUNT(u.id)')
-            ->andWhere('u.deletedAt IS NULL')
+            ->andWhere('u.removedAt IS NULL')
             ->andWhere('u.isBanned = false')
             ->getQuery()
             ->getSingleScalarResult();
 
         $banned = (int) $this->createQueryBuilder('u')
             ->select('COUNT(u.id)')
-            ->andWhere('u.deletedAt IS NULL')
+            ->andWhere('u.removedAt IS NULL')
             ->andWhere('u.isBanned = true')
             ->andWhere('u.banUntil IS NULL OR u.banUntil > :now')
             ->setParameter('now', new \DateTimeImmutable())
@@ -343,7 +343,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
 
         $roles = $this->createQueryBuilder('u')
             ->select('u.role as role, COUNT(u.id) as count')
-            ->andWhere('u.deletedAt IS NULL')
+            ->andWhere('u.removedAt IS NULL')
             ->groupBy('u.role')
             ->getQuery()
             ->getResult();
@@ -361,7 +361,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         $since = new \DateTimeImmutable('-' . $days . ' days');
         $rows = $this->createQueryBuilder('u')
             ->select('u.createdAt')
-            ->andWhere('u.deletedAt IS NULL')
+            ->andWhere('u.removedAt IS NULL')
             ->andWhere('u.createdAt >= :since')
             ->setParameter('since', $since)
             ->orderBy('u.createdAt', 'ASC')

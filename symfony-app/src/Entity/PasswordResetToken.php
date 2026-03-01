@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Doctrine\Id\ManualIntId;
 use App\Repository\PasswordResetTokenRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Ignore;
@@ -11,7 +12,6 @@ use Symfony\Component\Serializer\Annotation\Ignore;
 class PasswordResetToken
 {
     #[ORM\Id]
-    #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
     private ?int $id = null;
 
@@ -23,10 +23,10 @@ class PasswordResetToken
     #[Ignore]
     private string $token;
 
-    #[ORM\Column(type: 'datetime_immutable')]
+    #[ORM\Column(type: 'datetimetz_immutable')]
     private \DateTimeImmutable $expiresAt;
 
-    #[ORM\Column(type: 'datetime_immutable')]
+    #[ORM\Column(type: 'datetimetz_immutable')]
     private \DateTimeImmutable $createdAt;
 
     #[ORM\Column(type: 'boolean')]
@@ -34,6 +34,7 @@ class PasswordResetToken
 
     public function __construct()
     {
+        $this->id = ManualIntId::generate();
         $this->createdAt = new \DateTimeImmutable();
         // Token valide pendant 1 heure
         $this->expiresAt = new \DateTimeImmutable('+1 hour');
@@ -72,7 +73,7 @@ class PasswordResetToken
         return $this->expiresAt;
     }
 
-    public function setExpiresAt(\DateTimeImmutable $expiresAt): self
+    public function expireAt(\DateTimeImmutable $expiresAt): self
     {
         $this->expiresAt = $expiresAt;
         return $this;

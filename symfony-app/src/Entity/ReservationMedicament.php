@@ -42,22 +42,22 @@ class ReservationMedicament
     #[ORM\Column(type: 'string', length: 20, options: ['default' => 'en_attente'])]
     private string $statut = 'en_attente';
 
-    #[ORM\Column(type: 'datetime', options: ['default' => 'CURRENT_TIMESTAMP'])]
+    #[ORM\Column(type: 'datetimetz', options: ['default' => 'CURRENT_TIMESTAMP'])]
     private \DateTimeInterface $createdAt;
 
-    #[ORM\Column(type: 'datetime', options: ['default' => 'CURRENT_TIMESTAMP'])]
+    #[ORM\Column(type: 'datetimetz', options: ['default' => 'CURRENT_TIMESTAMP'])]
     private \DateTimeInterface $updatedAt;
 
-    #[ORM\Column(type: 'datetime', nullable: true)]
+    #[ORM\Column(type: 'datetimetz', nullable: true)]
     private ?\DateTimeInterface $expiresAt = null;
 
-    #[ORM\Column(type: 'datetime', nullable: true)]
+    #[ORM\Column(type: 'datetimetz', nullable: true)]
     private ?\DateTimeInterface $confirmedAt = null;
 
-    #[ORM\Column(type: 'datetime', nullable: true)]
+    #[ORM\Column(type: 'datetimetz', nullable: true)]
     private ?\DateTimeInterface $cancelledAt = null;
 
-    #[ORM\Column(type: 'datetime', nullable: true)]
+    #[ORM\Column(type: 'datetimetz', nullable: true)]
     private ?\DateTimeInterface $rejectedAt = null;
 
     public function __construct()
@@ -84,15 +84,15 @@ class ReservationMedicament
     public function getStatut(): string { return $this->statut; }
     public function setStatut(string $statut): void { $this->statut = $statut; }
     public function getCreatedAt(): \DateTimeInterface { return $this->createdAt; }
-    public function setCreatedAt(\DateTimeInterface $createdAt): void { $this->createdAt = $createdAt; }
+    public function forceCreatedAt(\DateTimeInterface $createdAt): void { $this->createdAt = $createdAt; }
     public function getUpdatedAt(): \DateTimeInterface { return $this->updatedAt; }
-    public function setUpdatedAt(\DateTimeInterface $updatedAt): void { $this->updatedAt = $updatedAt; }
+    public function forceUpdatedAt(\DateTimeInterface $updatedAt): void { $this->updatedAt = $updatedAt; }
     public function getExpiresAt(): ?\DateTimeInterface { return $this->expiresAt; }
-    public function setExpiresAt(?\DateTimeInterface $expiresAt): void { $this->expiresAt = $expiresAt; }
+    public function expireAt(?\DateTimeInterface $expiresAt): void { $this->expiresAt = $expiresAt; }
     public function getConfirmedAt(): ?\DateTimeInterface { return $this->confirmedAt; }
-    public function setConfirmedAt(?\DateTimeInterface $confirmedAt): void { $this->confirmedAt = $confirmedAt; }
+    public function confirmAt(?\DateTimeInterface $confirmedAt): void { $this->confirmedAt = $confirmedAt; }
     public function getCancelledAt(): ?\DateTimeInterface { return $this->cancelledAt; }
-    public function setCancelledAt(?\DateTimeInterface $cancelledAt): void { $this->cancelledAt = $cancelledAt; }
+    public function cancelAt(?\DateTimeInterface $cancelledAt): void { $this->cancelledAt = $cancelledAt; }
     public function getRejectedAt(): ?\DateTimeInterface { return $this->rejectedAt; }
-    public function setRejectedAt(?\DateTimeInterface $rejectedAt): void { $this->rejectedAt = $rejectedAt; }
+    public function rejectAt(?\DateTimeInterface $rejectedAt): void { $this->rejectedAt = $rejectedAt; }
 }

@@ -91,7 +91,7 @@ class RiskPredictionService
                 'sante' => $santeFeatures,
                 'symptomes' => $symptomeFeatures,
             ])
-            ->setUpdatedAt(new \DateTimeImmutable());
+            ->forceUpdatedAt(new \DateTimeImmutable());
 
         $this->em->persist($prediction);
         $this->em->flush();

@@ -2,6 +2,8 @@
 
 namespace App\Entity;
 
+use App\Doctrine\Id\ManualIntId;
+use App\Enum\UserScoreSnapshotType;
 use App\Repository\UserScoreHistoryRepository;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -11,7 +13,6 @@ use Doctrine\ORM\Mapping as ORM;
 class UserScoreHistory
 {
     #[ORM\Id]
-    #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
     private ?int $id = null;
 
@@ -34,14 +35,15 @@ class UserScoreHistory
     #[ORM\Column(type: 'smallint')]
     private int $sanctionsHistoryScore = 0;
 
-    #[ORM\Column(type: 'string', length: 50, options: ['default' => 'daily'])]
-    private string $snapshotType = 'daily';
+    #[ORM\Column(type: 'user_score_snapshot_type', length: 50, options: ['default' => 'daily'])]
+    private UserScoreSnapshotType $snapshotType = UserScoreSnapshotType::DAILY;
 
-    #[ORM\Column(type: 'datetime_immutable')]
+    #[ORM\Column(type: 'datetimetz_immutable')]
     private \DateTimeImmutable $createdAt;
 
     public function __construct()
     {
+        $this->id = ManualIntId::generate();
         $this->createdAt = new \DateTimeImmutable();
     }
 
@@ -65,9 +67,9 @@ class UserScoreHistory
     public function getSanctionsHistoryScore(): int { return $this->sanctionsHistoryScore; }
     public function setSanctionsHistoryScore(int $sanctionsHistoryScore): void { $this->sanctionsHistoryScore = $sanctionsHistoryScore; }
 
-    public function getSnapshotType(): string { return $this->snapshotType; }
-    public function setSnapshotType(string $snapshotType): void { $this->snapshotType = $snapshotType; }
+    public function getSnapshotType(): UserScoreSnapshotType { return $this->snapshotType; }
+    public function setSnapshotType(UserScoreSnapshotType $snapshotType): void { $this->snapshotType = $snapshotType; }
 
     public function getCreatedAt(): \DateTimeImmutable { return $this->createdAt; }
-    public function setCreatedAt(\DateTimeImmutable $createdAt): void { $this->createdAt = $createdAt; }
+    public function forceCreatedAt(\DateTimeImmutable $createdAt): void { $this->createdAt = $createdAt; }
 }

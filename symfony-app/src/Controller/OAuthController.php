@@ -105,8 +105,8 @@ class OAuthController extends AbstractController
             $user->setRole('ROLE_USER');
             
             // Dates
-            $user->setCreatedAt(new \DateTimeImmutable());
-            $user->setUpdatedAt(new \DateTimeImmutable());
+            $user->forceCreatedAt(new \DateTimeImmutable());
+            $user->forceUpdatedAt(new \DateTimeImmutable());
             
             // Sauvegarder
             $entityManager->persist($user);

@@ -68,7 +68,7 @@ class GoogleFitController extends AbstractController
 
         $expires = $accessToken->getExpires();
         if ($expires) {
-            $account->setTokenExpiration((new \DateTimeImmutable())->setTimestamp($expires));
+            $account->updateTokenExpiration((new \DateTimeImmutable())->setTimestamp($expires));
         }
 
         $scopeValue = $accessToken->getValues()['scope'] ?? [];
