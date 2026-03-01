@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\PasswordResetTokenRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Ignore;
 
 #[ORM\Entity(repositoryClass: PasswordResetTokenRepository::class)]
 #[ORM\Table(name: 'password_reset_tokens')]
@@ -19,6 +20,7 @@ class PasswordResetToken
     private User $user;
 
     #[ORM\Column(type: 'string', length: 64, unique: true)]
+    #[Ignore]
     private string $token;
 
     #[ORM\Column(type: 'datetime_immutable')]

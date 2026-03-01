@@ -31,7 +31,7 @@ class RecalculateHealthRiskCommand extends Command
         $users = $this->em->getRepository(User::class)->findBy(['role' => 'ROLE_PATIENT']);
         $count = 0;
         foreach ($users as $user) {
-            if (!$user instanceof User || $user->getPatient() === null) {
+            if ($user->getPatient() === null) {
                 continue;
             }
             $this->riskPredictionService->recalculateForUser($user);

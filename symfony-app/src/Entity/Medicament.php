@@ -52,10 +52,10 @@ class Medicament
     #[ORM\Column(type: 'datetime', options: ['default' => 'CURRENT_TIMESTAMP'])]
     private \DateTimeInterface $updatedAt;
 
-    #[ORM\OneToMany(mappedBy: 'medicament', targetEntity: StockPharmacy::class, cascade: ['persist', 'remove'])]
+    #[ORM\OneToMany(mappedBy: 'medicament', targetEntity: StockPharmacy::class, cascade: ['persist'], orphanRemoval: true)]
     private Collection $stockPharmacies;
 
-    #[ORM\OneToMany(mappedBy: 'medicament', targetEntity: ReponseMedicament::class)]
+    #[ORM\OneToMany(mappedBy: 'medicament', targetEntity: ReponseMedicament::class, cascade: ['persist'], orphanRemoval: true)]
     private Collection $reponsesMedicaments;
 
 

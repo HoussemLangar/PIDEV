@@ -16,11 +16,21 @@ final class Version20260208090000 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
-        $this->addSql('ALTER TABLE users ADD email_verification_expires_at DATETIME DEFAULT NULL');
+        $schemaManager = $this->connection->createSchemaManager();
+        $columns = $schemaManager->listTableColumns('users');
+
+        if (!isset($columns['email_verification_expires_at'])) {
+            $this->addSql('ALTER TABLE users ADD email_verification_expires_at DATETIME DEFAULT NULL');
+        }
     }
 
     public function down(Schema $schema): void
     {
-        $this->addSql('ALTER TABLE users DROP email_verification_expires_at');
+        $schemaManager = $this->connection->createSchemaManager();
+        $columns = $schemaManager->listTableColumns('users');
+
+        if (isset($columns['email_verification_expires_at'])) {
+            $this->addSql('ALTER TABLE users DROP email_verification_expires_at');
+        }
     }
 }

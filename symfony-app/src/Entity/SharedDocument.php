@@ -35,8 +35,8 @@ class SharedDocument
     #[ORM\Column(type: 'integer')]
     private int $fileSize;
 
-    #[ORM\Column(type: Types::BLOB)]
-    private $fileContent;
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $fileContent = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     #[Assert\Length(max: 2000, maxMessage: "La description ne peut pas dépasser {{ limit }} caractères")]
@@ -52,7 +52,7 @@ class SharedDocument
     #[ORM\Column(type: 'boolean', options: ['default' => 0], name: 'is_public')]
     private bool $public = false;
 
-    #[ORM\OneToMany(mappedBy: 'document', targetEntity: DocumentAccess::class, cascade: ['persist', 'remove'])]
+    #[ORM\OneToMany(mappedBy: 'document', targetEntity: DocumentAccess::class, cascade: ['persist'], orphanRemoval: true)]
     private Collection $accesses;
 
     public function __construct()
@@ -121,12 +121,12 @@ class SharedDocument
         return $this;
     }
 
-    public function getFileContent()
+    public function getFileContent(): ?string
     {
         return $this->fileContent;
     }
 
-    public function setFileContent($fileContent): self
+    public function setFileContent(?string $fileContent): self
     {
         $this->fileContent = $fileContent;
         return $this;
@@ -187,9 +187,6 @@ class SharedDocument
     public function removeAccess(DocumentAccess $access): self
     {
         if ($this->accesses->removeElement($access)) {
-            if ($access->getDocument() === $this) {
-                $access->setDocument(null);
-            }
         }
         return $this;
     }

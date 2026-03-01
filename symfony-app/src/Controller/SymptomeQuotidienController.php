@@ -530,7 +530,7 @@ class SymptomeQuotidienController extends AbstractController
 
                 if ($param) {
                     $type = $param->getType();
-                    $typeName = $type ? $type->getName() : null;
+                    $typeName = $type instanceof \ReflectionNamedType ? $type->getName() : null;
 
                     // Conversion automatique selon le type attendu
                     $converted = match ($typeName) {

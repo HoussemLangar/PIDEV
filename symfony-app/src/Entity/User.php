@@ -10,6 +10,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Serializer\Annotation\Ignore;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
@@ -56,6 +57,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     private string $email;
 
     #[ORM\Column(type: 'string', length: 255)]
+    #[Ignore]
     private string $password;
 
     #[ORM\Column(type: 'string', length: 100)]
@@ -144,6 +146,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     private bool $mfaEnabled = false;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[Ignore]
     private ?string $googleAuthenticatorSecret = null;
 
     #[ORM\Column(type: 'string', length: 10, options: ['default' => 'light'])]
@@ -152,8 +155,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     #[ORM\Column(type: 'string', length: 5, options: ['default' => 'fr'])]
     private string $locale = 'fr';
 
-    #[ORM\Column(type: 'blob', nullable: true)]
-    private $avatarData = null;
+    #[ORM\Column(type: 'text', nullable: true)]
+    private ?string $avatarData = null;
 
     #[ORM\Column(type: 'string', length: 50, nullable: true)]
     private ?string $avatarMime = null;
@@ -162,6 +165,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     private bool $reminderEnabled = true;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[Ignore]
     private ?string $emailVerificationToken = null;
 
     #[ORM\Column(type: 'datetime_immutable', nullable: true)]
@@ -197,7 +201,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
         type: \DateTimeImmutable::class,
         message: 'La date de création doit être une date valide.'
     )]
-    private \DateTimeInterface $createdAt;
+    private \DateTimeImmutable $createdAt;
 
     #[ORM\Column(type: 'datetime_immutable', options: ['default' => 'CURRENT_TIMESTAMP'])]
     #[Assert\NotBlank(message: 'La date de mise à jour est obligatoire.')]
@@ -209,28 +213,28 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
         propertyPath: 'createdAt',
         message: 'La date de mise à jour ne peut pas être antérieure à la date de création.'
     )]
-    private \DateTimeInterface $updatedAt;
+    private \DateTimeImmutable $updatedAt;
 
     // Relations
-    #[ORM\OneToOne(mappedBy: 'user', targetEntity: Patient::class, cascade: ['persist', 'remove'])]
+    #[ORM\OneToOne(mappedBy: 'user', targetEntity: Patient::class, cascade: ['persist', 'remove'], fetch: 'LAZY')]
     private ?Patient $patient = null;
 
-    #[ORM\OneToOne(mappedBy: 'user', targetEntity: Medecin::class, cascade: ['persist', 'remove'])]
+    #[ORM\OneToOne(mappedBy: 'user', targetEntity: Medecin::class, cascade: ['persist', 'remove'], fetch: 'LAZY')]
     private ?Medecin $medecin = null;
 
-    #[ORM\OneToOne(mappedBy: 'user', targetEntity: Pharmacien::class, cascade: ['persist', 'remove'])]
+    #[ORM\OneToOne(mappedBy: 'user', targetEntity: Pharmacien::class, cascade: ['persist', 'remove'], fetch: 'LAZY')]
     private ?Pharmacien $pharmacien = null;
 
-    #[ORM\OneToOne(mappedBy: 'user', targetEntity: CoachSportif::class, cascade: ['persist', 'remove'])]
+    #[ORM\OneToOne(mappedBy: 'user', targetEntity: CoachSportif::class, cascade: ['persist', 'remove'], fetch: 'LAZY')]
     private ?CoachSportif $coachSportif = null;
 
-    #[ORM\OneToOne(mappedBy: 'user', targetEntity: Nutritionniste::class, cascade: ['persist', 'remove'])]
+    #[ORM\OneToOne(mappedBy: 'user', targetEntity: Nutritionniste::class, cascade: ['persist', 'remove'], fetch: 'LAZY')]
     private ?Nutritionniste $nutritionniste = null;
 
     #[ORM\OneToOne(
         mappedBy: 'user',
         targetEntity: GoogleFitAccount::class,
-        cascade: ['persist', 'remove'],
+        cascade: ['persist'],
         fetch: 'LAZY'
     )]
     private ?GoogleFitAccount $googleFitAccount = null;
@@ -239,21 +243,25 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     #[Assert\Valid]
     private Collection $contenus;
 
-    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Like::class, cascade: ['persist', 'remove'])]
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Like::class, cascade: ['persist'], orphanRemoval: true)]
     #[Assert\Valid]
     private Collection $likes;
 
-    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Commentaire::class, cascade: ['persist', 'remove'])]
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Commentaire::class, cascade: ['persist'], orphanRemoval: true)]
     #[Assert\Valid]
     private Collection $commentaires;
 
-    #[ORM\OneToMany(mappedBy: 'user', targetEntity: ReponseMedicament::class)]
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: ReponseMedicament::class, cascade: ['persist'], orphanRemoval: true)]
     #[Assert\Valid]
     private Collection $reponsesMedicaments;
 
-    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Notification::class, cascade: ['persist', 'remove'])]
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Notification::class, cascade: ['persist'], orphanRemoval: true)]
     #[Assert\Valid]
     private Collection $notifications;
+
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: SanteQuotidienne::class, cascade: ['persist'], orphanRemoval: true)]
+    #[Assert\Valid]
+    private Collection $santeQuotidiennes;
 
     public function __construct()
     {
@@ -264,6 +272,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
         $this->commentaires = new ArrayCollection();
         $this->reponsesMedicaments = new ArrayCollection();
         $this->notifications = new ArrayCollection();
+        $this->santeQuotidiennes = new ArrayCollection();
     }
 
     public function getId(): ?int { return $this->id; }
@@ -323,16 +332,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     public function getLocale(): string { return $this->locale; }
     public function setLocale(string $locale): void { $this->locale = $locale; }
 
-    public function getAvatarData(): ?string
-    {
-        if ($this->avatarData === null) {
-            return null;
-        }
-        if (is_resource($this->avatarData)) {
-            return stream_get_contents($this->avatarData) ?: null;
-        }
-        return $this->avatarData;
-    }
+    public function getAvatarData(): ?string { return $this->avatarData; }
 
     public function setAvatarData(?string $avatarData): void { $this->avatarData = $avatarData; }
 
@@ -401,7 +401,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
     public function setBanUntil(?\DateTimeImmutable $banUntil): void { $this->banUntil = $banUntil; }
 
     public function getDeletedAt(): ?\DateTimeImmutable { return $this->deletedAt; }
-    public function setDeletedAt(?\DateTimeImmutable $deletedAt): void { $this->deletedAt = $deletedAt; }
+    public function softDelete(): void { $this->deletedAt = new \DateTimeImmutable(); }
+    public function restore(): void { $this->deletedAt = null; }
 
     public function isDeleted(): bool { return $this->deletedAt !== null; }
 
@@ -429,11 +430,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TwoFact
         return false;
     }
 
-    public function getCreatedAt(): \DateTimeInterface { return $this->createdAt; }
-    public function setCreatedAt(\DateTimeInterface $createdAt): void { $this->createdAt = $createdAt; }
+    public function getCreatedAt(): \DateTimeImmutable { return $this->createdAt; }
+    public function setCreatedAt(\DateTimeImmutable $createdAt): void { $this->createdAt = $createdAt; }
 
-    public function getUpdatedAt(): \DateTimeInterface { return $this->updatedAt; }
-    public function setUpdatedAt(\DateTimeInterface $updatedAt): void { $this->updatedAt = $updatedAt; }
+    public function getUpdatedAt(): \DateTimeImmutable { return $this->updatedAt; }
+    public function setUpdatedAt(\DateTimeImmutable $updatedAt): void { $this->updatedAt = $updatedAt; }
 
     // Relation getters/setters
     public function getPatient(): ?Patient { return $this->patient; }

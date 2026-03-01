@@ -98,6 +98,11 @@ class AbonnementRepository extends ServiceEntityRepository
             ->getOneOrNullResult();
     }
 
+    public function findByPaymentSessionId(string $paymentSessionId): ?Abonnement
+    {
+        return $this->findOneBy(['paymentSessionId' => $paymentSessionId]);
+    }
+
     public function createFilteredQueryBuilder(array $filters): QueryBuilder
     {
         $qb = $this->createQueryBuilder('a')

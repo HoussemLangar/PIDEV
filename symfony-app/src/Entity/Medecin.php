@@ -50,16 +50,16 @@ class Medecin
     #[ORM\Column(type: 'datetime', options: ['default' => 'CURRENT_TIMESTAMP'])]
     private \DateTimeInterface $updatedAt;
 
-    #[ORM\OneToMany(mappedBy: 'medecin', targetEntity: Disponibilite::class, cascade: ['persist', 'remove'])]
+    #[ORM\OneToMany(mappedBy: 'medecin', targetEntity: Disponibilite::class, cascade: ['persist'], orphanRemoval: true)]
     private Collection $disponibilites;
 
-    #[ORM\OneToMany(mappedBy: 'medecin', targetEntity: RendezVous::class)]
+    #[ORM\OneToMany(mappedBy: 'medecin', targetEntity: RendezVous::class, cascade: ['persist'], orphanRemoval: true)]
     private Collection $rendezVous;
 
     #[ORM\OneToMany(mappedBy: 'medecin', targetEntity: RapportAnalyse::class)]
     private Collection $rapportsAnalyses;
 
-    #[ORM\OneToMany(mappedBy: 'medecin', targetEntity: RapportMedical::class)]
+    #[ORM\OneToMany(mappedBy: 'medecin', targetEntity: RapportMedical::class, cascade: ['persist'], orphanRemoval: true)]
     private Collection $rapportsMedicaux;
 
     public function __construct()

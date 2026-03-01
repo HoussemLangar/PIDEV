@@ -41,6 +41,7 @@ use App\Enum\NiveauActivite;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Bundle\FixturesBundle\FixtureGroupInterface;
 use Doctrine\Common\DataFixtures\DependentFixtureInterface;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ObjectManager;
 
 class AllEntitiesFixtures extends Fixture implements DependentFixtureInterface, FixtureGroupInterface
@@ -97,7 +98,7 @@ class AllEntitiesFixtures extends Fixture implements DependentFixtureInterface, 
 
     private function seedCliniques(ObjectManager $manager): void
     {
-        if ($manager->getRepository(Clinique::class)->count([]) > 0) {
+        if ($manager->getRepository(Clinique::class)->findOneBy([]) !== null) {
             return;
         }
 
@@ -121,7 +122,7 @@ class AllEntitiesFixtures extends Fixture implements DependentFixtureInterface, 
     private function seedPharmacies(ObjectManager $manager, array $pharmaciens): array
     {
         $repo = $manager->getRepository(Pharmacy::class);
-        if ($repo->count([]) > 0) {
+        if ($repo->findOneBy([]) !== null) {
             return $repo->findAll();
         }
 
@@ -149,7 +150,7 @@ class AllEntitiesFixtures extends Fixture implements DependentFixtureInterface, 
 
     private function seedGoogleFitAccounts(ObjectManager $manager, array $users): void
     {
-        if ($manager->getRepository(GoogleFitAccount::class)->count([]) > 0) {
+        if ($manager->getRepository(GoogleFitAccount::class)->findOneBy([]) !== null) {
             return;
         }
 
@@ -170,7 +171,7 @@ class AllEntitiesFixtures extends Fixture implements DependentFixtureInterface, 
     private function seedMedicaments(ObjectManager $manager): array
     {
         $repo = $manager->getRepository(Medicament::class);
-        if ($repo->count([]) > 0) {
+        if ($repo->findOneBy([]) !== null) {
             return $repo->findAll();
         }
 
@@ -205,7 +206,7 @@ class AllEntitiesFixtures extends Fixture implements DependentFixtureInterface, 
     private function seedAccompagnements(ObjectManager $manager, array $abonnements): array
     {
         $repo = $manager->getRepository(Accompagnement::class);
-        if ($repo->count([]) > 0) {
+        if ($repo->findOneBy([]) !== null) {
             return $repo->findAll();
         }
 
@@ -231,7 +232,7 @@ class AllEntitiesFixtures extends Fixture implements DependentFixtureInterface, 
     private function seedAccompanimentPlans(ObjectManager $manager, array $patients, array $nutritionnistes): array
     {
         $repo = $manager->getRepository(AccompanimentPlan::class);
-        if ($repo->count([]) > 0) {
+        if ($repo->findOneBy([]) !== null) {
             return $repo->findAll();
         }
 
@@ -262,7 +263,7 @@ class AllEntitiesFixtures extends Fixture implements DependentFixtureInterface, 
 
     private function seedPlansExercices(ObjectManager $manager, array $patients, array $accompagnements, array $plans): void
     {
-        if ($manager->getRepository(PlanExercice::class)->count([]) > 0 || count($patients) === 0) {
+        if ($manager->getRepository(PlanExercice::class)->findOneBy([]) !== null || count($patients) === 0) {
             return;
         }
 
@@ -285,7 +286,7 @@ class AllEntitiesFixtures extends Fixture implements DependentFixtureInterface, 
 
     private function seedPlansRegimes(ObjectManager $manager, array $patients, array $accompagnements, array $plans): void
     {
-        if ($manager->getRepository(PlanRegime::class)->count([]) > 0 || count($patients) === 0) {
+        if ($manager->getRepository(PlanRegime::class)->findOneBy([]) !== null || count($patients) === 0) {
             return;
         }
 
@@ -308,7 +309,7 @@ class AllEntitiesFixtures extends Fixture implements DependentFixtureInterface, 
 
     private function seedJournalItems(ObjectManager $manager, array $patients): void
     {
-        if ($manager->getRepository(JournalItem::class)->count([]) > 0 || count($patients) === 0) {
+        if ($manager->getRepository(JournalItem::class)->findOneBy([]) !== null || count($patients) === 0) {
             return;
         }
 
@@ -331,7 +332,7 @@ class AllEntitiesFixtures extends Fixture implements DependentFixtureInterface, 
 
     private function seedRapportsAnalyses(ObjectManager $manager, array $patients, array $medecins): void
     {
-        if ($manager->getRepository(RapportAnalyse::class)->count([]) > 0 || count($patients) === 0) {
+        if ($manager->getRepository(RapportAnalyse::class)->findOneBy([]) !== null || count($patients) === 0) {
             return;
         }
 
@@ -352,7 +353,7 @@ class AllEntitiesFixtures extends Fixture implements DependentFixtureInterface, 
 
     private function seedRapportsMedicaux(ObjectManager $manager, array $patients, array $medecins): void
     {
-        if ($manager->getRepository(RapportMedical::class)->count([]) > 0 || count($patients) === 0 || count($medecins) === 0) {
+        if ($manager->getRepository(RapportMedical::class)->findOneBy([]) !== null || count($patients) === 0 || count($medecins) === 0) {
             return;
         }
 
@@ -375,7 +376,7 @@ class AllEntitiesFixtures extends Fixture implements DependentFixtureInterface, 
     private function seedPartagesAnalyses(ObjectManager $manager, array $patients, array $accompagnements): array
     {
         $repo = $manager->getRepository(PartageAnalyse::class);
-        if ($repo->count([]) > 0) {
+        if ($repo->findOneBy([]) !== null) {
             return $repo->findAll();
         }
 
@@ -398,7 +399,7 @@ class AllEntitiesFixtures extends Fixture implements DependentFixtureInterface, 
 
     private function seedReponsesMedecin(ObjectManager $manager, array $partages, array $medecins): void
     {
-        if ($manager->getRepository(ReponseMedecin::class)->count([]) > 0 || count($partages) === 0 || count($medecins) === 0) {
+        if ($manager->getRepository(ReponseMedecin::class)->findOneBy([]) !== null || count($partages) === 0 || count($medecins) === 0) {
             return;
         }
 
@@ -415,7 +416,7 @@ class AllEntitiesFixtures extends Fixture implements DependentFixtureInterface, 
 
     private function seedReponsesMedicaments(ObjectManager $manager, array $users, array $medicaments): void
     {
-        if ($manager->getRepository(ReponseMedicament::class)->count([]) > 0 || count($users) === 0 || count($medicaments) === 0) {
+        if ($manager->getRepository(ReponseMedicament::class)->findOneBy([]) !== null || count($users) === 0 || count($medicaments) === 0) {
             return;
         }
 
@@ -436,7 +437,7 @@ class AllEntitiesFixtures extends Fixture implements DependentFixtureInterface, 
     private function seedSharedDocuments(ObjectManager $manager, array $users): array
     {
         $repo = $manager->getRepository(SharedDocument::class);
-        if ($repo->count([]) > 0) {
+        if ($repo->findOneBy([]) !== null) {
             return $repo->findAll();
         }
 
@@ -464,7 +465,7 @@ class AllEntitiesFixtures extends Fixture implements DependentFixtureInterface, 
 
     private function seedDocumentAccesses(ObjectManager $manager, array $documents, array $users): void
     {
-        if ($manager->getRepository(DocumentAccess::class)->count([]) > 0 || count($documents) === 0 || count($users) < 2) {
+        if ($manager->getRepository(DocumentAccess::class)->findOneBy([]) !== null || count($documents) === 0 || count($users) < 2) {
             return;
         }
 
@@ -484,7 +485,7 @@ class AllEntitiesFixtures extends Fixture implements DependentFixtureInterface, 
 
     private function seedSanteQuotidienneFallback(ObjectManager $manager, array $patients): void
     {
-        if ($manager->getRepository(SanteQuotidienne::class)->count([]) > 0 || count($patients) === 0) {
+        if ($manager->getRepository(SanteQuotidienne::class)->findOneBy([]) !== null || count($patients) === 0) {
             return;
         }
 
@@ -514,7 +515,7 @@ class AllEntitiesFixtures extends Fixture implements DependentFixtureInterface, 
 
     private function seedSymptomesQuotidiensFallback(ObjectManager $manager, array $patients, array $symptomesListe): void
     {
-        if ($manager->getRepository(SymptomeQuotidien::class)->count([]) > 0 || count($patients) === 0 || count($symptomesListe) === 0) {
+        if ($manager->getRepository(SymptomeQuotidien::class)->findOneBy([]) !== null || count($patients) === 0 || count($symptomesListe) === 0) {
             return;
         }
 
@@ -532,7 +533,7 @@ class AllEntitiesFixtures extends Fixture implements DependentFixtureInterface, 
 
     private function seedTeleconsultationsFallback(ObjectManager $manager, array $patients, array $medecins): void
     {
-        if ($manager->getRepository(Teleconsultation::class)->count([]) > 0 || count($patients) === 0 || count($medecins) === 0) {
+        if ($manager->getRepository(Teleconsultation::class)->findOneBy([]) !== null || count($patients) === 0 || count($medecins) === 0) {
             return;
         }
 
@@ -552,7 +553,7 @@ class AllEntitiesFixtures extends Fixture implements DependentFixtureInterface, 
 
     private function seedStockPharmacyFallback(ObjectManager $manager, array $pharmacies, array $medicaments): void
     {
-        if ($manager->getRepository(StockPharmacy::class)->count([]) > 0 || count($pharmacies) === 0 || count($medicaments) === 0) {
+        if ($manager->getRepository(StockPharmacy::class)->findOneBy([]) !== null || count($pharmacies) === 0 || count($medicaments) === 0) {
             return;
         }
 
@@ -569,7 +570,7 @@ class AllEntitiesFixtures extends Fixture implements DependentFixtureInterface, 
 
     private function seedRendezVousFallback(ObjectManager $manager, array $patients, array $medecins): void
     {
-        if ($manager->getRepository(RendezVous::class)->count([]) > 0 || count($patients) === 0 || count($medecins) === 0) {
+        if ($manager->getRepository(RendezVous::class)->findOneBy([]) !== null || count($patients) === 0 || count($medecins) === 0) {
             return;
         }
 
@@ -590,7 +591,7 @@ class AllEntitiesFixtures extends Fixture implements DependentFixtureInterface, 
 
     private function seedCommentairesFallback(ObjectManager $manager, array $users): void
     {
-        if ($manager->getRepository(Commentaire::class)->count([]) > 0 || count($users) === 0) {
+        if ($manager->getRepository(Commentaire::class)->findOneBy([]) !== null || count($users) === 0) {
             return;
         }
 
@@ -615,7 +616,7 @@ class AllEntitiesFixtures extends Fixture implements DependentFixtureInterface, 
 
     private function seedLikesFallback(ObjectManager $manager, array $users): void
     {
-        if ($manager->getRepository(Like::class)->count([]) > 0 || count($users) === 0) {
+        if ($manager->getRepository(Like::class)->findOneBy([]) !== null || count($users) === 0) {
             return;
         }
 
@@ -636,7 +637,7 @@ class AllEntitiesFixtures extends Fixture implements DependentFixtureInterface, 
 
     private function seedReservationsFallback(ObjectManager $manager, array $users, array $pharmacies, array $medicaments): void
     {
-        if ($manager->getRepository(ReservationMedicament::class)->count([]) > 0) {
+        if ($manager->getRepository(ReservationMedicament::class)->findOneBy([]) !== null) {
             return;
         }
 
@@ -669,6 +670,10 @@ class AllEntitiesFixtures extends Fixture implements DependentFixtureInterface, 
 
     private function seedArticleScores(ObjectManager $manager): void
     {
+        if (!$manager instanceof EntityManagerInterface) {
+            return;
+        }
+
         $connection = $manager->getConnection();
         $existing = (int) $connection->fetchOne('SELECT COUNT(*) FROM article_scores');
         if ($existing > 0) {

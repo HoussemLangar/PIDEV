@@ -192,7 +192,7 @@ class AppointmentController extends AbstractController
 
         $items = [];
         $rdvs = $this->rendezVousRepository->createQueryBuilder('r')
-            ->leftJoin('r.patient', 'p')
+            ->innerJoin('r.patient', 'p')
             ->addSelect('p')
             ->andWhere('p.id = :pid')
             ->setParameter('pid', $patient->getId())
@@ -807,7 +807,7 @@ class AppointmentController extends AbstractController
             'جانفي' => 1, 'جانف' => 1,
             'fevrier' => 2, 'février' => 2, 'fev' => 2, 'fév' => 2, 'february' => 2, 'feb' => 2,
             'fivri' => 2, 'fivry' => 2, 'fevri' => 2, 'fivrih' => 2,
-            'fevriy' => 2, 'fivriy' => 2, 'fivry' => 2, 'fefri' => 2, 'febre' => 2,
+            'fevriy' => 2, 'fivriy' => 2, 'fefri' => 2, 'febre' => 2,
             'فيفري' => 2, 'فيفرى' => 2, 'فيفريه' => 2,
             'فيفي'  => 2, 'فيفا'  => 2, 'فيفر' => 2, 'فيف' => 2,
             'mars' => 3, 'march' => 3, 'mar' => 3,

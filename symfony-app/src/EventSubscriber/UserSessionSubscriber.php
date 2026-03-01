@@ -42,7 +42,11 @@ class UserSessionSubscriber
         }
 
         if (!$this->em->isOpen()) {
-            $this->em = $this->registry->resetManager();
+            $resetManager = $this->registry->resetManager();
+            if (!$resetManager instanceof EntityManagerInterface) {
+                return;
+            }
+            $this->em = $resetManager;
         }
 
         $sessionRepository = $this->registry->getRepository(UserSession::class);

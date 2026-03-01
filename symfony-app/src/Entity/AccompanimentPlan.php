@@ -63,10 +63,10 @@ class AccompanimentPlan
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     private \DateTimeImmutable $updatedAt;
 
-    #[ORM\OneToMany(mappedBy: 'plan', targetEntity: PlanExercice::class, cascade: ['persist', 'remove'])]
+    #[ORM\OneToMany(mappedBy: 'plan', targetEntity: PlanExercice::class, cascade: ['persist'])]
     private Collection $exercisePlans;
 
-    #[ORM\OneToMany(mappedBy: 'plan', targetEntity: PlanRegime::class, cascade: ['persist', 'remove'])]
+    #[ORM\OneToMany(mappedBy: 'plan', targetEntity: PlanRegime::class, cascade: ['persist'])]
     private Collection $dietPlans;
 
     public function __construct()

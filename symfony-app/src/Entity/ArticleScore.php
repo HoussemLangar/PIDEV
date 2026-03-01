@@ -15,7 +15,7 @@ class ArticleScore
     #[ORM\JoinColumn(name: 'contenu_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private Contenu $contenu;
 
-    #[ORM\Column(name: 'score_article', type: 'float', options: ['default' => 0])]
+    #[ORM\Column(name: 'score_article', type: 'float')]
     private float $scoreArticle = 0.0;
 
     #[ORM\Column(name: 'nb_commentaires', type: 'integer', options: ['default' => 0])]

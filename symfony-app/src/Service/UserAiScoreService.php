@@ -4,17 +4,22 @@ namespace App\Service;
 
 use App\Entity\User;
 use App\Entity\UserScoreHistory;
+use App\Repository\AbonnementRepository;
 use App\Repository\UserScoreHistoryRepository;
 use App\Repository\UserSessionRepository;
+use Doctrine\ORM\EntityManagerInterface;
 
 class UserAiScoreService
 {
     private const PREMIUM_THRESHOLD = 80;
-    private const FREE_MONTH_THRESHOLD = 95;
+    private const FREE_MONTH_THRESHOLD = 80;
+    private const AI_TOOLS_TYPE = 'AI_TOOLS';
 
     public function __construct(
         private UserSessionRepository $userSessionRepository,
-        private UserScoreHistoryRepository $userScoreHistoryRepository
+        private UserScoreHistoryRepository $userScoreHistoryRepository,
+        private AbonnementRepository $abonnementRepository,
+        private EntityManagerInterface $entityManager
     ) {
     }
 
@@ -89,17 +94,22 @@ class UserAiScoreService
     public function getBenefitsMessage(User $user): string
     {
         $score = $this->calculateScore($user);
+        $aiOfferActive = $this->hasActiveAiOffer($user);
 
-        if ($score >= 85) {
+        if ($aiOfferActive && $score >= 85) {
             return 'Excellent profil : priorité support haute et accès premium IA activé.';
         }
 
+        if ($aiOfferActive && $score >= self::PREMIUM_THRESHOLD) {
+            return 'Très bon profil : offre premium IA active et traitement support prioritaire.';
+        }
+
         if ($score >= self::PREMIUM_THRESHOLD) {
-            return 'Très bon profil : offre premium IA active grâce à votre score et traitement support prioritaire.';
+            return 'Très bon profil : vous êtes éligible à l\'offre IA. Activez un abonnement IA pour en bénéficier.';
         }
 
         if ($score >= 55) {
-            return 'Bon profil : priorité support normale. Continuez votre activité pour atteindre 95/100 et obtenir 1 mois gratuit.';
+            return 'Bon profil : priorité support normale. Continuez votre activité pour atteindre 80/100 et obtenir 1 mois gratuit.';
         }
 
         return 'Profil en progression : augmentez votre activité et le respect des règles pour obtenir des offres premium.';
@@ -107,12 +117,15 @@ class UserAiScoreService
 
     public function getProfileSummary(User $user): array
     {
+        $aiOfferActive = $this->hasActiveAiOffer($user);
+
         return [
             'score' => $this->calculateScore($user),
             'breakdown' => $this->getBreakdown($user),
             'supportPriority' => $this->getSupportPriority($user),
             'supportPriorityLabel' => $this->getSupportPriorityLabel($user),
             'premiumEligible' => $this->isPremiumEligibleForCurrentMonth($user),
+            'aiOfferActive' => $aiOfferActive,
             'benefitsMessage' => $this->getBenefitsMessage($user),
             'premiumThreshold' => self::PREMIUM_THRESHOLD,
             'freeMonthThreshold' => self::FREE_MONTH_THRESHOLD,
@@ -165,7 +178,7 @@ class UserAiScoreService
         $history->setSanctionsHistoryScore($breakdown['sanctionsHistory']);
         $history->setSnapshotType('daily');
 
-        $this->userScoreHistoryRepository->getEntityManager()->persist($history);
+        $this->entityManager->persist($history);
 
         return true;
     }
@@ -287,5 +300,10 @@ class UserAiScoreService
         }
 
         return max(0, $score);
+    }
+
+    private function hasActiveAiOffer(User $user): bool
+    {
+        return $this->abonnementRepository->findActiveForUserAndType($user, self::AI_TOOLS_TYPE) !== null;
     }
 }

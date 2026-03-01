@@ -9,6 +9,7 @@ use KnpU\OAuth2ClientBundle\Security\Authenticator\OAuth2Authenticator;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
@@ -87,10 +88,15 @@ class FacebookAuthenticator extends OAuth2Authenticator implements Authenticatio
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
 {
     // Ajouter un message d'erreur dans la session
-    $request->getSession()->getFlashBag()->add(
-        'error', 
-        'Impossible de se connecter avec Facebook. Veuillez réessayer ou utiliser une autre méthode.'
-    );
+        if ($request->hasSession()) {
+            $session = $request->getSession();
+            if ($session instanceof Session) {
+                $session->getFlashBag()->add(
+                    'error',
+                    'Impossible de se connecter avec Facebook. Veuillez réessayer ou utiliser une autre méthode.'
+                );
+            }
+        }
     
     return new RedirectResponse($this->router->generate('login'));
 }

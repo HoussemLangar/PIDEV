@@ -242,10 +242,10 @@
                 </div>
 
                 <div class="ai-score-benefit">
-                    {% if ai.premiumEligible %}
+                    {% if ai.aiOfferActive %}
                         <strong>Offre active :</strong> vous bénéficiez d'un accès premium IA grâce à votre score.
                     {% else %}
-                            <strong>Offre à débloquer :</strong> atteignez 80/100 ce mois-ci pour activer l'accès premium IA, puis 95/100 pour obtenir 1 mois gratuit.
+                            <strong>Offre non activée :</strong> atteignez 80/100 ce mois-ci pour être éligible puis activez votre abonnement IA pour bénéficier de l'accès premium.
                     {% endif %}
                     <div style="margin-top:6px;">{{ ai.benefitsMessage }}</div>
                 </div>

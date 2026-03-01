@@ -21,10 +21,10 @@ class SanteQuotidienne
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'santeQuotidiennes')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private ?User $user = null;
 
-    #[ORM\Column(type: Types::FLOAT)]
+    #[ORM\Column(type: Types::FLOAT, nullable: true)]
     #[Assert\NotBlank(message: "Le poids est obligatoire")]
     #[Assert\Range(
         min: 0.1,
@@ -33,7 +33,7 @@ class SanteQuotidienne
     )]
     private ?float $poids = null;
 
-    #[ORM\Column(type: Types::FLOAT)]
+    #[ORM\Column(type: Types::FLOAT, nullable: true)]
     #[Assert\NotBlank(message: "La taille est obligatoire")]
     #[Assert\Range(
         min: 0.1,
@@ -66,18 +66,18 @@ class SanteQuotidienne
     )]
     private ?float $sommeil = null;
 
-    #[ORM\Column(type: Types::STRING, length: 20, enumType: NiveauActivite::class, nullable: true)]
-    private ?NiveauActivite $activitePhysique = null;
+    #[ORM\Column(type: Types::STRING, length: 20, nullable: true)]
+    private ?string $activitePhysique = null;
 
-    #[ORM\Column(type: Types::SIMPLE_ARRAY, enumType: Humeur::class)]
+    #[ORM\Column(type: Types::JSON)]
     #[Assert\Count(
         min: 1,
         minMessage: "Veuillez choisir au moins une humeur"
     )]
     private array $humeur = [];
 
-    #[ORM\Column(type: Types::STRING, length: 20, enumType: Alimentation::class, nullable: true)]
-    private ?Alimentation $alimentation = null;
+    #[ORM\Column(type: Types::STRING, length: 20, nullable: true)]
+    private ?string $alimentation = null;
 
     #[ORM\Column(type: Types::FLOAT, nullable: true)]
     #[Assert\Range(
@@ -90,8 +90,8 @@ class SanteQuotidienne
     #[ORM\Column(type: Types::INTEGER, nullable: true)]
     private ?int $pas = null;
 
-    #[ORM\Column(type: Types::FLOAT, nullable: true)]
-    private ?float $calories = null;
+    #[ORM\Column(type: Types::INTEGER, nullable: true)]
+    private ?int $calories = null;
 
     #[ORM\Column(type: Types::INTEGER, nullable: true)]
     private ?int $dureeActiviteMinutes = null;
@@ -99,7 +99,7 @@ class SanteQuotidienne
     #[ORM\Column(type: Types::STRING, length: 20)]
     private string $sourceDonnees = 'manuel';
 
-    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     #[Assert\NotBlank(message: "La date est obligatoire")]
     #[Assert\LessThanOrEqual('today', message: 'Veuillez choisir une date valide (aujourd\'hui ou avant).')]
     private ?\DateTimeInterface $date = null;
@@ -185,12 +185,12 @@ class SanteQuotidienne
 
     public function getActivitePhysique(): ?NiveauActivite
     {
-        return $this->activitePhysique;
+        return $this->activitePhysique !== null ? NiveauActivite::tryFrom($this->activitePhysique) : null;
     }
 
     public function setActivitePhysique(?NiveauActivite $activitePhysique): static
     {
-        $this->activitePhysique = $activitePhysique;
+        $this->activitePhysique = $activitePhysique?->value;
         return $this;
     }
 
@@ -210,12 +210,12 @@ class SanteQuotidienne
 
     public function getAlimentation(): ?Alimentation
     {
-        return $this->alimentation;
+        return $this->alimentation !== null ? Alimentation::tryFrom($this->alimentation) : null;
     }
 
     public function setAlimentation(?Alimentation $alimentation): static
     {
-        $this->alimentation = $alimentation;
+        $this->alimentation = $alimentation?->value;
         return $this;
     }
 
@@ -233,8 +233,8 @@ class SanteQuotidienne
     public function getPas(): ?int { return $this->pas; }
     public function setPas(?int $pas): static { $this->pas = $pas; return $this; }
 
-    public function getCalories(): ?float { return $this->calories; }
-    public function setCalories(?float $calories): static { $this->calories = $calories; return $this; }
+    public function getCalories(): ?int { return $this->calories; }
+    public function setCalories(?int $calories): static { $this->calories = $calories; return $this; }
 
     public function getDureeActiviteMinutes(): ?int { return $this->dureeActiviteMinutes; }
     public function setDureeActiviteMinutes(?int $dureeActiviteMinutes): static { $this->dureeActiviteMinutes = $dureeActiviteMinutes; return $this; }

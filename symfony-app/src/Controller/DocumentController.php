@@ -236,7 +236,7 @@ class DocumentController extends AbstractController
         $response = new Response($fileContent);
         $response->headers->set('Content-Type', $document->getMimeType());
         $response->headers->set('Content-Disposition', sprintf('attachment; filename="%s"', $document->getFileName()));
-        $response->headers->set('Content-Length', strlen($fileContent));
+        $response->headers->set('Content-Length', (string) strlen($fileContent));
 
         return $response;
     }

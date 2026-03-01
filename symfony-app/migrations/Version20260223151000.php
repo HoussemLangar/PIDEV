@@ -16,6 +16,11 @@ final class Version20260223151000 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
+        $schemaManager = $this->connection->createSchemaManager();
+        if ($schemaManager->tablesExist(['article_scores'])) {
+            return;
+        }
+
         $this->addSql('CREATE TABLE article_scores (contenu_id INT NOT NULL, score_article DOUBLE PRECISION DEFAULT 0 NOT NULL, nb_commentaires INT DEFAULT 0 NOT NULL, updated_at DATETIME NOT NULL, PRIMARY KEY(contenu_id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
         $this->addSql('ALTER TABLE article_scores ADD CONSTRAINT FK_EAC7D4A30756C23D FOREIGN KEY (contenu_id) REFERENCES contenu (id) ON DELETE CASCADE');
     }

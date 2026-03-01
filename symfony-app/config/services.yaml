@@ -73,6 +73,7 @@ services:
     App\Service\Payment\StripeCheckoutService:
         arguments:
             $secretKey: '%env(string:STRIPE_SECRET_KEY)%'
+            $webhookSecret: '%env(string:STRIPE_WEBHOOK_SECRET)%'
             $currency: '%env(string:STRIPE_CURRENCY)%'
             $tndToStripeRate: '%env(float:STRIPE_TND_TO_CURRENCY_RATE)%'
 

@@ -1,7 +1,11 @@
 monolog:
     channels:
         - deprecation
-        - mailer  
+        - mailer
+        - payment
+        - document
+        - ai
+        - security_audit
 
 when@dev:
     monolog:
@@ -11,6 +15,26 @@ when@dev:
                 path: "%kernel.logs_dir%/%kernel.environment%.log"
                 level: debug
                 channels: ["!event"]
+            payment:
+                type: stream
+                path: "%kernel.logs_dir%/payment.log"
+                level: info
+                channels: ["payment"]
+            document:
+                type: stream
+                path: "%kernel.logs_dir%/document.log"
+                level: info
+                channels: ["document"]
+            ai:
+                type: stream
+                path: "%kernel.logs_dir%/ai.log"
+                level: info
+                channels: ["ai"]
+            security_audit:
+                type: stream
+                path: "%kernel.logs_dir%/security_audit.log"
+                level: info
+                channels: ["security_audit"]
             console:
                 type: console
                 process_psr_3_messages: false
@@ -53,4 +77,28 @@ when@prod:
                 type: stream
                 channels: [deprecation]
                 path: php://stderr
+                formatter: monolog.formatter.json
+            payment:
+                type: stream
+                path: php://stderr
+                level: info
+                channels: [payment]
+                formatter: monolog.formatter.json
+            document:
+                type: stream
+                path: php://stderr
+                level: info
+                channels: [document]
+                formatter: monolog.formatter.json
+            ai:
+                type: stream
+                path: php://stderr
+                level: info
+                channels: [ai]
+                formatter: monolog.formatter.json
+            security_audit:
+                type: stream
+                path: php://stderr
+                level: info
+                channels: [security_audit]
                 formatter: monolog.formatter.json

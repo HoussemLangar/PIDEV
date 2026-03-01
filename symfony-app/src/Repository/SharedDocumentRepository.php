@@ -37,10 +37,13 @@ class SharedDocumentRepository extends ServiceEntityRepository
     public function findSharedWithUser(User $user, int $limit = 50): array
     {
         return $this->createQueryBuilder('d')
-            ->leftJoin('d.accesses', 'a')
-            ->where('a.sharedWith = :user')
-            ->andWhere('a.isActive = true')
-            ->andWhere('(a.expiresAt IS NULL OR a.expiresAt > :now)')
+            ->where('EXISTS (
+                SELECT 1 FROM App\\Entity\\DocumentAccess a
+                WHERE a.document = d
+                  AND a.sharedWith = :user
+                  AND a.isActive = true
+                  AND (a.expiresAt IS NULL OR a.expiresAt > :now)
+            )')
             ->setParameter('user', $user)
             ->setParameter('now', new \DateTimeImmutable())
             ->orderBy('d.uploadedAt', 'DESC')

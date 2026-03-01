@@ -8,6 +8,7 @@ use App\Service\UserAiScoreService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -63,8 +64,8 @@ class SubscriptionGateSubscriber implements EventSubscriberInterface
 
         if ($this->userAiScoreService->grantFreeMonthIfEligible($user)) {
             $mustFlush = true;
-            if ($session) {
-                $session->getFlashBag()->add('success', 'Félicitations ! Vous avez atteint un score IA de 95+ et gagné 1 mois d\'utilisation gratuit.');
+            if ($session instanceof Session) {
+                $session->getFlashBag()->add('success', 'Félicitations ! Vous avez atteint un score IA de 80+ et gagné 1 mois d\'utilisation gratuit.');
             }
         }
 
@@ -76,7 +77,7 @@ class SubscriptionGateSubscriber implements EventSubscriberInterface
             $this->revokeExpiredSubscriptionAccess($user);
             $mustFlush = true;
 
-            if ($session && !$session->get('subscription_expired_notice_shown', false)) {
+            if ($session instanceof Session && !$session->get('subscription_expired_notice_shown', false)) {
                 $session->getFlashBag()->add('warning', 'Votre abonnement est terminé. Vos droits d\'accès ont été retirés.');
                 $session->set('subscription_expired_notice_shown', true);
             }
@@ -139,7 +140,7 @@ class SubscriptionGateSubscriber implements EventSubscriberInterface
 
         // PENDING / EXPIRED => forcer la page d'abonnement
         if ($user->getSubscriptionStatus() === 'EXPIRED') {
-            if ($session && !$session->get('subscription_expired_notice_shown', false)) {
+            if ($session instanceof Session && !$session->get('subscription_expired_notice_shown', false)) {
                 $session->getFlashBag()->add('warning', 'Votre abonnement est terminé. Merci de renouveler pour récupérer l\'accès.');
                 $session->set('subscription_expired_notice_shown', true);
             }
@@ -206,9 +207,7 @@ class SubscriptionGateSubscriber implements EventSubscriberInterface
 
         $endDate = $latest->getDateFin();
         $today = new \DateTimeImmutable('today');
-        $endDay = ($endDate instanceof \DateTimeImmutable)
-            ? $endDate->setTime(0, 0)
-            : \DateTimeImmutable::createFromMutable((clone $endDate)->setTime(0, 0));
+        $endDay = \DateTimeImmutable::createFromInterface($endDate)->setTime(0, 0);
 
         return $endDay < $today;
     }

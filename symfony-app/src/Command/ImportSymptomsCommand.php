@@ -58,41 +58,39 @@ class ImportSymptomsCommand extends Command
         $io->progressStart();
 
         while (($data = fgetcsv($handle, 1000, ',')) !== false) {
-            if (count($data) >= 1) {
-                $nom = trim($data[0]);
-                $categorie = isset($data[1]) ? trim($data[1]) : null;
+            $nom = trim($data[0]);
+            $categorie = isset($data[1]) ? trim($data[1]) : null;
 
-                if (!empty($nom)) {
-                    try {
-                        // Check if symptom already exists
-                        $existing = $this->entityManager->getRepository(SymptomeListe::class)
-                            ->findOneBy(['nom' => $nom]);
+            if (!empty($nom)) {
+                try {
+                    // Check if symptom already exists
+                    $existing = $this->entityManager->getRepository(SymptomeListe::class)
+                        ->findOneBy(['nom' => $nom]);
 
-                        if (!$existing) {
-                            $symptome = new SymptomeListe();
-                            $symptome->setNom($nom);
-                            $symptome->setCategorie($categorie ?: null);
-                            // Don't set createdAt, let the constructor handle it
+                    if (!$existing) {
+                        $symptome = new SymptomeListe();
+                        $symptome->setNom($nom);
+                        $symptome->setCategorie($categorie ?: null);
+                        // Don't set createdAt, let the constructor handle it
 
-                            $this->entityManager->persist($symptome);
-                            $imported++;
+                        $this->entityManager->persist($symptome);
+                        $imported++;
 
-                            // Flush in batches
-                            if ($imported % $batch === 0) {
-                                $this->entityManager->flush();
-                                // Don't clear the entity manager, it causes issues
-                            }
+                        // Flush in batches
+                        if ($imported % $batch === 0) {
+                            $this->entityManager->flush();
+                            // Don't clear the entity manager, it causes issues
                         }
-                        
-                        $io->progressAdvance();
-                        
-                    } catch (\Exception $e) {
-                        $io->warning("Erreur pour '$nom': " . $e->getMessage());
-                        $errors++;
-                        
-                        // Skip if there's an error but continue with the import
-                        continue;
                     }
+
+                    $io->progressAdvance();
+
+                } catch (\Exception $e) {
+                    $io->warning("Erreur pour '$nom': " . $e->getMessage());
+                    $errors++;
+
+                    // Skip if there's an error but continue with the import
+                    continue;
                 }
             }
         }

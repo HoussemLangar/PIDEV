@@ -25,7 +25,7 @@ class Conversation
     #[ORM\JoinColumn(name: 'user_two_id', nullable: false, onDelete: 'CASCADE')]
     private User $userTwo;
 
-    #[ORM\OneToMany(mappedBy: 'conversation', targetEntity: Message::class, cascade: ['persist', 'remove'])]
+    #[ORM\OneToMany(mappedBy: 'conversation', targetEntity: Message::class, cascade: ['persist'], orphanRemoval: true)]
     private Collection $messages;
 
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
@@ -87,9 +87,6 @@ class Conversation
     public function removeMessage(Message $message): self
     {
         if ($this->messages->removeElement($message)) {
-            if ($message->getConversation() === $this) {
-                $message->setConversation(null);
-            }
         }
         return $this;
     }

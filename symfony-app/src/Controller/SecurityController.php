@@ -53,6 +53,9 @@ class SecurityController extends AbstractController
         $this->denyAccessUnlessGranted('ROLE_ADMIN');
         
         $user = $this->getUser();
+        if (!$user instanceof User) {
+            return new JsonResponse(['success' => false, 'message' => 'Utilisateur non authentifié'], 401);
+        }
         $faceData = $faceDataRepository->findOneBy(['user' => $user]);
 
         return $this->render('security/face_verification.html.twig', [
@@ -78,6 +81,9 @@ class SecurityController extends AbstractController
         }
 
         $user = $this->getUser();
+        if (!$user instanceof User) {
+            return new JsonResponse(['success' => false, 'message' => 'Utilisateur non authentifié'], 401);
+        }
         
         // Vérifier si l'utilisateur a déjà des données faciales
         $faceData = $faceDataRepository->findOneBy(['user' => $user]);
@@ -123,6 +129,12 @@ class SecurityController extends AbstractController
         }
 
         $user = $this->getUser();
+        if (!$user instanceof User) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Utilisateur non authentifié'
+            ], 401);
+        }
         $faceData = $faceDataRepository->findOneBy(['user' => $user]);
 
         if (!$faceData) {
@@ -131,6 +143,7 @@ class SecurityController extends AbstractController
                 'message' => 'Aucune donnée faciale enregistrée'
             ], 404);
         }
+        assert($faceData instanceof FaceData);
 
         $storedDescriptor = json_decode($faceData->getFaceDescriptor(), true);
         $currentDescriptor = $data['faceDescriptor'];

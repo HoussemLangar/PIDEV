@@ -11,6 +11,7 @@ use App\Entity\CoachSportif;
 use App\Entity\Nutritionniste;
 use App\Repository\AbonnementRepository;
 use App\Repository\SuspiciousLoginRepository;
+use App\Repository\UserRepository;
 use App\Entity\Facture;
 use App\Service\InvoiceService;
 use App\Service\Payment\StripeCheckoutService;
@@ -19,6 +20,7 @@ use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Mime\Address;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -236,6 +238,22 @@ class SubscriptionController extends AbstractController
             return $this->redirectToRoute('app_subscription_payment');
         }
 
+        $metadata = is_array($checkoutSession['metadata'] ?? null) ? $checkoutSession['metadata'] : [];
+        $paidUserId = (int) ($metadata['user_id'] ?? 0);
+        $paidType = (string) ($metadata['subscription_type'] ?? '');
+        if ($paidUserId !== (int) $user->getId() || $paidType !== $type) {
+            $this->addFlash('error', 'Session Stripe invalide pour cet utilisateur.');
+            return $this->redirectToRoute('app_subscription_payment');
+        }
+
+        if ($abonnementRepository->findByPaymentSessionId($sessionId) !== null) {
+            if ($type === self::AI_TOOLS_TYPE) {
+                return $this->redirectToRoute('app_ai_tools_index');
+            }
+
+            return $this->redirectToRoute('app_subscription_overview');
+        }
+
         $alreadyProcessed = (array) $request->getSession()->get('processed_stripe_sessions', []);
         if (in_array($sessionId, $alreadyProcessed, true)) {
             if ($type === self::AI_TOOLS_TYPE) {
@@ -251,6 +269,154 @@ class SubscriptionController extends AbstractController
             return $this->redirectToRoute('app_ai_tools_index');
         }
 
+        $this->activatePaidSubscription(
+            $user,
+            $type,
+            $sessionId,
+            $em,
+            $invoiceService,
+            $mailer,
+            $abonnementRepository,
+        );
+
+        $alreadyProcessed[] = $sessionId;
+        $request->getSession()->set('processed_stripe_sessions', array_values(array_unique($alreadyProcessed)));
+        $request->getSession()->remove('subscription_type');
+        $request->getSession()->remove('subscription_expired_notice_shown');
+
+        $this->addFlash('success', 'Paiement réussi. Abonnement activé.');
+
+        if ($type === self::AI_TOOLS_TYPE) {
+            return $this->redirectToRoute('app_ai_tools_index');
+        }
+
+        return $this->redirectToRoute('app_subscription_overview');
+    }
+
+    #[Route('/subscription/payment/webhook', name: 'app_subscription_payment_webhook', methods: ['POST'])]
+    public function paymentWebhook(
+        Request $request,
+        UserRepository $userRepository,
+        EntityManagerInterface $em,
+        InvoiceService $invoiceService,
+        MailerInterface $mailer,
+        AbonnementRepository $abonnementRepository,
+        StripeCheckoutService $stripeCheckoutService,
+    ): JsonResponse {
+        $payload = (string) $request->getContent();
+        $signature = (string) $request->headers->get('Stripe-Signature', '');
+
+        if (!$stripeCheckoutService->verifyWebhookSignature($payload, $signature)) {
+            return $this->json(['error' => 'Invalid signature'], 400);
+        }
+
+        $event = $stripeCheckoutService->decodeWebhookEvent($payload);
+        if (!is_array($event)) {
+            return $this->json(['error' => 'Invalid payload'], 400);
+        }
+
+        if (($event['type'] ?? '') !== 'checkout.session.completed') {
+            return $this->json(['received' => true]);
+        }
+
+        $session = is_array($event['data']['object'] ?? null) ? $event['data']['object'] : [];
+        $sessionId = trim((string) ($session['id'] ?? ''));
+        $paymentStatus = (string) ($session['payment_status'] ?? '');
+        $metadata = is_array($session['metadata'] ?? null) ? $session['metadata'] : [];
+        $userId = (int) ($metadata['user_id'] ?? 0);
+        $type = (string) ($metadata['subscription_type'] ?? '');
+
+        if ($sessionId === '' || $paymentStatus !== 'paid' || !$this->isValidSubscriptionType($type) || $userId <= 0) {
+            return $this->json(['received' => true]);
+        }
+
+        if ($abonnementRepository->findByPaymentSessionId($sessionId) !== null) {
+            return $this->json(['received' => true, 'duplicate' => true]);
+        }
+
+        $user = $userRepository->find($userId);
+        if (!$user instanceof User) {
+            return $this->json(['received' => true]);
+        }
+
+        $this->activatePaidSubscription(
+            $user,
+            $type,
+            $sessionId,
+            $em,
+            $invoiceService,
+            $mailer,
+            $abonnementRepository,
+        );
+
+        return $this->json(['received' => true, 'processed' => true]);
+    }
+
+    #[Route('/subscription/payment/cancel', name: 'app_subscription_payment_cancel', methods: ['GET'])]
+    public function paymentCancel(Request $request): RedirectResponse
+    {
+        $type = (string) $request->getSession()->get('subscription_type', '');
+
+        $this->addFlash('warning', 'Paiement annulé.');
+
+        if ($type === self::AI_TOOLS_TYPE) {
+            return $this->redirectToRoute('app_ai_tools_subscription');
+        }
+
+        return $this->redirectToRoute('app_subscription_payment');
+    }
+
+    private function labelFromRole(string $role): string
+    {
+        return match ($role) {
+            'ROLE_MEDECIN' => 'Médecin',
+            'ROLE_PHARMACIEN' => 'Pharmacien',
+            'ROLE_COACH' => 'Coach sportif',
+            'ROLE_NUTRITIONNISTE' => 'Nutritionniste',
+            'ROLE_PATIENT' => 'Patient',
+            self::AI_TOOLS_TYPE => 'Outils IA SANTÉA',
+            default => 'Abonnement',
+        };
+    }
+
+    private function priceFromType(string $type): float
+    {
+        if ($type === self::AI_TOOLS_TYPE) {
+            return 5.00;
+        }
+
+        return 10.00;
+    }
+
+    private function isValidSubscriptionType(string $type): bool
+    {
+        return in_array($type, [
+            'ROLE_MEDECIN',
+            'ROLE_PHARMACIEN',
+            'ROLE_COACH',
+            'ROLE_NUTRITIONNISTE',
+            'ROLE_PATIENT',
+            self::AI_TOOLS_TYPE,
+        ], true);
+    }
+
+    private function activatePaidSubscription(
+        User $user,
+        string $type,
+        string $sessionId,
+        EntityManagerInterface $em,
+        InvoiceService $invoiceService,
+        MailerInterface $mailer,
+        AbonnementRepository $abonnementRepository,
+    ): void {
+        if ($abonnementRepository->findByPaymentSessionId($sessionId) !== null) {
+            return;
+        }
+
+        if ($type === self::AI_TOOLS_TYPE && $abonnementRepository->findActiveForUserAndType($user, self::AI_TOOLS_TYPE)) {
+            return;
+        }
+
         $planLabel = $this->labelFromRole($type);
         $price = $this->priceFromType($type);
 
@@ -263,6 +429,7 @@ class SubscriptionController extends AbstractController
         $abonnement->setDateFin((new \DateTime())->modify('+1 month'));
         $abonnement->setStatut('actif');
         $abonnement->setUser($user);
+        $abonnement->setPaymentSessionId($sessionId);
 
         $em->persist($abonnement);
 
@@ -309,55 +476,6 @@ class SubscriptionController extends AbstractController
             ->attachFromPath($pdfPath, 'facture-' . $facture->getNumero() . '.pdf');
 
         $mailer->send($email);
-
-        $alreadyProcessed[] = $sessionId;
-        $request->getSession()->set('processed_stripe_sessions', array_values(array_unique($alreadyProcessed)));
-        $request->getSession()->remove('subscription_type');
-        $request->getSession()->remove('subscription_expired_notice_shown');
-
-        $this->addFlash('success', 'Paiement réussi. Abonnement activé.');
-
-        if ($type === self::AI_TOOLS_TYPE) {
-            return $this->redirectToRoute('app_ai_tools_index');
-        }
-
-        return $this->redirectToRoute('app_subscription_overview');
-    }
-
-    #[Route('/subscription/payment/cancel', name: 'app_subscription_payment_cancel', methods: ['GET'])]
-    public function paymentCancel(Request $request): RedirectResponse
-    {
-        $type = (string) $request->getSession()->get('subscription_type', '');
-
-        $this->addFlash('warning', 'Paiement annulé.');
-
-        if ($type === self::AI_TOOLS_TYPE) {
-            return $this->redirectToRoute('app_ai_tools_subscription');
-        }
-
-        return $this->redirectToRoute('app_subscription_payment');
-    }
-
-    private function labelFromRole(string $role): string
-    {
-        return match ($role) {
-            'ROLE_MEDECIN' => 'Médecin',
-            'ROLE_PHARMACIEN' => 'Pharmacien',
-            'ROLE_COACH' => 'Coach sportif',
-            'ROLE_NUTRITIONNISTE' => 'Nutritionniste',
-            'ROLE_PATIENT' => 'Patient',
-            self::AI_TOOLS_TYPE => 'Outils IA SANTÉA',
-            default => 'Abonnement',
-        };
-    }
-
-    private function priceFromType(string $type): float
-    {
-        if ($type === self::AI_TOOLS_TYPE) {
-            return 5.00;
-        }
-
-        return 10.00;
     }
 
     private function ensureRoleEntity(User $user, string $role, EntityManagerInterface $em): void

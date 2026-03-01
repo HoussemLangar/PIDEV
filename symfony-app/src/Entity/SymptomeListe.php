@@ -53,7 +53,7 @@ class SymptomeListe
     #[Assert\NotNull]
     private \DateTimeInterface $createdAt;
 
-    #[ORM\OneToMany(mappedBy: 'symptome', targetEntity: SymptomeQuotidien::class, cascade: ['persist', 'remove'])]
+    #[ORM\OneToMany(mappedBy: 'symptome', targetEntity: SymptomeQuotidien::class, cascade: ['persist'], orphanRemoval: true)]
     private Collection $symptomesQuotidiens;
 
     public function __construct()

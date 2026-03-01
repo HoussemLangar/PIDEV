@@ -771,7 +771,8 @@ class AdminController extends AbstractController
             $monthlyRevenue,
             $totalRevenue,
             $totalInvoices,
-            $pendingPayments
+            $pendingPayments,
+            $suspiciousCount
         ) {
             $handle = fopen('php://output', 'w');
             fputcsv($handle, ['KPI', 'Valeur']);
@@ -1082,7 +1083,7 @@ class AdminController extends AbstractController
             return $this->redirectToRoute('admin_users');
         }
 
-        $user->setDeletedAt(new \DateTimeImmutable());
+        $user->softDelete();
         $user->setUpdatedAt(new \DateTimeImmutable());
         $em->flush();
 
@@ -1360,7 +1361,7 @@ class AdminController extends AbstractController
         $user = $abonnement->getUser();
         if ($user) {
             $user->setSubscriptionType($abonnement->getTypeAbonnement());
-            $user->setSubscriptionEndAt(\DateTimeImmutable::createFromMutable($abonnement->getDateFin()));
+            $user->setSubscriptionEndAt(\DateTimeImmutable::createFromInterface($abonnement->getDateFin()));
             $user->setSubscriptionStatus($abonnement->getStatut() === 'actif' ? 'ACTIVE' : 'EXPIRED');
             $user->setRole($abonnement->getTypeAbonnement());
             $user->setUpdatedAt(new \DateTimeImmutable());
@@ -1848,10 +1849,10 @@ class AdminController extends AbstractController
 
         $repo = $em->getRepository(\App\Entity\RendezVous::class);
         $qb = $repo->createQueryBuilder('r')
-            ->leftJoin('r.patient', 'p')->addSelect('p')
-            ->leftJoin('p.user', 'pu')->addSelect('pu')
-            ->leftJoin('r.medecin', 'm')->addSelect('m')
-            ->leftJoin('m.user', 'mu')->addSelect('mu')
+            ->innerJoin('r.patient', 'p')->addSelect('p')
+            ->innerJoin('p.user', 'pu')->addSelect('pu')
+            ->innerJoin('r.medecin', 'm')->addSelect('m')
+            ->innerJoin('m.user', 'mu')->addSelect('mu')
             ->orderBy('r.dateRdv', 'DESC');
 
         if ($status) {

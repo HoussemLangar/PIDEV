@@ -29,8 +29,8 @@ class SendAppointmentRemindersCommand extends Command
         $date = $target->format('Y-m-d');
 
         $qb = $this->rendezVousRepository->createQueryBuilder('r')
-            ->leftJoin('r.patient', 'p')
-            ->leftJoin('p.user', 'u')
+            ->innerJoin('r.patient', 'p')
+            ->innerJoin('p.user', 'u')
             ->addSelect('u')
             ->andWhere('r.dateRdv = :date')
             ->andWhere('r.statut = :statut')

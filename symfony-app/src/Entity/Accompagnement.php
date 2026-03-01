@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\AccompagnementRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: AccompagnementRepository::class)]
@@ -42,11 +44,19 @@ class Accompagnement
     #[ORM\Column(type: 'datetime', options: ['default' => 'CURRENT_TIMESTAMP'])]
     private \DateTimeInterface $updatedAt;
 
+    #[ORM\OneToMany(mappedBy: 'accompagnement', targetEntity: PlanExercice::class)]
+    private Collection $plansExercices;
+
+    #[ORM\OneToMany(mappedBy: 'accompagnement', targetEntity: PlanRegime::class)]
+    private Collection $plansRegimes;
+
 
     public function __construct()
     {
         $this->createdAt = new \DateTimeImmutable();
         $this->updatedAt = new \DateTimeImmutable();
+        $this->plansExercices = new ArrayCollection();
+        $this->plansRegimes = new ArrayCollection();
     }
 
     public function getId(): ?int { return $this->id; }

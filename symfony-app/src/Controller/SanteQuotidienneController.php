@@ -318,7 +318,7 @@ class SanteQuotidienneController extends AbstractController
         error_log('Request data: ' . json_encode($request->request->all()));
 
         $sante = new SanteQuotidienne();
-        $sante->setUser($this->getUser());           // ← très important
+        $sante->setUser($user);           // ← très important
         $sante->setDate(new \DateTime());             // date du jour par défaut
 
         $form = $this->createForm(SanteQuotidienneType::class, $sante);

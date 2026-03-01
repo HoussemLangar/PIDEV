@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\GoogleFitAccountRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Ignore;
 
 #[ORM\Entity(repositoryClass: GoogleFitAccountRepository::class)]
 #[ORM\Table(name: 'google_fit_accounts')]
@@ -22,12 +23,15 @@ class GoogleFitAccount
     private string $googleAccountId;
 
     #[ORM\Column(type: 'text')]
+    #[Ignore]
     private string $accessToken;
 
     #[ORM\Column(type: 'text', nullable: true)]
+    #[Ignore]
     private ?string $refreshToken = null;
 
     #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    #[Ignore]
     private ?\DateTimeImmutable $tokenExpiration = null;
 
     #[ORM\Column(type: 'datetime_immutable', nullable: true)]

@@ -47,10 +47,16 @@ class MessageController extends AbstractController
 
         $availableRecipients = [];
         if ($this->isPatientRole($user)) {
-            $availableRecipients = array_filter(
-                $this->userRepository->findAll(),
-                fn (User $u) => $u->getId() !== $user->getId() && $this->isProfessionalRole($u)
-            );
+            $availableRecipients = [];
+            foreach (self::PROFESSIONAL_ROLES as $role) {
+                foreach ($this->userRepository->findByRole($role) as $candidate) {
+                    if ($candidate->getId() === $user->getId()) {
+                        continue;
+                    }
+                    $availableRecipients[$candidate->getId()] = $candidate;
+                }
+            }
+            $availableRecipients = array_values($availableRecipients);
         } else {
             $availableRecipients = $this->userRepository->findByRole('ROLE_PATIENT');
         }
@@ -94,8 +100,12 @@ class MessageController extends AbstractController
         $this->messageRepository->markAllAsRead($user, $conversation);
         $this->em->flush();
 
+        $page = max(1, $request->query->getInt('page', 1));
+        $limit = min(100, max(20, $request->query->getInt('limit', 50)));
+        $offset = ($page - 1) * $limit;
+
         // Get conversation messages
-        $messages = $this->messageRepository->findConversationMessages($conversation, 0, 100);
+        $messages = $this->messageRepository->findConversationMessages($conversation, $offset, $limit);
         $messages = array_reverse($messages); // Show oldest first
 
         $otherUser = $conversation->getOtherUser($user);
@@ -105,6 +115,9 @@ class MessageController extends AbstractController
             'messages' => $messages,
             'form' => $form,
             'otherUser' => $otherUser,
+            'page' => $page,
+            'limit' => $limit,
+            'hasMore' => count($messages) === $limit,
             'liveComponentEnabled' => class_exists(\Symfony\UX\LiveComponent\LiveComponentBundle::class),
         ]);
     }
@@ -262,8 +275,8 @@ class MessageController extends AbstractController
 
         $this->denyIfInvalidMessagingPair($user, $recipient);
 
-        $page = $request->query->getInt('page', 1);
-        $limit = 50;
+        $page = max(1, $request->query->getInt('page', 1));
+        $limit = min(100, max(20, $request->query->getInt('limit', 50)));
         $offset = ($page - 1) * $limit;
 
         $messages = $this->messageRepository->findHistoryBetweenUsers($user, $recipient, $offset, $limit);
@@ -280,7 +293,12 @@ class MessageController extends AbstractController
             ];
         }, $messages);
 
-        return $this->json(['messages' => $messageDtos]);
+        return $this->json([
+            'messages' => $messageDtos,
+            'page' => $page,
+            'limit' => $limit,
+            'hasMore' => count($messageDtos) === $limit,
+        ]);
     }
 
     /**

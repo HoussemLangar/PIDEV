@@ -1,27 +1,35 @@
 version: '3.8'
 
 services:
-  # Service PHP/Apache avec Symfony
+  # =========================
+  # Service PHP / Apache (Symfony)
+  # =========================
   web:
+    container_name: pidev-web
     build:
       context: ./docker/php
       dockerfile: Dockerfile
-    container_name: pidev-web
     ports:
       - "8000:80"
       - "8443:443"
     volumes:
       - ./symfony-app:/var/www/html
     environment:
-      - APP_ENV=dev
-      - DATABASE_URL=mysql://symfony:symfony@db:3306/pidev?serverVersion=8.0
+      APP_ENV: dev
+      DATABASE_URL: "mysql://symfony:symfony@db:3306/pidev?serverVersion=8.0"
     depends_on:
       - db
     networks:
       - pidev-network
     restart: unless-stopped
 
+    # 🔥 OBLIGATOIRE — corrige docker-compose exec muet
+    tty: true
+    stdin_open: true
+
+  # =========================
   # Service MySQL 8.0
+  # =========================
   db:
     image: mysql:8.0
     container_name: pidev-db
@@ -39,7 +47,9 @@ services:
     command: --default-authentication-plugin=mysql_native_password
     restart: unless-stopped
 
+  # =========================
   # Service phpMyAdmin
+  # =========================
   phpmyadmin:
     image: phpmyadmin:latest
     container_name: pidev-phpmyadmin
@@ -57,21 +67,29 @@ services:
       - pidev-network
     restart: unless-stopped
 
+  # =========================
   # Service JavaFX
+  # =========================
   javafx:
     image: eclipse-temurin:17-jdk
     container_name: pidev-javafx
+    working_dir: /app
     volumes:
       - ./javafx-app:/app
-    working_dir: /app
     command: tail -f /dev/null
     networks:
       - pidev-network
     restart: unless-stopped
 
+# =========================
+# Réseaux
+# =========================
 networks:
   pidev-network:
     driver: bridge
 
+# =========================
+# Volumes
+# =========================
 volumes:
   db-data:

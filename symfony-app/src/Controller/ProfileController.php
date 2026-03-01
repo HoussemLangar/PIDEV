@@ -29,6 +29,9 @@ class ProfileController extends AbstractController
     ): Response
     {
         $user = $this->getUser();
+        if (!$user instanceof User) {
+            throw $this->createAccessDeniedException();
+        }
 
         $form = $this->createForm(ProfileType::class, $user);
         $form->handleRequest($request);
@@ -84,12 +87,24 @@ class ProfileController extends AbstractController
     }
 
     #[Route('/mfa', name: 'mfa', methods: ['GET', 'POST'])]
-    public function mfa(Request $request, EntityManagerInterface $em, GoogleAuthenticatorInterface $googleAuthenticator): Response
+    public function mfa(
+        Request $request,
+        EntityManagerInterface $em,
+        GoogleAuthenticatorInterface $googleAuthenticator,
+        UserPasswordHasherInterface $passwordHasher
+    ): Response
     {
         /** @var User $user */
         $user = $this->getUser();
 
         if ($request->isMethod('POST')) {
+            // Always require password for both enable and disable
+            $currentPassword = (string) $request->request->get('current_password', '');
+            if ($currentPassword === '' || !$passwordHasher->isPasswordValid($user, $currentPassword)) {
+                $this->addFlash('error', 'Mot de passe du compte incorrect. Action MFA refusée.');
+                return $this->redirectToRoute('profile_mfa');
+            }
+
             if ($request->request->get('disable_mfa')) {
                 $user->setMfaEnabled(false);
                 $user->setGoogleAuthenticatorSecret(null);

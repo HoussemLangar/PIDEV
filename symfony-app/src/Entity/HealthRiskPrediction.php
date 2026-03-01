@@ -21,18 +21,18 @@ class HealthRiskPrediction
     private ?User $user = null;
 
     #[ORM\Column(type: Types::DATE_IMMUTABLE)]
-    private ?\DateTimeImmutable $predictionDate = null;
+    private \DateTimeImmutable $predictionDate;
 
-    #[ORM\Column(type: Types::FLOAT, options: ['default' => 0])]
+    #[ORM\Column(type: Types::FLOAT)]
     private float $riskHtn = 0.0;
 
-    #[ORM\Column(type: Types::FLOAT, options: ['default' => 0])]
+    #[ORM\Column(type: Types::FLOAT)]
     private float $riskDiabetes = 0.0;
 
-    #[ORM\Column(type: Types::FLOAT, options: ['default' => 0])]
+    #[ORM\Column(type: Types::FLOAT)]
     private float $riskDepression = 0.0;
 
-    #[ORM\Column(type: Types::FLOAT, options: ['default' => 0])]
+    #[ORM\Column(type: Types::FLOAT)]
     private float $riskRespiratory = 0.0;
 
     #[ORM\Column(type: Types::STRING, length: 20, options: ['default' => 'LOW'])]
@@ -58,13 +58,14 @@ class HealthRiskPrediction
 
     public function __construct()
     {
+        $this->predictionDate = new \DateTimeImmutable('today');
         $this->updatedAt = new \DateTimeImmutable();
     }
 
     public function getId(): ?int { return $this->id; }
     public function getUser(): ?User { return $this->user; }
     public function setUser(User $user): self { $this->user = $user; return $this; }
-    public function getPredictionDate(): ?\DateTimeImmutable { return $this->predictionDate; }
+    public function getPredictionDate(): \DateTimeImmutable { return $this->predictionDate; }
     public function setPredictionDate(\DateTimeImmutable $predictionDate): self { $this->predictionDate = $predictionDate; return $this; }
     public function getRiskHtn(): float { return $this->riskHtn; }
     public function setRiskHtn(float $riskHtn): self { $this->riskHtn = $riskHtn; return $this; }

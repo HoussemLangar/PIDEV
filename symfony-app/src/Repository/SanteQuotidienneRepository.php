@@ -104,8 +104,9 @@ class SanteQuotidienneRepository extends ServiceEntityRepository
      */
     public function findOneByUserAndDate(object $user, \DateTimeInterface $date): ?SanteQuotidienne
     {
-        $start = (clone $date)->setTime(0, 0, 0);
-        $end = (clone $date)->setTime(23, 59, 59);
+        $baseDate = \DateTimeImmutable::createFromInterface($date);
+        $start = $baseDate->setTime(0, 0, 0);
+        $end = $baseDate->setTime(23, 59, 59);
         
         return $this->createQueryBuilder('s')
             ->where('s.user = :user')

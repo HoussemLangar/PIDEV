@@ -13,6 +13,7 @@ class StripeCheckoutService
         private readonly HttpClientInterface $httpClient,
         private readonly LoggerInterface $logger,
         private readonly string $secretKey,
+        private readonly string $webhookSecret = '',
         private readonly string $currency = 'usd',
         private readonly float $tndToStripeRate = 0.32
     ) {
@@ -126,5 +127,57 @@ class StripeCheckoutService
         $rate = $this->tndToStripeRate > 0 ? $this->tndToStripeRate : 1.0;
 
         return round($amount * $rate, 2);
+    }
+
+    public function verifyWebhookSignature(string $payload, string $signatureHeader, int $toleranceSeconds = 300): bool
+    {
+        if (trim($this->webhookSecret) === '' || trim($payload) === '' || trim($signatureHeader) === '') {
+            return false;
+        }
+
+        $parts = [];
+        foreach (explode(',', $signatureHeader) as $segment) {
+            $kv = explode('=', trim($segment), 2);
+            if (count($kv) !== 2) {
+                continue;
+            }
+
+            $parts[$kv[0]][] = $kv[1];
+        }
+
+        $timestamp = isset($parts['t'][0]) ? (int) $parts['t'][0] : 0;
+        $signatures = $parts['v1'] ?? [];
+
+        if ($timestamp <= 0 || $signatures === []) {
+            return false;
+        }
+
+        if (abs(time() - $timestamp) > $toleranceSeconds) {
+            return false;
+        }
+
+        $expected = hash_hmac('sha256', $timestamp . '.' . $payload, $this->webhookSecret);
+
+        foreach ($signatures as $signature) {
+            if (is_string($signature) && hash_equals($expected, $signature)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public function decodeWebhookEvent(string $payload): ?array
+    {
+        if (trim($payload) === '') {
+            return null;
+        }
+
+        $decoded = json_decode($payload, true);
+        if (!is_array($decoded)) {
+            return null;
+        }
+
+        return $decoded;
     }
 }

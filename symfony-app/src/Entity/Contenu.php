@@ -74,10 +74,10 @@ class Contenu
     #[ORM\Column(type: 'datetime', options: ['default' => 'CURRENT_TIMESTAMP'])]
     private \DateTimeInterface $updatedAt;
 
-    #[ORM\OneToMany(mappedBy: 'contenu', targetEntity: Like::class, cascade: ['persist', 'remove'])]
+    #[ORM\OneToMany(mappedBy: 'contenu', targetEntity: Like::class, cascade: ['persist'], orphanRemoval: true)]
     private Collection $likes;
 
-    #[ORM\OneToMany(mappedBy: 'contenu', targetEntity: Commentaire::class, cascade: ['persist', 'remove'])]
+    #[ORM\OneToMany(mappedBy: 'contenu', targetEntity: Commentaire::class, cascade: ['persist'], orphanRemoval: true)]
     private Collection $commentaires;
 
     public function __construct()

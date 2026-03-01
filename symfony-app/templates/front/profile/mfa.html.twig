@@ -29,19 +29,168 @@
                     </div>
                 {% endif %}
             </div>
-            <form method="post" style="margin-top:16px;">
-                <input type="hidden" name="disable_mfa" value="1">
-                <button class="btn btn-danger" type="submit">Désactiver MFA</button>
-            </form>
+            {# Disable button → opens modal #}
+            <button type="button" onclick="document.getElementById('mfa-disable-modal').style.display='flex';"
+                    style="margin-top:16px;display:inline-flex;align-items:center;gap:8px;padding:10px 22px;font-size:14px;font-weight:600;
+                           background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;border:none;border-radius:10px;cursor:pointer;
+                           box-shadow:0 4px 12px rgba(239,68,68,0.35);transition:opacity .2s,transform .15s;"
+                    onmouseover="this.style.opacity='.88';this.style.transform='translateY(-1px)';"
+                    onmouseout="this.style.opacity='1';this.style.transform='translateY(0)';">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                Désactiver la MFA
+            </button>
+
+            {# ── Disable MFA modal ── #}
+            <div id="mfa-disable-modal"
+                 style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:9999;
+                        align-items:center;justify-content:center;"
+                 onclick="if(event.target===this)this.style.display='none';">
+                <div style="background:#fff;border-radius:18px;padding:28px 28px 24px;max-width:420px;width:90%;
+                            box-shadow:0 20px 50px rgba(15,23,42,0.2);position:relative;animation:mfaModalIn .2s ease;">
+                    <button type="button" onclick="document.getElementById('mfa-disable-modal').style.display='none';"
+                            style="position:absolute;top:14px;right:16px;background:none;border:none;font-size:22px;
+                                   color:#94a3b8;cursor:pointer;line-height:1;">×</button>
+                    <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
+                        <span style="display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;
+                                     border-radius:12px;background:linear-gradient(135deg,#ef4444,#dc2626);flex-shrink:0;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                        </span>
+                        <div>
+                            <p style="margin:0;font-size:16px;font-weight:700;color:#0f172a;">Désactiver la MFA</p>
+                            <p style="margin:0;font-size:12px;color:#64748b;">Confirmez votre mot de passe pour continuer</p>
+                        </div>
+                    </div>
+                    <form method="post">
+                        <input type="hidden" name="disable_mfa" value="1">
+                        <label for="disable_password"
+                               style="display:block;font-size:12px;font-weight:600;color:#475569;
+                                      text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">
+                            Mot de passe actuel
+                        </label>
+                        <div id="disable-pw-wrap" style="position:relative;margin-bottom:20px;">
+                            <input id="disable_password" name="current_password" type="password" required
+                                   autocomplete="current-password" placeholder="••••••••••••"
+                                   style="width:100%;padding:10px 44px 10px 14px;font-size:14px;
+                                          border:1.5px solid #cbd5e1;border-radius:10px;outline:none;
+                                          transition:border-color .2s,box-shadow .2s;
+                                          background:#f8fafc;color:#1e293b;box-sizing:border-box;"
+                                   onfocus="this.style.borderColor='#ef4444';this.style.boxShadow='0 0 0 3px rgba(239,68,68,0.15)';"
+                                   onblur="this.style.borderColor='#cbd5e1';this.style.boxShadow='none';">
+                            <button type="button" id="toggle-disable-pw"
+                                    style="position:absolute;right:12px;top:50%;transform:translateY(-50%);
+                                           background:none;border:none;padding:0;cursor:pointer;color:#94a3b8;display:inline-flex;align-items:center;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            </button>
+                        </div>
+                        <div style="display:flex;gap:10px;">
+                            <button type="button" onclick="document.getElementById('mfa-disable-modal').style.display='none';"
+                                    style="flex:1;padding:10px;font-size:14px;font-weight:600;
+                                           background:#f1f5f9;color:#64748b;border:none;border-radius:10px;cursor:pointer;">
+                                Annuler
+                            </button>
+                            <button type="submit"
+                                    style="flex:1;padding:10px;font-size:14px;font-weight:600;
+                                           background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;
+                                           border:none;border-radius:10px;cursor:pointer;
+                                           box-shadow:0 4px 12px rgba(239,68,68,0.35);">
+                                Désactiver
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         {% else %}
             <div style="padding:16px;border:1px solid #e2e8f0;border-radius:12px;background:#f8fafc;">
                 <p style="margin:0 0 6px;font-weight:600;">MFA non activé</p>
                 <p style="margin:0;color:#64748b;font-size:13px;">Cliquez sur “Activer” pour générer votre secret Google Authenticator.</p>
             </div>
-            <form method="post" style="margin-top:16px;">
-                <button class="btn btn-primary" type="submit">Activer MFA</button>
-            </form>
+            {# Enable button → opens modal #}
+            <button type="button" onclick="document.getElementById('mfa-enable-modal').style.display='flex';"
+                    style="margin-top:20px;display:inline-flex;align-items:center;gap:8px;padding:10px 22px;font-size:14px;font-weight:600;
+                           background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;border:none;border-radius:10px;cursor:pointer;
+                           box-shadow:0 4px 12px rgba(99,102,241,0.35);transition:opacity .2s,transform .15s;"
+                    onmouseover="this.style.opacity='.9';this.style.transform='translateY(-1px)';"
+                    onmouseout="this.style.opacity='1';this.style.transform='translateY(0)';">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                Activer la MFA
+            </button>
+
+            {# ── Enable MFA modal ── #}
+            <div id="mfa-enable-modal"
+                 style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:9999;
+                        align-items:center;justify-content:center;"
+                 onclick="if(event.target===this)this.style.display='none';">
+                <div style="background:#fff;border-radius:18px;padding:28px 28px 24px;max-width:420px;width:90%;
+                            box-shadow:0 20px 50px rgba(15,23,42,0.2);position:relative;animation:mfaModalIn .2s ease;">
+                    <button type="button" onclick="document.getElementById('mfa-enable-modal').style.display='none';"
+                            style="position:absolute;top:14px;right:16px;background:none;border:none;font-size:22px;
+                                   color:#94a3b8;cursor:pointer;line-height:1;">×</button>
+                    <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
+                        <span style="display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;
+                                     border-radius:12px;background:linear-gradient(135deg,#3b82f6,#6366f1);flex-shrink:0;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        </span>
+                        <div>
+                            <p style="margin:0;font-size:16px;font-weight:700;color:#0f172a;">Activer la MFA</p>
+                            <p style="margin:0;font-size:12px;color:#64748b;">Confirmez votre mot de passe pour continuer</p>
+                        </div>
+                    </div>
+                    <form method="post">
+                        <label for="enable_password"
+                               style="display:block;font-size:12px;font-weight:600;color:#475569;
+                                      text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">
+                            Mot de passe actuel
+                        </label>
+                        <div style="position:relative;margin-bottom:20px;">
+                            <input id="enable_password" name="current_password" type="password" required
+                                   autocomplete="current-password" placeholder="••••••••••••"
+                                   style="width:100%;padding:10px 44px 10px 14px;font-size:14px;
+                                          border:1.5px solid #cbd5e1;border-radius:10px;outline:none;
+                                          transition:border-color .2s,box-shadow .2s;
+                                          background:#f8fafc;color:#1e293b;box-sizing:border-box;"
+                                   onfocus="this.style.borderColor='#6366f1';this.style.boxShadow='0 0 0 3px rgba(99,102,241,0.15)';"
+                                   onblur="this.style.borderColor='#cbd5e1';this.style.boxShadow='none';">
+                            <button type="button" id="toggle-enable-pw"
+                                    style="position:absolute;right:12px;top:50%;transform:translateY(-50%);
+                                           background:none;border:none;padding:0;cursor:pointer;color:#94a3b8;display:inline-flex;align-items:center;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            </button>
+                        </div>
+                        <div style="display:flex;gap:10px;">
+                            <button type="button" onclick="document.getElementById('mfa-enable-modal').style.display='none';"
+                                    style="flex:1;padding:10px;font-size:14px;font-weight:600;
+                                           background:#f1f5f9;color:#64748b;border:none;border-radius:10px;cursor:pointer;">
+                                Annuler
+                            </button>
+                            <button type="submit"
+                                    style="flex:1;padding:10px;font-size:14px;font-weight:600;
+                                           background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;
+                                           border:none;border-radius:10px;cursor:pointer;
+                                           box-shadow:0 4px 12px rgba(99,102,241,0.35);">
+                                Activer
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         {% endif %}
+
+        <style>
+            @keyframes mfaModalIn {
+                from { opacity:0; transform:scale(.95) translateY(8px); }
+                to   { opacity:1; transform:scale(1) translateY(0); }
+            }
+        </style>
+        <script>
+            document.getElementById('toggle-enable-pw')?.addEventListener('click', function() {
+                var inp = document.getElementById('enable_password');
+                inp.type = inp.type === 'password' ? 'text' : 'password';
+            });
+            document.getElementById('toggle-disable-pw')?.addEventListener('click', function() {
+                var inp = document.getElementById('disable_password');
+                inp.type = inp.type === 'password' ? 'text' : 'password';
+            });
+        </script>
     </div>
 </div>
 {% endblock %}

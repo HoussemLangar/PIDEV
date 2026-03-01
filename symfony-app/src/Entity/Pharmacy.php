@@ -100,7 +100,7 @@ class Pharmacy
     #[ORM\Column(type: 'datetime', options: ['default' => 'CURRENT_TIMESTAMP'])]
     private \DateTimeInterface $updatedAt;
 
-    #[ORM\OneToMany(mappedBy: 'pharmacie', targetEntity: StockPharmacy::class, cascade: ['persist', 'remove'])]
+    #[ORM\OneToMany(mappedBy: 'pharmacie', targetEntity: StockPharmacy::class, cascade: ['persist'], orphanRemoval: true)]
     private Collection $stocks;
 
     public function __construct()

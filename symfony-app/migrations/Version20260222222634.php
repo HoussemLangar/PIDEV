@@ -19,6 +19,11 @@ final class Version20260222222634 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
+        $schemaManager = $this->connection->createSchemaManager();
+        if ($schemaManager->tablesExist(['users']) || $schemaManager->tablesExist(['abonnements'])) {
+            return;
+        }
+
         // this up() migration is auto-generated, please modify it to your needs
         $this->addSql('CREATE TABLE abonnements (id INT AUTO_INCREMENT NOT NULL, nom VARCHAR(100) NOT NULL, type_abonnement VARCHAR(50) NOT NULL, prix NUMERIC(10, 2) NOT NULL, duree_mois INT NOT NULL, avantages LONGTEXT DEFAULT NULL, description LONGTEXT DEFAULT NULL, date_debut DATE NOT NULL, date_fin DATE NOT NULL, statut VARCHAR(20) DEFAULT \'actif\' NOT NULL, created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL, user_id INT DEFAULT NULL, INDEX IDX_4788B767A76ED395 (user_id), PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci`');
         $this->addSql('CREATE TABLE accompagnements (id INT AUTO_INCREMENT NOT NULL, nom VARCHAR(100) NOT NULL, description LONGTEXT DEFAULT NULL, date_debut DATE NOT NULL, date_fin DATE DEFAULT NULL, type_accompagnement VARCHAR(50) DEFAULT NULL, statut VARCHAR(20) DEFAULT \'en_cours\' NOT NULL, created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL, abonnement_id INT NOT NULL, INDEX IDX_E79677D7F1D74413 (abonnement_id), PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci`');

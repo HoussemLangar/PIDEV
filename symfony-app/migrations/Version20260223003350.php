@@ -19,6 +19,11 @@ final class Version20260223003350 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
+        $schemaManager = $this->connection->createSchemaManager();
+        if ($schemaManager->tablesExist(['reservations_medicaments']) || $schemaManager->tablesExist(['article_scores'])) {
+            return;
+        }
+
         // this up() migration is auto-generated, please modify it to your needs
         $this->addSql('CREATE TABLE article_scores (score_article DOUBLE PRECISION DEFAULT 0 NOT NULL, nb_commentaires INT DEFAULT 0 NOT NULL, updated_at DATETIME NOT NULL, contenu_id INT NOT NULL, PRIMARY KEY(contenu_id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci`');
         $this->addSql('CREATE TABLE reservations_medicaments (id INT AUTO_INCREMENT NOT NULL, quantite INT DEFAULT 1 NOT NULL, prix_unitaire NUMERIC(10, 2) DEFAULT NULL, prix_total NUMERIC(10, 2) DEFAULT NULL, statut VARCHAR(20) DEFAULT \'en_attente\' NOT NULL, created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL, updated_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL, expires_at DATETIME DEFAULT NULL, confirmed_at DATETIME DEFAULT NULL, cancelled_at DATETIME DEFAULT NULL, rejected_at DATETIME DEFAULT NULL, patient_id INT NOT NULL, pharmacie_id INT NOT NULL, medicament_id INT NOT NULL, stock_id INT NOT NULL, INDEX IDX_C8F0BB396B899279 (patient_id), INDEX IDX_C8F0BB39BC6D351B (pharmacie_id), INDEX IDX_C8F0BB39AB0D61F7 (medicament_id), INDEX IDX_C8F0BB39DCD6110 (stock_id), PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci`');

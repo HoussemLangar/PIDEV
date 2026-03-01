@@ -16,11 +16,21 @@ final class Version20260208093000 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
-        $this->addSql("ALTER TABLE users ADD locale VARCHAR(5) DEFAULT 'fr' NOT NULL");
+        $schemaManager = $this->connection->createSchemaManager();
+        $columns = $schemaManager->listTableColumns('users');
+
+        if (!isset($columns['locale'])) {
+            $this->addSql("ALTER TABLE users ADD locale VARCHAR(5) DEFAULT 'fr' NOT NULL");
+        }
     }
 
     public function down(Schema $schema): void
     {
-        $this->addSql('ALTER TABLE users DROP locale');
+        $schemaManager = $this->connection->createSchemaManager();
+        $columns = $schemaManager->listTableColumns('users');
+
+        if (isset($columns['locale'])) {
+            $this->addSql('ALTER TABLE users DROP locale');
+        }
     }
 }

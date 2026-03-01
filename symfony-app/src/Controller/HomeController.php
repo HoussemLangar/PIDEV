@@ -16,17 +16,12 @@ class HomeController extends AbstractController
     #[Route('/', name: 'app_home')]
     public function index(): Response
     {
-        // Get latest validated/published forum posts with their comments
-        $forumPosts = $this->contenuRepository->createValidatedQueryBuilder()
-            ->leftJoin('c.commentaires', 'com')
-            ->addSelect('com')
-            ->leftJoin('com.user', 'comUser')
-            ->addSelect('comUser')
-            ->orderBy('c.datePublication', 'DESC')
-            ->addOrderBy('c.createdAt', 'DESC')
-            ->setMaxResults(6)
-            ->getQuery()
-            ->getResult();
+        // Get latest validated/published forum posts
+        $forumPosts = $this->contenuRepository->findBy(
+            ['statut' => 'publie'],
+            ['datePublication' => 'DESC', 'createdAt' => 'DESC'],
+            6
+        );
         
         return $this->render('front/index.html.twig', [
             'forumPosts' => $forumPosts,

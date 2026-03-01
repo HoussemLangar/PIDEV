@@ -125,7 +125,7 @@ class FrontSymptomeController extends AbstractController
         // Créer un utilisateur de test d'abord (requis pour Patient)
         $user = new \App\Entity\User();
         $user->setEmail('test@example.com');
-        $user->setRoles(['ROLE_USER']);
+        $user->setRole('ROLE_USER');
         $user->setPassword('test'); // mot de passe fictif
         $em->persist($user);
         $em->flush();

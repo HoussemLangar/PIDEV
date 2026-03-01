@@ -38,25 +38,25 @@ class Patient
     #[ORM\Column(type: 'datetime', options: ['default' => 'CURRENT_TIMESTAMP'])]
     private \DateTimeInterface $updatedAt;
 
-    #[ORM\OneToMany(mappedBy: 'patient', targetEntity: RendezVous::class, cascade: ['persist', 'remove'])]
+    #[ORM\OneToMany(mappedBy: 'patient', targetEntity: RendezVous::class, cascade: ['persist'], orphanRemoval: true)]
     private Collection $rendezVous;
 
-    #[ORM\OneToMany(mappedBy: 'patient', targetEntity: RapportAnalyse::class, cascade: ['persist', 'remove'])]
+    #[ORM\OneToMany(mappedBy: 'patient', targetEntity: RapportAnalyse::class, cascade: ['persist'], orphanRemoval: true)]
     private Collection $rapportsAnalyses;
 
-    #[ORM\OneToMany(mappedBy: 'patient', targetEntity: RapportMedical::class, cascade: ['persist', 'remove'])]
+    #[ORM\OneToMany(mappedBy: 'patient', targetEntity: RapportMedical::class, cascade: ['persist'], orphanRemoval: true)]
     private Collection $rapportsMedicaux;
 
-    #[ORM\OneToMany(mappedBy: 'patient', targetEntity: JournalItem::class, cascade: ['persist', 'remove'])]
+    #[ORM\OneToMany(mappedBy: 'patient', targetEntity: JournalItem::class, cascade: ['persist'], orphanRemoval: true)]
     private Collection $journalItems;
 
-    #[ORM\OneToMany(mappedBy: 'patient', targetEntity: SymptomeQuotidien::class, cascade: ['persist', 'remove'])]
+    #[ORM\OneToMany(mappedBy: 'patient', targetEntity: SymptomeQuotidien::class, cascade: ['persist'], orphanRemoval: true)]
     private Collection $symptomesQuotidiens;
 
-    #[ORM\OneToMany(mappedBy: 'patient', targetEntity: PlanExercice::class, cascade: ['persist', 'remove'])]
+    #[ORM\OneToMany(mappedBy: 'patient', targetEntity: PlanExercice::class, cascade: ['persist'], orphanRemoval: true)]
     private Collection $plansExercices;
 
-    #[ORM\OneToMany(mappedBy: 'patient', targetEntity: PlanRegime::class, cascade: ['persist', 'remove'])]
+    #[ORM\OneToMany(mappedBy: 'patient', targetEntity: PlanRegime::class, cascade: ['persist'], orphanRemoval: true)]
     private Collection $plansRegimes;
 
     public function __construct()

@@ -12,6 +12,7 @@ use App\Security\GeoIpService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Mime\Address;
@@ -93,7 +94,7 @@ class LoginSuccessListener
                 ]);
             $this->mailer->send($email);
 
-            if ($session) {
+            if ($session instanceof Session) {
                 $session->getFlashBag()->add('error', 'Connexion suspecte détectée. Un email de sécurité vous a été envoyé.');
                 $session->invalidate();
             }

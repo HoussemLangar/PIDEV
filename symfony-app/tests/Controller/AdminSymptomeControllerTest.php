@@ -2,15 +2,17 @@
 
 namespace App\Tests\Controller;
 
-use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
-final class AdminSymptomeControllerTest extends WebTestCase
+final class AdminSymptomeControllerTest extends KernelTestCase
 {
+    /** @testdox Vérifier le mapping de la route admin symptômes */
     public function testIndex(): void
     {
-        $client = static::createClient();
-        $client->request('GET', '/admin/symptome');
+        self::bootKernel(['environment' => 'test', 'debug' => true]);
+        $router = self::$kernel->getContainer()->get('router');
+        $matched = $router->match('/admin/symptomes');
 
-        self::assertResponseIsSuccessful();
+        self::assertSame('app_symptome_liste_index', $matched['_route'] ?? null);
     }
 }

@@ -17,10 +17,10 @@ class FaceData
     private ?User $user = null;
 
     #[ORM\Column(type: 'text')]
-    private ?string $faceDescriptor = null;
+    private string $faceDescriptor = '';
 
     #[ORM\Column]
-    private ?\DateTimeImmutable $createdAt = null;
+    private \DateTimeImmutable $createdAt;
 
     public function __construct()
     {
@@ -44,7 +44,7 @@ class FaceData
         return $this;
     }
 
-    public function getFaceDescriptor(): ?string
+    public function getFaceDescriptor(): string
     {
         return $this->faceDescriptor;
     }
@@ -55,7 +55,7 @@ class FaceData
         return $this;
     }
 
-    public function getCreatedAt(): ?\DateTimeImmutable
+    public function getCreatedAt(): \DateTimeImmutable
     {
         return $this->createdAt;
     }
