@@ -17,6 +17,8 @@ class SanteQuotidienneType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
+        $tunisTz = new \DateTimeZone('Africa/Tunis');
+
         $builder
             ->add('poids', NumberType::class, [
                 'label' => 'Poids (kg)',
@@ -76,8 +78,10 @@ class SanteQuotidienneType extends AbstractType
                 'label' => 'Date',
                 'widget' => 'single_text',
                 'required' => true,
+                'model_timezone' => 'Africa/Tunis',
+                'view_timezone' => 'Africa/Tunis',
                 'attr' => [
-                    'max' => (new \DateTime())->format('Y-m-d'),
+                    'max' => (new \DateTimeImmutable('today', $tunisTz))->format('Y-m-d'),
                 ],
             ]);
     }

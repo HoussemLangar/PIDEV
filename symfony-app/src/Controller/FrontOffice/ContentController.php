@@ -34,10 +34,28 @@ class ContentController extends AbstractController
 
         /** @var User $user */
         $user = $this->getUser();
-        $showRecommended = $user->getRole() === 'ROLE_PATIENT';
+        $effectiveRole = $user->getSubscriptionType() ?? $user->getRole();
+        $showRecommended = $effectiveRole === 'ROLE_PATIENT';
         $recommended = [];
         if ($showRecommended) {
-            $publishedContents = $contenuRepository->findFiltered(null, null, null, null);
+            $professionalRoles = ['ROLE_MEDECIN', 'ROLE_PHARMACIEN', 'ROLE_COACH', 'ROLE_NUTRITIONNISTE'];
+            $publishedContents = array_values(array_filter(
+                $contenuRepository->findFiltered('article', null, null, ['publie', 'valide']),
+                static function (Contenu $content) use ($professionalRoles): bool {
+                    $author = $content->getAuteur();
+                    if (!$author instanceof User) {
+                        return false;
+                    }
+
+                    $authorRole = $author->getSubscriptionType() ?? $author->getRole();
+
+                    return in_array($authorRole, $professionalRoles, true)
+                        || $author->getMedecin() !== null
+                        || $author->getPharmacien() !== null
+                        || $author->getCoachSportif() !== null
+                        || $author->getNutritionniste() !== null;
+                }
+            ));
             $contentIds = array_values(array_filter(array_map(
                 static fn (Contenu $content): ?int => $content->getId(),
                 $publishedContents
@@ -134,11 +152,9 @@ class ContentController extends AbstractController
         /** @var User $user */
         $user = $this->getUser();
         $isOwner = $user instanceof User && $contenu->getAuteur() && $contenu->getAuteur()->getId() === $user->getId();
-        $isPatient = $user instanceof User && $user->getRole() === 'ROLE_PATIENT';
+        $isAdmin = in_array('ROLE_ADMIN', $user->getRoles(), true);
 
-        // Permettre à l'auteur de voir son propre contenu quel que soit le statut
-        // Les patients peuvent consulter tous les contenus
-        if (!$isOwner && !$isPatient && $contenu->getStatut() !== 'publie') {
+        if (!$isAdmin && !$isOwner && !in_array($contenu->getStatut(), ['publie', 'valide'], true)) {
             throw $this->createNotFoundException('Contenu introuvable.');
         }
 

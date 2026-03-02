@@ -11,6 +11,7 @@ use App\Repository\SanteQuotidienneRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
 #[ORM\Entity(repositoryClass: SanteQuotidienneRepository::class)]
 #[ORM\Table(name: 'sante_quotidienne')]
@@ -102,12 +103,11 @@ class SanteQuotidienne
 
     #[ORM\Column(type: Types::DATETIMETZ_MUTABLE, nullable: true)]
     #[Assert\NotBlank(message: "La date est obligatoire")]
-    #[Assert\LessThanOrEqual('today', message: 'Veuillez choisir une date valide (aujourd\'hui ou avant).')]
     private ?\DateTimeInterface $date = null;
 
     public function __construct()
     {
-        $this->date = new \DateTime(); // Date du jour par défaut
+        $this->date = new \DateTime('now', new \DateTimeZone('Africa/Tunis')); // Date du jour par défaut
         $this->humeur = []; // Tableau vide par défaut
     }
 
@@ -248,10 +248,15 @@ class SanteQuotidienne
         return $this->date;
     }
 
-    public function recordDate(\DateTimeInterface $date): static
+    public function setDate(?\DateTimeInterface $date): static
     {
         $this->date = $date;
         return $this;
+    }
+
+    public function recordDate(\DateTimeInterface $date): static
+    {
+        return $this->setDate($date);
     }
 
     /**
@@ -264,6 +269,25 @@ class SanteQuotidienne
             $this->imc = round($this->poids / ($tailleEnMetres * $tailleEnMetres), 2);
         } else {
             $this->imc = null;
+        }
+    }
+
+    #[Assert\Callback]
+    public function validateDateNotInFuture(ExecutionContextInterface $context): void
+    {
+        if (!$this->date instanceof \DateTimeInterface) {
+            return;
+        }
+
+        $tz = new \DateTimeZone('Africa/Tunis');
+        $entryDay = (new \DateTimeImmutable($this->date->format('Y-m-d'), $tz))->setTime(0, 0, 0);
+        $today = (new \DateTimeImmutable('today', $tz))->setTime(0, 0, 0);
+
+        if ($entryDay > $today) {
+            $context
+                ->buildViolation('Veuillez choisir une date valide (aujourd\'hui ou avant).')
+                ->atPath('date')
+                ->addViolation();
         }
     }
 }

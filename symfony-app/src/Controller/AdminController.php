@@ -195,7 +195,7 @@ class AdminController extends AbstractController
 
             $needle = $targetNormalized;
             $candidates = $userRepository->createQueryBuilder('u')
-                ->andWhere('u.removedAt IS NULL')
+                ->andWhere('u.deletedAt IS NULL')
                 ->andWhere('LOWER(u.email) LIKE :q OR LOWER(u.username) LIKE :q OR LOWER(u.nom) LIKE :q OR LOWER(u.prenom) LIKE :q')
                 ->setParameter('q', '%' . $needle . '%')
                 ->setMaxResults(1)
@@ -208,7 +208,7 @@ class AdminController extends AbstractController
             }
 
             $pool = $userRepository->createQueryBuilder('u')
-                ->andWhere('u.removedAt IS NULL')
+                ->andWhere('u.deletedAt IS NULL')
                 ->getQuery()
                 ->getResult();
 
@@ -418,7 +418,7 @@ class AdminController extends AbstractController
 
         if ($intent === 'autopilot') {
             $users = $userRepository->createQueryBuilder('u')
-                ->andWhere('u.removedAt IS NULL')
+                ->andWhere('u.deletedAt IS NULL')
                 ->getQuery()
                 ->getResult();
 
@@ -511,7 +511,7 @@ class AdminController extends AbstractController
         $pendingPayments = (int) $em->createQueryBuilder()
             ->select('COUNT(u.id)')
             ->from(User::class, 'u')
-            ->andWhere('u.removedAt IS NULL')
+            ->andWhere('u.deletedAt IS NULL')
             ->andWhere('u.subscriptionStatus = :status')
             ->setParameter('status', 'PENDING')
             ->getQuery()
@@ -594,7 +594,7 @@ class AdminController extends AbstractController
         $suspiciousCount = $suspiciousLoginRepository->countBlocked();
 
         $allUsers = $userRepository->createQueryBuilder('u')
-            ->andWhere('u.removedAt IS NULL')
+            ->andWhere('u.deletedAt IS NULL')
             ->getQuery()
             ->getResult();
 
@@ -756,7 +756,7 @@ class AdminController extends AbstractController
         $pendingPayments = (int) $em->createQueryBuilder()
             ->select('COUNT(u.id)')
             ->from(User::class, 'u')
-            ->andWhere('u.removedAt IS NULL')
+            ->andWhere('u.deletedAt IS NULL')
             ->andWhere('u.subscriptionStatus = :status')
             ->setParameter('status', 'PENDING')
             ->getQuery()
@@ -1249,7 +1249,7 @@ class AdminController extends AbstractController
         }
 
         $users = $userRepository->createQueryBuilder('u')
-            ->andWhere('u.removedAt IS NULL')
+            ->andWhere('u.deletedAt IS NULL')
             ->andWhere('u.emailVerified = false')
             ->getQuery()
             ->getResult();
@@ -1800,7 +1800,7 @@ class AdminController extends AbstractController
         // Liste des coaches pour le filtre
         $coaches = $em->getRepository(CoachSportif::class)->createQueryBuilder('c')
             ->leftJoin('c.user', 'u')->addSelect('u')
-            ->where('u.removedAt IS NULL')
+            ->where('u.deletedAt IS NULL')
             ->orderBy('u.nom', 'ASC')
             ->setMaxResults(50)
             ->getQuery()->getResult();
@@ -1808,7 +1808,7 @@ class AdminController extends AbstractController
         // Liste des nutritionnistes pour le filtre
         $nutritionists = $em->getRepository(Nutritionniste::class)->createQueryBuilder('n')
             ->leftJoin('n.user', 'u')->addSelect('u')
-            ->where('u.removedAt IS NULL')
+            ->where('u.deletedAt IS NULL')
             ->orderBy('u.nom', 'ASC')
             ->setMaxResults(50)
             ->getQuery()->getResult();

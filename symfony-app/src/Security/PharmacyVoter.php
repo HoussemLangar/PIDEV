@@ -38,7 +38,7 @@ class PharmacyVoter extends Voter
 
         return match ($attribute) {
             self::VIEW => $user->isSubscriptionActive(),
-            self::RESERVE => $user->isSubscriptionActive() && $effectiveRole === 'ROLE_PATIENT',
+            self::RESERVE => $user->isSubscriptionActive() && in_array($effectiveRole, ['ROLE_PATIENT', 'ROLE_MEDECIN'], true),
             self::MANAGE, self::STOCK, self::ORDERS => $user->isSubscriptionActive() && $effectiveRole === 'ROLE_PHARMACIEN',
             default => false,
         };

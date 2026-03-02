@@ -180,7 +180,7 @@
                                 {% if item.statut == 'en_attente' %}
                                     {% set statutClass = statutClass ~ ' status-pending' %}
                                     {% set statutLabel = 'En attente' %}
-                                {% elseif item.statut == 'publie' %}
+                                {% elseif item.statut == 'publie' or item.statut == 'valide' %}
                                     {% set statutClass = statutClass ~ ' status-published' %}
                                     {% set statutLabel = 'Publié' %}
                                 {% elseif item.statut == 'rejete' %}
@@ -314,8 +314,9 @@
                 const likedClass = item.liked ? 'active' : '';
                 let statutBadge = '';
                 if (item.isOwner && item.statut) {
-                    const cls = item.statut === 'en_attente' ? 'status-pending' : (item.statut === 'publie' ? 'status-published' : 'status-rejected');
-                    const lbl = item.statut === 'en_attente' ? TRANS.pending : (item.statut === 'publie' ? TRANS.published : TRANS.rejected);
+                    const isPublished = item.statut === 'publie' || item.statut === 'valide';
+                    const cls = item.statut === 'en_attente' ? 'status-pending' : (isPublished ? 'status-published' : 'status-rejected');
+                    const lbl = item.statut === 'en_attente' ? TRANS.pending : (isPublished ? TRANS.published : TRANS.rejected);
                     statutBadge = `<span class="content-pill ${cls}">${lbl}</span>`;
                 }
                 return `
@@ -337,7 +338,7 @@
                         <button class="btn btn-secondary btn-xs comment-toggle">
                             <i class="fas fa-comment" style="margin-right:4px;"></i>(<span class="comment-count">${item.commentaires}</span>)
                         </button>
-                        <a class="btn btn-primary btn-xs" href="/contenus/${item.id}">{{ 'common.view'|trans }}</a>
+                        <a class="btn btn-primary btn-xs" href="{{ path('front_content_show', {id: 0})|slice(0, -1) }}${item.id}">{{ 'common.view'|trans }}</a>
                     </div>
                     <div class="comment-panel" hidden>
                         <div class="comment-list"></div>

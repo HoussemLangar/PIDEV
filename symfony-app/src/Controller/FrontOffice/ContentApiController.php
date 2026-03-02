@@ -49,20 +49,49 @@ class ContentApiController extends AbstractController
         $owner = $request->query->get('owner');
         /** @var User $user */
         $user = $this->getUser();
+        $effectiveRole = $user->getSubscriptionType() ?? $user->getRole();
         $ownerId = null;
-        $statuses = ['publie']; // Par défaut, n'afficher que les contenus publiés
-        $isPatient = $user->getRole() === 'ROLE_PATIENT';
-
-        if ($isPatient) {
-            $statuses = null; // Les patients voient tous les contenus
-        }
+        $statuses = null;
+        $isAdmin = in_array('ROLE_ADMIN', $user->getRoles(), true);
+        $isPatient = $effectiveRole === 'ROLE_PATIENT';
+        $professionalRoles = ['ROLE_MEDECIN', 'ROLE_PHARMACIEN', 'ROLE_COACH', 'ROLE_NUTRITIONNISTE'];
         
         if ($owner === 'me') {
             $ownerId = $user->getId();
-            $statuses = null; // Si l'utilisateur regarde ses propres contenus, afficher tous les statuts
         }
 
         $allContents = $this->contenuRepository->findFiltered($type, $search, $category, $statuses, $ownerId);
+
+        if (!$isAdmin) {
+            $currentUserId = $user->getId();
+            $allContents = array_values(array_filter(
+                $allContents,
+                static function (Contenu $contenu) use ($currentUserId, $owner, $isPatient, $professionalRoles): bool {
+                    $auteur = $contenu->getAuteur();
+                    $isOwner = $auteur instanceof User && $auteur->getId() === $currentUserId;
+                    $isPublished = in_array($contenu->getStatut(), ['publie', 'valide'], true);
+                    $authorRole = $auteur instanceof User ? ($auteur->getSubscriptionType() ?? $auteur->getRole()) : null;
+                    $isProfessionalAuthor = $auteur instanceof User && (
+                        ($authorRole !== null && in_array($authorRole, $professionalRoles, true))
+                        || $auteur->getMedecin() !== null
+                        || $auteur->getPharmacien() !== null
+                        || $auteur->getCoachSportif() !== null
+                        || $auteur->getNutritionniste() !== null
+                    );
+
+                    if ($owner === 'me') {
+                        return $isOwner;
+                    }
+
+                    if ($isPatient) {
+                        return $isPublished && $contenu->getType() === 'article' && $isProfessionalAuthor;
+                    }
+
+                    return $isPublished || $isOwner;
+                }
+            ));
+        }
+
         $contentIds = array_values(array_filter(array_map(
             static fn (Contenu $content): ?int => $content->getId(),
             $allContents
@@ -170,10 +199,9 @@ class ContentApiController extends AbstractController
         $user = $this->getUser();
         $auteur = $contenu->getAuteur();
         $isOwner = $user instanceof User && $auteur && $auteur->getId() === $user->getId();
-        $isPatient = $user instanceof User && $user->getRole() === 'ROLE_PATIENT';
+        $isAdmin = in_array('ROLE_ADMIN', $user->getRoles(), true);
         
-        // Permettre à l'auteur de voir son propre contenu quel que soit le statut
-        if (!$isOwner && !$isPatient && $contenu->getStatut() !== 'publie') {
+        if (!$isAdmin && !$isOwner && !in_array($contenu->getStatut(), ['publie', 'valide'], true)) {
             return new JsonResponse(['message' => 'Introuvable'], 404);
         }
 
@@ -208,10 +236,9 @@ class ContentApiController extends AbstractController
         $user = $this->getUser();
         $auteur = $contenu->getAuteur();
         $isOwner = $user instanceof User && $auteur && $auteur->getId() === $user->getId();
-        $isPatient = $user instanceof User && $user->getRole() === 'ROLE_PATIENT';
+        $isAdmin = in_array('ROLE_ADMIN', $user->getRoles(), true);
         
-        // Permettre à l'auteur de voir les commentaires de son propre contenu
-        if (!$isOwner && !$isPatient && $contenu->getStatut() !== 'publie') {
+        if (!$isAdmin && !$isOwner && !in_array($contenu->getStatut(), ['publie', 'valide'], true)) {
             return new JsonResponse(['items' => []]);
         }
 
@@ -248,10 +275,9 @@ class ContentApiController extends AbstractController
         $user = $this->getUser();
         $auteur = $contenu->getAuteur();
         $isOwner = $user instanceof User && $auteur && $auteur->getId() === $user->getId();
-        $isPatient = $user instanceof User && $user->getRole() === 'ROLE_PATIENT';
+        $isAdmin = in_array('ROLE_ADMIN', $user->getRoles(), true);
         
-        // Permettre à l'auteur d'interagir avec son propre contenu
-        if (!$isOwner && !$isPatient && $contenu->getStatut() !== 'publie') {
+        if (!$isAdmin && !$isOwner && !in_array($contenu->getStatut(), ['publie', 'valide'], true)) {
             return new JsonResponse(['success' => false, 'message' => 'Contenu indisponible'], 404);
         }
 

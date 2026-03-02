@@ -37,7 +37,7 @@
         <div style="margin-top:16px;line-height:1.7;">
             {% set isLocal = contenu.contenu starts with '/media/' %}
             {% if contenu.type == 'article' %}
-                <div style="font-size:15px;color:var(--text,#1a1a2e);">{{ contenu.contenu|raw }}</div>
+                <div style="font-size:15px;color:var(--text,#1a1a2e);">{{ contenu.contenu|e|nl2br }}</div>
             {% elseif contenu.type == 'pdf' %}
                 <a class="btn btn-primary" href="{{ contenu.contenu }}" target="_blank" style="display:inline-flex;align-items:center;gap:8px;">
                     <i class="fas fa-file-pdf"></i> Télécharger le PDF
@@ -118,10 +118,13 @@
                 commentList.innerHTML = '';
                 (data.items || []).forEach((c) => {
                     const canDelete = currentUserId && c.user_id === currentUserId;
+                    const deleteBtn = canDelete
+                        ? `<button class="btn btn-secondary btn-xs comment-delete" data-comment-id="${c.id}" style="margin-top:6px;">{{ 'common.delete'|trans }}</button>`
+                        : '';
                     commentList.insertAdjacentHTML('beforeend', `
-                        <div class="comment-item" data-comment-id="${comment.id}">
-                            <div class="comment-meta">${comment.user} • ${comment.date} • Score: ${formatSignedScore(comment.score)} (${comment.sentiment ?? 'N/A'})</div>
-                            <div>${comment.message}</div>
+                        <div class="comment-item" data-comment-id="${c.id}">
+                            <div class="comment-meta">${c.user} • ${c.date} • Score: ${formatSignedScore(c.score)} (${c.sentiment ?? 'N/A'})</div>
+                            <div>${c.message}</div>
                             ${deleteBtn}
                         </div>
                     `);

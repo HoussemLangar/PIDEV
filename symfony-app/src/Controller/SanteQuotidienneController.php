@@ -25,6 +25,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route('/sante-quotidienne')]
 #[IsGranted('IS_AUTHENTICATED_FULLY')] // obligatoire : seul un utilisateur connecté peut accéder
@@ -319,18 +320,28 @@ class SanteQuotidienneController extends AbstractController
 
         $sante = new SanteQuotidienne();
         $sante->setUser($user);           // ← très important
-        $sante->recordDate(new \DateTime());             // date du jour par défaut
+        $sante->recordDate(new \DateTime('now', new \DateTimeZone('Africa/Tunis')));             // date du jour par défaut
 
         $form = $this->createForm(SanteQuotidienneType::class, $sante);
         $form->handleRequest($request);
 
         error_log('Form submitted: ' . ($form->isSubmitted() ? 'YES' : 'NO'));
-        error_log('Form valid: ' . ($form->isValid() ? 'YES' : 'NO'));
+        if ($form->isSubmitted()) {
+            $submittedData = $request->request->all('sante_quotidienne');
+            if (is_array($submittedData) && isset($submittedData['date']) && is_string($submittedData['date'])) {
+                $parsedDate = \DateTimeImmutable::createFromFormat('!Y-m-d', $submittedData['date'], new \DateTimeZone('Africa/Tunis'));
+                if ($parsedDate instanceof \DateTimeImmutable) {
+                    $sante->setDate(\DateTime::createFromInterface($parsedDate));
+                }
+            }
 
-        if (!$form->isValid() && $form->isSubmitted()) {
-            error_log('Form errors:');
-            foreach ($form->getErrors(true) as $error) {
-                error_log('  - ' . $error->getMessage());
+            error_log('Form valid: ' . ($form->isValid() ? 'YES' : 'NO'));
+
+            if (!$form->isValid()) {
+                error_log('Form errors:');
+                foreach ($form->getErrors(true) as $error) {
+                    error_log('  - ' . $error->getMessage());
+                }
             }
         }
 
@@ -366,7 +377,7 @@ class SanteQuotidienneController extends AbstractController
 
     #[Route('/{id}/edit', name: 'app_sante_quotidienne_edit', methods: ['GET', 'POST'])]
     #[IsGranted('SANTE_EDIT', subject: 'sante')]
-    public function edit(Request $request, SanteQuotidienne $sante, EntityManagerInterface $em, SanteQuotidienneRepository $repository, CsrfTokenManagerInterface $csrfTokenManager): Response
+    public function edit(Request $request, SanteQuotidienne $sante, EntityManagerInterface $em, SanteQuotidienneRepository $repository, CsrfTokenManagerInterface $csrfTokenManager, ValidatorInterface $validator): Response
     {
         /** @var User $user */
         $user = $this->getUser();
@@ -381,42 +392,129 @@ class SanteQuotidienneController extends AbstractController
 
         // Si c'est une requête AJAX, on renvoie un JSON avec les erreurs éventuelles
         if ($request->isXmlHttpRequest()) {
-            if (!$csrfTokenManager->isTokenValid(new \Symfony\Component\Security\Csrf\CsrfToken('edit' . $sante->getId(), $request->get('_token')))) {
-                return new JsonResponse(['ok' => false, 'message' => 'Token CSRF invalide'], 400);
-            }
+            try {
+                $submittedToken = (string) $request->request->get('_token', '');
+                if ($submittedToken === '' || !$csrfTokenManager->isTokenValid(new \Symfony\Component\Security\Csrf\CsrfToken('edit' . $sante->getId(), $submittedToken))) {
+                    return new JsonResponse(['ok' => false, 'message' => 'Token CSRF invalide'], 400);
+                }
 
-            $form = $this->createForm(SanteQuotidienneType::class, $sante, [
-                'csrf_protection' => false,
-            ]);
-            $form->handleRequest($request);
+                $payload = $request->request->all('sante_quotidienne');
+                if (!is_array($payload)) {
+                    return new JsonResponse([
+                        'ok' => false,
+                        'message' => 'Payload invalide',
+                        'errors' => ['_form' => ['Données de formulaire invalides.']],
+                    ], 422);
+                }
 
-            if ($form->isSubmitted() && $form->isValid()) {
+                $errors = [];
+
+                $dateRaw = trim((string) ($payload['date'] ?? ''));
+                if ($dateRaw !== '') {
+                    $parsedDate = \DateTimeImmutable::createFromFormat('!Y-m-d', $dateRaw, new \DateTimeZone('Africa/Tunis'));
+                    if ($parsedDate instanceof \DateTimeImmutable) {
+                        $sante->setDate(\DateTime::createFromInterface($parsedDate));
+                    } else {
+                        $errors['date'][] = 'Format de date invalide.';
+                    }
+                }
+
+                $poidsRaw = $payload['poids'] ?? null;
+                $sante->setPoids($poidsRaw === '' || $poidsRaw === null ? null : (float) $poidsRaw);
+
+                $tailleRaw = $payload['taille'] ?? null;
+                $sante->setTaille($tailleRaw === '' || $tailleRaw === null ? null : (float) $tailleRaw);
+
+                $tensionRaw = $payload['tensionArterielle'] ?? null;
+                $sante->setTensionArterielle($tensionRaw === '' || $tensionRaw === null ? null : (float) $tensionRaw);
+
+                $sommeilRaw = $payload['sommeil'] ?? null;
+                $sante->setSommeil($sommeilRaw === '' || $sommeilRaw === null ? null : (float) $sommeilRaw);
+
+                $eauRaw = $payload['eauBue'] ?? null;
+                $sante->setEauBue($eauRaw === '' || $eauRaw === null ? null : (float) $eauRaw);
+
+                $activiteRaw = trim((string) ($payload['activitePhysique'] ?? ''));
+                if ($activiteRaw === '') {
+                    $sante->setActivitePhysique(null);
+                } else {
+                    $activite = NiveauActivite::tryFrom($activiteRaw);
+                    if ($activite instanceof NiveauActivite) {
+                        $sante->setActivitePhysique($activite);
+                    } else {
+                        $errors['activitePhysique'][] = 'Niveau d\'activité invalide.';
+                    }
+                }
+
+                $alimentationRaw = trim((string) ($payload['alimentation'] ?? ''));
+                if ($alimentationRaw === '') {
+                    $sante->setAlimentation(null);
+                } else {
+                    $alimentation = Alimentation::tryFrom($alimentationRaw);
+                    if ($alimentation instanceof Alimentation) {
+                        $sante->setAlimentation($alimentation);
+                    } else {
+                        $errors['alimentation'][] = 'Valeur d\'alimentation invalide.';
+                    }
+                }
+
+                $submittedHumeur = $payload['humeur'] ?? [];
+                if (is_string($submittedHumeur)) {
+                    $submittedHumeur = [$submittedHumeur];
+                }
+                if (!is_array($submittedHumeur)) {
+                    $submittedHumeur = [];
+                }
+
+                $humeurValues = [];
+                foreach ($submittedHumeur as $humeurRaw) {
+                    $value = trim((string) $humeurRaw);
+                    if ($value === '') {
+                        continue;
+                    }
+
+                    $humeur = Humeur::tryFrom($value);
+                    if ($humeur instanceof Humeur) {
+                        $humeurValues[] = $humeur->value;
+                    } else {
+                        $errors['humeur'][] = sprintf('Humeur invalide: %s', $value);
+                    }
+                }
+                $sante->setHumeur(array_values(array_unique($humeurValues)));
+
+                $violations = $validator->validate($sante);
+                foreach ($violations as $violation) {
+                    $field = $violation->getPropertyPath() ?: '_form';
+                    $errors[$field][] = $violation->getMessage();
+                }
+
+                if (!empty($errors)) {
+                    $firstField = array_key_first($errors);
+                    $firstMessage = is_string($firstField) && isset($errors[$firstField][0]) ? $errors[$firstField][0] : 'Formulaire invalide';
+
+                    return new JsonResponse([
+                        'ok' => false,
+                        'message' => $firstMessage,
+                        'errors' => $errors,
+                    ], 422);
+                }
+
                 $em->flush();
-                /** @var User $currentUser */
-                $currentUser = $this->getUser();
-                if ($currentUser instanceof User) {
-                    $this->riskPredictionService->recalculateForUser($currentUser);
+                try {
+                    $this->riskPredictionService->recalculateForUser($user);
+                } catch (\Throwable $riskException) {
+                    error_log('Risk recalculation failed after edit: ' . $riskException->getMessage());
                 }
+
                 return new JsonResponse(['ok' => true, 'message' => 'Données modifiées avec succès.']);
-            }
+            } catch (\Throwable $exception) {
+                error_log('AJAX edit failed: ' . $exception->getMessage());
 
-            $errors = [];
-            $firstErrorMessage = null;
-            foreach ($form->getErrors(true) as $error) {
-                $origin = $error->getOrigin();
-                $field = $origin instanceof FormInterface ? $origin->getName() : '_form';
-                $errors[$field][] = $error->getMessage();
-                if ($firstErrorMessage === null) {
-                    $humanField = $field === '_form' ? '' : ucfirst(str_replace('_', ' ', $field)) . ' : ';
-                    $firstErrorMessage = $humanField . $error->getMessage();
-                }
+                return new JsonResponse([
+                    'ok' => false,
+                    'message' => 'Erreur serveur lors de la modification.',
+                ], 500);
             }
-
-            return new JsonResponse([
-                'ok' => false,
-                'message' => $firstErrorMessage ?? 'Formulaire invalide',
-                'errors' => $errors,
-            ], 422);
         }
 
         $form = $this->createForm(SanteQuotidienneType::class, $sante);
