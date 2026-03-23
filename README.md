@@ -1,4 +1,10 @@
-# PI-DEV - Environnement de développement
+# SANTEA
+
+## Overview
+This project was developed as part of the PIDEV – 3rd Year Engineering Program at **Esprit 
+School of Engineering** (Academic Year 2025–2026).
+It consists of a full-stack web application that allows teams to manage tasks, track progress, 
+and collaborate efficiently.
 
 ## Stack technique
 - Symfony 6.4
@@ -96,3 +102,7 @@ pidev/
 ├── docker-compose.yml
 └── README.md
 ```
+
+## Academic Context
+Developed at **Esprit School of Engineering – Tunisia**
+PIDEV – 3A | 2025–2026
