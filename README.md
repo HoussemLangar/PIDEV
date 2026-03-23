@@ -7,7 +7,7 @@ Il s’agit d’une application web full-stack permettant aux équipes de :
 - gérer leurs tâches,
 - suivre l’avancement des projets,
 - collaborer efficacement.
-- 
+
 ## Stack technique
 - Symfony 6.4
 - PHP 8.1
