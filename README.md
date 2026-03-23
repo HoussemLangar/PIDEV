@@ -1,11 +1,13 @@
 # SANTEA
 
-## Overview
-This project was developed as part of the PIDEV – 3rd Year Engineering Program at **Esprit 
-School of Engineering** (Academic Year 2025–2026).
-It consists of a full-stack web application that allows teams to manage tasks, track progress, 
-and collaborate efficiently.
+## Présentation
+Ce projet a été développé dans le cadre du module PIDEV – 3ème année du cycle ingénieur à Esprit School of Engineering (année universitaire 2025–2026).
 
+Il s’agit d’une application web full-stack permettant aux équipes de :
+- gérer leurs tâches,
+- suivre l’avancement des projets,
+- collaborer efficacement.
+- 
 ## Stack technique
 - Symfony 6.4
 - PHP 8.1
@@ -103,6 +105,7 @@ pidev/
 └── README.md
 ```
 
-## Academic Context
-Developed at **Esprit School of Engineering – Tunisia**
-PIDEV – 3A | 2025–2026
+## Contexte académique
+
+Projet réalisé à Esprit School of Engineering – Tunisie
+PIDEV – 3ème année | 2025–2026
