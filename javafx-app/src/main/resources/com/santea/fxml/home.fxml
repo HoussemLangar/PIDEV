@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.santea.controller.HomeViewController"
+            styleClass="home-root" style="-fx-background-color: linear-gradient(to bottom, #f8fbff 0%, #eaf5ff 100%);-fx-padding: 0;">
+    
+    <!-- TOP NAVBAR -->
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="26" styleClass="home-nav" 
+              style="-fx-background-color: rgba(255,255,255,0.88); -fx-border-color: #e2e8f0; -fx-border-width: 0 0 1.2 0; -fx-padding: 16 32 16 32;">
+            
+            <!-- LOGO -->
+            <Label text="SANTÉA" styleClass="home-brand" style="-fx-font-size: 26; -fx-font-weight: bold; -fx-text-fill: #0b5f8f;"/>
+            
+            <!-- NAV LINKS -->
+            <HBox spacing="24" style="-fx-padding: 0;">
+                <Hyperlink text="Accueil" style="-fx-font-size: 14; -fx-text-fill: #374151; -fx-padding: 0;"/>
+                <Hyperlink text="Services" style="-fx-font-size: 14; -fx-text-fill: #374151; -fx-padding: 0;"/>
+                <Hyperlink text="Téléconsultation" style="-fx-font-size: 14; -fx-text-fill: #374151; -fx-padding: 0;"/>
+                <Hyperlink text="Pharmacies" style="-fx-font-size: 14; -fx-text-fill: #374151; -fx-padding: 0;"/>
+            </HBox>
+            
+            <!-- RIGHT BUTTONS -->
+            <HBox spacing="12" HBox.hgrow="ALWAYS" alignment="CENTER_RIGHT">
+                <Button text="🔓 Connexion" styleClass="home-login-btn" 
+                       onAction="#handleOpenLogin"
+                       style="-fx-padding: 10 18 10 18; -fx-font-size: 13; -fx-font-weight: bold; -fx-text-fill: #0b5f8f; -fx-background-color: white; -fx-border-radius: 8; -fx-border-color: #dbeafe; -fx-border-width: 1.2;"/>
+                <Button text="📝 S'inscrire" styleClass="home-register-btn" 
+                       onAction="#handleOpenRegister"
+                       style="-fx-padding: 10 18 10 18; -fx-font-size: 13; -fx-font-weight: bold; -fx-text-fill: #0862a0; -fx-background-color: linear-gradient(to bottom right, #4f46e5 0%, #6366f1 100%); -fx-border-radius: 8; -fx-text-fill: white;"/>
+            </HBox>
+        </HBox>
+    </top>
+    
+    <!-- CENTER: HERO SECTION -->
+    <center>
+        <StackPane styleClass="home-hero-wrap" style="-fx-padding: 0;">
+            
+            <!-- Decorative Icons (background) -->
+            <AnchorPane style="-fx-padding: 0;">
+                <Label text="❤" style="-fx-font-size: 120; -fx-text-fill: rgba(255,255,255,0.05); -fx-padding: 40 0 0 60;" 
+                       AnchorPane.topAnchor="40" AnchorPane.leftAnchor="60"/>
+                <Label text="⚕" style="-fx-font-size: 100; -fx-text-fill: rgba(255,255,255,0.06); -fx-padding: 0 0 100 0;" 
+                       AnchorPane.bottomAnchor="60" AnchorPane.rightAnchor="80"/>
+                <Label text="💊" style="-fx-font-size: 90; -fx-text-fill: rgba(255,255,255,0.05);" 
+                       AnchorPane.topAnchor="120" AnchorPane.rightAnchor="40"/>
+                <Label text="🩺" style="-fx-font-size: 110; -fx-text-fill: rgba(255,255,255,0.04);" 
+                       AnchorPane.bottomAnchor="100" AnchorPane.leftAnchor="40"/>
+            </AnchorPane>
+            
+            <!-- Hero Content -->
+            <HBox spacing="40" alignment="CENTER_LEFT" 
+                  style="-fx-background-color: linear-gradient(to bottom right, #0c6fa7, #0d8abc, #14b8a6); -fx-padding: 60 80 60 80; -fx-border-radius: 28; -fx-margin: 60 40 60 40;">
+                
+                <!-- LEFT SIDE: TEXT & BUTTONS -->
+                <VBox spacing="24" style="-fx-max-width: 560;">
+                    
+                    <!-- Badge -->
+                    <HBox alignment="CENTER_LEFT">
+                        <Label text="✨ BIEN ÊTRE" style="-fx-background-color: rgba(255,255,255,0.2); -fx-padding: 6 12 6 12; -fx-border-radius: 20; -fx-text-fill: white; -fx-font-size: 11; -fx-font-weight: bold;"/>
+                    </HBox>
+                    
+                    <!-- Main Title -->
+                    <Label text="Votre SANTÉA, en toute confiance" 
+                           style="-fx-font-size: 32; -fx-font-weight: bold; -fx-text-fill: white; -fx-wrap-text: true; -fx-line-spacing: 1.2;"/>
+                    
+                    <!-- Subtitle -->
+                    <Label text="Suivez votre santé quotidienne, consultez des experts, et accédez à vos prescriptions en un clic. Une plateforme complète pour votre bien-être."
+                           style="-fx-font-size: 14; -fx-text-fill: rgba(255,255,255,0.92); -fx-wrap-text: true; -fx-line-spacing: 1.4;"/>
+                    
+                    <!-- CTA Buttons -->
+                    <HBox spacing="14" style="-fx-padding: 8 0 0 0;">
+                        <Button text="🔓 Se Connecter" 
+                               onAction="#handleOpenLogin"
+                               style="-fx-padding: 12 24 12 24; -fx-font-size: 13.5; -fx-font-weight: bold; -fx-background-color: white; -fx-text-fill: #0b5f8f; -fx-border-radius: 12;"/>
+                        <Button text="📝 S'inscrire Maintenant" 
+                               onAction="#handleOpenRegister"
+                               style="-fx-padding: 12 24 12 24; -fx-font-size: 13.5; -fx-font-weight: bold; -fx-background-color: rgba(255,255,255,0.14); -fx-text-fill: white; -fx-border-color: rgba(255,255,255,0.5); -fx-border-width: 1.4; -fx-border-radius: 12;"/>
+                    </HBox>
+                </VBox>
+                
+                <!-- RIGHT SIDE: STATISTICS CARDS -->
+                <VBox spacing="16" style="-fx-max-width: 430;">
+                    
+                    <!-- Stat Card 1 -->
+                    <HBox spacing="14" alignment="CENTER_LEFT"
+                          style="-fx-background-color: rgba(255,255,255,0.92); -fx-padding: 14; -fx-border-radius: 14;">
+                        <Label text="📅" style="-fx-font-size: 28; -fx-background-color: #e0f2fe; -fx-padding: 10; -fx-border-radius: 9;"/>
+                        <VBox spacing="2">
+                            <Label text="+12 000" style="-fx-font-size: 19; -fx-font-weight: bold; -fx-text-fill: #0f172a;"/>
+                            <Label text="Rendez-vous effectués" style="-fx-font-size: 12.5; -fx-text-fill: #64748b;"/>
+                        </VBox>
+                    </HBox>
+                    
+                    <!-- Stat Card 2 -->
+                    <HBox spacing="14" alignment="CENTER_LEFT"
+                          style="-fx-background-color: rgba(255,255,255,0.92); -fx-padding: 14; -fx-border-radius: 14;">
+                        <Label text="📋" style="-fx-font-size: 28; -fx-background-color: #fef3c7; -fx-padding: 10; -fx-border-radius: 9;"/>
+                        <VBox spacing="2">
+                            <Label text="+8 500" style="-fx-font-size: 19; -fx-font-weight: bold; -fx-text-fill: #0f172a;"/>
+                            <Label text="Suivis de santé" style="-fx-font-size: 12.5; -fx-text-fill: #64748b;"/>
+                        </VBox>
+                    </HBox>
+                    
+                    <!-- Stat Card 3 -->
+                    <HBox spacing="14" alignment="CENTER_LEFT"
+                          style="-fx-background-color: rgba(255,255,255,0.92); -fx-padding: 14; -fx-border-radius: 14;">
+                        <Label text="💊" style="-fx-font-size: 28; -fx-background-color: #dcfce7; -fx-padding: 10; -fx-border-radius: 9;"/>
+                        <VBox spacing="2">
+                            <Label text="+4 700" style="-fx-font-size: 19; -fx-font-weight: bold; -fx-text-fill: #0f172a;"/>
+                            <Label text="Médicaments référencés" style="-fx-font-size: 12.5; -fx-text-fill: #64748b;"/>
+                        </VBox>
+                    </HBox>
+                </VBox>
+            </HBox>
+        </StackPane>
+    </center>
+    
+    <!-- BOTTOM: FEATURE PILLS -->
+    <bottom>
+        <HBox spacing="16" alignment="CENTER" style="-fx-padding: 40 40 40 40;">
+            <Label text="🎯 Téléconsultations" 
+                  style="-fx-background-color: white; -fx-padding: 10 18 10 18; -fx-border-color: #dbeafe; -fx-border-width: 1.2; -fx-border-radius: 999; -fx-font-size: 13; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
+            <Label text="📄 Documents" 
+                  style="-fx-background-color: white; -fx-padding: 10 18 10 18; -fx-border-color: #dbeafe; -fx-border-width: 1.2; -fx-border-radius: 999; -fx-font-size: 13; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
+            <Label text="📔 Journal santé" 
+                  style="-fx-background-color: white; -fx-padding: 10 18 10 18; -fx-border-color: #dbeafe; -fx-border-width: 1.2; -fx-border-radius: 999; -fx-font-size: 13; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
+            <Label text="💬 Messagerie" 
+                  style="-fx-background-color: white; -fx-padding: 10 18 10 18; -fx-border-color: #dbeafe; -fx-border-width: 1.2; -fx-border-radius: 999; -fx-font-size: 13; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
+        </HBox>
+    </bottom>
+    
+</BorderPane>

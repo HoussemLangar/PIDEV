@@ -1,0 +1,544 @@
+.root {
+    -fx-font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.auth-container {
+    -fx-background-color: #ffffff;
+}
+
+.auth-left {
+    -fx-background-color: linear-gradient(to bottom right, #0862a0 0%, #0D8ABC 55%, #00c9a7 100%);
+    -fx-padding: 60 60 60 60;
+    -fx-min-width: 530;
+}
+
+.auth-left-content {
+    -fx-max-width: 500;
+}
+
+.auth-logo {
+    -fx-min-width: 100;
+    -fx-min-height: 100;
+    -fx-max-width: 100;
+    -fx-max-height: 100;
+    -fx-alignment: center;
+    -fx-background-color: rgba(255, 255, 255, 0.2);
+    -fx-background-radius: 20;
+    -fx-font-size: 36;
+    -fx-text-fill: white;
+}
+
+.auth-left-title {
+    -fx-text-fill: white;
+    -fx-font-size: 28;
+    -fx-font-weight: 700;
+    -fx-text-alignment: center;
+}
+
+.auth-left-subtitle {
+    -fx-text-fill: rgba(255,255,255,0.95);
+    -fx-font-size: 17;
+}
+
+.auth-float-icon {
+    -fx-text-fill: rgba(255,255,255,0.5);
+    -fx-font-size: 26;
+}
+
+.auth-right {
+    -fx-background-color: rgba(255,255,255,0.95);
+}
+
+.auth-content-scroll {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-padding: 0;
+}
+
+.auth-content-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+
+.language-selector {
+    -fx-padding: 0 0 20 0;
+}
+
+.language-select {
+    -fx-background-color: white;
+    -fx-border-color: #e0e0e0;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+}
+
+.auth-form {
+    -fx-max-width: 470;
+}
+
+.auth-home-btn {
+    -fx-background-color: #f8fafc;
+    -fx-border-color: #e2e8f0;
+    -fx-border-width: 1.5;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+    -fx-padding: 9 16 9 16;
+    -fx-font-size: 13;
+    -fx-font-weight: 600;
+    -fx-text-fill: #374151;
+}
+
+.auth-home-btn:hover {
+    -fx-background-color: #e0e7ff;
+    -fx-border-color: #6366f1;
+    -fx-text-fill: #4f46e5;
+}
+
+.title-icon {
+    -fx-min-width: 42;
+    -fx-min-height: 42;
+    -fx-max-width: 42;
+    -fx-max-height: 42;
+    -fx-background-color: linear-gradient(to bottom right, #3b82f6, #6366f1);
+    -fx-background-radius: 12;
+    -fx-alignment: center;
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 18;
+}
+
+.auth-title {
+    -fx-font-size: 30;
+    -fx-font-weight: 700;
+    -fx-text-fill: #111827;
+}
+
+.subtitle {
+    -fx-font-size: 13;
+    -fx-text-fill: #6b7280;
+}
+
+.social-buttons {
+    -fx-padding: 0 0 4 0;
+}
+
+.social-btn {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #e0e0e0;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 12 14 12 14;
+    -fx-font-size: 13;
+    -fx-font-weight: 600;
+}
+
+.social-btn:hover {
+    -fx-background-color: #f8f8f8;
+}
+
+.google-btn {
+    -fx-text-fill: #db4437;
+}
+
+.facebook-btn {
+    -fx-text-fill: #4267B2;
+}
+
+.divider {
+    -fx-alignment: center;
+    -fx-padding: 4 0 4 0;
+}
+
+.divider-text {
+    -fx-text-fill: #9ca3af;
+    -fx-font-size: 12;
+    -fx-font-weight: 600;
+}
+
+.login-card {
+    -fx-background-color: #f9fafb;
+    -fx-border-color: #e5e7eb;
+    -fx-border-width: 1.5;
+    -fx-border-radius: 16;
+    -fx-background-radius: 16;
+    -fx-padding: 24 22 20 22;
+}
+
+.card-header {
+    -fx-padding: 0 0 14 0;
+    -fx-border-color: transparent transparent #e5e7eb transparent;
+    -fx-border-width: 0 0 1.5 0;
+}
+
+.card-header-icon {
+    -fx-min-width: 34;
+    -fx-min-height: 34;
+    -fx-max-width: 34;
+    -fx-max-height: 34;
+    -fx-background-color: #eef2ff;
+    -fx-background-radius: 10;
+    -fx-text-fill: #6366f1;
+    -fx-alignment: center;
+}
+
+.card-header-title {
+    -fx-font-size: 13;
+    -fx-font-weight: 700;
+    -fx-text-fill: #374151;
+}
+
+.card-header-sub {
+    -fx-font-size: 11;
+    -fx-text-fill: #9ca3af;
+}
+
+.form-group {
+    -fx-padding: 2 0 0 0;
+}
+
+.field-label {
+    -fx-font-size: 12;
+    -fx-font-weight: 600;
+    -fx-text-fill: #374151;
+}
+
+.text-input {
+    -fx-padding: 11 12 11 12;
+    -fx-background-color: #ffffff;
+    -fx-border-color: #d1d5db;
+    -fx-border-width: 1.5;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+    -fx-font-size: 13.5;
+}
+
+.text-input:focused {
+    -fx-border-color: #6366f1;
+}
+
+.toggle-password {
+    -fx-background-color: transparent;
+    -fx-font-size: 13;
+    -fx-text-fill: #9ca3af;
+    -fx-padding: 0 4 0 4;
+}
+
+.toggle-password:hover {
+    -fx-text-fill: #6366f1;
+}
+
+.form-options {
+    -fx-padding: 4 0 0 0;
+}
+
+.remember-me {
+    -fx-font-size: 12.5;
+    -fx-text-fill: #374151;
+}
+
+.forgot-password {
+    -fx-font-size: 12.5;
+    -fx-text-fill: #6366f1;
+    -fx-border-color: transparent;
+}
+
+.login-submit {
+    -fx-background-color: linear-gradient(to bottom right, #4f46e5, #6366f1);
+    -fx-text-fill: #ffffff;
+    -fx-background-radius: 12;
+    -fx-font-size: 14.5;
+    -fx-font-weight: 700;
+    -fx-padding: 13 30 13 30;
+}
+
+.login-submit:hover {
+    -fx-background-color: linear-gradient(to bottom right, #4338ca, #4f46e5);
+}
+
+.auth-switch {
+    -fx-text-fill: #6b7280;
+    -fx-font-size: 12.5;
+}
+
+.register-link {
+    -fx-text-fill: #6366f1;
+    -fx-font-weight: 700;
+    -fx-border-color: transparent;
+}
+
+.alert {
+    -fx-padding: 11 14 11 14;
+    -fx-font-size: 13;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+}
+
+.alert-danger {
+    -fx-background-color: #fff1f2;
+    -fx-border-color: #fecaca;
+    -fx-text-fill: #b91c1c;
+}
+
+.alert-success {
+    -fx-background-color: #f0fdf4;
+    -fx-border-color: #a7f3d0;
+    -fx-text-fill: #065f46;
+}
+
+.register-form {
+    -fx-max-width: 760;
+}
+
+.register-form .login-card {
+    -fx-padding: 22 20 20 20;
+}
+
+.home-root {
+    -fx-background-color: linear-gradient(to bottom, #f8fbff 0%, #eaf5ff 100%);
+}
+
+.home-nav {
+    -fx-background-color: rgba(255, 255, 255, 0.88);
+    -fx-border-color: transparent transparent #e2e8f0 transparent;
+    -fx-border-width: 0 0 1.2 0;
+}
+
+.home-brand {
+    -fx-text-fill: #0b5f8f;
+    -fx-font-size: 26;
+    -fx-font-weight: 800;
+}
+
+.home-nav-link {
+    -fx-text-fill: #64748b;
+    -fx-font-size: 13.5;
+    -fx-font-weight: 600;
+}
+
+.home-nav-link.active {
+    -fx-text-fill: #0d8abc;
+}
+
+.home-login-btn {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #cbd5e1;
+    -fx-border-width: 1.4;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+    -fx-text-fill: #334155;
+    -fx-font-size: 13;
+    -fx-font-weight: 700;
+    -fx-padding: 10 16 10 16;
+}
+
+.home-login-btn:hover {
+    -fx-border-color: #0d8abc;
+    -fx-text-fill: #0d8abc;
+}
+
+.home-register-btn {
+    -fx-background-color: linear-gradient(to bottom right, #0d8abc, #0f766e);
+    -fx-background-radius: 10;
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 13;
+    -fx-font-weight: 700;
+    -fx-padding: 10 18 10 18;
+}
+
+.home-register-btn:hover {
+    -fx-background-color: linear-gradient(to bottom right, #0b749f, #0d9488);
+}
+
+.home-hero-wrap {
+    -fx-padding: 16 24 10 24;
+}
+
+.home-hero-content {
+    -fx-background-color: linear-gradient(to bottom right, #0c6fa7 0%, #0d8abc 52%, #14b8a6 100%);
+    -fx-background-radius: 28;
+}
+
+.home-badge {
+    -fx-background-color: rgba(255, 255, 255, 0.2);
+    -fx-background-radius: 999;
+    -fx-padding: 6 14 6 14;
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 12;
+    -fx-font-weight: 700;
+}
+
+.home-title {
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 44;
+    -fx-font-weight: 800;
+    -fx-line-spacing: 3;
+}
+
+.home-subtitle {
+    -fx-text-fill: rgba(255, 255, 255, 0.96);
+    -fx-font-size: 15.5;
+}
+
+.home-cta-primary {
+    -fx-background-color: #ffffff;
+    -fx-text-fill: #0b5f8f;
+    -fx-font-size: 14;
+    -fx-font-weight: 700;
+    -fx-background-radius: 12;
+    -fx-padding: 12 18 12 18;
+}
+
+.home-cta-primary:hover {
+    -fx-background-color: #eff6ff;
+}
+
+.home-cta-secondary {
+    -fx-background-color: rgba(255, 255, 255, 0.14);
+    -fx-border-color: rgba(255, 255, 255, 0.5);
+    -fx-border-width: 1.4;
+    -fx-border-radius: 12;
+    -fx-background-radius: 12;
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 14;
+    -fx-font-weight: 700;
+    -fx-padding: 12 18 12 18;
+}
+
+.home-cta-secondary:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.24);
+}
+
+.home-stat-column {
+    -fx-padding: 0 6 0 6;
+}
+
+.home-stat-card {
+    -fx-background-color: rgba(255, 255, 255, 0.92);
+    -fx-background-radius: 14;
+    -fx-padding: 14 14 14 14;
+}
+
+.home-stat-icon {
+    -fx-min-width: 34;
+    -fx-min-height: 34;
+    -fx-max-width: 34;
+    -fx-max-height: 34;
+    -fx-alignment: center;
+    -fx-background-color: #e0f2fe;
+    -fx-background-radius: 9;
+    -fx-font-size: 16;
+}
+
+.home-stat-value {
+    -fx-font-size: 19;
+    -fx-font-weight: 800;
+    -fx-text-fill: #0f172a;
+}
+
+.home-stat-label {
+    -fx-font-size: 12.5;
+    -fx-text-fill: #64748b;
+}
+
+.home-features {
+    -fx-padding: 0 0 2 0;
+}
+
+.home-feature-pill {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 999;
+    -fx-border-color: #dbeafe;
+    -fx-border-width: 1.2;
+    -fx-border-radius: 999;
+    -fx-padding: 8 16 8 16;
+    -fx-text-fill: #334155;
+    -fx-font-size: 12.5;
+    -fx-font-weight: 600;
+}
+
+.home-float-icon {
+    -fx-text-fill: rgba(255, 255, 255, 0.65);
+    -fx-font-size: 30;
+}
+
+.home-float-icon.icon-a {
+    -fx-font-size: 38;
+}
+
+.home-float-icon.icon-b {
+    -fx-font-size: 30;
+}
+
+.home-float-icon.icon-c {
+    -fx-font-size: 34;
+}
+
+.home-float-icon.icon-d {
+    -fx-font-size: 32;
+}
+
+/* ===== FORM CONTROLS ===== */
+.form-control {
+    -fx-border-color: #d1d5db;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-padding: 11 14 11 14;
+    -fx-font-size: 13.5;
+    -fx-text-fill: #111827;
+    -fx-control-inner-background: #ffffff;
+    -fx-font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.form-control:focused {
+    -fx-border-color: #6366f1;
+    -fx-border-width: 1.5;
+    -fx-effect: null;
+}
+
+.form-control:hover {
+    -fx-border-color: #9ca3af;
+}
+
+/* ===== FORM TITLES & LABELS ===== */
+.form-title {
+    -fx-font-size: 28;
+    -fx-font-weight: 600;
+    -fx-text-fill: #111827;
+}
+
+.form-subtitle {
+    -fx-font-size: 13;
+    -fx-text-fill: #6b7280;
+}
+
+.field-label {
+    -fx-font-size: 13;
+    -fx-font-weight: 500;
+    -fx-text-fill: #374151;
+}
+
+.login-title {
+    -fx-font-size: 28;
+    -fx-font-weight: 600;
+    -fx-text-fill: #111827;
+}
+
+.login-subtitle {
+    -fx-font-size: 13;
+    -fx-text-fill: #6b7280;
+}
+
+/* ===== LOGIN & REGISTER FORMS ===== */
+.login-form {
+    -fx-padding: 0;
+}
+
+.register-form {
+    -fx-padding: 0;
+}
+
+/* ===== INPUT WRAPPER LAYOUT ===== */
+.input-wrapper {
+    -fx-alignment: center;
+}
+
+.password-input {
+    -fx-spacing: 0;
+}

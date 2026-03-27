@@ -58,15 +58,24 @@ docker-compose exec web php bin/console make:controller
 
 ### JavaFX
 ```bash
+# Mode 1: X11 local (nécessite xhost)
 # Entrer dans le conteneur JavaFX
 docker-compose exec javafx bash
 
-# Compiler (nécessite JavaFX SDK)
-javac --module-path /path/to/javafx-sdk/lib --add-modules javafx.controls Main.java
+# Lancer l'application JavaFX (Maven)
+docker-compose exec javafx mvn javafx:run
 
-# Exécuter
-java --module-path /path/to/javafx-sdk/lib --add-modules javafx.controls Main
+# Compiler uniquement
+docker-compose exec javafx mvn -DskipTests compile
 ```
+
+```bash
+# Mode 2: Xpra (sans xhost, accès navigateur)
+docker-compose up -d javafx-xpra
+xdg-open http://localhost:14500/index.html
+```
+
+Le mode Xpra lance JavaFX dans un display virtuel et expose l'interface via navigateur.
 
 ### Docker
 ```bash
