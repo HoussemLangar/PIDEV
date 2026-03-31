@@ -13,22 +13,22 @@
 
 <HBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.santea.controller.AuthBaseViewController"
-      styleClass="auth-container">
+      styleClass="auth-container" alignment="CENTER_LEFT">
 
-    <StackPane styleClass="auth-left" HBox.hgrow="ALWAYS" maxWidth="1.7976931348623157E308">
+    <StackPane styleClass="auth-left" minWidth="595" prefWidth="595" HBox.hgrow="NEVER">
         <children>
             <AnchorPane styleClass="auth-floating-icons" mouseTransparent="true">
                 <children>
-                    <Label text="❤" styleClass="auth-float-icon" AnchorPane.topAnchor="45.0" AnchorPane.leftAnchor="60.0" />
-                    <Label text="⚕" styleClass="auth-float-icon" AnchorPane.topAnchor="95.0" AnchorPane.rightAnchor="40.0" />
-                    <Label text="💊" styleClass="auth-float-icon" AnchorPane.topAnchor="220.0" AnchorPane.leftAnchor="30.0" />
-                    <Label text="🩺" styleClass="auth-float-icon" AnchorPane.bottomAnchor="70.0" AnchorPane.rightAnchor="90.0" />
-                    <Label text="💉" styleClass="auth-float-icon" AnchorPane.topAnchor="120.0" AnchorPane.leftAnchor="100.0" />
-                    <Label text="📋" styleClass="auth-float-icon" AnchorPane.bottomAnchor="140.0" AnchorPane.rightAnchor="25.0" />
+                    <Label text="❤" styleClass="auth-float-icon" AnchorPane.topAnchor="56.0" AnchorPane.leftAnchor="68.0" />
+                    <Label text="✚" styleClass="auth-float-icon" AnchorPane.topAnchor="128.0" AnchorPane.leftAnchor="58.0" />
+                    <Label text="⚕" styleClass="auth-float-icon" AnchorPane.topAnchor="250.0" AnchorPane.leftAnchor="42.0" />
+                    <Label text="✚" styleClass="auth-float-icon" AnchorPane.bottomAnchor="108.0" AnchorPane.rightAnchor="66.0" />
+                    <Label text="✚" styleClass="auth-float-icon" AnchorPane.topAnchor="190.0" AnchorPane.rightAnchor="152.0" />
+                    <Label text="⚕" styleClass="auth-float-icon" AnchorPane.bottomAnchor="198.0" AnchorPane.rightAnchor="130.0" />
                 </children>
             </AnchorPane>
 
-            <VBox alignment="CENTER" spacing="18.0" styleClass="auth-left-content" maxWidth="500.0">
+            <VBox alignment="CENTER" spacing="20.0" styleClass="auth-left-content" maxWidth="500.0">
                 <children>
                     <Label text="🩺" styleClass="auth-logo" />
                     <Label text="Chez SANTÉA, nous sommes toujours entièrement concentrés sur votre santé"
@@ -43,7 +43,7 @@
         <children>
             <BorderPane maxWidth="1.7976931348623157E308">
                 <right>
-                    <HBox alignment="TOP_RIGHT" styleClass="language-selector">
+                    <HBox alignment="TOP_RIGHT" styleClass="language-selector" maxWidth="1.7976931348623157E308">
                         <children>
                             <ComboBox fx:id="languageSelect" styleClass="language-select" prefWidth="140.0" />
                         </children>
@@ -66,7 +66,7 @@
             </ScrollPane>
         </children>
         <padding>
-            <Insets top="24.0" right="40.0" bottom="28.0" left="40.0" />
+            <Insets top="24.0" right="36.0" bottom="24.0" left="36.0" />
         </padding>
     </VBox>
 </HBox>

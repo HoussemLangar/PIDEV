@@ -1,136 +1,274 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Hyperlink?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
 
 <BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.santea.controller.HomeViewController"
-            styleClass="home-root" style="-fx-background-color: linear-gradient(to bottom, #f8fbff 0%, #eaf5ff 100%);-fx-padding: 0;">
-    
-    <!-- TOP NAVBAR -->
+            styleClass="home-root">
+
     <top>
-        <HBox alignment="CENTER_LEFT" spacing="26" styleClass="home-nav" 
-              style="-fx-background-color: rgba(255,255,255,0.88); -fx-border-color: #e2e8f0; -fx-border-width: 0 0 1.2 0; -fx-padding: 16 32 16 32;">
-            
-            <!-- LOGO -->
-            <Label text="SANTÉA" styleClass="home-brand" style="-fx-font-size: 26; -fx-font-weight: bold; -fx-text-fill: #0b5f8f;"/>
-            
-            <!-- NAV LINKS -->
-            <HBox spacing="24" style="-fx-padding: 0;">
-                <Hyperlink text="Accueil" style="-fx-font-size: 14; -fx-text-fill: #374151; -fx-padding: 0;"/>
-                <Hyperlink text="Services" style="-fx-font-size: 14; -fx-text-fill: #374151; -fx-padding: 0;"/>
-                <Hyperlink text="Téléconsultation" style="-fx-font-size: 14; -fx-text-fill: #374151; -fx-padding: 0;"/>
-                <Hyperlink text="Pharmacies" style="-fx-font-size: 14; -fx-text-fill: #374151; -fx-padding: 0;"/>
+        <HBox alignment="CENTER_LEFT" spacing="34" styleClass="home-nav">
+            <padding>
+                <Insets top="16" right="34" bottom="16" left="34"/>
+            </padding>
+
+            <Label text="SANTÉA" styleClass="home-brand"/>
+
+            <HBox spacing="24" alignment="CENTER_LEFT">
+                <Hyperlink text="Accueil" styleClass="home-nav-link" onAction="#handleScrollToTop"/>
+                <Hyperlink text="À propos" styleClass="home-nav-link" onAction="#handleScrollToAbout"/>
+                <Hyperlink text="Services" styleClass="home-nav-link" onAction="#handleScrollToServices"/>
+                <Hyperlink text="Blog" styleClass="home-nav-link" onAction="#handleScrollToBlog"/>
+                <Hyperlink text="Contact" styleClass="home-nav-link" onAction="#handleScrollToContact"/>
             </HBox>
-            
-            <!-- RIGHT BUTTONS -->
-            <HBox spacing="12" HBox.hgrow="ALWAYS" alignment="CENTER_RIGHT">
-                <Button text="🔓 Connexion" styleClass="home-login-btn" 
-                       onAction="#handleOpenLogin"
-                       style="-fx-padding: 10 18 10 18; -fx-font-size: 13; -fx-font-weight: bold; -fx-text-fill: #0b5f8f; -fx-background-color: white; -fx-border-radius: 8; -fx-border-color: #dbeafe; -fx-border-width: 1.2;"/>
-                <Button text="📝 S'inscrire" styleClass="home-register-btn" 
-                       onAction="#handleOpenRegister"
-                       style="-fx-padding: 10 18 10 18; -fx-font-size: 13; -fx-font-weight: bold; -fx-text-fill: #0862a0; -fx-background-color: linear-gradient(to bottom right, #4f46e5 0%, #6366f1 100%); -fx-border-radius: 8; -fx-text-fill: white;"/>
+
+            <HBox spacing="12" alignment="CENTER_RIGHT" HBox.hgrow="ALWAYS">
+                <Button text="Se connecter" styleClass="home-register-btn" onAction="#handleOpenLogin"/>
             </HBox>
         </HBox>
     </top>
-    
-    <!-- CENTER: HERO SECTION -->
+
     <center>
-        <StackPane styleClass="home-hero-wrap" style="-fx-padding: 0;">
-            
-            <!-- Decorative Icons (background) -->
-            <AnchorPane style="-fx-padding: 0;">
-                <Label text="❤" style="-fx-font-size: 120; -fx-text-fill: rgba(255,255,255,0.05); -fx-padding: 40 0 0 60;" 
-                       AnchorPane.topAnchor="40" AnchorPane.leftAnchor="60"/>
-                <Label text="⚕" style="-fx-font-size: 100; -fx-text-fill: rgba(255,255,255,0.06); -fx-padding: 0 0 100 0;" 
-                       AnchorPane.bottomAnchor="60" AnchorPane.rightAnchor="80"/>
-                <Label text="💊" style="-fx-font-size: 90; -fx-text-fill: rgba(255,255,255,0.05);" 
-                       AnchorPane.topAnchor="120" AnchorPane.rightAnchor="40"/>
-                <Label text="🩺" style="-fx-font-size: 110; -fx-text-fill: rgba(255,255,255,0.04);" 
-                       AnchorPane.bottomAnchor="100" AnchorPane.leftAnchor="40"/>
-            </AnchorPane>
-            
-            <!-- Hero Content -->
-            <HBox spacing="40" alignment="CENTER_LEFT" 
-                  style="-fx-background-color: linear-gradient(to bottom right, #0c6fa7, #0d8abc, #14b8a6); -fx-padding: 60 80 60 80; -fx-border-radius: 28; -fx-margin: 60 40 60 40;">
-                
-                <!-- LEFT SIDE: TEXT & BUTTONS -->
-                <VBox spacing="24" style="-fx-max-width: 560;">
-                    
-                    <!-- Badge -->
-                    <HBox alignment="CENTER_LEFT">
-                        <Label text="✨ BIEN ÊTRE" style="-fx-background-color: rgba(255,255,255,0.2); -fx-padding: 6 12 6 12; -fx-border-radius: 20; -fx-text-fill: white; -fx-font-size: 11; -fx-font-weight: bold;"/>
-                    </HBox>
-                    
-                    <!-- Main Title -->
-                    <Label text="Votre SANTÉA, en toute confiance" 
-                           style="-fx-font-size: 32; -fx-font-weight: bold; -fx-text-fill: white; -fx-wrap-text: true; -fx-line-spacing: 1.2;"/>
-                    
-                    <!-- Subtitle -->
-                    <Label text="Suivez votre santé quotidienne, consultez des experts, et accédez à vos prescriptions en un clic. Une plateforme complète pour votre bien-être."
-                           style="-fx-font-size: 14; -fx-text-fill: rgba(255,255,255,0.92); -fx-wrap-text: true; -fx-line-spacing: 1.4;"/>
-                    
-                    <!-- CTA Buttons -->
-                    <HBox spacing="14" style="-fx-padding: 8 0 0 0;">
-                        <Button text="🔓 Se Connecter" 
-                               onAction="#handleOpenLogin"
-                               style="-fx-padding: 12 24 12 24; -fx-font-size: 13.5; -fx-font-weight: bold; -fx-background-color: white; -fx-text-fill: #0b5f8f; -fx-border-radius: 12;"/>
-                        <Button text="📝 S'inscrire Maintenant" 
-                               onAction="#handleOpenRegister"
-                               style="-fx-padding: 12 24 12 24; -fx-font-size: 13.5; -fx-font-weight: bold; -fx-background-color: rgba(255,255,255,0.14); -fx-text-fill: white; -fx-border-color: rgba(255,255,255,0.5); -fx-border-width: 1.4; -fx-border-radius: 12;"/>
-                    </HBox>
+        <ScrollPane fx:id="homeScroll"
+                    fitToWidth="true"
+                    hbarPolicy="NEVER"
+                    vbarPolicy="AS_NEEDED"
+                    pannable="true"
+                    styleClass="home-scroll">
+            <content>
+                <VBox styleClass="home-page-stack">
+                    <StackPane fx:id="heroSection" styleClass="home-hero-bg" minHeight="860">
+                        <children>
+                            <AnchorPane mouseTransparent="true">
+                                <children>
+                                    <Label text="❤" styleClass="home-float-soft" AnchorPane.topAnchor="60" AnchorPane.leftAnchor="88"/>
+                                    <Label text="✚" styleClass="home-float-soft" AnchorPane.bottomAnchor="150" AnchorPane.leftAnchor="160"/>
+                                    <Label text="⚕" styleClass="home-float-soft" AnchorPane.bottomAnchor="100" AnchorPane.rightAnchor="160"/>
+                                    <Label text="➕" styleClass="home-float-soft" AnchorPane.topAnchor="175" AnchorPane.rightAnchor="250"/>
+                                </children>
+                            </AnchorPane>
+
+                            <VBox spacing="34" maxWidth="1180">
+                                <padding>
+                                    <Insets top="64" right="36" bottom="38" left="36"/>
+                                </padding>
+
+                                <HBox alignment="CENTER_LEFT" spacing="40">
+                                    <VBox spacing="18" maxWidth="520">
+                                        <Label text="BIEN ÊTRE" styleClass="home-badge"/>
+                                        <Label text="Votre SANTÉA, en\ntoute confiance" styleClass="home-title"/>
+                                        <Label text="Suivez votre état de SANTÉA au quotidien, bénéficiez d'un accompagnement global et facilitez vos échanges avec les professionnels de SANTÉA."
+                                               wrapText="true" styleClass="home-subtitle"/>
+                                        <Button text="Découvrir SANTÉA" styleClass="home-cta-primary" onAction="#handleScrollToServices"/>
+                                    </VBox>
+
+                                    <StackPane HBox.hgrow="ALWAYS" alignment="CENTER_RIGHT">
+                                        <ImageView fitWidth="430" preserveRatio="true" pickOnBounds="true">
+                                            <image>
+                                                <javafx.scene.image.Image url="@../images/heart.png"/>
+                                            </image>
+                                        </ImageView>
+                                    </StackPane>
+                                </HBox>
+
+                                <HBox alignment="CENTER" spacing="18" styleClass="home-stats-row">
+                                    <VBox spacing="8" alignment="CENTER" styleClass="home-stat-card">
+                                        <Label text="●" styleClass="home-stat-icon"/>
+                                        <Label text="+12 000" styleClass="home-stat-value"/>
+                                        <Label text="Rendez-vous pris" styleClass="home-stat-label"/>
+                                    </VBox>
+                                    <VBox spacing="8" alignment="CENTER" styleClass="home-stat-card">
+                                        <Label text="●" styleClass="home-stat-icon"/>
+                                        <Label text="+8 500" styleClass="home-stat-value"/>
+                                        <Label text="Suivis quotidiens" styleClass="home-stat-label"/>
+                                    </VBox>
+                                    <VBox spacing="8" alignment="CENTER" styleClass="home-stat-card">
+                                        <Label text="●" styleClass="home-stat-icon"/>
+                                        <Label text="+2 300" styleClass="home-stat-value"/>
+                                        <Label text="Partages médicaux" styleClass="home-stat-label"/>
+                                    </VBox>
+                                    <VBox spacing="8" alignment="CENTER" styleClass="home-stat-card">
+                                        <Label text="●" styleClass="home-stat-icon"/>
+                                        <Label text="+4 700" styleClass="home-stat-value"/>
+                                        <Label text="Médicaments recherchés" styleClass="home-stat-label"/>
+                                    </VBox>
+                                    <VBox spacing="8" alignment="CENTER" styleClass="home-stat-card">
+                                        <Label text="●" styleClass="home-stat-icon"/>
+                                        <Label text="+3 200" styleClass="home-stat-value"/>
+                                        <Label text="Plans personnalisés" styleClass="home-stat-label"/>
+                                    </VBox>
+                                </HBox>
+                            </VBox>
+                        </children>
+                    </StackPane>
+
+                    <VBox fx:id="aboutSection" spacing="16" styleClass="home-section quick-info-section">
+                        <VBox spacing="16" alignment="CENTER" styleClass="section-shell">
+                            <Label text="Pourquoi choisir SANTÉA" styleClass="home-section-title"/>
+                            <Label text="Des solutions complètes pour prendre soin de votre santé" styleClass="home-section-subtitle"/>
+                            <FlowPane hgap="22" vgap="22" prefWrapLength="1120" alignment="CENTER" styleClass="home-services-grid">
+                                <VBox spacing="12" styleClass="home-service-card"><Label text="◉" styleClass="home-feature-icon gradient-purple"/><Label text="Téléconsultations" styleClass="home-card-title"/><Label text="Consultez vos médecins à distance en visioconférence sécurisée, où que vous soyez." wrapText="true" styleClass="home-card-text"/><Button text="Accéder" styleClass="btn-feature"/></VBox>
+                                <VBox spacing="12" styleClass="home-service-card"><Label text="◉" styleClass="home-feature-icon gradient-blue"/><Label text="Gestion des documents" styleClass="home-card-title"/><Label text="Centralisez et partagez vos documents médicaux en toute sécurité." wrapText="true" styleClass="home-card-text"/><Button text="Accéder" styleClass="btn-feature"/></VBox>
+                                <VBox spacing="12" styleClass="home-service-card"><Label text="◉" styleClass="home-feature-icon gradient-green"/><Label text="Journal santé quotidien" styleClass="home-card-title"/><Label text="Suivez votre poids, IMC, sommeil et activité physique jour après jour." wrapText="true" styleClass="home-card-text"/><Button text="Accéder" styleClass="btn-feature"/></VBox>
+                                <VBox spacing="12" styleClass="home-service-card"><Label text="◉" styleClass="home-feature-icon gradient-cyan"/><Label text="Plans d'accompagnement" styleClass="home-card-title"/><Label text="Programmes personnalisés avec coach sportif et nutritionniste." wrapText="true" styleClass="home-card-text"/><Button text="Accéder" styleClass="btn-feature"/></VBox>
+                                <VBox spacing="12" styleClass="home-service-card"><Label text="◉" styleClass="home-feature-icon gradient-orange"/><Label text="Suivi des symptômes" styleClass="home-card-title"/><Label text="Enregistrez vos symptômes et recevez des diagnostics préliminaires." wrapText="true" styleClass="home-card-text"/><Button text="Accéder" styleClass="btn-feature"/></VBox>
+                                <VBox spacing="12" styleClass="home-service-card"><Label text="◉" styleClass="home-feature-icon gradient-teal"/><Label text="Messagerie sécurisée" styleClass="home-card-title"/><Label text="Échangez en toute confidentialité avec vos professionnels de santé." wrapText="true" styleClass="home-card-text"/><Button text="Accéder" styleClass="btn-feature"/></VBox>
+                                <VBox spacing="12" styleClass="home-service-card"><Label text="◉" styleClass="home-feature-icon gradient-pink"/><Label text="Pharmacies de garde" styleClass="home-card-title"/><Label text="Trouvez les pharmacies ouvertes près de chez vous rapidement." wrapText="true" styleClass="home-card-text"/><Button text="Accéder" styleClass="btn-feature"/></VBox>
+                                <VBox spacing="12" styleClass="home-service-card"><Label text="◉" styleClass="home-feature-icon gradient-indigo"/><Label text="Sécurité &amp; confidentialité" styleClass="home-card-title"/><Label text="Vos données sont chiffrées et partagées avec votre autorisation." wrapText="true" styleClass="home-card-text"/><Button text="Paramètres" styleClass="btn-feature"/></VBox>
+                            </FlowPane>
+                        </VBox>
+                    </VBox>
+
+                    <Separator styleClass="section-divider"/>
+
+                    <VBox fx:id="servicesSection" spacing="24" styleClass="home-section appointment-section">
+                        <VBox spacing="18" alignment="CENTER" styleClass="section-shell section-shell-services">
+                            <Label text="Nos services médicaux" styleClass="home-section-title"/>
+                            <Label text="Des solutions complètes pour prendre soin de votre santé" styleClass="home-section-subtitle"/>
+
+                            <FlowPane hgap="20" vgap="20" prefWrapLength="1200" alignment="CENTER" styleClass="home-appointment-grid">
+                                <HBox spacing="18" styleClass="home-appointment-panel">
+                                    <StackPane styleClass="home-appointment-image-wrap">
+                                        <ImageView fitWidth="230" fitHeight="230" preserveRatio="false" pickOnBounds="true" styleClass="home-appointment-image">
+                                            <image><javafx.scene.image.Image url="@../images/doctor.jpg"/></image>
+                                        </ImageView>
+                                        <Label text="+10k Consultations réservées" styleClass="home-appointment-badge"/>
+                                    </StackPane>
+                                    <VBox spacing="10" alignment="CENTER" styleClass="home-appointment-content">
+                                        <Label text="Rendez-vous médicaux" styleClass="home-card-kicker"/>
+                                        <Label text="Réservez une consultation aujourd'hui" wrapText="true" styleClass="home-card-title"/>
+                                        <Label text="Prenez rendez-vous facilement avec nos médecins certifiés. Profitez d'une prise en charge rapide pour tous vos besoins de santé." wrapText="true" styleClass="home-card-text"/>
+                                        <Button text="Prendre rendez-vous" styleClass="btn-appointment-main"/>
+                                    </VBox>
+                                </HBox>
+
+                                <HBox spacing="18" styleClass="home-appointment-panel">
+                                    <StackPane styleClass="home-appointment-image-wrap">
+                                        <ImageView fitWidth="230" fitHeight="230" preserveRatio="false" pickOnBounds="true" styleClass="home-appointment-image">
+                                            <image><javafx.scene.image.Image url="@../images/ph.jpg"/></image>
+                                        </ImageView>
+                                        <Label text="+1000 Pharmacies partenaires" styleClass="home-appointment-badge"/>
+                                    </StackPane>
+                                    <VBox spacing="10" alignment="CENTER" styleClass="home-appointment-content">
+                                        <Label text="Pharmacies de garde" styleClass="home-card-kicker"/>
+                                        <Label text="Trouvez vos médicaments facilement" wrapText="true" styleClass="home-card-title"/>
+                                        <Label text="Recherchez vos médicaments, comparez les disponibilités et trouvez la pharmacie ouverte la plus proche de chez vous en temps réel." wrapText="true" styleClass="home-card-text"/>
+                                        <Button text="Trouver une pharmacie" styleClass="btn-appointment-main"/>
+                                    </VBox>
+                                </HBox>
+
+                                <HBox spacing="18" styleClass="home-appointment-panel">
+                                    <StackPane styleClass="home-appointment-image-wrap">
+                                        <ImageView fitWidth="230" fitHeight="230" preserveRatio="false" pickOnBounds="true" styleClass="home-appointment-image">
+                                            <image><javafx.scene.image.Image url="@../images/track.jpg"/></image>
+                                        </ImageView>
+                                        <Label text="+8 500 Suivis quotidiens" styleClass="home-appointment-badge"/>
+                                    </StackPane>
+                                    <VBox spacing="10" alignment="CENTER" styleClass="home-appointment-content">
+                                        <Label text="Santé quotidienne" styleClass="home-card-kicker"/>
+                                        <Label text="Suivez votre santé au quotidien" wrapText="true" styleClass="home-card-title"/>
+                                        <Label text="Suivez vos indicateurs de santé (poids, IMC, activité, sommeil, alimentation) grâce à un tracker intelligent et centralisé." wrapText="true" styleClass="home-card-text"/>
+                                        <Button text="Mon journal santé" styleClass="btn-appointment-main"/>
+                                    </VBox>
+                                </HBox>
+
+                                <HBox spacing="18" styleClass="home-appointment-panel">
+                                    <StackPane styleClass="home-appointment-image-wrap">
+                                        <ImageView fitWidth="230" fitHeight="230" preserveRatio="false" pickOnBounds="true" styleClass="home-appointment-image">
+                                            <image><javafx.scene.image.Image url="@../images/teleconsultation.png"/></image>
+                                        </ImageView>
+                                        <Label text="Disponible 24/7" styleClass="home-appointment-badge"/>
+                                    </StackPane>
+                                    <VBox spacing="10" alignment="CENTER" styleClass="home-appointment-content">
+                                        <Label text="Téléconsultation" styleClass="home-card-kicker"/>
+                                        <Label text="Consultez à distance en vidéo" wrapText="true" styleClass="home-card-title"/>
+                                        <Label text="Consultez vos médecins en visioconférence sécurisée depuis chez vous. Aucune installation requise." wrapText="true" styleClass="home-card-text"/>
+                                        <Button text="Mes téléconsultations" styleClass="btn-appointment-main"/>
+                                    </VBox>
+                                </HBox>
+
+                                <HBox spacing="18" styleClass="home-appointment-panel">
+                                    <StackPane styleClass="home-appointment-image-wrap">
+                                        <ImageView fitWidth="230" fitHeight="230" preserveRatio="false" pickOnBounds="true" styleClass="home-appointment-image">
+                                            <image><javafx.scene.image.Image url="@../images/sport.jpg"/></image>
+                                        </ImageView>
+                                        <Label text="+3 200 Plans actifs" styleClass="home-appointment-badge"/>
+                                    </StackPane>
+                                    <VBox spacing="10" alignment="CENTER" styleClass="home-appointment-content">
+                                        <Label text="Accompagnement personnalisé" styleClass="home-card-kicker"/>
+                                        <Label text="Plans sport &amp; nutrition sur mesure" wrapText="true" styleClass="home-card-title"/>
+                                        <Label text="Bénéficiez d'un accompagnement personnalisé avec coach sportif et nutritionniste." wrapText="true" styleClass="home-card-text"/>
+                                        <Button text="Mes plans" styleClass="btn-appointment-main"/>
+                                    </VBox>
+                                </HBox>
+
+                                <HBox spacing="18" styleClass="home-appointment-panel">
+                                    <StackPane styleClass="home-appointment-image-wrap">
+                                        <ImageView fitWidth="230" fitHeight="230" preserveRatio="false" pickOnBounds="true" styleClass="home-appointment-image">
+                                            <image><javafx.scene.image.Image url="@../images/bien.jpg"/></image>
+                                        </ImageView>
+                                        <Label text="+15 000 Documents" styleClass="home-appointment-badge"/>
+                                    </StackPane>
+                                    <VBox spacing="10" alignment="CENTER" styleClass="home-appointment-content">
+                                        <Label text="Stockage sécurisé" styleClass="home-card-kicker"/>
+                                        <Label text="Vos documents médicaux centralisés" wrapText="true" styleClass="home-card-title"/>
+                                        <Label text="Conservez et partagez vos documents médicaux en toute sécurité, accessibles partout." wrapText="true" styleClass="home-card-text"/>
+                                        <Button text="Mes documents" styleClass="btn-appointment-main"/>
+                                    </VBox>
+                                </HBox>
+                            </FlowPane>
+                        </VBox>
+                    </VBox>
+
+                    <Separator styleClass="section-divider"/>
+
+                    <VBox fx:id="blogSection" spacing="18" styleClass="home-section home-blog-section">
+                        <VBox spacing="14" alignment="CENTER" styleClass="section-shell">
+                            <Label text="Forum &amp; Publications" styleClass="home-section-title"/>
+                            <Label text="Retrouvez les dernières ressources et échanges de la communauté SANTÉA" styleClass="home-section-subtitle"/>
+                            <HBox spacing="14" alignment="CENTER" styleClass="home-blog-grid">
+                                <VBox spacing="8" styleClass="home-blog-card"><Label text="Article" styleClass="home-card-kicker"/><Label text="Conseils bien-être" styleClass="home-card-title"/><Label text="Articles, astuces et recommandations pour améliorer votre santé au quotidien." wrapText="true" styleClass="home-card-text"/><Hyperlink text="Lire la suite" styleClass="home-read-link"/></VBox>
+                                <VBox spacing="8" styleClass="home-blog-card"><Label text="Publication" styleClass="home-card-kicker"/><Label text="Retours de la communauté" styleClass="home-card-title"/><Label text="Échangez avec les autres utilisateurs et découvrez les expériences partagées." wrapText="true" styleClass="home-card-text"/><Hyperlink text="Lire la suite" styleClass="home-read-link"/></VBox>
+                                <VBox spacing="8" styleClass="home-blog-card"><Label text="Guide" styleClass="home-card-kicker"/><Label text="Ressources pratiques" styleClass="home-card-title"/><Label text="Vidéo, PDF et guides pour rester informé et agir efficacement." wrapText="true" styleClass="home-card-text"/><Hyperlink text="Lire la suite" styleClass="home-read-link"/></VBox>
+                            </HBox>
+                        </VBox>
+                    </VBox>
+
+                    <Separator styleClass="section-divider"/>
+
+                    <VBox fx:id="contactSection" spacing="16" styleClass="home-section home-contact-section">
+                        <VBox spacing="16" alignment="CENTER" styleClass="section-shell section-shell-contact">
+                            <Label text="Support 24/7" styleClass="contact-badge"/>
+                            <Label text="Contactez-nous" styleClass="home-section-title"/>
+                            <Label text="Une question ? Notre équipe est toujours prête à vous accompagner." styleClass="home-section-text"/>
+                            <FlowPane hgap="18" vgap="18" prefWrapLength="1100" alignment="CENTER">
+                                <VBox spacing="8" styleClass="home-contact-card"><Label text="☎" styleClass="home-contact-icon"/><Label text="Appelez-nous" styleClass="home-card-title"/><Label text="Du lundi au vendredi, 9h-18h" styleClass="home-contact-desc"/><Label text="+33 1 11 11 11 11" styleClass="home-card-text"/></VBox>
+                                <VBox spacing="8" styleClass="home-contact-card"><Label text="✉" styleClass="home-contact-icon"/><Label text="Envoyez un email" styleClass="home-card-title"/><Label text="Réponse sous 24h ouvrées" styleClass="home-contact-desc"/><Label text="contact@santea.com" styleClass="home-card-text"/></VBox>
+                                <VBox spacing="8" styleClass="home-contact-card"><Label text="⌖" styleClass="home-contact-icon"/><Label text="Notre adresse" styleClass="home-card-title"/><Label text="Visitez nos bureaux" styleClass="home-contact-desc"/><Label text="123 Avenue de la Santé, 75001 Paris" wrapText="true" styleClass="home-card-text"/></VBox>
+                                <VBox spacing="8" styleClass="home-contact-card"><Label text="◷" styleClass="home-contact-icon"/><Label text="Horaires" styleClass="home-card-title"/><Label text="Nos heures d'ouverture" styleClass="home-contact-desc"/><Label text="Lun - Ven: 9h - 18h | Sam: 10h - 14h" wrapText="true" styleClass="home-card-text"/></VBox>
+                            </FlowPane>
+                            <HBox spacing="12" alignment="CENTER" styleClass="home-social-row">
+                                <Button text="f" styleClass="social-link-btn"/>
+                                <Button text="x" styleClass="social-link-btn"/>
+                                <Button text="◎" styleClass="social-link-btn"/>
+                                <Button text="in" styleClass="social-link-btn"/>
+                            </HBox>
+                        </VBox>
+                    </VBox>
                 </VBox>
-                
-                <!-- RIGHT SIDE: STATISTICS CARDS -->
-                <VBox spacing="16" style="-fx-max-width: 430;">
-                    
-                    <!-- Stat Card 1 -->
-                    <HBox spacing="14" alignment="CENTER_LEFT"
-                          style="-fx-background-color: rgba(255,255,255,0.92); -fx-padding: 14; -fx-border-radius: 14;">
-                        <Label text="📅" style="-fx-font-size: 28; -fx-background-color: #e0f2fe; -fx-padding: 10; -fx-border-radius: 9;"/>
-                        <VBox spacing="2">
-                            <Label text="+12 000" style="-fx-font-size: 19; -fx-font-weight: bold; -fx-text-fill: #0f172a;"/>
-                            <Label text="Rendez-vous effectués" style="-fx-font-size: 12.5; -fx-text-fill: #64748b;"/>
-                        </VBox>
-                    </HBox>
-                    
-                    <!-- Stat Card 2 -->
-                    <HBox spacing="14" alignment="CENTER_LEFT"
-                          style="-fx-background-color: rgba(255,255,255,0.92); -fx-padding: 14; -fx-border-radius: 14;">
-                        <Label text="📋" style="-fx-font-size: 28; -fx-background-color: #fef3c7; -fx-padding: 10; -fx-border-radius: 9;"/>
-                        <VBox spacing="2">
-                            <Label text="+8 500" style="-fx-font-size: 19; -fx-font-weight: bold; -fx-text-fill: #0f172a;"/>
-                            <Label text="Suivis de santé" style="-fx-font-size: 12.5; -fx-text-fill: #64748b;"/>
-                        </VBox>
-                    </HBox>
-                    
-                    <!-- Stat Card 3 -->
-                    <HBox spacing="14" alignment="CENTER_LEFT"
-                          style="-fx-background-color: rgba(255,255,255,0.92); -fx-padding: 14; -fx-border-radius: 14;">
-                        <Label text="💊" style="-fx-font-size: 28; -fx-background-color: #dcfce7; -fx-padding: 10; -fx-border-radius: 9;"/>
-                        <VBox spacing="2">
-                            <Label text="+4 700" style="-fx-font-size: 19; -fx-font-weight: bold; -fx-text-fill: #0f172a;"/>
-                            <Label text="Médicaments référencés" style="-fx-font-size: 12.5; -fx-text-fill: #64748b;"/>
-                        </VBox>
-                    </HBox>
-                </VBox>
-            </HBox>
-        </StackPane>
+            </content>
+        </ScrollPane>
     </center>
-    
-    <!-- BOTTOM: FEATURE PILLS -->
-    <bottom>
-        <HBox spacing="16" alignment="CENTER" style="-fx-padding: 40 40 40 40;">
-            <Label text="🎯 Téléconsultations" 
-                  style="-fx-background-color: white; -fx-padding: 10 18 10 18; -fx-border-color: #dbeafe; -fx-border-width: 1.2; -fx-border-radius: 999; -fx-font-size: 13; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
-            <Label text="📄 Documents" 
-                  style="-fx-background-color: white; -fx-padding: 10 18 10 18; -fx-border-color: #dbeafe; -fx-border-width: 1.2; -fx-border-radius: 999; -fx-font-size: 13; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
-            <Label text="📔 Journal santé" 
-                  style="-fx-background-color: white; -fx-padding: 10 18 10 18; -fx-border-color: #dbeafe; -fx-border-width: 1.2; -fx-border-radius: 999; -fx-font-size: 13; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
-            <Label text="💬 Messagerie" 
-                  style="-fx-background-color: white; -fx-padding: 10 18 10 18; -fx-border-color: #dbeafe; -fx-border-width: 1.2; -fx-border-radius: 999; -fx-font-size: 13; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
-        </HBox>
-    </bottom>
-    
+
 </BorderPane>

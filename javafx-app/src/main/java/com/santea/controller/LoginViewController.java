@@ -63,6 +63,11 @@ public class LoginViewController {
         AppNavigator.showRegister();
     }
 
+    @FXML
+    private void handleOpenForgotPassword() {
+        AppNavigator.showForgotPassword();
+    }
+
     private void showFeedback(String message, boolean success) {
         feedbackLabel.setText(message);
         feedbackLabel.getStyleClass().removeAll("alert-success", "alert-danger");

@@ -35,6 +35,10 @@ public final class AppNavigator {
         showAuthPage("/com/santea/fxml/register.fxml");
     }
 
+    public static void showForgotPassword() {
+        showAuthPage("/com/santea/fxml/forgot_password.fxml");
+    }
+
     private static void showAuthPage(String contentFxmlPath) {
         FXMLLoader baseLoader = getLoader("/com/santea/fxml/auth_base.fxml");
         Parent baseRoot;

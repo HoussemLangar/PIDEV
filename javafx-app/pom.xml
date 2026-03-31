@@ -131,7 +131,11 @@
                         <!-- Default configuration for running with: mvn clean javafx:run -->
                         <id>default-cli</id>
                         <configuration>
-                            <mainClass>com.santea.javafxapp/com.santea.Launcher</mainClass>
+                            <mainClass>com.santea.Launcher</mainClass>
+                            <options>
+                                <option>--enable-native-access=javafx.graphics</option>
+                                <option>--sun-misc-unsafe-memory-access=allow</option>
+                            </options>
                             <launcher>app</launcher>
                             <jlinkZipName>app</jlinkZipName>
                             <jlinkImageName>app</jlinkImageName>
