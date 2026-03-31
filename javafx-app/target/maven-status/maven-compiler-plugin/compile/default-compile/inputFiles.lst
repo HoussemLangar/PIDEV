@@ -2,6 +2,7 @@
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/Main.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/config/DatabaseConfig.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/controller/AuthBaseViewController.java
+/home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/controller/ForgotPasswordViewController.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/controller/HomeViewController.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/controller/LoginController.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/controller/LoginViewController.java

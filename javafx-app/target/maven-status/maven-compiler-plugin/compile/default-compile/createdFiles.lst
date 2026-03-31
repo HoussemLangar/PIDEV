@@ -8,6 +8,7 @@ com/santea/model/User.class
 com/santea/model/UserScoreSnapshotType.class
 com/santea/model/PartageAnalyse.class
 com/santea/model/SymptomeQuotidien.class
+com/santea/controller/ForgotPasswordViewController.class
 com/santea/model/CoachSportif.class
 com/santea/model/Commentaire.class
 com/santea/Main.class

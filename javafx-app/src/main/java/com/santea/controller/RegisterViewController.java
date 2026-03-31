@@ -2,11 +2,15 @@ package com.santea.controller;
 
 import com.santea.navigation.AppNavigator;
 import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.Region;
 
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -165,6 +169,34 @@ public class RegisterViewController {
             visibleConfirmPasswordField.setVisible(true);
             visibleConfirmPasswordField.setManaged(true);
         }
+    }
+
+    @FXML
+    private void handleShowTerms() {
+        ButtonType acceptButton = new ButtonType("Accepter", ButtonBar.ButtonData.OK_DONE);
+        ButtonType closeButton = new ButtonType("Fermer", ButtonBar.ButtonData.CANCEL_CLOSE);
+
+        Alert alert = new Alert(Alert.AlertType.INFORMATION, "", acceptButton, closeButton);
+        alert.setTitle("Conditions d'utilisation SANTÉA");
+        alert.setHeaderText("Conditions d'utilisation et politique de confidentialité");
+        alert.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
+        alert.getDialogPane().setContentText(
+                "1) Objet: SANTÉA fournit des services numériques de suivi et d'accompagnement santé.\n\n"
+                        + "2) Compte utilisateur: vous êtes responsable de la confidentialité de vos identifiants et des activités réalisées depuis votre compte.\n\n"
+                        + "3) Données personnelles: vos données sont traitées uniquement pour fournir les services demandés, améliorer la qualité des soins et respecter les obligations légales.\n\n"
+                        + "4) Confidentialité: les données médicales sont protégées et partagées uniquement avec les professionnels autorisés et selon votre consentement.\n\n"
+                        + "5) Sécurité: vous devez signaler immédiatement toute utilisation suspecte de votre compte.\n\n"
+                        + "6) Usage conforme: il est interdit de publier du contenu frauduleux, illégal ou portant atteinte aux droits d'autrui.\n\n"
+                        + "7) Limitation: SANTÉA ne remplace pas une prise en charge médicale d'urgence. En cas d'urgence, contactez les services compétents.\n\n"
+                        + "8) Acceptation: en créant un compte, vous acceptez ces conditions et la politique de confidentialité associée."
+        );
+
+        alert.showAndWait().ifPresent(result -> {
+            if (result == acceptButton) {
+                termsAcceptedCheckBox.setSelected(true);
+                showFeedback("Conditions acceptées.", true);
+            }
+        });
     }
 
     private boolean isBlank(TextField field) {
