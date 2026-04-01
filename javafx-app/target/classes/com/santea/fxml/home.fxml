@@ -3,7 +3,11 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Hyperlink?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.SeparatorMenuItem?>
 <?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.MenuButton?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
@@ -34,7 +38,37 @@
             </HBox>
 
             <HBox spacing="12" alignment="CENTER_RIGHT" HBox.hgrow="ALWAYS">
-                <Button text="Se connecter" styleClass="home-register-btn" onAction="#handleOpenLogin"/>
+                <Button fx:id="loginButton" text="Se connecter" styleClass="home-register-btn" onAction="#handleOpenLogin"/>
+                <Button fx:id="registerButton" text="Créer un compte" styleClass="home-register-outline-btn" onAction="#handleOpenRegister"/>
+
+                <MenuButton fx:id="accountMenuButton" text="Mon compte" visible="false" managed="false" styleClass="home-account-btn">
+                    <items>
+                        <MenuItem fx:id="accountHeaderItem" text="Mon compte" disable="true"/>
+                        <SeparatorMenuItem/>
+                        <MenuItem text="Paramètres du profil" onAction="#handleAccountProfile"/>
+                        <MenuItem text="MFA / Sécurité" onAction="#handleAccountMfa"/>
+
+                        <Menu text="Accompagnement">
+                            <items>
+                                <MenuItem text="Messages" onAction="#handleAccountMessages"/>
+                                <MenuItem text="Documents" onAction="#handleAccountDocuments"/>
+                                <MenuItem text="Consultations vidéo" onAction="#handleAccountTeleconsultation"/>
+                                <MenuItem text="Mes plans" onAction="#handleAccountPlans"/>
+                            </items>
+                        </Menu>
+
+                        <Menu text="Santé quotidienne">
+                            <items>
+                                <MenuItem text="Mon journal santé" onAction="#handleAccountJournal"/>
+                                <MenuItem text="Mes symptômes" onAction="#handleAccountSymptoms"/>
+                            </items>
+                        </Menu>
+
+                        <MenuItem text="Abonnement" onAction="#handleAccountSubscription"/>
+                        <SeparatorMenuItem/>
+                        <MenuItem text="Déconnexion" onAction="#handleLogout"/>
+                    </items>
+                </MenuButton>
             </HBox>
         </HBox>
     </top>

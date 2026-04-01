@@ -1,6 +1,7 @@
 package com.santea.controller;
 
 import com.santea.navigation.AppNavigator;
+import com.santea.service.AuthService;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -8,7 +9,7 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 
 public class LoginViewController {
-    private final LoginController loginController = new LoginController();
+    private final AuthService authService = new AuthService();
 
     @FXML
     private TextField emailField;
@@ -30,8 +31,12 @@ public class LoginViewController {
         String email = emailField.getText() == null ? "" : emailField.getText().trim();
         String password = passwordField.isVisible() ? passwordField.getText() : visiblePasswordField.getText();
 
-        LoginController.LoginResponse response = loginController.authenticate(email, password);
+        AuthService.LoginResult response = authService.login(email, password);
         showFeedback(response.message(), response.success());
+
+        if (response.success()) {
+            AppNavigator.showHome();
+        }
     }
 
     @FXML

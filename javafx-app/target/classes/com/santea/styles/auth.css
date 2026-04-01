@@ -49,6 +49,27 @@
     -fx-padding: 10 24 10 24;
 }
 
+.home-register-outline-btn {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #40c4ff;
+    -fx-border-width: 1.4;
+    -fx-border-radius: 30;
+    -fx-background-radius: 30;
+    -fx-text-fill: #0288d1;
+    -fx-font-size: 14;
+    -fx-font-weight: 700;
+    -fx-padding: 9 18 9 18;
+}
+
+.home-account-btn {
+    -fx-background-color: linear-gradient(to right, #0d8abc, #0ea5b7);
+    -fx-background-radius: 24;
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 14;
+    -fx-font-weight: 700;
+    -fx-padding: 8 16 8 16;
+}
+
 .home-hero-bg {
     -fx-background-color: linear-gradient(to bottom right, #40c4ff 0%, #0288d1 100%);
 }

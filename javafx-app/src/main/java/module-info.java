@@ -2,6 +2,7 @@ module com.santea.javafxapp {
     requires javafx.controls;
     requires javafx.fxml;
     requires java.sql;
+    requires jakarta.mail;
     requires spring.security.crypto;
 
     requires org.controlsfx.controls;

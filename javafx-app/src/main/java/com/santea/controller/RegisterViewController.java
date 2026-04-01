@@ -1,6 +1,7 @@
 package com.santea.controller;
 
 import com.santea.navigation.AppNavigator;
+import com.santea.service.AuthService;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonBar;
@@ -15,6 +16,7 @@ import javafx.scene.layout.Region;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class RegisterViewController {
+    private final AuthService authService = new AuthService();
 
     @FXML
     private Label registerFeedbackLabel;
@@ -127,14 +129,32 @@ public class RegisterViewController {
             return;
         }
 
-        registerFeedbackLabel.setText("Compte créé avec succès (démo JavaFX).");
-        registerFeedbackLabel.getStyleClass().removeAll("alert-danger", "alert-success");
-        registerFeedbackLabel.getStyleClass().add("alert-success");
-        registerFeedbackLabel.setVisible(true);
-        registerFeedbackLabel.setManaged(true);
+        AuthService.RegistrationRequest request = new AuthService.RegistrationRequest(
+                usernameField.getText(),
+                emailField.getText(),
+                nomField.getText(),
+                prenomField.getText(),
+                dateNaissancePicker.getValue(),
+                adresseField.getText(),
+                telephoneField.getText(),
+                password,
+                confirmPassword,
+                termsAcceptedCheckBox.isSelected()
+        );
+
+        AuthService.RegisterResult result = authService.register(request);
+        showFeedback(result.message(), result.success());
+
+        if (!result.success()) {
+            return;
+        }
 
         refreshCaptcha();
         captchaField.clear();
+
+        if (result.success()) {
+            AppNavigator.showLogin();
+        }
     }
 
     @FXML
