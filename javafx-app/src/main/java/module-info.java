@@ -1,9 +1,12 @@
 module com.santea.javafxapp {
     requires javafx.controls;
     requires javafx.fxml;
+    requires javafx.swing;
     requires java.sql;
+    requires java.desktop;
     requires jakarta.mail;
     requires spring.security.crypto;
+    requires webcam.capture;
 
     requires org.controlsfx.controls;
     requires com.dlsc.formsfx;

@@ -2,6 +2,9 @@ package com.santea.navigation;
 
 import com.santea.Main;
 import com.santea.controller.AuthBaseViewController;
+import com.santea.controller.BannedViewController;
+import com.santea.controller.FeaturePageController;
+import com.santea.model.User;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -9,6 +12,7 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.List;
 
 public final class AppNavigator {
     private static Stage primaryStage;
@@ -37,6 +41,56 @@ public final class AppNavigator {
 
     public static void showForgotPassword() {
         showAuthPage("/com/santea/fxml/forgot_password.fxml");
+    }
+
+    public static void showFeaturePage(String title, String subtitle, List<String> lines) {
+        FXMLLoader loader = getLoader("/com/santea/fxml/feature_page.fxml");
+        Parent root;
+
+        try {
+            root = loader.load();
+            FeaturePageController controller = loader.getController();
+            controller.setData(title, subtitle, lines);
+        } catch (IOException exception) {
+            throw new RuntimeException("Impossible de charger la page module", exception);
+        }
+
+        mainScene = buildScene(root);
+        primaryStage.setScene(mainScene);
+    }
+
+    public static void showBanned(User user) {
+        FXMLLoader loader = getLoader("/com/santea/fxml/banned.fxml");
+        Parent root;
+
+        try {
+            root = loader.load();
+            BannedViewController controller = loader.getController();
+            controller.setUser(user);
+        } catch (IOException exception) {
+            throw new RuntimeException("Impossible de charger la page compte suspendu", exception);
+        }
+
+        mainScene = buildScene(root);
+        primaryStage.setScene(mainScene);
+    }
+
+    public static void showAdminDashboard() {
+        Parent root = loadFxml("/com/santea/fxml/admin_dashboard.fxml");
+        mainScene = buildScene(root);
+        primaryStage.setScene(mainScene);
+    }
+
+    public static void showAdminFaceVerification() {
+        Parent root = loadFxml("/com/santea/fxml/admin_face_verification.fxml");
+        mainScene = buildScene(root);
+        primaryStage.setScene(mainScene);
+    }
+
+    public static void showSubscriptionPage() {
+        Parent root = loadFxml("/com/santea/fxml/subscription.fxml");
+        mainScene = buildScene(root);
+        primaryStage.setScene(mainScene);
     }
 
     private static void showAuthPage(String contentFxmlPath) {

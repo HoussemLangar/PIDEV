@@ -3,11 +3,7 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Hyperlink?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.SeparatorMenuItem?>
 <?import javafx.scene.control.ScrollPane?>
-<?import javafx.scene.control.MenuButton?>
-<?import javafx.scene.control.Menu?>
-<?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
@@ -19,6 +15,7 @@
 
 <BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.santea.controller.HomeViewController"
+            fx:id="rootPane"
             styleClass="home-root">
 
     <top>
@@ -37,58 +34,26 @@
                 <Hyperlink text="Contact" styleClass="home-nav-link" onAction="#handleScrollToContact"/>
             </HBox>
 
-            <HBox spacing="12" alignment="CENTER_RIGHT" HBox.hgrow="ALWAYS">
-                <Button fx:id="loginButton" text="Se connecter" styleClass="home-register-btn" onAction="#handleOpenLogin"/>
-                <Button fx:id="registerButton" text="Créer un compte" styleClass="home-register-outline-btn" onAction="#handleOpenRegister"/>
+            <StackPane fx:id="accountStack" alignment="TOP_RIGHT" HBox.hgrow="ALWAYS" pickOnBounds="false">
+                <HBox spacing="10" alignment="CENTER_RIGHT">
+                    <Button fx:id="loginButton" text="Se connecter" styleClass="home-register-btn" onAction="#handleOpenLogin"/>
+                    <Button fx:id="registerButton" text="Créer un compte" styleClass="home-register-outline-btn" onAction="#handleOpenRegister"/>
+                    <Button fx:id="adminDashboardButton" text="Dashboard Admin" visible="false" managed="false" styleClass="home-admin-btn" onAction="#handleOpenAdminDashboard"/>
 
-                <StackPane fx:id="notifWrap" visible="false" managed="false">
-                    <Button fx:id="notifButton" text="🔔" styleClass="home-icon-btn" onAction="#handleOpenNotifications"/>
-                    <Label fx:id="notifBadgeLabel" text="0" styleClass="home-badge-dot" visible="false" managed="false" StackPane.alignment="TOP_RIGHT"/>
-                </StackPane>
+                    <StackPane fx:id="notifWrap" visible="false" managed="false">
+                        <Button fx:id="notifButton" text="🔔" styleClass="home-icon-btn" onAction="#handleOpenNotifications"/>
+                        <Label fx:id="notifBadgeLabel" text="0" styleClass="home-badge-dot" visible="false" managed="false" StackPane.alignment="TOP_RIGHT"/>
+                    </StackPane>
 
-                <StackPane fx:id="msgWrap" visible="false" managed="false">
-                    <Button fx:id="msgButton" text="💬" styleClass="home-icon-btn" onAction="#handleOpenMessages"/>
-                    <Label fx:id="msgBadgeLabel" text="0" styleClass="home-badge-dot" visible="false" managed="false" StackPane.alignment="TOP_RIGHT"/>
-                </StackPane>
+                    <StackPane fx:id="msgWrap" visible="false" managed="false">
+                        <Button fx:id="msgButton" text="💬" styleClass="home-icon-btn" onAction="#handleOpenMessages"/>
+                        <Label fx:id="msgBadgeLabel" text="0" styleClass="home-badge-dot" visible="false" managed="false" StackPane.alignment="TOP_RIGHT"/>
+                    </StackPane>
 
-                <MenuButton fx:id="accountMenuButton" text="Mon compte" visible="false" managed="false" styleClass="home-account-btn">
-                    <items>
-                        <MenuItem fx:id="accountHeaderItem" text="Mon compte" disable="true"/>
-                        <SeparatorMenuItem/>
-                        <MenuItem fx:id="profileItem" text="Paramètres du profil" onAction="#handleAccountProfile"/>
-                        <MenuItem fx:id="mfaItem" text="MFA / Sécurité" onAction="#handleAccountMfa"/>
-                        <MenuItem fx:id="aiToolsItem" text="Outils IA" onAction="#handleAccountAiTools"/>
+                    <Button fx:id="accountAvatarButton" text="LH" visible="false" managed="false" styleClass="home-avatar-btn" onAction="#handleToggleAccountDropdown"/>
+                </HBox>
 
-                        <Menu fx:id="accompagnementMenu" text="Accompagnement">
-                            <items>
-                                <MenuItem fx:id="messagesItem" text="Messages" onAction="#handleAccountMessages"/>
-                                <MenuItem fx:id="documentsItem" text="Documents" onAction="#handleAccountDocuments"/>
-                                <MenuItem fx:id="teleconsultationItem" text="Consultations vidéo" onAction="#handleAccountTeleconsultation"/>
-                                <MenuItem fx:id="plansItem" text="Mes plans" onAction="#handleAccountPlans"/>
-                            </items>
-                        </Menu>
-
-                        <Menu fx:id="santeMenu" text="Santé quotidienne">
-                            <items>
-                                <MenuItem fx:id="journalItem" text="Mon journal santé" onAction="#handleAccountJournal"/>
-                                <MenuItem fx:id="symptomsItem" text="Mes symptômes" onAction="#handleAccountSymptoms"/>
-                            </items>
-                        </Menu>
-
-                        <MenuItem fx:id="subscriptionItem" text="Abonnement" onAction="#handleAccountSubscription"/>
-                        <MenuItem fx:id="appointmentsItem" text="Rendez-vous" onAction="#handleAccountAppointments"/>
-                        <MenuItem fx:id="pharmacyItem" text="Ma pharmacie" onAction="#handleAccountPharmacy"/>
-                        <SeparatorMenuItem/>
-                        <MenuItem text="Thème clair" onAction="#handleSetThemeLight"/>
-                        <MenuItem text="Thème sombre" onAction="#handleSetThemeDark"/>
-                        <MenuItem text="Langue FR" onAction="#handleSetLocaleFr"/>
-                        <MenuItem text="Langue EN" onAction="#handleSetLocaleEn"/>
-                        <MenuItem text="Langue AR" onAction="#handleSetLocaleAr"/>
-                        <SeparatorMenuItem/>
-                        <MenuItem text="Déconnexion" onAction="#handleLogout"/>
-                    </items>
-                </MenuButton>
-            </HBox>
+            </StackPane>
         </HBox>
     </top>
 

@@ -35,7 +35,16 @@ public class LoginViewController {
         showFeedback(response.message(), response.success());
 
         if (response.success()) {
-            AppNavigator.showHome();
+            if (response.user() != null && "ROLE_ADMIN".equalsIgnoreCase(response.user().getRole())) {
+                AppNavigator.showAdminFaceVerification();
+            } else {
+                AppNavigator.showHome();
+            }
+            return;
+        }
+
+        if (response.failureReason() == AuthService.LoginFailureReason.BANNED) {
+            AppNavigator.showBanned(response.user());
         }
     }
 

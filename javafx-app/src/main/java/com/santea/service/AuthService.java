@@ -34,30 +34,30 @@ public class AuthService {
 
     public LoginResult login(String identifier, String password) {
         if (isBlank(identifier) || isBlank(password)) {
-            return LoginResult.failure("Merci de saisir votre email et votre mot de passe.");
+            return LoginResult.failure("Merci de saisir votre email et votre mot de passe.", LoginFailureReason.VALIDATION, null);
         }
 
         if (!databaseService.canConnect()) {
-            return LoginResult.failure("Connexion à la base échouée. " + databaseService.getLastConnectionError());
+            return LoginResult.failure("Connexion à la base échouée. " + databaseService.getLastConnectionError(), LoginFailureReason.SYSTEM, null);
         }
 
         Optional<User> userOptional = userRepository.findByEmailOrUsername(identifier.trim());
         if (userOptional.isEmpty()) {
-            return LoginResult.failure("Utilisateur introuvable.");
+            return LoginResult.failure("Utilisateur introuvable.", LoginFailureReason.NOT_FOUND, null);
         }
 
         User user = userOptional.get();
         if (!isPasswordValid(password, user.getPassword())) {
-            return LoginResult.failure("Mot de passe incorrect.");
+            return LoginResult.failure("Mot de passe incorrect.", LoginFailureReason.INVALID_PASSWORD, null);
         }
 
         if (isBannedEffective(user)) {
             String reason = isBlank(user.getBanReason()) ? "" : " Motif: " + user.getBanReason().trim();
-            return LoginResult.failure("Votre compte est banni." + reason);
+            return LoginResult.failure("Votre compte est banni." + reason, LoginFailureReason.BANNED, user);
         }
 
         if (!Boolean.TRUE.equals(user.getEmailVerified())) {
-            return LoginResult.failure("Email non vérifié. Vérifiez votre boîte mail avant de vous connecter.");
+            return LoginResult.failure("Email non vérifié. Vérifiez votre boîte mail avant de vous connecter.", LoginFailureReason.NOT_VERIFIED, null);
         }
 
         AuthSession.login(user);
@@ -306,14 +306,24 @@ public class AuthService {
         return value == null ? "" : value;
     }
 
-    public record LoginResult(boolean success, String message, User user) {
+    public record LoginResult(boolean success, String message, User user, LoginFailureReason failureReason) {
         public static LoginResult success(User user, String message) {
-            return new LoginResult(true, message, user);
+            return new LoginResult(true, message, user, LoginFailureReason.NONE);
         }
 
-        public static LoginResult failure(String message) {
-            return new LoginResult(false, message, null);
+        public static LoginResult failure(String message, LoginFailureReason failureReason, User user) {
+            return new LoginResult(false, message, user, failureReason == null ? LoginFailureReason.NONE : failureReason);
         }
+    }
+
+    public enum LoginFailureReason {
+        NONE,
+        VALIDATION,
+        SYSTEM,
+        NOT_FOUND,
+        INVALID_PASSWORD,
+        BANNED,
+        NOT_VERIFIED
     }
 
     public record RegisterResult(boolean success, String message) {
