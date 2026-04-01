@@ -70,6 +70,32 @@
     -fx-padding: 8 16 8 16;
 }
 
+.home-icon-btn {
+    -fx-background-color: #eaf4fb;
+    -fx-background-radius: 18;
+    -fx-min-width: 36;
+    -fx-min-height: 36;
+    -fx-max-width: 36;
+    -fx-max-height: 36;
+    -fx-font-size: 14;
+    -fx-padding: 0;
+}
+
+.home-badge-dot {
+    -fx-background-color: #ef4444;
+    -fx-background-radius: 10;
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 10;
+    -fx-font-weight: 800;
+    -fx-alignment: center;
+    -fx-min-width: 18;
+    -fx-min-height: 18;
+    -fx-max-width: 18;
+    -fx-max-height: 18;
+    -fx-translate-x: 8;
+    -fx-translate-y: -8;
+}
+
 .home-hero-bg {
     -fx-background-color: linear-gradient(to bottom right, #40c4ff 0%, #0288d1 100%);
 }

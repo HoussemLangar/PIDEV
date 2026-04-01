@@ -41,30 +41,49 @@
                 <Button fx:id="loginButton" text="Se connecter" styleClass="home-register-btn" onAction="#handleOpenLogin"/>
                 <Button fx:id="registerButton" text="Créer un compte" styleClass="home-register-outline-btn" onAction="#handleOpenRegister"/>
 
+                <StackPane fx:id="notifWrap" visible="false" managed="false">
+                    <Button fx:id="notifButton" text="🔔" styleClass="home-icon-btn" onAction="#handleOpenNotifications"/>
+                    <Label fx:id="notifBadgeLabel" text="0" styleClass="home-badge-dot" visible="false" managed="false" StackPane.alignment="TOP_RIGHT"/>
+                </StackPane>
+
+                <StackPane fx:id="msgWrap" visible="false" managed="false">
+                    <Button fx:id="msgButton" text="💬" styleClass="home-icon-btn" onAction="#handleOpenMessages"/>
+                    <Label fx:id="msgBadgeLabel" text="0" styleClass="home-badge-dot" visible="false" managed="false" StackPane.alignment="TOP_RIGHT"/>
+                </StackPane>
+
                 <MenuButton fx:id="accountMenuButton" text="Mon compte" visible="false" managed="false" styleClass="home-account-btn">
                     <items>
                         <MenuItem fx:id="accountHeaderItem" text="Mon compte" disable="true"/>
                         <SeparatorMenuItem/>
-                        <MenuItem text="Paramètres du profil" onAction="#handleAccountProfile"/>
-                        <MenuItem text="MFA / Sécurité" onAction="#handleAccountMfa"/>
+                        <MenuItem fx:id="profileItem" text="Paramètres du profil" onAction="#handleAccountProfile"/>
+                        <MenuItem fx:id="mfaItem" text="MFA / Sécurité" onAction="#handleAccountMfa"/>
+                        <MenuItem fx:id="aiToolsItem" text="Outils IA" onAction="#handleAccountAiTools"/>
 
-                        <Menu text="Accompagnement">
+                        <Menu fx:id="accompagnementMenu" text="Accompagnement">
                             <items>
-                                <MenuItem text="Messages" onAction="#handleAccountMessages"/>
-                                <MenuItem text="Documents" onAction="#handleAccountDocuments"/>
-                                <MenuItem text="Consultations vidéo" onAction="#handleAccountTeleconsultation"/>
-                                <MenuItem text="Mes plans" onAction="#handleAccountPlans"/>
+                                <MenuItem fx:id="messagesItem" text="Messages" onAction="#handleAccountMessages"/>
+                                <MenuItem fx:id="documentsItem" text="Documents" onAction="#handleAccountDocuments"/>
+                                <MenuItem fx:id="teleconsultationItem" text="Consultations vidéo" onAction="#handleAccountTeleconsultation"/>
+                                <MenuItem fx:id="plansItem" text="Mes plans" onAction="#handleAccountPlans"/>
                             </items>
                         </Menu>
 
-                        <Menu text="Santé quotidienne">
+                        <Menu fx:id="santeMenu" text="Santé quotidienne">
                             <items>
-                                <MenuItem text="Mon journal santé" onAction="#handleAccountJournal"/>
-                                <MenuItem text="Mes symptômes" onAction="#handleAccountSymptoms"/>
+                                <MenuItem fx:id="journalItem" text="Mon journal santé" onAction="#handleAccountJournal"/>
+                                <MenuItem fx:id="symptomsItem" text="Mes symptômes" onAction="#handleAccountSymptoms"/>
                             </items>
                         </Menu>
 
-                        <MenuItem text="Abonnement" onAction="#handleAccountSubscription"/>
+                        <MenuItem fx:id="subscriptionItem" text="Abonnement" onAction="#handleAccountSubscription"/>
+                        <MenuItem fx:id="appointmentsItem" text="Rendez-vous" onAction="#handleAccountAppointments"/>
+                        <MenuItem fx:id="pharmacyItem" text="Ma pharmacie" onAction="#handleAccountPharmacy"/>
+                        <SeparatorMenuItem/>
+                        <MenuItem text="Thème clair" onAction="#handleSetThemeLight"/>
+                        <MenuItem text="Thème sombre" onAction="#handleSetThemeDark"/>
+                        <MenuItem text="Langue FR" onAction="#handleSetLocaleFr"/>
+                        <MenuItem text="Langue EN" onAction="#handleSetLocaleEn"/>
+                        <MenuItem text="Langue AR" onAction="#handleSetLocaleAr"/>
                         <SeparatorMenuItem/>
                         <MenuItem text="Déconnexion" onAction="#handleLogout"/>
                     </items>
