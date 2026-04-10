@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Hyperlink?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<StackPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="com.santea.controller.ProfileMfaController" styleClass="profile-page-root">
+
+    <ScrollPane fitToWidth="true" styleClass="home-scroll" StackPane.alignment="CENTER">
+        <content>
+            <VBox spacing="16" alignment="TOP_CENTER" styleClass="profile-content-shell">
+                <padding>
+                    <Insets top="26" right="18" bottom="30" left="18"/>
+                </padding>
+
+                <HBox alignment="CENTER_LEFT" spacing="24" styleClass="home-nav" maxWidth="940">
+                    <padding>
+                        <Insets top="14" right="18" bottom="14" left="18"/>
+                    </padding>
+                    <Label text="SANTEA" styleClass="home-brand"/>
+                    <FlowPane hgap="10" vgap="6" alignment="CENTER_LEFT" HBox.hgrow="ALWAYS">
+                        <Hyperlink text="Accueil" styleClass="home-nav-link" onAction="#handleNavHome"/>
+                        <Hyperlink text="Services" styleClass="home-nav-link" onAction="#handleNavServices"/>
+                        <Hyperlink text="Parametres" styleClass="home-nav-link" onAction="#handleOpenProfilePage"/>
+                        <Hyperlink text="2FA" styleClass="home-nav-link" onAction="#handleOpenMfaPage"/>
+                        <Hyperlink text="Abonnement" styleClass="home-nav-link" onAction="#handleOpenSubscriptionPage"/>
+                    </FlowPane>
+                    <Button text="Retour Accueil" styleClass="home-register-outline-btn" onAction="#handleBackHome"/>
+                </HBox>
+
+                <HBox spacing="8" styleClass="profile-nav-tabs" maxWidth="940">
+                    <Button text="Informations" styleClass="profile-nav-btn" onAction="#handleOpenProfilePage"/>
+                    <Button text="Confidentialite" styleClass="profile-nav-btn" onAction="#handleOpenConfidentialite"/>
+                    <Button text="2FA" styleClass="profile-nav-btn active"/>
+                    <Button text="Abonnement" styleClass="profile-nav-btn" onAction="#handleOpenSubscriptionPage"/>
+                </HBox>
+
+                <Label fx:id="feedbackLabel" text="" visible="false" managed="false" wrapText="true" styleClass="alert" maxWidth="940"/>
+
+                <VBox spacing="12" styleClass="profile-card mfa-main-card" maxWidth="940">
+                    <Label text="Authentification multi-facteurs" styleClass="profile-title" style="-fx-font-size: 42;"/>
+                    <Label text="Activez Google Authenticator pour securiser votre compte." styleClass="profile-subtitle"/>
+
+                    <VBox fx:id="inactiveCard" spacing="10" styleClass="mfa-status-card">
+                        <Label text="MFA non active" styleClass="profile-section-title"/>
+                        <Label text="Cliquez sur Activer pour generer votre secret Google Authenticator." styleClass="profile-mfa-help" wrapText="true"/>
+                        <Button text="Activer la MFA" styleClass="sub-primary-button" onAction="#handleOpenEnableModal"/>
+                    </VBox>
+
+                    <VBox fx:id="qrCard" spacing="10" styleClass="mfa-status-card" visible="false" managed="false">
+                        <Label fx:id="mfaStatusLabel" text="MFA active." styleClass="mfa-active-banner"/>
+                        <HBox spacing="12">
+                            <ImageView fx:id="qrImageView" fitWidth="220" fitHeight="220" preserveRatio="true"/>
+                            <VBox spacing="8" HBox.hgrow="ALWAYS">
+                                <Label text="Scannez ce QR dans Google Authenticator." styleClass="profile-mfa-help" wrapText="true"/>
+                                <Label text="URI:" styleClass="field-label"/>
+                                <Label fx:id="qrUriLabel" text="-" styleClass="profile-ai-meta" wrapText="true"/>
+                            </VBox>
+                        </HBox>
+                        <Button text="Desactiver la MFA" styleClass="sub-danger-button" onAction="#handleOpenDisableModal"/>
+                    </VBox>
+                </VBox>
+            </VBox>
+        </content>
+    </ScrollPane>
+
+    <VBox fx:id="enableModal" visible="false" managed="false" styleClass="mfa-modal-overlay" StackPane.alignment="CENTER">
+        <VBox spacing="12" styleClass="mfa-modal-card" maxWidth="520">
+            <Label text="Activer la MFA" styleClass="mfa-modal-title"/>
+            <Label text="Etape 1: verifiez d'abord votre mot de passe." styleClass="profile-mfa-help" wrapText="true"/>
+            <HBox spacing="8" alignment="CENTER_LEFT">
+                <PasswordField fx:id="enablePasswordField" promptText="Mot de passe actuel" styleClass="form-control" HBox.hgrow="ALWAYS"/>
+                <TextField fx:id="enablePasswordVisibleField" promptText="Mot de passe actuel" styleClass="form-control" visible="false" managed="false" HBox.hgrow="ALWAYS"/>
+                <Button text="👁" styleClass="password-toggle-btn" onAction="#toggleEnablePasswordVisibility"/>
+            </HBox>
+            <HBox alignment="CENTER_RIGHT">
+                <Button text="Verifier mot de passe" styleClass="sub-outline-button" onAction="#handlePrepareEnableMfa"/>
+            </HBox>
+            <VBox fx:id="enableSetupBox" spacing="10" visible="false" managed="false">
+                <Label text="Etape 2: scannez le QR, puis entrez le code OTP." styleClass="profile-mfa-help" wrapText="true"/>
+                <HBox spacing="12">
+                    <ImageView fx:id="enableQrImageView" fitWidth="170" fitHeight="170" preserveRatio="true"/>
+                    <VBox spacing="8" HBox.hgrow="ALWAYS">
+                        <Label text="URI:" styleClass="field-label"/>
+                        <Label fx:id="enableQrUriLabel" text="-" styleClass="profile-ai-meta" wrapText="true"/>
+                        <Label text="Code OTP (6 chiffres)" styleClass="field-label"/>
+                        <TextField fx:id="enableCodeField" promptText="123456" styleClass="form-control"/>
+                    </VBox>
+                </HBox>
+            </VBox>
+            <HBox spacing="10" alignment="CENTER_RIGHT">
+                <Button text="Annuler" styleClass="sub-outline-button" onAction="#handleCloseEnableModal"/>
+                <Button fx:id="enableConfirmButton" text="Activer" styleClass="sub-primary-button" onAction="#handleEnableMfa" disable="true"/>
+            </HBox>
+        </VBox>
+    </VBox>
+
+    <VBox fx:id="disableModal" visible="false" managed="false" styleClass="mfa-modal-overlay" StackPane.alignment="CENTER">
+        <VBox spacing="12" styleClass="mfa-modal-card" maxWidth="420">
+            <Label text="Desactiver la MFA" styleClass="mfa-modal-title"/>
+            <Label text="Confirmez votre mot de passe pour continuer." styleClass="profile-mfa-help"/>
+            <HBox spacing="8" alignment="CENTER_LEFT">
+                <PasswordField fx:id="disablePasswordField" promptText="Mot de passe actuel" styleClass="form-control" HBox.hgrow="ALWAYS"/>
+                <TextField fx:id="disablePasswordVisibleField" promptText="Mot de passe actuel" styleClass="form-control" visible="false" managed="false" HBox.hgrow="ALWAYS"/>
+                <Button text="👁" styleClass="password-toggle-btn" onAction="#toggleDisablePasswordVisibility"/>
+            </HBox>
+            <HBox spacing="10" alignment="CENTER_RIGHT">
+                <Button text="Annuler" styleClass="sub-outline-button" onAction="#handleCloseDisableModal"/>
+                <Button text="Desactiver" styleClass="sub-danger-button" onAction="#handleDisableMfa"/>
+            </HBox>
+        </VBox>
+    </VBox>
+</StackPane>

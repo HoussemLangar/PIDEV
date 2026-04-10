@@ -93,6 +93,18 @@ public final class AppNavigator {
         primaryStage.setScene(mainScene);
     }
 
+    public static void showProfileSettings() {
+        Parent root = loadFxml("/com/santea/fxml/profile_settings.fxml");
+        mainScene = buildScene(root);
+        primaryStage.setScene(mainScene);
+    }
+
+    public static void showProfileMfa() {
+        Parent root = loadFxml("/com/santea/fxml/profile_mfa.fxml");
+        mainScene = buildScene(root);
+        primaryStage.setScene(mainScene);
+    }
+
     private static void showAuthPage(String contentFxmlPath) {
         FXMLLoader baseLoader = getLoader("/com/santea/fxml/auth_base.fxml");
         Parent baseRoot;

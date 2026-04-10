@@ -4,6 +4,7 @@ import com.santea.model.User;
 import com.santea.navigation.AppNavigator;
 import com.santea.service.AuthService;
 import com.santea.service.AuthSession;
+import com.santea.service.AuthorizationPolicyService;
 import com.santea.service.HomeDashboardService;
 import javafx.fxml.FXML;
 import javafx.geometry.Side;
@@ -11,7 +12,6 @@ import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.CustomMenuItem;
-import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
@@ -34,9 +34,9 @@ public class HomeViewController {
 
     private final AuthService authService = new AuthService();
     private final HomeDashboardService homeDashboardService = new HomeDashboardService();
+    private final AuthorizationPolicyService authorizationPolicyService = new AuthorizationPolicyService();
 
     private String selectedTheme = "light";
-    private String selectedLocale = "FR";
 
     @FXML
     private BorderPane rootPane;
@@ -334,9 +334,7 @@ public class HomeViewController {
         boolean isAdmin = "ROLE_ADMIN".equals(role);
         boolean canTeleconsult = isPatient || isMedecin;
         boolean canPlan = Set.of("ROLE_PATIENT", "ROLE_MEDECIN", "ROLE_COACH", "ROLE_NUTRITIONNISTE").contains(role);
-        boolean canAiTools = "ROLE_ADMIN".equals(role)
-                || ("ACTIVE".equalsIgnoreCase(safe(user.getSubscriptionStatus()))
-                && Set.of("ROLE_PATIENT", "ROLE_MEDECIN", "ROLE_COACH", "ROLE_NUTRITIONNISTE").contains(role));
+        boolean canAiTools = authorizationPolicyService.hasAiToolsAccess(user);
 
         VBox card = new VBox(10);
         card.getStyleClass().add("account-dropdown-card");
@@ -443,13 +441,13 @@ public class HomeViewController {
         HBox.setHgrow(localeButtons, Priority.ALWAYS);
         Button frBtn = new Button("FR");
         frBtn.getStyleClass().add("account-mini-pill");
-        frBtn.setOnAction(event -> selectedLocale = "FR");
+        frBtn.setOnAction(event -> applyLocale("FR"));
         Button enBtn = new Button("EN");
         enBtn.getStyleClass().add("account-mini-pill");
-        enBtn.setOnAction(event -> selectedLocale = "EN");
+        enBtn.setOnAction(event -> applyLocale("EN"));
         Button arBtn = new Button("AR");
         arBtn.getStyleClass().add("account-mini-pill");
-        arBtn.setOnAction(event -> selectedLocale = "AR");
+        arBtn.setOnAction(event -> applyLocale("AR"));
         localeButtons.getChildren().addAll(frBtn, enBtn, arBtn);
         localeRow.getChildren().addAll(localeLabel, localeButtons);
 
@@ -493,30 +491,17 @@ public class HomeViewController {
     }
 
     private void openProfilePage() {
-        User user = AuthSession.getCurrentUser();
-        if (user == null) {
-            return;
-        }
-
-        List<String> lines = new ArrayList<>();
-        lines.add("Nom: " + safe(user.getNom()));
-        lines.add("Prenom: " + safe(user.getPrenom()));
-        lines.add("Email: " + safe(user.getEmail()));
-        lines.add("Role: " + humanizeRole(resolveRole(user)));
-        lines.add("Abonnement: " + safe(user.getSubscriptionStatus()));
-        AppNavigator.showFeaturePage("Parametres du profil", "Gestion du profil utilisateur", lines);
+        AppNavigator.showProfileSettings();
     }
 
     private void openMfaPage() {
-        AppNavigator.showFeaturePage("Securite MFA", "Protection du compte", List.of(
-                "Etat MFA: actif/inactif",
-                "Codes de recuperation",
-                "Historique des sessions",
-                "Validation en 2 etapes"
-        ));
+        AppNavigator.showProfileMfa();
     }
 
     private void openAiToolsPage() {
+        if (!guardPremiumAccess()) {
+            return;
+        }
         AppNavigator.showFeaturePage("Outils IA", "Analyse et recommandations", List.of(
                 "Analyse des symptomes",
                 "Score de risque",
@@ -525,6 +510,9 @@ public class HomeViewController {
     }
 
     private void openMessagesPage() {
+        if (!guardPremiumAccess()) {
+            return;
+        }
         List<String> lines = new ArrayList<>();
         for (HomeDashboardService.ConversationPreview conversation : dashboardData.conversations()) {
             lines.add(conversation.otherUserDisplay() + " | " + safe(conversation.lastMessage()));
@@ -544,6 +532,9 @@ public class HomeViewController {
     }
 
     private void openDocumentsPage() {
+        if (!guardPremiumAccess()) {
+            return;
+        }
         AppNavigator.showFeaturePage("Documents", "Gestion documentaire", List.of(
                 "Voir mes documents",
                 "Televerser un document",
@@ -552,6 +543,9 @@ public class HomeViewController {
     }
 
     private void openTeleconsultationPage() {
+        if (!guardPremiumAccess()) {
+            return;
+        }
         AppNavigator.showFeaturePage("Teleconsultation", "Consultations video", List.of(
                 "Planning des sessions",
                 "Historique des consultations",
@@ -560,6 +554,9 @@ public class HomeViewController {
     }
 
     private void openPlansPage() {
+        if (!guardPremiumAccess()) {
+            return;
+        }
         AppNavigator.showFeaturePage("Mes plans", "Accompagnement personnalise", List.of(
                 "Plan nutrition",
                 "Plan activite physique",
@@ -568,6 +565,9 @@ public class HomeViewController {
     }
 
     private void openJournalPage() {
+        if (!guardPremiumAccess()) {
+            return;
+        }
         AppNavigator.showFeaturePage("Journal sante", "Suivi quotidien", List.of(
                 "Poids et IMC",
                 "Sommeil",
@@ -577,6 +577,9 @@ public class HomeViewController {
     }
 
     private void openSymptomsPage() {
+        if (!guardPremiumAccess()) {
+            return;
+        }
         AppNavigator.showFeaturePage("Mes symptomes", "Historique et suivi", List.of(
                 "Declaration des symptomes",
                 "Evolution dans le temps",
@@ -589,6 +592,9 @@ public class HomeViewController {
     }
 
     private void openAppointmentsPage() {
+        if (!guardPremiumAccess()) {
+            return;
+        }
         AppNavigator.showFeaturePage("Rendez-vous", "Gestion des consultations", List.of(
                 "Rendez-vous a venir",
                 "Historique",
@@ -597,6 +603,9 @@ public class HomeViewController {
     }
 
     private void openPharmacyPage() {
+        if (!guardPremiumAccess()) {
+            return;
+        }
         AppNavigator.showFeaturePage("Ma pharmacie", "Espace pharmacie", List.of(
                 "Stock des medicaments",
                 "Ordonnances recues",
@@ -626,7 +635,7 @@ public class HomeViewController {
         if (user == null) {
             return "";
         }
-        return safe(user.getRole()).toUpperCase();
+        return authorizationPolicyService.effectiveRole(user);
     }
 
     private String resolveFullName(User user) {
@@ -721,5 +730,27 @@ public class HomeViewController {
         } else {
             rootPane.setStyle("");
         }
+    }
+
+    private void applyLocale(String locale) {
+        User user = AuthSession.getCurrentUser();
+        if (user != null) {
+            user.setLocale(locale);
+        }
+    }
+
+    private boolean guardPremiumAccess() {
+        User user = AuthSession.getCurrentUser();
+        AuthorizationPolicyService.AccessDecision decision = authorizationPolicyService.decisionForProtectedFeatures(user);
+        if (decision.allowed()) {
+            return true;
+        }
+
+        AppNavigator.showFeaturePage("Acces restreint", "Droits d'abonnement", List.of(
+                decision.message(),
+                "Statut actuel: " + (user == null ? "INCONNU" : safe(user.getSubscriptionStatus())),
+                "Type actuel: " + (user == null ? "Aucun" : safe(user.getSubscriptionType()))
+        ));
+        return false;
     }
 }

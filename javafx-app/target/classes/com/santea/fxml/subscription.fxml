@@ -3,88 +3,131 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Hyperlink?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
-<?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<ScrollPane fitToWidth="true" prefHeight="800.0" prefWidth="1200.0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.santea.controller.SubscriptionViewController">
-    <content>
-        <VBox fx:id="root" spacing="20.0" styleClass="sub-root">
-            <padding>
-                <Insets bottom="24.0" left="24.0" right="24.0" top="24.0" />
-            </padding>
+<StackPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="com.santea.controller.SubscriptionViewController" styleClass="sub-page-root">
 
-            <HBox alignment="CENTER_LEFT" spacing="12.0">
-                <Button mnemonicParsing="false" onAction="#goHome" styleClass="sub-outline-button" text="Retour" />
-                <Label styleClass="sub-title" text="Abonnement" />
+    <ScrollPane fitToWidth="true" styleClass="home-scroll">
+        <content>
+            <VBox fx:id="root" spacing="18" alignment="TOP_CENTER" styleClass="sub-root profile-content-shell" maxWidth="1460">
+                <padding>
+                    <Insets top="24" right="20" bottom="30" left="20"/>
+                </padding>
+
+                <HBox alignment="CENTER_LEFT" spacing="24" styleClass="home-nav" maxWidth="1360">
+                    <padding>
+                        <Insets top="14" right="18" bottom="14" left="18"/>
+                    </padding>
+                    <Label text="SANTEA" styleClass="home-brand"/>
+                    <FlowPane hgap="10" vgap="6" alignment="CENTER_LEFT" HBox.hgrow="ALWAYS">
+                        <Hyperlink text="Accueil" styleClass="home-nav-link" onAction="#handleNavHome"/>
+                        <Hyperlink text="Services" styleClass="home-nav-link" onAction="#handleNavServices"/>
+                        <Hyperlink text="Parametres" styleClass="home-nav-link" onAction="#handleNavSettings"/>
+                        <Hyperlink text="2FA" styleClass="home-nav-link" onAction="#handleNavMfa"/>
+                        <Hyperlink text="Abonnement" styleClass="home-nav-link" onAction="#handleNavSubscription"/>
+                    </FlowPane>
+                    <Button mnemonicParsing="false" onAction="#goHome" styleClass="home-register-outline-btn" text="Retour Accueil"/>
+                </HBox>
+
+                <HBox alignment="CENTER_LEFT" spacing="12.0" maxWidth="1360">
+                    <Label styleClass="sub-chip" text="Abonnement Premium"/>
+                </HBox>
+
+                <VBox spacing="8" alignment="CENTER" styleClass="sub-hero-wrap">
+                    <Label styleClass="sub-title" text="Accedez a tout SANTEA"/>
+                    <Label styleClass="sub-subtitle" text="Un seul abonnement · toutes les fonctionnalites · acces immediat."/>
+                    <Label styleClass="sub-subtitle" text="Si vous n'etes pas satisfait, resiliez a tout moment."/>
+                </VBox>
+
+                <HBox alignment="CENTER" spacing="18.0" styleClass="sub-kpi-box">
+                    <VBox spacing="2.0" alignment="CENTER">
+                        <Label styleClass="sub-kpi-value" text="10 DT"/>
+                        <Label styleClass="sub-kpi-label" text="par mois"/>
+                    </VBox>
+                    <VBox spacing="2.0" alignment="CENTER">
+                        <Label styleClass="sub-kpi-value" text="1"/>
+                        <Label styleClass="sub-kpi-label" text="mois renouvelable"/>
+                    </VBox>
+                    <VBox spacing="2.0" alignment="CENTER">
+                        <Label styleClass="sub-kpi-value" text="∞"/>
+                        <Label styleClass="sub-kpi-label" text="fonctionnalites"/>
+                    </VBox>
+                </HBox>
+
+                <VBox spacing="6.0" styleClass="sub-banner">
+                    <Label fx:id="bannerStatus" styleClass="sub-banner-label" text="Aucun abonnement actif"/>
+                    <Label fx:id="statusText" styleClass="sub-banner-text" text="Choisissez une formule pour debloquer toutes les fonctionnalites."/>
+                </VBox>
+
+                <FlowPane fx:id="plansContainer" hgap="16" vgap="16" prefWrapLength="1320" alignment="CENTER"/>
+
+                <VBox fx:id="overviewSection" managed="false" spacing="10.0" visible="false">
+                    <Label styleClass="sub-section-title" text="Mon abonnement"/>
+                    <HBox spacing="16.0">
+                        <VBox spacing="6.0" styleClass="sub-overview-card">
+                            <Label text="Nom"/>
+                            <Label fx:id="ovPlan" styleClass="sub-strong-text" text="-"/>
+                            <Label text="Type"/>
+                            <Label fx:id="ovType" styleClass="sub-strong-text" text="-"/>
+                        </VBox>
+                        <VBox spacing="6.0" styleClass="sub-overview-card">
+                            <Label text="Prix"/>
+                            <Label fx:id="ovPrice" styleClass="sub-strong-text" text="-"/>
+                            <Label text="Debut"/>
+                            <Label fx:id="ovStart" styleClass="sub-strong-text" text="-"/>
+                        </VBox>
+                        <VBox spacing="6.0" styleClass="sub-overview-card">
+                            <Label text="Fin"/>
+                            <Label fx:id="ovEnd" styleClass="sub-strong-text" text="-"/>
+                            <Label text="Statut"/>
+                            <Label fx:id="ovStatus" styleClass="sub-strong-text" text="-"/>
+                        </VBox>
+                    </HBox>
+                    <HBox spacing="10.0">
+                        <Button mnemonicParsing="false" onAction="#cancelSubscription" styleClass="sub-danger-button" text="Annuler abonnement"/>
+                        <Button mnemonicParsing="false" onAction="#goHome" styleClass="sub-outline-button" text="Retour accueil"/>
+                    </HBox>
+                </VBox>
+
+                <Label fx:id="paymentFeedback" styleClass="sub-feedback" text=""/>
+            </VBox>
+        </content>
+    </ScrollPane>
+
+    <VBox fx:id="paymentSection" managed="false" visible="false" styleClass="mfa-modal-overlay" StackPane.alignment="CENTER">
+        <VBox spacing="12.0" styleClass="mfa-modal-card" maxWidth="520">
+            <Label styleClass="mfa-modal-title" text="Paiement securise"/>
+            <Label text="Plan" styleClass="field-label"/>
+            <Label fx:id="chosenPlanLabel" styleClass="sub-strong-text" text="-"/>
+            <Label text="Tarif" styleClass="field-label"/>
+            <Label fx:id="chosenPriceLabel" styleClass="sub-strong-text" text="-"/>
+            <Label text="Type de carte" styleClass="field-label"/>
+            <ComboBox fx:id="cardType" prefWidth="260.0" styleClass="form-control"/>
+            <Label text="Numero de carte" styleClass="field-label"/>
+            <TextField fx:id="cardNumber" promptText="4242 4242 4242 4242" styleClass="form-control"/>
+            <HBox spacing="10">
+                <VBox spacing="6" HBox.hgrow="ALWAYS">
+                    <Label text="Expiration (MM/YY)" styleClass="field-label"/>
+                    <TextField fx:id="cardExpiry" promptText="12/30" styleClass="form-control"/>
+                </VBox>
+                <VBox spacing="6" HBox.hgrow="ALWAYS">
+                    <Label text="CVC" styleClass="field-label"/>
+                    <TextField fx:id="cardCvc" promptText="123" styleClass="form-control"/>
+                </VBox>
             </HBox>
-
-            <VBox spacing="6.0" styleClass="sub-banner">
-                <Label fx:id="bannerStatus" styleClass="sub-banner-label" text="Aucun abonnement actif" />
-                <Label fx:id="statusText" styleClass="sub-banner-text" text="Choisissez une formule pour debloquer toutes les fonctionnalites." />
-            </VBox>
-
-            <VBox fx:id="choiceSection" spacing="16.0">
-                <Label styleClass="sub-section-title" text="Choisissez votre formule" />
-                <VBox fx:id="plansContainer" spacing="12.0" />
-                <HBox spacing="10.0">
-                    <Button fx:id="toPaymentBtn" mnemonicParsing="false" onAction="#startPayment" styleClass="sub-primary-button" text="Continuer vers paiement" />
-                    <Button mnemonicParsing="false" onAction="#skipForNow" styleClass="sub-outline-button" text="Passer pour le moment" />
-                </HBox>
-            </VBox>
-
-            <VBox fx:id="paymentSection" managed="false" spacing="12.0" visible="false">
-                <Label styleClass="sub-section-title" text="Paiement securise" />
-                <Label text="Plan" />
-                <Label fx:id="chosenPlanLabel" styleClass="sub-strong-text" text="-" />
-                <Label text="Tarif" />
-                <Label fx:id="chosenPriceLabel" styleClass="sub-strong-text" text="-" />
-                <Separator />
-                <Label text="Type de carte" />
-                <ComboBox fx:id="cardType" prefWidth="240.0" />
-                <Label text="Numero de carte" />
-                <TextField fx:id="cardNumber" promptText="4242 4242 4242 4242" />
-                <Label text="Expiration (MM/YY)" />
-                <TextField fx:id="cardExpiry" promptText="12/30" />
-                <Label text="CVC" />
-                <TextField fx:id="cardCvc" promptText="123" />
-                <HBox spacing="10.0">
-                    <Button fx:id="payBtn" mnemonicParsing="false" onAction="#payNow" styleClass="sub-primary-button" text="Payer 10 EUR" />
-                    <Button mnemonicParsing="false" onAction="#backToChoice" styleClass="sub-outline-button" text="Retour" />
-                </HBox>
-                <Label fx:id="paymentFeedback" styleClass="sub-feedback" text="" />
-            </VBox>
-
-            <VBox fx:id="overviewSection" managed="false" spacing="10.0" visible="false">
-                <Label styleClass="sub-section-title" text="Mon abonnement" />
-                <HBox spacing="16.0">
-                    <VBox spacing="6.0" styleClass="sub-overview-card">
-                        <Label text="Nom" />
-                        <Label fx:id="ovPlan" styleClass="sub-strong-text" text="-" />
-                        <Label text="Type" />
-                        <Label fx:id="ovType" styleClass="sub-strong-text" text="-" />
-                    </VBox>
-                    <VBox spacing="6.0" styleClass="sub-overview-card">
-                        <Label text="Prix" />
-                        <Label fx:id="ovPrice" styleClass="sub-strong-text" text="-" />
-                        <Label text="Debut" />
-                        <Label fx:id="ovStart" styleClass="sub-strong-text" text="-" />
-                    </VBox>
-                    <VBox spacing="6.0" styleClass="sub-overview-card">
-                        <Label text="Fin" />
-                        <Label fx:id="ovEnd" styleClass="sub-strong-text" text="-" />
-                        <Label text="Statut" />
-                        <Label fx:id="ovStatus" styleClass="sub-strong-text" text="-" />
-                    </VBox>
-                </HBox>
-                <HBox spacing="10.0">
-                    <Button mnemonicParsing="false" onAction="#cancelSubscription" styleClass="sub-danger-button" text="Annuler abonnement" />
-                    <Button mnemonicParsing="false" onAction="#goHome" styleClass="sub-outline-button" text="Retour accueil" />
-                </HBox>
-            </VBox>
+            <HBox spacing="10.0" alignment="CENTER_RIGHT">
+                <Button fx:id="payBtn" mnemonicParsing="false" onAction="#payNow" styleClass="sub-primary-button" text="Payer"/>
+                <Button mnemonicParsing="false" onAction="#backToChoice" styleClass="sub-outline-button" text="Annuler"/>
+            </HBox>
         </VBox>
-    </content>
-</ScrollPane>
+    </VBox>
+
+</StackPane>

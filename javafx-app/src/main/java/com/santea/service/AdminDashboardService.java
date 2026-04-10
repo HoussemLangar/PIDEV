@@ -27,6 +27,8 @@ public class AdminDashboardService {
         int verifiedUsers = scalarCount("SELECT COUNT(*) FROM users WHERE email_verified = 1");
         int pendingUsers = scalarCount("SELECT COUNT(*) FROM users WHERE email_verified = 1 AND admin_approved = 0");
         int unreadSuspicious = scalarCount("SELECT COUNT(*) FROM suspicious_logins WHERE blocked = 1");
+        int paymentsSucceeded = scalarCountSafe("SELECT COUNT(*) FROM stripe_payments WHERE status = 'succeeded'");
+        int activeSessions = scalarCountSafe("SELECT COUNT(*) FROM user_sessions WHERE is_active = 1");
 
         int appointmentsToday = scalarCountWithDate(
                 "SELECT COUNT(*) FROM appointments WHERE DATE(appointment_date) = ?",
@@ -35,7 +37,7 @@ public class AdminDashboardService {
 
         List<String> latestBans = latestBanSamples();
 
-        return new AdminDashboardData(totalUsers, bannedUsers, verifiedUsers, pendingUsers, unreadSuspicious, appointmentsToday, latestBans);
+        return new AdminDashboardData(totalUsers, bannedUsers, verifiedUsers, pendingUsers, unreadSuspicious, appointmentsToday, paymentsSucceeded, activeSessions, latestBans);
     }
 
     private int scalarCount(String sql) {
@@ -70,6 +72,14 @@ public class AdminDashboardService {
         return 0;
     }
 
+    private int scalarCountSafe(String sql) {
+        try {
+            return scalarCount(sql);
+        } catch (Exception ignored) {
+            return 0;
+        }
+    }
+
     private List<String> latestBanSamples() {
         String sql = "SELECT email, ban_reason FROM users WHERE is_banned = 1 ORDER BY updated_at DESC LIMIT 5";
         List<String> rows = new ArrayList<>();
@@ -97,10 +107,12 @@ public class AdminDashboardService {
             int pendingUsers,
             int blockedSuspicious,
             int appointmentsToday,
+            int succeededPayments,
+            int activeSessions,
             List<String> latestBans
     ) {
         public static AdminDashboardData empty() {
-            return new AdminDashboardData(0, 0, 0, 0, 0, 0, List.of());
+            return new AdminDashboardData(0, 0, 0, 0, 0, 0, 0, 0, List.of());
         }
     }
 }

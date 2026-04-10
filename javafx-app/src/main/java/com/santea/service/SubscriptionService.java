@@ -9,6 +9,7 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -27,7 +28,8 @@ public class SubscriptionService {
                 new PlanCard("Pharmacien", "ROLE_PHARMACIEN", "10.00", "Gestion stock, ordonnances, pharmacie en ligne"),
                 new PlanCard("Coach sportif", "ROLE_COACH", "10.00", "Plans d'entrainement, suivi clients, coaching"),
                 new PlanCard("Nutritionniste", "ROLE_NUTRITIONNISTE", "10.00", "Plans nutritionnels, suivi alimentaire, recettes"),
-                new PlanCard("Patient", "ROLE_PATIENT", "10.00", "Journal sante, teleconsultation, suivi symptomes")
+                new PlanCard("Patient", "ROLE_PATIENT", "10.00", "Journal sante, teleconsultation, suivi symptomes"),
+                new PlanCard("IA Tools", "AI_TOOLS", "5.00", "Document scanner, nutrition planner, workout planner, result explainer")
         );
     }
 
@@ -57,6 +59,10 @@ public class SubscriptionService {
     }
 
     public ActionResult activatePaidSubscription(User user, String type) {
+        return activatePaidSubscription(user, type, null, resolvePrice(type), "EUR");
+    }
+
+    public ActionResult activatePaidSubscription(User user, String type, String paymentSessionId, BigDecimal amount, String currency) {
         if (user == null || user.getId() == null) {
             return ActionResult.failure("Utilisateur invalide.");
         }
@@ -73,31 +79,40 @@ public class SubscriptionService {
         LocalDate start = LocalDate.now();
         LocalDate end = start.plusMonths(1);
 
-        String insert = "INSERT INTO abonnements (nom, type_abonnement, prix, duree_mois, avantages, description, date_debut, date_fin, statut, created_at, updated_at, user_id) "
-                + "VALUES (?, ?, ?, 1, ?, ?, ?, ?, 'actif', ?, ?, ?)";
+        String insert = "INSERT INTO abonnements (nom, type_abonnement, prix, duree_mois, avantages, description, date_debut, date_fin, statut, payment_session_id, created_at, updated_at, user_id) "
+                + "VALUES (?, ?, ?, 1, ?, ?, ?, ?, 'actif', ?, ?, ?, ?)";
 
         String updateUser = "UPDATE users SET role = ?, subscription_status = 'ACTIVE', subscription_type = ?, subscription_end_at = ?, updated_at = ? WHERE id = ?";
 
         try (Connection connection = databaseService.getConnection()) {
             connection.setAutoCommit(false);
+            int abonnementId;
 
-            try (PreparedStatement insertStmt = connection.prepareStatement(insert)) {
+            try (PreparedStatement insertStmt = connection.prepareStatement(insert, Statement.RETURN_GENERATED_KEYS)) {
                 insertStmt.setString(1, labelFromRole(type));
                 insertStmt.setString(2, type);
-                insertStmt.setBigDecimal(3, new BigDecimal("10.00"));
+                insertStmt.setBigDecimal(3, amount == null ? resolvePrice(type) : amount);
                 insertStmt.setString(4, defaultAdvantages(type));
                 insertStmt.setString(5, "Abonnement premium SANTEA");
                 insertStmt.setDate(6, Date.valueOf(start));
                 insertStmt.setDate(7, Date.valueOf(end));
-                insertStmt.setTimestamp(8, Timestamp.valueOf(LocalDateTime.now()));
+                insertStmt.setString(8, paymentSessionId);
                 insertStmt.setTimestamp(9, Timestamp.valueOf(LocalDateTime.now()));
-                insertStmt.setInt(10, user.getId());
+                insertStmt.setTimestamp(10, Timestamp.valueOf(LocalDateTime.now()));
+                insertStmt.setInt(11, user.getId());
                 insertStmt.executeUpdate();
+
+                try (ResultSet keys = insertStmt.getGeneratedKeys()) {
+                    abonnementId = keys.next() ? keys.getInt(1) : 0;
+                }
             }
 
+            String roleToSet = "AI_TOOLS".equals(type) ? defaultIfBlank(user.getRole(), "ROLE_USER") : type;
+            String subscriptionTypeToSet = type;
+
             try (PreparedStatement updateStmt = connection.prepareStatement(updateUser)) {
-                updateStmt.setString(1, type);
-                updateStmt.setString(2, type);
+                updateStmt.setString(1, roleToSet);
+                updateStmt.setString(2, subscriptionTypeToSet);
                 updateStmt.setTimestamp(3, Timestamp.valueOf(end.atStartOfDay()));
                 updateStmt.setTimestamp(4, Timestamp.valueOf(LocalDateTime.now()));
                 updateStmt.setInt(5, user.getId());
@@ -106,11 +121,11 @@ public class SubscriptionService {
 
             connection.commit();
 
-            user.setRole(type);
+            user.setRole(roleToSet);
             user.setSubscriptionStatus("ACTIVE");
-            user.setSubscriptionType(type);
+            user.setSubscriptionType(subscriptionTypeToSet);
             user.setSubscriptionEndAt(end.atStartOfDay());
-            return ActionResult.success("Paiement reussi. Abonnement active.");
+            return ActionResult.success("Paiement reussi. Abonnement active.", abonnementId);
         } catch (SQLException exception) {
             return ActionResult.failure("Activation impossible: " + exception.getMessage());
         }
@@ -166,7 +181,7 @@ public class SubscriptionService {
             user.setSubscriptionStatus("EXPIRED");
             user.setSubscriptionType(null);
             user.setSubscriptionEndAt(null);
-            return ActionResult.success("Abonnement annule.");
+            return ActionResult.success("Abonnement annule.", 0);
         } catch (SQLException exception) {
             return ActionResult.failure("Erreur annulation abonnement.");
         }
@@ -247,6 +262,7 @@ public class SubscriptionService {
                 + "date_debut DATE NOT NULL,"
                 + "date_fin DATE NOT NULL,"
                 + "statut VARCHAR(20) NOT NULL DEFAULT 'actif',"
+                + "payment_session_id VARCHAR(160) NULL,"
                 + "created_at DATETIME NOT NULL,"
                 + "updated_at DATETIME NOT NULL,"
                 + "user_id INT NULL"
@@ -260,7 +276,7 @@ public class SubscriptionService {
     }
 
     private boolean isValidType(String type) {
-        return List.of("ROLE_MEDECIN", "ROLE_PHARMACIEN", "ROLE_COACH", "ROLE_NUTRITIONNISTE", "ROLE_PATIENT").contains(type);
+        return List.of("ROLE_MEDECIN", "ROLE_PHARMACIEN", "ROLE_COACH", "ROLE_NUTRITIONNISTE", "ROLE_PATIENT", "AI_TOOLS").contains(type);
     }
 
     private String labelFromRole(String role) {
@@ -270,6 +286,7 @@ public class SubscriptionService {
             case "ROLE_COACH" -> "Coach sportif";
             case "ROLE_NUTRITIONNISTE" -> "Nutritionniste";
             case "ROLE_PATIENT" -> "Patient";
+            case "AI_TOOLS" -> "IA Tools";
             default -> "Abonnement";
         };
     }
@@ -281,8 +298,21 @@ public class SubscriptionService {
             case "ROLE_COACH" -> "Plans d'entrainement, suivi clients, coaching";
             case "ROLE_NUTRITIONNISTE" -> "Plans nutritionnels, suivi alimentaire, recettes";
             case "ROLE_PATIENT" -> "Journal sante, teleconsultation, suivi symptomes";
+            case "AI_TOOLS" -> "Document scanner, nutrition planner, workout planner, result explainer";
             default -> "Acces premium";
         };
+    }
+
+    private BigDecimal resolvePrice(String role) {
+        if ("AI_TOOLS".equalsIgnoreCase(safe(role))) {
+            return new BigDecimal("5.00");
+        }
+        return new BigDecimal("10.00");
+    }
+
+    private String defaultIfBlank(String value, String fallback) {
+        String candidate = safe(value);
+        return candidate.isBlank() ? fallback : candidate;
     }
 
     private String safe(String value) {
@@ -323,13 +353,17 @@ public class SubscriptionService {
         }
     }
 
-    public record ActionResult(boolean success, String message) {
+    public record ActionResult(boolean success, String message, int abonnementId) {
         public static ActionResult success(String message) {
-            return new ActionResult(true, message);
+            return new ActionResult(true, message, 0);
+        }
+
+        public static ActionResult success(String message, int abonnementId) {
+            return new ActionResult(true, message, abonnementId);
         }
 
         public static ActionResult failure(String message) {
-            return new ActionResult(false, message);
+            return new ActionResult(false, message, 0);
         }
     }
 

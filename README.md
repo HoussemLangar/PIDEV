@@ -77,6 +77,55 @@ xdg-open http://localhost:14500/index.html
 
 Le mode Xpra lance JavaFX dans un display virtuel et expose l'interface via navigateur.
 
+### Lancer JavaFX via une shortcut Bureau + autostart
+
+Si vous voulez lancer la meme application que `mvn -q javafx:run` via une icone Bureau:
+
+```bash
+bash /home/pi-dev/PIDEV/scripts/install-javafx-shortcut.sh
+```
+
+Ce script cree:
+- `~/Desktop/santea-javafx.desktop` (shortcut Bureau)
+- `~/.config/autostart/santea-javafx.desktop` (ouverture automatique a la connexion Linux)
+
+La commande executee est:
+
+```bash
+/home/pi-dev/PIDEV/javafx-app/scripts/run-javafx.sh
+```
+
+Cette commande lance bien Maven en mode local avec:
+
+```bash
+mvn -q javafx:run
+```
+
+### Deux shortcuts separes (Windows + VM)
+
+Objectif:
+- Une shortcut Windows qui ouvre seulement JavaFX.
+- Une shortcut Linux dans la VM qui ouvre JavaFX dans la VM.
+
+Shortcut Windows (native):
+1. La VM doit avoir l'autologin Linux + autostart JavaFX deja configures.
+2. Depuis Windows, executer:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\windows\create-javafx-shortcut-windows.ps1
+```
+
+3. Une icone Bureau `SanteA JavaFX.lnk` est creee.
+4. Double-clic sur cette icone: la VM se lance en GUI, puis JavaFX s'ouvre automatiquement dans la VM.
+
+Shortcut dans la VM Linux:
+
+```bash
+bash /home/pi-dev/PIDEV/scripts/install-javafx-shortcut.sh
+```
+
+Cette commande cree l'icone `~/Desktop/santea-javafx.desktop` dans la VM.
+
 ### Docker
 ```bash
 # Voir les logs

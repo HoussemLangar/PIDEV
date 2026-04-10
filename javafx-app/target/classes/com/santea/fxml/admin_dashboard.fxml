@@ -54,7 +54,24 @@
                         <Label text="Rendez-vous aujourd'hui" styleClass="admin-card-label"/>
                         <Label fx:id="appointmentsTodayLabel" text="0" styleClass="admin-card-value"/>
                     </VBox>
+                    <VBox spacing="4" styleClass="admin-card stat-green">
+                        <Label text="Paiements valides" styleClass="admin-card-label"/>
+                        <Label fx:id="paymentsSucceededLabel" text="0" styleClass="admin-card-value"/>
+                    </VBox>
+                    <VBox spacing="4" styleClass="admin-card stat-blue">
+                        <Label text="Sessions actives" styleClass="admin-card-label"/>
+                        <Label fx:id="activeSessionsLabel" text="0" styleClass="admin-card-value"/>
+                    </VBox>
                 </FlowPane>
+
+                <HBox spacing="10">
+                    <Button text="Exporter CSV" styleClass="admin-btn-secondary" onAction="#handleExportCsv"/>
+                    <Button text="Revoquer session" styleClass="admin-btn-secondary" onAction="#handleRevokeLatestSession"/>
+                    <Button text="Connexions suspectes" styleClass="admin-btn-secondary" onAction="#handleReviewSuspicious"/>
+                    <Button text="Assistant vocal (API)" styleClass="admin-btn-secondary" onAction="#handleVoiceAssistant"/>
+                </HBox>
+
+                <Label fx:id="adminFeedbackLabel" text="" visible="false" managed="false" styleClass="alert" wrapText="true"/>
 
                 <VBox spacing="10" styleClass="admin-list-wrap">
                     <Label text="Derniers bannissements" styleClass="admin-section-title"/>

@@ -11,6 +11,8 @@
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/controller/HomeViewController.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/controller/LoginController.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/controller/LoginViewController.java
+/home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/controller/ProfileMfaController.java
+/home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/controller/ProfileSettingsController.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/controller/RegisterViewController.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/controller/SubscriptionViewController.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/model/Abonnement.java
@@ -65,11 +67,17 @@
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/navigation/AppNavigator.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/repository/UserRepository.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/service/AdminDashboardService.java
+/home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/service/AdminOperationsService.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/service/AuthService.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/service/AuthSession.java
+/home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/service/AuthorizationPolicyService.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/service/DatabaseService.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/service/EmailService.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/service/FaceVerificationService.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/service/HomeDashboardService.java
+/home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/service/InvoiceService.java
+/home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/service/ProfileService.java
+/home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/service/StripeCheckoutService.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/service/SubscriptionService.java
+/home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/service/TwoFactorService.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/module-info.java

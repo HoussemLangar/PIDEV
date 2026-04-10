@@ -19,11 +19,14 @@ public class UserRepository {
 
     public UserRepository(DatabaseService databaseService) {
         this.databaseService = databaseService;
+        ensureUserColumns();
     }
 
     public Optional<User> findByEmailOrUsername(String identifier) {
         String sql = "SELECT id, username, email, password, nom, prenom, role, email_verified, admin_approved, "
-            + "is_banned, ban_reason, ban_until, subscription_status "
+            + "is_banned, ban_reason, ban_until, subscription_status, subscription_type, subscription_end_at, "
+            + "theme_preference, locale, mfa_enabled, google_authenticator_secret, "
+            + "telephone, adresse, date_naissance, reminder_enabled, avatar_data, avatar_mime "
             + "FROM users WHERE email = ? OR username = ? LIMIT 1";
 
         try (Connection connection = databaseService.getConnection();
@@ -46,7 +49,9 @@ public class UserRepository {
 
     public Optional<User> findByEmail(String email) {
         String sql = "SELECT id, username, email, password, nom, prenom, role, email_verified, admin_approved, "
-                + "is_banned, ban_reason, ban_until, subscription_status "
+                + "is_banned, ban_reason, ban_until, subscription_status, subscription_type, subscription_end_at, "
+                + "theme_preference, locale, mfa_enabled, google_authenticator_secret, "
+                + "telephone, adresse, date_naissance, reminder_enabled, avatar_data, avatar_mime "
                 + "FROM users WHERE email = ? LIMIT 1";
 
         try (Connection connection = databaseService.getConnection();
@@ -198,6 +203,72 @@ public class UserRepository {
         }
     }
 
+    public boolean updateProfilePreferences(int userId, String nom, String prenom, String telephone, String adresse, String theme, String locale, Boolean reminderEnabled) {
+        String sql = "UPDATE users SET nom = ?, prenom = ?, telephone = ?, adresse = ?, theme_preference = ?, locale = ?, reminder_enabled = ?, updated_at = NOW() WHERE id = ?";
+
+        try (Connection connection = databaseService.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setString(1, emptyToNull(nom));
+            statement.setString(2, emptyToNull(prenom));
+            statement.setString(3, emptyToNull(telephone));
+            statement.setString(4, emptyToNull(adresse));
+            statement.setString(5, emptyToNull(theme));
+            statement.setString(6, emptyToNull(locale));
+            statement.setBoolean(7, Boolean.TRUE.equals(reminderEnabled));
+            statement.setInt(8, userId);
+            return statement.executeUpdate() == 1;
+        } catch (SQLException exception) {
+            return false;
+        }
+    }
+
+    public boolean updateMfaConfiguration(int userId, boolean enabled, String secret) {
+        String sql = "UPDATE users SET mfa_enabled = ?, google_authenticator_secret = ?, updated_at = NOW() WHERE id = ?";
+
+        try (Connection connection = databaseService.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setBoolean(1, enabled);
+            statement.setString(2, emptyToNull(secret));
+            statement.setInt(3, userId);
+            return statement.executeUpdate() == 1;
+        } catch (SQLException exception) {
+            return false;
+        }
+    }
+
+    public boolean softDeleteUser(int userId) {
+        String sql = "UPDATE users SET deleted_at = NOW(), is_banned = 1, ban_reason = 'Compte supprime par utilisateur', updated_at = NOW() WHERE id = ?";
+        try (Connection connection = databaseService.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, userId);
+            return statement.executeUpdate() == 1;
+        } catch (SQLException exception) {
+            return false;
+        }
+    }
+
+    public Optional<User> findById(int userId) {
+        String sql = "SELECT id, username, email, password, nom, prenom, role, email_verified, admin_approved, "
+                + "is_banned, ban_reason, ban_until, subscription_status, subscription_type, subscription_end_at, "
+                + "theme_preference, locale, mfa_enabled, google_authenticator_secret, "
+                + "telephone, adresse, date_naissance, reminder_enabled, avatar_data, avatar_mime "
+                + "FROM users WHERE id = ? LIMIT 1";
+
+        try (Connection connection = databaseService.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, userId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (!resultSet.next()) {
+                    return Optional.empty();
+                }
+                return Optional.of(mapUser(resultSet));
+            }
+        } catch (SQLException exception) {
+            return Optional.empty();
+        }
+    }
+
     public boolean updateEmailVerificationToken(int userId, String verificationToken, LocalDateTime expiresAt) {
         String sql = "UPDATE users SET email_verification_token = ?, email_verification_expires_at = ?, updated_at = NOW() WHERE id = ?";
 
@@ -256,10 +327,30 @@ public class UserRepository {
         user.setIsBanned(resultSet.getBoolean("is_banned"));
         user.setBanReason(resultSet.getString("ban_reason"));
         user.setSubscriptionStatus(resultSet.getString("subscription_status"));
+        user.setSubscriptionType(resultSet.getString("subscription_type"));
+        user.setThemePreference(resultSet.getString("theme_preference"));
+        user.setLocale(resultSet.getString("locale"));
+        user.setMfaEnabled(resultSet.getBoolean("mfa_enabled"));
+        user.setGoogleAuthenticatorSecret(resultSet.getString("google_authenticator_secret"));
+        user.setTelephone(resultSet.getString("telephone"));
+        user.setAdresse(resultSet.getString("adresse"));
+        user.setAvatarData(resultSet.getString("avatar_data"));
+        user.setAvatarMime(resultSet.getString("avatar_mime"));
+        user.setReminderEnabled(resultSet.getBoolean("reminder_enabled"));
+
+        Timestamp dateNaissance = resultSet.getTimestamp("date_naissance");
+        if (dateNaissance != null) {
+            user.setDateNaissance(dateNaissance.toLocalDateTime());
+        }
 
         Timestamp banUntil = resultSet.getTimestamp("ban_until");
         if (banUntil != null) {
             user.setBanUntil(banUntil.toLocalDateTime());
+        }
+
+        Timestamp subscriptionEndAt = resultSet.getTimestamp("subscription_end_at");
+        if (subscriptionEndAt != null) {
+            user.setSubscriptionEndAt(subscriptionEndAt.toLocalDateTime());
         }
 
         return user;
@@ -277,6 +368,31 @@ public class UserRepository {
             return fallback;
         }
         return value.trim();
+    }
+
+    private void ensureUserColumns() {
+        String[] alters = new String[] {
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_type VARCHAR(50) NULL",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_end_at DATETIME NULL",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS theme_preference VARCHAR(32) NULL",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS locale VARCHAR(8) NULL",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS mfa_enabled BOOLEAN NOT NULL DEFAULT 0",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS google_authenticator_secret VARCHAR(255) NULL",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS reminder_enabled BOOLEAN NOT NULL DEFAULT 0",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_data LONGTEXT NULL",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_mime VARCHAR(120) NULL",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS deleted_at DATETIME NULL",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verification_token VARCHAR(255) NULL",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verification_expires_at DATETIME NULL"
+        };
+
+        for (String sql : alters) {
+            try (Connection connection = databaseService.getConnection();
+                 PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.execute();
+            } catch (SQLException ignored) {
+            }
+        }
     }
 
     public record PasswordResetTokenRecord(int id, int userId, String token, LocalDateTime expiresAt, boolean isUsed) {

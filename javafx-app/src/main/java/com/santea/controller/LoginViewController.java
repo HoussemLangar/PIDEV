@@ -3,10 +3,15 @@ package com.santea.controller;
 import com.santea.navigation.AppNavigator;
 import com.santea.service.AuthService;
 import javafx.fxml.FXML;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+
+import java.awt.Desktop;
+import java.net.URI;
+import java.util.Optional;
 
 public class LoginViewController {
     private final AuthService authService = new AuthService();
@@ -31,7 +36,17 @@ public class LoginViewController {
         String email = emailField.getText() == null ? "" : emailField.getText().trim();
         String password = passwordField.isVisible() ? passwordField.getText() : visiblePasswordField.getText();
 
-        AuthService.LoginResult response = authService.login(email, password);
+        AuthService.LoginResult response = authService.login(email, password, null);
+
+        if (!response.success() && response.failureReason() == AuthService.LoginFailureReason.MFA_REQUIRED) {
+            String code = askMfaCode();
+            if (code == null) {
+                showFeedback("Connexion annulee: code MFA requis.", false);
+                return;
+            }
+            response = authService.login(email, password, code);
+        }
+
         showFeedback(response.message(), response.success());
 
         if (response.success()) {
@@ -46,6 +61,16 @@ public class LoginViewController {
         if (response.failureReason() == AuthService.LoginFailureReason.BANNED) {
             AppNavigator.showBanned(response.user());
         }
+    }
+
+    @FXML
+    private void handleGoogleLogin() {
+        handleOAuth("Google");
+    }
+
+    @FXML
+    private void handleFacebookLogin() {
+        handleOAuth("Facebook");
     }
 
     @FXML
@@ -88,5 +113,71 @@ public class LoginViewController {
         feedbackLabel.getStyleClass().add(success ? "alert-success" : "alert-danger");
         feedbackLabel.setVisible(true);
         feedbackLabel.setManaged(true);
+    }
+
+    private void handleOAuth(String provider) {
+        String providerUrl = "Google".equalsIgnoreCase(provider)
+                ? "https://accounts.google.com/"
+                : "https://www.facebook.com/login.php";
+        boolean opened = openExternalBrowser(providerUrl);
+        if (!opened) {
+            showFeedback("Impossible d'ouvrir le navigateur automatiquement. Copiez ce lien: " + providerUrl, false);
+        }
+
+        String email = askText("OAuth " + provider, "Email", "Saisissez l'email OAuth:");
+        if (email == null || email.isBlank()) {
+            showFeedback("Connexion OAuth annulee.", false);
+            return;
+        }
+
+        String nom = askText("OAuth " + provider, "Nom", "Nom:");
+        String prenom = askText("OAuth " + provider, "Prenom", "Prenom:");
+
+        AuthService.LoginResult response = authService.loginWithOAuth(provider, email, nom, prenom);
+        showFeedback(response.message(), response.success());
+
+        if (response.success()) {
+            if (response.user() != null && "ROLE_ADMIN".equalsIgnoreCase(response.user().getRole())) {
+                AppNavigator.showAdminFaceVerification();
+            } else {
+                AppNavigator.showHome();
+            }
+        }
+    }
+
+    private String askMfaCode() {
+        return askText("Double authentification", "Code Google Authenticator", "Entrez le code a 6 chiffres:");
+    }
+
+    private String askText(String title, String header, String content) {
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setTitle(title);
+        dialog.setHeaderText(header);
+        dialog.setContentText(content);
+        Optional<String> result = dialog.showAndWait();
+        return result.map(String::trim).orElse(null);
+    }
+
+    private boolean openExternalBrowser(String url) {
+        try {
+            if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+                Desktop.getDesktop().browse(URI.create(url));
+                return true;
+            }
+            String os = System.getProperty("os.name", "").toLowerCase();
+            Process process;
+            if (os.contains("linux")) {
+                process = new ProcessBuilder("xdg-open", url).start();
+            } else if (os.contains("mac")) {
+                process = new ProcessBuilder("open", url).start();
+            } else if (os.contains("win")) {
+                process = new ProcessBuilder("rundll32", "url.dll,FileProtocolHandler", url).start();
+            } else {
+                return false;
+            }
+            return process.isAlive() || process.exitValue() == 0;
+        } catch (Exception exception) {
+            return false;
+        }
     }
 }

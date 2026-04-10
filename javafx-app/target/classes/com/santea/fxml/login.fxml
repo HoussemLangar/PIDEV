@@ -30,8 +30,8 @@
     <Label text="Bon retour ! Connectez-vous à votre espace SANTÉA." styleClass="login-subtitle"/>
 
     <HBox spacing="12" styleClass="social-buttons-wrap">
-        <Button text="G  Se connecter avec Google" styleClass="social-btn google-btn" maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS"/>
-        <Button text="f  Se connecter avec Facebook" styleClass="social-btn facebook-btn" maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS"/>
+        <Button text="G  Se connecter avec Google" styleClass="social-btn google-btn" maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS" onAction="#handleGoogleLogin"/>
+        <Button text="f  Se connecter avec Facebook" styleClass="social-btn facebook-btn" maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS" onAction="#handleFacebookLogin"/>
     </HBox>
 
     <HBox alignment="CENTER" styleClass="divider-row">
