@@ -1,1 +1,5 @@
+# Ignore JDK
 javafx-app/.jdks/
+.javafx-app/.jdks/
+javafx-app/.jdks/
+# Ignore JDK

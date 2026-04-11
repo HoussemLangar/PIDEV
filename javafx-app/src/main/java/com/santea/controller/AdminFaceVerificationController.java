@@ -19,8 +19,14 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
 import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.ExecutorService;
@@ -33,11 +39,10 @@ public class AdminFaceVerificationController {
     private static final int CAMERA_HEIGHT = 240;
     private static final double CAMERA_FPS = 30.0;
     private static final long PREVIEW_FRAME_INTERVAL_MS = 140;
-    private static final int CAMERA_OPEN_TIMEOUT_MS = 3000;
-    private static final int CAMERA_READ_TIMEOUT_MS = 2500;
     private static final int MAX_EMPTY_FRAMES = 4;
     private static final int STARTUP_FRAME_PROBE_ATTEMPTS = 12;
     private static final int CANDIDATE_INIT_TIMEOUT_SECONDS = 6;
+    private static final int MAX_CAMERA_INDEX_SCAN = 8;
 
     private final FaceVerificationService faceService = new FaceVerificationService();
     private final AuthService authService = new AuthService();
@@ -291,24 +296,12 @@ public class AdminFaceVerificationController {
 
     private GrabberSelection openBestGrabber() {
         for (GrabberCandidate candidate : buildCandidates()) {
-            FrameGrabber grabber = null;
             try {
                 GrabberSelection selection = openCandidateWithTimeout(candidate, CANDIDATE_INIT_TIMEOUT_SECONDS);
                 if (selection != null) {
                     return selection;
                 }
             } catch (Exception ignored) {
-            }
-
-            if (grabber != null) {
-                try {
-                    grabber.stop();
-                } catch (Exception ignored) {
-                }
-                try {
-                    grabber.release();
-                } catch (Exception ignored) {
-                }
             }
         }
         return null;
@@ -412,15 +405,44 @@ public class AdminFaceVerificationController {
 
     private List<GrabberCandidate> buildCandidates() {
         List<GrabberCandidate> candidates = new ArrayList<>();
-        candidates.add(new GrabberCandidate("/dev/video0 (OpenCV)", () -> new OpenCVFrameGrabber("/dev/video0")));
-        candidates.add(new GrabberCandidate("/dev/video1 (OpenCV)", () -> new OpenCVFrameGrabber("/dev/video1")));
-        candidates.add(new GrabberCandidate("index 0 (CAP_ANY)", () -> new OpenCVFrameGrabber(0)));
-        candidates.add(new GrabberCandidate("index 1 (CAP_ANY)", () -> new OpenCVFrameGrabber(1)));
-        candidates.add(new GrabberCandidate("/dev/video0 (FFmpeg yuyv422)", () -> createFfmpegGrabber("/dev/video0", "yuyv422")));
-        candidates.add(new GrabberCandidate("/dev/video1 (FFmpeg yuyv422)", () -> createFfmpegGrabber("/dev/video1", "yuyv422")));
-        candidates.add(new GrabberCandidate("/dev/video0 (FFmpeg mjpeg)", () -> createFfmpegGrabber("/dev/video0", "mjpeg")));
-        candidates.add(new GrabberCandidate("/dev/video1 (FFmpeg mjpeg)", () -> createFfmpegGrabber("/dev/video1", "mjpeg")));
+        Set<String> videoDevices = detectVideoDevices();
+
+        for (String devicePath : videoDevices) {
+            candidates.add(new GrabberCandidate(devicePath + " (OpenCV)", () -> new OpenCVFrameGrabber(devicePath)));
+        }
+
+        for (int i = 0; i < MAX_CAMERA_INDEX_SCAN; i++) {
+            int index = i;
+            candidates.add(new GrabberCandidate("index " + index + " (CAP_ANY)", () -> new OpenCVFrameGrabber(index)));
+        }
+
+        for (String devicePath : videoDevices) {
+            candidates.add(new GrabberCandidate(devicePath + " (FFmpeg yuyv422)", () -> createFfmpegGrabber(devicePath, "yuyv422")));
+            candidates.add(new GrabberCandidate(devicePath + " (FFmpeg mjpeg)", () -> createFfmpegGrabber(devicePath, "mjpeg")));
+        }
+
         return candidates;
+    }
+
+    private Set<String> detectVideoDevices() {
+        Set<String> devices = new LinkedHashSet<>();
+        Path devPath = Path.of("/dev");
+        if (Files.isDirectory(devPath)) {
+            try (DirectoryStream<Path> stream = Files.newDirectoryStream(devPath, "video*")) {
+                for (Path path : stream) {
+                    if (Files.isReadable(path)) {
+                        devices.add(path.toString());
+                    }
+                }
+            } catch (IOException ignored) {
+            }
+        }
+
+        if (devices.isEmpty()) {
+            devices.add("/dev/video0");
+            devices.add("/dev/video1");
+        }
+        return devices;
     }
 
     private FFmpegFrameGrabber createFfmpegGrabber(String devicePath, String inputFormat) {
