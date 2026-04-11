@@ -74,7 +74,7 @@
         </VBox>
 
         <HBox alignment="CENTER_LEFT" spacing="12">
-            <CheckBox text="Se souvenir de moi" styleClass="remember-me"/>
+            <CheckBox fx:id="rememberMeCheckBox" text="Se souvenir de moi" styleClass="remember-me"/>
             <HBox HBox.hgrow="ALWAYS"/>
             <Hyperlink text="Mot de passe oublié ?" styleClass="forgot-password" onAction="#handleOpenForgotPassword"/>
         </HBox>

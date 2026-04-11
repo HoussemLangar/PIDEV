@@ -28,8 +28,7 @@ public final class AppNavigator {
 
     public static void showHome() {
         Parent homeRoot = loadFxml("/com/santea/fxml/home.fxml");
-        mainScene = buildScene(homeRoot);
-        primaryStage.setScene(mainScene);
+        applyScene(buildScene(homeRoot));
     }
 
     public static void showLogin() {
@@ -111,8 +110,7 @@ public final class AppNavigator {
             throw new RuntimeException("Impossible de charger la base applicative", exception);
         }
 
-        mainScene = buildScene(baseRoot);
-        primaryStage.setScene(mainScene);
+        applyScene(buildScene(baseRoot));
     }
 
     private static void showAuthPage(String contentFxmlPath) {
@@ -128,8 +126,7 @@ public final class AppNavigator {
             throw new RuntimeException("Impossible de charger la base d'authentification", exception);
         }
 
-        mainScene = buildScene(baseRoot);
-        primaryStage.setScene(mainScene);
+        applyScene(buildScene(baseRoot));
     }
 
     private static Parent loadFxml(String resourcePath) {
@@ -150,12 +147,39 @@ public final class AppNavigator {
     }
 
     private static Scene buildScene(Parent root) {
-        Scene scene = new Scene(root, 1320, 760);
+        Scene scene = new Scene(root);
         URL cssResource = Main.class.getResource("/com/santea/styles/auth.css");
         if (cssResource == null) {
             throw new RuntimeException("Ressource CSS introuvable: /com/santea/styles/auth.css");
         }
         scene.getStylesheets().add(cssResource.toExternalForm());
         return scene;
+    }
+
+    private static void applyScene(Scene scene) {
+        if (primaryStage == null) {
+            throw new IllegalStateException("Stage principal non initialise.");
+        }
+
+        boolean wasMaximized = primaryStage.isMaximized();
+        double previousWidth = primaryStage.getWidth();
+        double previousHeight = primaryStage.getHeight();
+        double previousX = primaryStage.getX();
+        double previousY = primaryStage.getY();
+
+        mainScene = scene;
+        primaryStage.setScene(mainScene);
+
+        if (wasMaximized) {
+            primaryStage.setMaximized(true);
+            return;
+        }
+
+        if (previousWidth > 0 && previousHeight > 0) {
+            primaryStage.setWidth(previousWidth);
+            primaryStage.setHeight(previousHeight);
+            primaryStage.setX(previousX);
+            primaryStage.setY(previousY);
+        }
     }
 }

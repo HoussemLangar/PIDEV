@@ -5,6 +5,7 @@ import com.santea.service.AuthService;
 import com.santea.service.AdminOperationsService;
 import com.santea.service.AdminDashboardService;
 import com.santea.service.AuthSession;
+import com.santea.ui.ConfirmDialogs;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextInputDialog;
@@ -68,8 +69,10 @@ public class AdminDashboardController {
 
     @FXML
     private void handleLogout() {
-        authService.logout();
-        AppNavigator.showLogin();
+        ConfirmDialogs.confirmLogout(usersTotalLabel, () -> {
+            authService.logout();
+            AppNavigator.showLogin();
+        });
     }
 
     @FXML

@@ -1,6 +1,7 @@
 package com.santea;
 
 import com.santea.navigation.AppNavigator;
+import com.santea.service.AuthService;
 import javafx.application.Application;
 import javafx.scene.Parent;
 import javafx.scene.control.Label;
@@ -17,6 +18,7 @@ public class Main extends Application {
 
         try {
             AppNavigator.initialize(primaryStage);
+            new AuthService().tryRestoreRememberedSession();
             AppNavigator.showHome();
         } catch (Throwable throwable) {
             String startupError = stackTraceToString(throwable);
@@ -27,6 +29,7 @@ public class Main extends Application {
         primaryStage.setTitle("SANTÉA");
         primaryStage.setMinWidth(1180);
         primaryStage.setMinHeight(700);
+        primaryStage.setMaximized(true);
         primaryStage.show();
     }
     

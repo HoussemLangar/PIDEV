@@ -14,6 +14,7 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 
 public class AuthService {
+        private static final int DEFAULT_REMEMBER_DAYS = 7;
     private static final Pattern EMAIL_PATTERN =
             Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
 
@@ -40,6 +41,10 @@ public class AuthService {
     }
 
     public LoginResult login(String identifier, String password, String mfaCode) {
+        return login(identifier, password, mfaCode, false);
+    }
+
+    public LoginResult login(String identifier, String password, String mfaCode, boolean rememberMe) {
         if (isBlank(identifier) || isBlank(password)) {
             return LoginResult.failure("Merci de saisir votre email et votre mot de passe.", LoginFailureReason.VALIDATION, null);
         }
@@ -81,6 +86,11 @@ public class AuthService {
 
         AuthSession.login(user);
         registerUserSession(user);
+        if (rememberMe && user.getId() != null) {
+            AuthSession.persistLogin(user.getId(), LocalDateTime.now().plusDays(resolveRememberDays()));
+        } else {
+            AuthSession.clearPersistedLogin();
+        }
         return LoginResult.success(user, "Connexion réussie.");
     }
 
@@ -132,7 +142,40 @@ public class AuthService {
 
         AuthSession.login(user);
         registerUserSession(user);
+        AuthSession.clearPersistedLogin();
         return LoginResult.success(user, "Connexion OAuth réussie via " + provider + ".");
+    }
+
+    public boolean tryRestoreRememberedSession() {
+        if (!databaseService.canConnect()) {
+            return false;
+        }
+
+        Optional<AuthSession.PersistedLogin> persisted = AuthSession.loadPersistedLogin();
+        if (persisted.isEmpty()) {
+            return false;
+        }
+
+        AuthSession.PersistedLogin data = persisted.get();
+        if (data.expiresAt() == null || LocalDateTime.now().isAfter(data.expiresAt())) {
+            AuthSession.clearPersistedLogin();
+            return false;
+        }
+
+        Optional<User> userOptional = userRepository.findById(data.userId());
+        if (userOptional.isEmpty()) {
+            AuthSession.clearPersistedLogin();
+            return false;
+        }
+
+        User user = userOptional.get();
+        if (isBannedEffective(user)) {
+            AuthSession.clearPersistedLogin();
+            return false;
+        }
+
+        AuthSession.login(user);
+        return true;
     }
 
     public RegisterResult register(RegistrationRequest request) {
@@ -603,6 +646,19 @@ public class AuthService {
 
     private boolean isBlank(String value) {
         return value == null || value.trim().isEmpty();
+    }
+
+    private int resolveRememberDays() {
+        String raw = System.getenv("SANTEA_REMEMBER_DAYS");
+        if (isBlank(raw)) {
+            return DEFAULT_REMEMBER_DAYS;
+        }
+        try {
+            int value = Integer.parseInt(raw.trim());
+            return value > 0 ? value : DEFAULT_REMEMBER_DAYS;
+        } catch (NumberFormatException exception) {
+            return DEFAULT_REMEMBER_DAYS;
+        }
     }
 
     private String defaultString(String value) {

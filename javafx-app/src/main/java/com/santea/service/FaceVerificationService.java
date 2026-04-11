@@ -14,8 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class FaceVerificationService {
-    private static final int HIST_BINS = 16;
-    private static final double MATCH_THRESHOLD = 25.0;
+    private static final int GRID_SIZE = 8;
+    private static final double FACE_THRESHOLD = 25.0;
 
     private final DatabaseService databaseService;
 
@@ -77,12 +77,20 @@ public class FaceVerificationService {
         double[] storedDescriptor = parseJsonDescriptor(stored);
         double distance = calculateAverageAbsoluteDistance(storedDescriptor, current);
 
-        if (distance < MATCH_THRESHOLD) {
+        if (distance < FACE_THRESHOLD) {
             return FaceProcessResult.success("Reconnaissance faciale reussie.", distance);
         }
 
+        double similarityPercent = similarityFromDistance(distance);
         return FaceProcessResult.failure("Reconnaissance faciale echouee. Similarite: "
-                + Math.round(Math.max(0, 100 - (distance / MATCH_THRESHOLD * 100))) + "%");
+                + Math.round(similarityPercent * 10.0) / 10.0 + "%");
+    }
+
+    private double similarityFromDistance(double distance) {
+        if (!Double.isFinite(distance)) {
+            return 0.0;
+        }
+        return Math.max(0.0, 100.0 - (distance / FACE_THRESHOLD * 100.0));
     }
 
     public boolean hasRegisteredFace(int userId) {
@@ -139,32 +147,45 @@ public class FaceVerificationService {
         int height = (int) image.getHeight();
         PixelReader reader = image.getPixelReader();
 
-        double[] histR = new double[HIST_BINS];
-        double[] histG = new double[HIST_BINS];
-        double[] histB = new double[HIST_BINS];
-
         if (reader == null || width <= 0 || height <= 0) {
-            return new double[HIST_BINS * 3];
+            return new double[GRID_SIZE * GRID_SIZE * 3];
         }
 
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                int argb = reader.getArgb(x, y);
-                int r = (argb >> 16) & 0xFF;
-                int g = (argb >> 8) & 0xFF;
-                int b = argb & 0xFF;
-                histR[Math.min(HIST_BINS - 1, r * HIST_BINS / 256)]++;
-                histG[Math.min(HIST_BINS - 1, g * HIST_BINS / 256)]++;
-                histB[Math.min(HIST_BINS - 1, b * HIST_BINS / 256)]++;
+        double[] descriptor = new double[GRID_SIZE * GRID_SIZE * 3];
+        int featureIndex = 0;
+
+        for (int gy = 0; gy < GRID_SIZE; gy++) {
+            int startY = (gy * height) / GRID_SIZE;
+            int endY = ((gy + 1) * height) / GRID_SIZE;
+            for (int gx = 0; gx < GRID_SIZE; gx++) {
+                int startX = (gx * width) / GRID_SIZE;
+                int endX = ((gx + 1) * width) / GRID_SIZE;
+
+                double sumR = 0.0;
+                double sumG = 0.0;
+                double sumB = 0.0;
+                int count = 0;
+
+                for (int y = startY; y < endY; y++) {
+                    for (int x = startX; x < endX; x++) {
+                        int argb = reader.getArgb(x, y);
+                        sumR += (argb >> 16) & 0xFF;
+                        sumG += (argb >> 8) & 0xFF;
+                        sumB += argb & 0xFF;
+                        count++;
+                    }
+                }
+
+                if (count > 0) {
+                    descriptor[featureIndex++] = sumR / count;
+                    descriptor[featureIndex++] = sumG / count;
+                    descriptor[featureIndex++] = sumB / count;
+                } else {
+                    descriptor[featureIndex++] = 0.0;
+                    descriptor[featureIndex++] = 0.0;
+                    descriptor[featureIndex++] = 0.0;
+                }
             }
-        }
-
-        double total = width * height;
-        double[] descriptor = new double[HIST_BINS * 3];
-        for (int i = 0; i < HIST_BINS; i++) {
-            descriptor[i] = (histR[i] / total) * 255.0;
-            descriptor[HIST_BINS + i] = (histG[i] / total) * 255.0;
-            descriptor[(2 * HIST_BINS) + i] = (histB[i] / total) * 255.0;
         }
 
         return descriptor;

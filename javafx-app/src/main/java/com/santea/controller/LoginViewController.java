@@ -7,6 +7,7 @@ import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
@@ -35,11 +36,15 @@ public class LoginViewController {
     private Label feedbackLabel;
 
     @FXML
+    private CheckBox rememberMeCheckBox;
+
+    @FXML
     private void handleLogin() {
         String email = emailField.getText() == null ? "" : emailField.getText().trim();
         String password = passwordField.isVisible() ? passwordField.getText() : visiblePasswordField.getText();
+        boolean rememberMe = rememberMeCheckBox != null && rememberMeCheckBox.isSelected();
 
-        AuthService.LoginResult response = authService.login(email, password, null);
+        AuthService.LoginResult response = authService.login(email, password, null, rememberMe);
 
         if (!response.success() && response.failureReason() == AuthService.LoginFailureReason.MFA_REQUIRED) {
             String code = askMfaCode();
@@ -47,7 +52,7 @@ public class LoginViewController {
                 showFeedback("Connexion annulee: code MFA requis.", false);
                 return;
             }
-            response = authService.login(email, password, code);
+            response = authService.login(email, password, code, rememberMe);
         }
 
         showFeedback(response.message(), response.success());

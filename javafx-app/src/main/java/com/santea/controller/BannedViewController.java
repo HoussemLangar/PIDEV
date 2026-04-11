@@ -3,6 +3,7 @@ package com.santea.controller;
 import com.santea.model.User;
 import com.santea.navigation.AppNavigator;
 import com.santea.service.AuthService;
+import com.santea.ui.ConfirmDialogs;
 import javafx.animation.FadeTransition;
 import javafx.animation.PauseTransition;
 import javafx.fxml.FXML;
@@ -60,8 +61,10 @@ public class BannedViewController {
 
     @FXML
     private void handleLogout() {
-        authService.logout();
-        AppNavigator.showLogin();
+        ConfirmDialogs.confirmLogout(banReasonLabel, () -> {
+            authService.logout();
+            AppNavigator.showLogin();
+        });
     }
 
     @FXML

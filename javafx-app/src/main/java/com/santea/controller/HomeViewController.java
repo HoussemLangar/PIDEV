@@ -6,22 +6,26 @@ import com.santea.service.AuthService;
 import com.santea.service.AuthSession;
 import com.santea.service.AuthorizationPolicyService;
 import com.santea.service.HomeDashboardService;
+import com.santea.ui.ConfirmDialogs;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.geometry.Side;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.CustomMenuItem;
+import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
-import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Separator;
-import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -164,9 +168,11 @@ public class HomeViewController {
     @FXML
     private void handleLogout() {
         hideAllMenus();
-        authService.logout();
-        refreshAuthUi();
-        AppNavigator.showHome();
+        ConfirmDialogs.confirmLogout(rootPane, () -> {
+            authService.logout();
+            refreshAuthUi();
+            AppNavigator.showHome();
+        });
     }
 
     @FXML
@@ -258,65 +264,211 @@ public class HomeViewController {
 
     private ContextMenu buildNotificationsMenu() {
         ContextMenu menu = new ContextMenu();
+        menu.getStyleClass().add("home-popup-menu");
 
-        MenuItem title = new MenuItem("Notifications");
-        title.setDisable(true);
-        menu.getItems().add(title);
+        VBox card = new VBox();
+        card.getStyleClass().add("home-dropdown-card");
 
-        MenuItem markAllRead = new MenuItem("Tout lire");
+        HBox header = new HBox();
+        header.getStyleClass().add("home-dropdown-header");
+        header.setAlignment(Pos.CENTER_LEFT);
+
+        HBox titleWrap = new HBox(8);
+        titleWrap.setAlignment(Pos.CENTER_LEFT);
+        FontIcon bellIcon = new FontIcon("fas-bell");
+        bellIcon.getStyleClass().add("home-dropdown-header-icon");
+        Label title = new Label("Notifications");
+        title.getStyleClass().add("home-dropdown-title");
+        titleWrap.getChildren().addAll(bellIcon, title);
+
+        Button markAllRead = new Button("Tout lire");
+        markAllRead.getStyleClass().add("home-dropdown-link-btn");
         markAllRead.setOnAction(event -> {
             User user = AuthSession.getCurrentUser();
             if (user != null && user.getId() != null) {
                 homeDashboardService.markAllNotificationsRead(user.getId());
                 refreshDashboardData();
+                hideAllMenus();
+                notificationsMenu = buildNotificationsMenu();
+                notificationsMenu.show(notifButton, Side.BOTTOM, 0, 8);
             }
         });
-        menu.getItems().add(markAllRead);
-        menu.getItems().add(new SeparatorMenuItem());
+
+        HBox.setHgrow(titleWrap, Priority.ALWAYS);
+        header.getChildren().addAll(titleWrap, markAllRead);
+
+        VBox content = new VBox();
+        content.getStyleClass().add("home-dropdown-list");
 
         if (dashboardData.notifications().isEmpty()) {
-            MenuItem empty = new MenuItem("Aucune notification");
-            empty.setDisable(true);
-            menu.getItems().add(empty);
-            return menu;
+            VBox emptyState = new VBox(8);
+            emptyState.getStyleClass().add("home-dropdown-empty-state");
+            emptyState.setAlignment(Pos.CENTER);
+            emptyState.setPadding(new Insets(28, 0, 30, 0));
+            FontIcon emptyIcon = new FontIcon("fas-bell-slash");
+            emptyIcon.getStyleClass().add("home-dropdown-empty-icon");
+            Label emptyText = new Label("Aucune notification");
+            emptyText.getStyleClass().add("home-dropdown-empty-text");
+            emptyState.getChildren().addAll(emptyIcon, emptyText);
+            content.getChildren().add(emptyState);
+        } else {
+            for (HomeDashboardService.NotificationPreview notification : dashboardData.notifications()) {
+                content.getChildren().add(createNotificationRow(notification));
+            }
         }
 
-        for (HomeDashboardService.NotificationPreview notification : dashboardData.notifications()) {
-            String prefix = notification.read() ? "" : "* ";
-            String when = formatDate(notification.sentAt());
-            String text = prefix + safe(notification.titre()) + "  " + when;
-            MenuItem item = new MenuItem(text.trim());
-            item.setOnAction(event -> openNotificationPage(notification));
-            menu.getItems().add(item);
-        }
+        card.getChildren().addAll(header, content);
+        CustomMenuItem container = new CustomMenuItem(card, false);
+        container.setHideOnClick(false);
+        menu.getItems().add(container);
 
         return menu;
     }
 
     private ContextMenu buildMessagesMenu() {
         ContextMenu menu = new ContextMenu();
+        menu.getStyleClass().add("home-popup-menu");
 
-        MenuItem title = new MenuItem("Messages");
-        title.setDisable(true);
-        menu.getItems().add(title);
-        menu.getItems().add(new SeparatorMenuItem());
+        VBox card = new VBox();
+        card.getStyleClass().add("home-dropdown-card");
+
+        HBox header = new HBox();
+        header.getStyleClass().add("home-dropdown-header");
+        header.setAlignment(Pos.CENTER_LEFT);
+
+        HBox titleWrap = new HBox(8);
+        titleWrap.setAlignment(Pos.CENTER_LEFT);
+        FontIcon msgIcon = new FontIcon("fas-comments");
+        msgIcon.getStyleClass().add("home-dropdown-header-icon");
+        Label title = new Label("Messages");
+        title.getStyleClass().add("home-dropdown-title");
+        titleWrap.getChildren().addAll(msgIcon, title);
+
+        Button seeAllBtn = new Button("Voir tout");
+        seeAllBtn.getStyleClass().add("home-dropdown-link-btn");
+        seeAllBtn.setOnAction(event -> {
+            hideAllMenus();
+            openMessagesPage();
+        });
+
+        HBox.setHgrow(titleWrap, Priority.ALWAYS);
+        header.getChildren().addAll(titleWrap, seeAllBtn);
+
+        VBox content = new VBox();
+        content.getStyleClass().add("home-dropdown-list");
 
         if (dashboardData.conversations().isEmpty()) {
-            MenuItem empty = new MenuItem("Aucune conversation");
-            empty.setDisable(true);
-            menu.getItems().add(empty);
-            return menu;
+            VBox emptyState = new VBox(8);
+            emptyState.getStyleClass().add("home-dropdown-empty-state");
+            emptyState.setAlignment(Pos.CENTER);
+            emptyState.setPadding(new Insets(40, 0, 44, 0));
+            FontIcon emptyIcon = new FontIcon("fas-comments");
+            emptyIcon.getStyleClass().add("home-dropdown-empty-icon");
+            Label emptyText = new Label("Aucune conversation");
+            emptyText.getStyleClass().add("home-dropdown-empty-text");
+            emptyState.getChildren().addAll(emptyIcon, emptyText);
+            content.getChildren().add(emptyState);
+        } else {
+            for (HomeDashboardService.ConversationPreview conversation : dashboardData.conversations()) {
+                content.getChildren().add(createConversationRow(conversation));
+            }
         }
 
-        for (HomeDashboardService.ConversationPreview conversation : dashboardData.conversations()) {
-            String badge = conversation.unreadInConversation() > 0 ? "(" + conversation.unreadInConversation() + ") " : "";
-            String text = badge + conversation.otherUserDisplay() + " - " + safe(conversation.lastMessage());
-            MenuItem item = new MenuItem(text);
-            item.setOnAction(event -> openConversationPage(conversation));
-            menu.getItems().add(item);
-        }
+        card.getChildren().addAll(header, content);
+        CustomMenuItem container = new CustomMenuItem(card, false);
+        container.setHideOnClick(false);
+        menu.getItems().add(container);
 
         return menu;
+    }
+
+    private HBox createNotificationRow(HomeDashboardService.NotificationPreview notification) {
+        HBox row = new HBox(12);
+        row.getStyleClass().add("home-dropdown-item");
+        row.setAlignment(Pos.TOP_LEFT);
+
+        StackPane iconWrap = new StackPane();
+        iconWrap.getStyleClass().add("home-dropdown-item-icon-wrap");
+        FontIcon icon = new FontIcon("fas-bell");
+        icon.getStyleClass().add("home-dropdown-item-icon");
+        iconWrap.getChildren().add(icon);
+
+        VBox textWrap = new VBox(4);
+        textWrap.setAlignment(Pos.TOP_LEFT);
+        HBox.setHgrow(textWrap, Priority.ALWAYS);
+
+        HBox titleRow = new HBox(8);
+        titleRow.setAlignment(Pos.CENTER_LEFT);
+        Label title = new Label(safe(notification.titre()));
+        title.getStyleClass().add("home-dropdown-item-title");
+        Label when = new Label(formatRelativeDays(notification.sentAt()));
+        when.getStyleClass().add("home-dropdown-time-badge");
+        HBox.setHgrow(title, Priority.ALWAYS);
+        titleRow.getChildren().addAll(title, when);
+
+        Label message = new Label(safe(notification.message()));
+        message.getStyleClass().add("home-dropdown-item-subtitle");
+        message.setWrapText(true);
+
+        textWrap.getChildren().addAll(titleRow, message);
+        row.getChildren().addAll(iconWrap, textWrap);
+        row.setOnMouseClicked(event -> {
+            hideAllMenus();
+            openNotificationPage(notification);
+        });
+
+        return row;
+    }
+
+    private HBox createConversationRow(HomeDashboardService.ConversationPreview conversation) {
+        HBox row = new HBox(12);
+        row.getStyleClass().add("home-dropdown-item");
+        row.setAlignment(Pos.TOP_LEFT);
+
+        StackPane iconWrap = new StackPane();
+        iconWrap.getStyleClass().add("home-dropdown-item-icon-wrap");
+        FontIcon icon = new FontIcon("fas-comments");
+        icon.getStyleClass().add("home-dropdown-item-icon");
+        iconWrap.getChildren().add(icon);
+
+        VBox textWrap = new VBox(4);
+        textWrap.setAlignment(Pos.TOP_LEFT);
+        HBox.setHgrow(textWrap, Priority.ALWAYS);
+
+        HBox titleRow = new HBox(8);
+        titleRow.setAlignment(Pos.CENTER_LEFT);
+        Label title = new Label(safe(conversation.otherUserDisplay()));
+        title.getStyleClass().add("home-dropdown-item-title");
+        Label when = new Label(formatRelativeDays(conversation.lastMessageAt()));
+        when.getStyleClass().add("home-dropdown-time-badge");
+        HBox.setHgrow(title, Priority.ALWAYS);
+        titleRow.getChildren().addAll(title, when);
+
+        String subtitleText = safe(conversation.lastMessage());
+        if (conversation.unreadInConversation() > 0) {
+            subtitleText = "(" + conversation.unreadInConversation() + ") " + subtitleText;
+        }
+        Label subtitle = new Label(subtitleText);
+        subtitle.getStyleClass().add("home-dropdown-item-subtitle");
+        subtitle.setWrapText(true);
+
+        textWrap.getChildren().addAll(titleRow, subtitle);
+        row.getChildren().addAll(iconWrap, textWrap);
+        row.setOnMouseClicked(event -> {
+            hideAllMenus();
+            openConversationPage(conversation);
+        });
+
+        return row;
+    }
+
+    private String formatRelativeDays(LocalDateTime dateTime) {
+        if (dateTime == null) {
+            return "";
+        }
+        long days = java.time.Duration.between(dateTime, LocalDateTime.now()).toDays();
+        long normalized = Math.max(0, days);
+        return normalized + " j";
     }
 
     private ContextMenu buildAccountMenu() {
@@ -339,10 +491,18 @@ public class HomeViewController {
 
         VBox card = new VBox(10);
         card.getStyleClass().add("account-dropdown-card");
-        card.setPrefWidth(300);
+        card.setPrefWidth(320);
 
-        VBox header = new VBox(7);
-        header.getStyleClass().add("account-dropdown-header");
+        StackPane headerWrap = new StackPane();
+        headerWrap.getStyleClass().add("account-dropdown-header");
+
+        Region bubbleTop = new Region();
+        bubbleTop.getStyleClass().addAll("account-header-bubble", "account-header-bubble-top");
+        Region bubbleBottom = new Region();
+        bubbleBottom.getStyleClass().addAll("account-header-bubble", "account-header-bubble-bottom");
+
+        VBox header = new VBox(8);
+        header.setAlignment(Pos.CENTER);
         Label avatar = new Label(computeInitials(user));
         avatar.getStyleClass().add("account-avatar-large");
         Label name = new Label(resolveFullName(user));
@@ -352,24 +512,26 @@ public class HomeViewController {
         Label roleLabel = new Label(humanizeRole(role));
         roleLabel.getStyleClass().add("account-role-pill");
         HBox scoreRow = new HBox(6);
+        scoreRow.setAlignment(Pos.CENTER);
         Label scoreValue = new Label(computeProfileScore(user) + "/100");
         scoreValue.getStyleClass().add("account-score-value");
         Label scoreCaption = new Label("Score IA");
         scoreCaption.getStyleClass().add("account-score-caption");
         scoreRow.getChildren().addAll(scoreValue, scoreCaption);
         header.getChildren().addAll(avatar, name, email, roleLabel, scoreRow);
+        headerWrap.getChildren().addAll(bubbleTop, bubbleBottom, header);
 
         VBox body = new VBox(8);
         body.getStyleClass().add("account-dropdown-body");
 
         if (isAdmin) {
-            body.getChildren().add(createAccountButton("Dashboard Admin", this::handleOpenAdminDashboard));
+            body.getChildren().add(createAccountButton("Dashboard Admin", "fas-chart-line", this::handleOpenAdminDashboard));
         }
 
-        body.getChildren().add(createAccountButton("Parametres", this::openProfilePage));
-        body.getChildren().add(createAccountButton("Securite (MFA)", this::openMfaPage));
+        body.getChildren().add(createAccountButton("Paramètres", "fas-user", this::openProfilePage));
+        body.getChildren().add(createAccountButton("Sécurité (MFA)", "fas-key", this::openMfaPage));
 
-        Button accompagnementToggle = createAccountButton("Accompagnement", () -> {
+        Button accompagnementToggle = createAccountButton("Accompagnement", "fas-hand-holding-heart", true, () -> {
             // no-op, handled by toggle below
         });
         VBox accompagnementSubmenu = new VBox(6);
@@ -399,15 +561,15 @@ public class HomeViewController {
         body.getChildren().add(accompagnementToggle);
         body.getChildren().add(accompagnementSubmenu);
 
-        body.getChildren().add(createAccountButton("Abonnement", this::openSubscriptionPage));
+        body.getChildren().add(createAccountButton("Abonnement", "fas-star", this::openSubscriptionPage));
         if (isPatient || isMedecin) {
-            body.getChildren().add(createAccountButton("Rendez-vous", this::openAppointmentsPage));
+            body.getChildren().add(createAccountButton("Rendez-vous", "fas-calendar-check", this::openAppointmentsPage));
         }
         if (isPharmacien) {
-            body.getChildren().add(createAccountButton("Ma pharmacie", this::openPharmacyPage));
+            body.getChildren().add(createAccountButton("Ma pharmacie", "fas-clinic-medical", this::openPharmacyPage));
         }
         if (canAiTools) {
-            body.getChildren().add(createAccountButton("Outils IA", this::openAiToolsPage));
+            body.getChildren().add(createAccountButton("Outils IA", "fas-robot", this::openAiToolsPage));
         }
 
         Separator sep1 = new Separator();
@@ -454,13 +616,12 @@ public class HomeViewController {
 
         body.getChildren().addAll(themeRow, localeRow, new Separator());
 
-        Button logoutBtn = new Button("Deconnexion");
-        logoutBtn.getStyleClass().add("account-logout-btn");
+        Button logoutBtn = createAccountButton("Déconnexion", "fas-sign-out-alt", this::handleLogout);
+        logoutBtn.getStyleClass().add("account-logout-row");
         logoutBtn.setMaxWidth(Double.MAX_VALUE);
-        logoutBtn.setOnAction(event -> handleLogout());
         body.getChildren().add(logoutBtn);
 
-        card.getChildren().addAll(header, body);
+        card.getChildren().addAll(headerWrap, body);
 
         CustomMenuItem container = new CustomMenuItem(card, false);
         container.setHideOnClick(false);
@@ -469,9 +630,37 @@ public class HomeViewController {
         return menu;
     }
 
-    private Button createAccountButton(String text, Runnable action) {
-        Button button = new Button(text);
+    private Button createAccountButton(String text, String iconLiteral, Runnable action) {
+        return createAccountButton(text, iconLiteral, false, action);
+    }
+
+    private Button createAccountButton(String text, String iconLiteral, boolean showChevron, Runnable action) {
+        Button button = new Button();
         button.getStyleClass().add("account-row-btn");
+        button.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+
+        StackPane iconWrap = new StackPane();
+        iconWrap.getStyleClass().add("account-row-icon-wrap");
+        FontIcon icon = new FontIcon(iconLiteral);
+        icon.getStyleClass().add("account-row-icon");
+        iconWrap.getChildren().add(icon);
+
+        Label textLabel = new Label(text);
+        textLabel.getStyleClass().add("account-row-label");
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        HBox content = new HBox(12);
+        content.setAlignment(Pos.CENTER_LEFT);
+        content.getChildren().addAll(iconWrap, textLabel, spacer);
+        if (showChevron) {
+            FontIcon chevron = new FontIcon("fas-chevron-right");
+            chevron.getStyleClass().add("account-row-chevron");
+            content.getChildren().add(chevron);
+        }
+
+        button.setGraphic(content);
         button.setMaxWidth(Double.MAX_VALUE);
         button.setOnAction(event -> {
             hideAllMenus();
