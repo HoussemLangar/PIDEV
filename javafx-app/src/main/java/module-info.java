@@ -3,11 +3,15 @@ module com.santea.javafxapp {
     requires transitive javafx.graphics;
     requires javafx.fxml;
     requires javafx.swing;
+    requires javafx.web;
     requires java.sql;
     requires java.desktop;
+    requires java.net.http;
+    requires jdk.httpserver;
     requires jakarta.mail;
     requires spring.security.crypto;
     requires webcam.capture;
+    requires org.bytedeco.javacv;
 
     requires org.controlsfx.controls;
     requires com.dlsc.formsfx;

@@ -4,6 +4,7 @@
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/config/MailConfig.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/controller/AdminDashboardController.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/controller/AdminFaceVerificationController.java
+/home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/controller/AppBaseViewController.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/controller/AuthBaseViewController.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/controller/BannedViewController.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/controller/FeaturePageController.java
@@ -74,6 +75,7 @@
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/service/DatabaseService.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/service/EmailService.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/service/FaceVerificationService.java
+/home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/service/GoogleOAuthService.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/service/HomeDashboardService.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/service/InvoiceService.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/service/ProfileService.java

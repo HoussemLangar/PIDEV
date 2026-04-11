@@ -1,6 +1,7 @@
 package com.santea.navigation;
 
 import com.santea.Main;
+import com.santea.controller.AppBaseViewController;
 import com.santea.controller.AuthBaseViewController;
 import com.santea.controller.BannedViewController;
 import com.santea.controller.FeaturePageController;
@@ -55,8 +56,7 @@ public final class AppNavigator {
             throw new RuntimeException("Impossible de charger la page module", exception);
         }
 
-        mainScene = buildScene(root);
-        primaryStage.setScene(mainScene);
+        showInAppBase(root);
     }
 
     public static void showBanned(User user) {
@@ -71,37 +71,47 @@ public final class AppNavigator {
             throw new RuntimeException("Impossible de charger la page compte suspendu", exception);
         }
 
-        mainScene = buildScene(root);
-        primaryStage.setScene(mainScene);
+        showInAppBase(root);
     }
 
     public static void showAdminDashboard() {
-        Parent root = loadFxml("/com/santea/fxml/admin_dashboard.fxml");
-        mainScene = buildScene(root);
-        primaryStage.setScene(mainScene);
+        showAppPage("/com/santea/fxml/admin_dashboard.fxml");
     }
 
     public static void showAdminFaceVerification() {
-        Parent root = loadFxml("/com/santea/fxml/admin_face_verification.fxml");
-        mainScene = buildScene(root);
-        primaryStage.setScene(mainScene);
+        showAppPage("/com/santea/fxml/admin_face_verification.fxml");
     }
 
     public static void showSubscriptionPage() {
-        Parent root = loadFxml("/com/santea/fxml/subscription.fxml");
-        mainScene = buildScene(root);
-        primaryStage.setScene(mainScene);
+        showAppPage("/com/santea/fxml/subscription.fxml");
     }
 
     public static void showProfileSettings() {
-        Parent root = loadFxml("/com/santea/fxml/profile_settings.fxml");
-        mainScene = buildScene(root);
-        primaryStage.setScene(mainScene);
+        showAppPage("/com/santea/fxml/profile_settings.fxml");
     }
 
     public static void showProfileMfa() {
-        Parent root = loadFxml("/com/santea/fxml/profile_mfa.fxml");
-        mainScene = buildScene(root);
+        showAppPage("/com/santea/fxml/profile_mfa.fxml");
+    }
+
+    private static void showAppPage(String contentFxmlPath) {
+        Parent contentRoot = loadFxml(contentFxmlPath);
+        showInAppBase(contentRoot);
+    }
+
+    private static void showInAppBase(Parent contentRoot) {
+        FXMLLoader baseLoader = getLoader("/com/santea/fxml/app_base.fxml");
+        Parent baseRoot;
+
+        try {
+            baseRoot = baseLoader.load();
+            AppBaseViewController baseController = baseLoader.getController();
+            baseController.setContent(contentRoot);
+        } catch (IOException exception) {
+            throw new RuntimeException("Impossible de charger la base applicative", exception);
+        }
+
+        mainScene = buildScene(baseRoot);
         primaryStage.setScene(mainScene);
     }
 

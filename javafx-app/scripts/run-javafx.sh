@@ -13,5 +13,9 @@ fi
 export JAVA_HOME="$JDK_HOME"
 export PATH="$JAVA_HOME/bin:$PATH"
 
+# Favor X11 backend for JavaFX/WebView on Linux to avoid common GDK/GTK runtime warnings.
+export GDK_BACKEND="${GDK_BACKEND:-x11}"
+export NO_AT_BRIDGE="${NO_AT_BRIDGE:-1}"
+
 cd "$PROJECT_DIR"
 exec mvn -q javafx:run

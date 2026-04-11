@@ -5,7 +5,11 @@ import com.santea.navigation.AppNavigator;
 import com.santea.service.AuthService;
 import com.santea.service.AuthSession;
 import com.santea.service.FaceVerificationService;
-import com.github.sarxos.webcam.Webcam;
+import org.bytedeco.javacv.FFmpegFrameGrabber;
+import org.bytedeco.javacv.Frame;
+import org.bytedeco.javacv.FrameGrabber;
+import org.bytedeco.javacv.Java2DFrameConverter;
+import org.bytedeco.javacv.OpenCVFrameGrabber;
 import javafx.application.Platform;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXML;
@@ -14,22 +18,31 @@ import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
-import java.awt.Dimension;
 import java.awt.image.BufferedImage;
-import java.util.Arrays;
-import java.util.Comparator;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class AdminFaceVerificationController {
-    private static final int CAMERA_OPEN_TIMEOUT_SECONDS = 6;
-    private static final int CAMERA_DISCOVERY_TIMEOUT_SECONDS = 5;
+    private static final int CAMERA_WIDTH = 320;
+    private static final int CAMERA_HEIGHT = 240;
+    private static final double CAMERA_FPS = 30.0;
+    private static final long PREVIEW_FRAME_INTERVAL_MS = 140;
+    private static final int CAMERA_OPEN_TIMEOUT_MS = 3000;
+    private static final int CAMERA_READ_TIMEOUT_MS = 2500;
+    private static final int MAX_EMPTY_FRAMES = 4;
+    private static final int STARTUP_FRAME_PROBE_ATTEMPTS = 12;
+    private static final int CANDIDATE_INIT_TIMEOUT_SECONDS = 6;
 
     private final FaceVerificationService faceService = new FaceVerificationService();
     private final AuthService authService = new AuthService();
     private final ExecutorService cameraExecutor = Executors.newSingleThreadExecutor();
+    private final Java2DFrameConverter frameConverter = new Java2DFrameConverter();
 
     @FXML
     private Label infoBannerLabel;
@@ -53,8 +66,11 @@ public class AdminFaceVerificationController {
     private Button stopCameraButton;
 
     private volatile boolean cameraRunning;
-    private Webcam webcam;
+    private FrameGrabber frameGrabber;
+    private volatile String activeCameraSource;
     private volatile Image liveFrame;
+    private final AtomicBoolean uiFrameUpdatePending = new AtomicBoolean(false);
+    private volatile long lastPreviewFrameAtMs;
 
     @FXML
     private void initialize() {
@@ -76,40 +92,49 @@ public class AdminFaceVerificationController {
         statusLabel.setText("Initialisation de la camera...");
         cameraExecutor.submit(() -> {
             try {
-                closeAnyOpenWebcams();
-                Webcam defaultWebcam = findDefaultWebcamWithTimeout(CAMERA_DISCOVERY_TIMEOUT_SECONDS);
-                if (defaultWebcam == null) {
-                    Platform.runLater(() -> statusLabel.setText(
-                            "Camera introuvable ou non repondante. Verifiez /dev/video0, permissions et qu'aucune autre application n'utilise la webcam."
-                    ));
+                GrabberSelection selection = openBestGrabber();
+                if (selection == null || selection.grabber() == null || selection.previewFrame() == null) {
+                    Platform.runLater(() -> {
+                        statusLabel.setText("Camera detectee mais aucun flux reel recu. En VM, activez le passthrough USB webcam VMware puis relancez.");
+                        stopCameraButton.setDisable(true);
+                        startCameraButton.setDisable(false);
+                    });
                     return;
                 }
 
-                webcam = defaultWebcam;
-                webcam.setViewSize(selectStableResolution(webcam));
-                if (!openCameraWithTimeout(webcam, CAMERA_OPEN_TIMEOUT_SECONDS)) {
-                    Platform.runLater(() -> statusLabel.setText(
-                            "Camera detectee mais flux indisponible. Fermez les autres apps camera puis reessayez."
-                    ));
-                    return;
-                }
+                frameGrabber = selection.grabber();
+                activeCameraSource = selection.sourceLabel();
                 cameraRunning = true;
+                liveFrame = selection.previewFrame();
 
                 Platform.runLater(() -> {
-                    statusLabel.setText("Camera active en temps reel (" + webcam.getViewSize().width + "x" + webcam.getViewSize().height + ").");
+                    previewImageView.setImage(selection.previewFrame());
+                    statusLabel.setText("Camera active en temps reel (" + CAMERA_WIDTH + "x" + CAMERA_HEIGHT + ") via " + activeCameraSource + ".");
                     stopCameraButton.setDisable(false);
                     startCameraButton.setDisable(true);
                 });
 
                 int consecutiveNullFrames = 0;
-                while (cameraRunning && webcam.isOpen()) {
+                while (cameraRunning && frameGrabber != null) {
                     try {
-                        BufferedImage buffered = webcam.getImage();
+                        Frame grabbed = frameGrabber.grab();
+                        BufferedImage buffered = grabbed == null ? null : frameConverter.getBufferedImage(grabbed);
                         if (buffered != null) {
                             consecutiveNullFrames = 0;
-                            Image frame = SwingFXUtils.toFXImage(buffered, null);
-                            liveFrame = frame;
-                            Platform.runLater(() -> previewImageView.setImage(frame));
+                            long now = System.currentTimeMillis();
+                            if ((now - lastPreviewFrameAtMs) >= PREVIEW_FRAME_INTERVAL_MS
+                                    && uiFrameUpdatePending.compareAndSet(false, true)) {
+                                Image frame = SwingFXUtils.toFXImage(buffered, null);
+                                liveFrame = frame;
+                                lastPreviewFrameAtMs = now;
+                                Platform.runLater(() -> {
+                                    try {
+                                        previewImageView.setImage(frame);
+                                    } finally {
+                                        uiFrameUpdatePending.set(false);
+                                    }
+                                });
+                            }
                         } else {
                             consecutiveNullFrames++;
                         }
@@ -117,9 +142,15 @@ public class AdminFaceVerificationController {
                         consecutiveNullFrames++;
                     }
 
-                    if (consecutiveNullFrames >= 20) {
-                        Platform.runLater(() -> statusLabel.setText("Flux camera instable. Essayez une autre resolution ou redemarrez la camera."));
-                        consecutiveNullFrames = 0;
+                    if (consecutiveNullFrames >= MAX_EMPTY_FRAMES) {
+                        cameraRunning = false;
+                        stopFrameGrabber();
+                        Platform.runLater(() -> {
+                            statusLabel.setText("Aucun flux camera recu (timeout). Verifiez VMware passthrough USB webcam et fermez les apps qui utilisent la camera.");
+                            stopCameraButton.setDisable(true);
+                            startCameraButton.setDisable(false);
+                        });
+                        break;
                     }
 
                     try {
@@ -130,7 +161,12 @@ public class AdminFaceVerificationController {
                     }
                 }
             } catch (Exception exception) {
-                Platform.runLater(() -> statusLabel.setText("Impossible d'ouvrir la camera: " + exception.getMessage()));
+                stopFrameGrabber();
+                Platform.runLater(() -> {
+                    statusLabel.setText("Impossible d'ouvrir la camera en temps reel: " + exception.getMessage());
+                    stopCameraButton.setDisable(true);
+                    startCameraButton.setDisable(false);
+                });
             }
         });
     }
@@ -224,108 +260,188 @@ public class AdminFaceVerificationController {
 
     private void stopCamera() {
         cameraRunning = false;
-
-        if (webcam != null) {
-            try {
-                webcam.close();
-            } catch (Exception ignored) {
-            }
-        }
-
-        webcam = null;
+        stopFrameGrabber();
+        activeCameraSource = null;
         liveFrame = null;
+        uiFrameUpdatePending.set(false);
+        lastPreviewFrameAtMs = 0L;
 
         Platform.runLater(() -> {
+            previewImageView.setImage(null);
             stopCameraButton.setDisable(true);
             startCameraButton.setDisable(false);
         });
     }
 
-    private boolean openCameraWithTimeout(Webcam targetWebcam, int timeoutSeconds) {
-        try {
-            targetWebcam.open(true);
-            long deadline = System.currentTimeMillis() + (timeoutSeconds * 1000L);
-
-            while (System.currentTimeMillis() < deadline) {
-                if (targetWebcam.isOpen()) {
-                    try {
-                        BufferedImage warmup = targetWebcam.getImage();
-                        if (warmup != null) {
-                            liveFrame = SwingFXUtils.toFXImage(warmup, null);
-                            return true;
-                        }
-                    } catch (Exception ignored) {
-                    }
-                }
-                TimeUnit.MILLISECONDS.sleep(120);
-            }
-
-            safeClose(targetWebcam);
-            return false;
-        } catch (Exception exception) {
-            safeClose(targetWebcam);
-            return false;
-        }
-    }
-
-    private Webcam findDefaultWebcamWithTimeout(int timeoutSeconds) {
-        ExecutorService finder = Executors.newSingleThreadExecutor();
-        try {
-            Future<Webcam> future = finder.submit(() -> Webcam.getDefault());
-            return future.get(timeoutSeconds, TimeUnit.SECONDS);
-        } catch (Exception exception) {
-            return null;
-        } finally {
-            finder.shutdownNow();
-        }
-    }
-
-    private void closeAnyOpenWebcams() {
-        try {
-            for (Webcam candidate : Webcam.getWebcams()) {
-                if (candidate != null && candidate.isOpen()) {
-                    safeClose(candidate);
-                }
-            }
-        } catch (Exception ignored) {
-        }
-    }
-
-    private void safeClose(Webcam targetWebcam) {
-        if (targetWebcam == null) {
+    private void stopFrameGrabber() {
+        FrameGrabber current = frameGrabber;
+        frameGrabber = null;
+        if (current == null) {
             return;
         }
         try {
-            targetWebcam.close();
+            current.stop();
+        } catch (Exception exception) {
+        }
+        try {
+            current.release();
         } catch (Exception ignored) {
         }
     }
 
+    private GrabberSelection openBestGrabber() {
+        for (GrabberCandidate candidate : buildCandidates()) {
+            FrameGrabber grabber = null;
+            try {
+                GrabberSelection selection = openCandidateWithTimeout(candidate, CANDIDATE_INIT_TIMEOUT_SECONDS);
+                if (selection != null) {
+                    return selection;
+                }
+            } catch (Exception ignored) {
+            }
 
-    private Dimension selectStableResolution(Webcam webcamInstance) {
-        Dimension[] supported = webcamInstance.getViewSizes();
-        if (supported == null || supported.length == 0) {
-            return new Dimension(640, 480);
-        }
-
-        // Prefer lower/standard resolutions first to reduce MJPEG decode errors on some Linux UVC webcams.
-        int[][] preferred = new int[][] {
-                {320, 240},
-                {640, 480},
-                {800, 600},
-                {1280, 720}
-        };
-
-        for (int[] pref : preferred) {
-            for (Dimension candidate : supported) {
-                if (candidate.width == pref[0] && candidate.height == pref[1]) {
-                    return candidate;
+            if (grabber != null) {
+                try {
+                    grabber.stop();
+                } catch (Exception ignored) {
+                }
+                try {
+                    grabber.release();
+                } catch (Exception ignored) {
                 }
             }
         }
+        return null;
+    }
 
-        return Arrays.stream(supported)
-                .min(Comparator.comparingInt(d -> d.width * d.height))
-                .orElse(new Dimension(640, 480));
+    private GrabberSelection openCandidateWithTimeout(GrabberCandidate candidate, int timeoutSeconds) {
+        ExecutorService single = Executors.newSingleThreadExecutor();
+        Future<GrabberSelection> future = single.submit(() -> {
+            FrameGrabber grabber = null;
+            try {
+                grabber = candidate.build();
+                configureGrabber(grabber);
+                grabber.start();
+
+                Image preview = probeFirstFrame(grabber, STARTUP_FRAME_PROBE_ATTEMPTS);
+                if (preview != null) {
+                    return new GrabberSelection(grabber, candidate.label(), preview);
+                }
+
+                try {
+                    grabber.stop();
+                } catch (Exception ignored) {
+                }
+                try {
+                    grabber.release();
+                } catch (Exception ignored) {
+                }
+                return null;
+            } catch (Exception e) {
+                if (grabber != null) {
+                    try {
+                        grabber.stop();
+                    } catch (Exception ignored) {
+                    }
+                    try {
+                        grabber.release();
+                    } catch (Exception ignored) {
+                    }
+                }
+                return null;
+            }
+        });
+
+        try {
+            return future.get(Math.max(2, timeoutSeconds), TimeUnit.SECONDS);
+        } catch (TimeoutException timeout) {
+            future.cancel(true);
+            return null;
+        } catch (Exception e) {
+            return null;
+        } finally {
+            single.shutdownNow();
+        }
+    }
+
+    private void configureGrabber(FrameGrabber grabber) {
+        if (grabber == null) {
+            return;
+        }
+
+        grabber.setImageWidth(CAMERA_WIDTH);
+        grabber.setImageHeight(CAMERA_HEIGHT);
+        grabber.setFrameRate(CAMERA_FPS);
+
+        if (grabber instanceof OpenCVFrameGrabber) {
+            // OpenCV backend keeps default options to stay JPMS-compatible across packaged natives.
+        }
+
+        if (grabber instanceof FFmpegFrameGrabber ffmpeg) {
+            ffmpeg.setFormat("v4l2");
+            ffmpeg.setOption("framerate", String.valueOf((int) CAMERA_FPS));
+            ffmpeg.setOption("video_size", CAMERA_WIDTH + "x" + CAMERA_HEIGHT);
+            ffmpeg.setOption("fflags", "nobuffer");
+            ffmpeg.setOption("flags", "low_delay");
+        }
+    }
+
+    private Image probeFirstFrame(FrameGrabber grabber, int attempts) {
+        if (grabber == null) {
+            return null;
+        }
+        for (int i = 0; i < Math.max(1, attempts); i++) {
+            try {
+                Frame frame = grabber.grab();
+                BufferedImage buffered = frame == null ? null : frameConverter.getBufferedImage(frame);
+                if (buffered != null) {
+                    return SwingFXUtils.toFXImage(buffered, null);
+                }
+            } catch (Exception ignored) {
+            }
+
+            try {
+                TimeUnit.MILLISECONDS.sleep(120);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
+        return null;
+    }
+
+    private List<GrabberCandidate> buildCandidates() {
+        List<GrabberCandidate> candidates = new ArrayList<>();
+        candidates.add(new GrabberCandidate("/dev/video0 (OpenCV)", () -> new OpenCVFrameGrabber("/dev/video0")));
+        candidates.add(new GrabberCandidate("/dev/video1 (OpenCV)", () -> new OpenCVFrameGrabber("/dev/video1")));
+        candidates.add(new GrabberCandidate("index 0 (CAP_ANY)", () -> new OpenCVFrameGrabber(0)));
+        candidates.add(new GrabberCandidate("index 1 (CAP_ANY)", () -> new OpenCVFrameGrabber(1)));
+        candidates.add(new GrabberCandidate("/dev/video0 (FFmpeg yuyv422)", () -> createFfmpegGrabber("/dev/video0", "yuyv422")));
+        candidates.add(new GrabberCandidate("/dev/video1 (FFmpeg yuyv422)", () -> createFfmpegGrabber("/dev/video1", "yuyv422")));
+        candidates.add(new GrabberCandidate("/dev/video0 (FFmpeg mjpeg)", () -> createFfmpegGrabber("/dev/video0", "mjpeg")));
+        candidates.add(new GrabberCandidate("/dev/video1 (FFmpeg mjpeg)", () -> createFfmpegGrabber("/dev/video1", "mjpeg")));
+        return candidates;
+    }
+
+    private FFmpegFrameGrabber createFfmpegGrabber(String devicePath, String inputFormat) {
+        FFmpegFrameGrabber grabber = new FFmpegFrameGrabber(devicePath);
+        if (inputFormat != null && !inputFormat.isBlank()) {
+            grabber.setOption("input_format", inputFormat);
+        }
+        return grabber;
+    }
+
+    @FunctionalInterface
+    private interface GrabberFactory {
+        FrameGrabber create() throws Exception;
+    }
+
+    private record GrabberCandidate(String label, GrabberFactory factory) {
+        private FrameGrabber build() throws Exception {
+            return factory.create();
+        }
+    }
+
+    private record GrabberSelection(FrameGrabber grabber, String sourceLabel, Image previewFrame) {
     }
 }

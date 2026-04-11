@@ -1483,48 +1483,31 @@
 }
 
 .sub-root {
-    -fx-background-color: linear-gradient(to bottom right, #f8fafc, #eef2ff);
+    -fx-background-color: #dbeaf4;
+}
+
+.sub-root-premium {
+    -fx-background-color: linear-gradient(to bottom, #d8e8f3 0%, #dcecf6 36%, #e4f1f8 100%);
 }
 
 .profile-content-shell {
     -fx-max-width: 1400;
 }
 
-.app-shell-nav {
-    -fx-background-color: rgba(255,255,255,0.92);
-    -fx-background-radius: 16;
-    -fx-border-color: #dbe5f1;
-    -fx-border-radius: 16;
-    -fx-padding: 12 16 12 16;
-    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.07), 18, 0.12, 0, 2);
-}
-
-.app-shell-brand {
-    -fx-font-size: 22;
-    -fx-font-weight: 900;
-    -fx-text-fill: #0f172a;
-}
-
-.app-shell-link {
-    -fx-text-fill: #475569;
-    -fx-font-size: 13;
-    -fx-font-weight: 700;
-    -fx-border-color: transparent;
-    -fx-underline: false;
-}
-
-.app-shell-link:hover {
-    -fx-text-fill: #0d8abc;
-}
-
-.app-shell-link.active {
-    -fx-text-fill: #0d8abc;
-}
-
 .sub-title {
-    -fx-font-size: 28;
-    -fx-font-weight: 800;
-    -fx-text-fill: #111827;
+    -fx-font-size: 58;
+    -fx-font-weight: 900;
+    -fx-text-fill: #0f1b3d;
+}
+
+.sub-subtitle {
+    -fx-font-size: 21;
+    -fx-text-fill: #5d6f86;
+    -fx-font-weight: 600;
+}
+
+.sub-hero-premium {
+    -fx-padding: 4 0 2 0;
 }
 
 .sub-banner {
@@ -1560,26 +1543,35 @@
 }
 
 .sub-plan-card {
-    -fx-background-color: #ffffff;
-    -fx-border-color: #f1f5f9;
-    -fx-border-width: 1.5;
-    -fx-border-radius: 14;
-    -fx-background-radius: 14;
-    -fx-padding: 18 18 18 18;
-    -fx-spacing: 8;
-    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.07), 20, 0.16, 0, 3);
+    -fx-border-color: rgba(255,255,255,0.55);
+    -fx-border-width: 1;
+    -fx-border-radius: 20;
+    -fx-background-radius: 20;
+    -fx-padding: 0;
+    -fx-spacing: 0;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.14), 24, 0.24, 0, 6);
+}
+
+.sub-plan-card:hover {
+    -fx-effect: dropshadow(gaussian, rgba(13, 138, 188, 0.28), 26, 0.28, 0, 8);
+}
+
+.sub-plan-selected {
+    -fx-border-color: rgba(255, 255, 255, 0.95);
+    -fx-border-width: 2;
+    -fx-effect: dropshadow(gaussian, rgba(13, 138, 188, 0.34), 28, 0.3, 0, 10);
 }
 
 .sub-plan-name {
-    -fx-font-size: 19;
+    -fx-font-size: 35;
     -fx-font-weight: 800;
-    -fx-text-fill: #0f172a;
+    -fx-text-fill: #ffffff;
 }
 
 .sub-plan-price {
-    -fx-font-size: 20;
+    -fx-font-size: 33;
     -fx-font-weight: 700;
-    -fx-text-fill: #0d8abc;
+    -fx-text-fill: #ffffff;
 }
 
 .sub-plan-features {
@@ -1864,51 +1856,98 @@
 }
 
 .sub-page-root {
-    -fx-background-color: linear-gradient(to bottom right, #eef7ff, #f8fafc);
+    -fx-background-color: #dbeaf4;
 }
 
 .sub-hero-wrap {
-    -fx-padding: 6 0 2 0;
+    -fx-padding: 6 0 0 0;
 }
 
 .sub-plan-medecin {
-    -fx-background-color: linear-gradient(to bottom, #1f8dbb 0%, #1778a7 50%, #ffffff 50%);
+    -fx-background-color: linear-gradient(to bottom, #1c90bd 0%, #177faa 46%, #ffffff 46%, #ffffff 100%);
 }
 
 .sub-plan-pharmacien {
-    -fx-background-color: linear-gradient(to bottom, #16b18f 0%, #129878 50%, #ffffff 50%);
+    -fx-background-color: linear-gradient(to bottom, #18b38f 0%, #12a37f 46%, #ffffff 46%, #ffffff 100%);
 }
 
 .sub-plan-coach {
-    -fx-background-color: linear-gradient(to bottom, #f59e0b 0%, #e28908 50%, #ffffff 50%);
+    -fx-background-color: linear-gradient(to bottom, #f1a10a 0%, #e39005 46%, #ffffff 46%, #ffffff 100%);
 }
 
 .sub-plan-nutri {
-    -fx-background-color: linear-gradient(to bottom, #7c4dff 0%, #6b3fe3 50%, #ffffff 50%);
+    -fx-background-color: linear-gradient(to bottom, #8052f3 0%, #7047e0 46%, #ffffff 46%, #ffffff 100%);
 }
 
 .sub-plan-patient {
-    -fx-background-color: linear-gradient(to bottom, #ef4444 0%, #dc2626 50%, #ffffff 50%);
+    -fx-background-color: linear-gradient(to bottom, #ef3f44 0%, #e92f35 46%, #ffffff 46%, #ffffff 100%);
 }
 
-.sub-plan-card .sub-plan-name,
-.sub-plan-card .sub-plan-price {
+.sub-plan-header {
+    -fx-padding: 18 18 14 18;
+    -fx-spacing: 6;
+}
+
+.sub-plan-icon-box {
+    -fx-min-width: 48;
+    -fx-max-width: 48;
+    -fx-min-height: 48;
+    -fx-max-height: 48;
+    -fx-alignment: center;
+    -fx-font-size: 22;
     -fx-text-fill: #ffffff;
-}
-
-.sub-plan-card .sub-plan-features {
-    -fx-text-fill: #334155;
-    -fx-padding: 12 0 6 0;
-}
-
-.sub-plan-card .sub-primary-button {
-    -fx-background-radius: 10;
-    -fx-padding: 10 14 10 14;
+    -fx-background-radius: 14;
+    -fx-background-color: rgba(255,255,255,0.20);
 }
 
 .sub-plan-card {
-    -fx-min-width: 260;
-    -fx-max-width: 320;
+    -fx-min-width: 302;
+    -fx-max-width: 302;
+    -fx-min-height: 430;
+}
+
+.sub-plan-features-box {
+    -fx-padding: 18 18 8 18;
+    -fx-spacing: 10;
+}
+
+.sub-plan-feature-item {
+    -fx-font-size: 15;
+    -fx-text-fill: #4a5568;
+    -fx-font-weight: 700;
+}
+
+.sub-plan-cta {
+    -fx-background-radius: 12;
+    -fx-padding: 12 16 12 16;
+    -fx-font-size: 19;
+    -fx-font-weight: 900;
+    -fx-translate-y: -2;
+    -fx-pref-width: 260;
+}
+
+.sub-plans-grid {
+    -fx-padding: 4 0 0 0;
+}
+
+.sub-icon-medecin {
+    -fx-background-color: rgba(80, 188, 226, 0.34);
+}
+
+.sub-icon-pharmacien {
+    -fx-background-color: rgba(97, 230, 186, 0.34);
+}
+
+.sub-icon-coach {
+    -fx-background-color: rgba(255, 203, 94, 0.36);
+}
+
+.sub-icon-nutri {
+    -fx-background-color: rgba(177, 146, 255, 0.35);
+}
+
+.sub-icon-patient {
+    -fx-background-color: rgba(255, 151, 151, 0.34);
 }
 
 .sub-kpi-box {
@@ -1916,13 +1955,107 @@
     -fx-border-color: #e2e8f0;
     -fx-border-radius: 14;
     -fx-background-radius: 14;
-    -fx-padding: 14;
+    -fx-padding: 14 20 14 20;
+    -fx-effect: dropshadow(gaussian, rgba(30,64,175,0.14), 18, 0.2, 0, 4);
+}
+
+.sub-kpi-item {
+    -fx-padding: 0 16 0 16;
+    -fx-border-color: transparent #d7e0ea transparent transparent;
+    -fx-border-width: 0 1 0 0;
+}
+
+.sub-kpi-item-last {
+    -fx-border-width: 0;
 }
 
 .sub-chip {
-    -fx-background-color: #e0f2fe;
-    -fx-text-fill: #0369a1;
+    -fx-background-color: #dbe8ff;
+    -fx-text-fill: #2a5de7;
     -fx-font-weight: 800;
     -fx-background-radius: 999;
-    -fx-padding: 7 12 7 12;
+    -fx-padding: 8 14 8 14;
+    -fx-font-size: 12;
+}
+
+.sub-kpi-value {
+    -fx-font-size: 34;
+    -fx-font-weight: 900;
+    -fx-text-fill: #1b84b3;
+}
+
+.sub-kpi-label {
+    -fx-font-size: 13;
+    -fx-font-weight: 700;
+    -fx-text-fill: #6b7b8d;
+}
+
+.sub-checkout-shell {
+    -fx-padding: 10 0 0 0;
+    -fx-spacing: 14;
+}
+
+.sub-checkout-card {
+    -fx-background-color: rgba(255,255,255,0.86);
+    -fx-background-radius: 22;
+    -fx-border-color: rgba(209, 223, 235, 0.95);
+    -fx-border-radius: 22;
+    -fx-padding: 22;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.12), 24, 0.24, 0, 5);
+}
+
+.sub-checkout-title {
+    -fx-font-size: 46;
+    -fx-font-weight: 900;
+    -fx-text-fill: #14213d;
+}
+
+.sub-checkout-subtitle {
+    -fx-font-size: 21;
+    -fx-text-fill: #27364d;
+}
+
+.sub-checkout-help {
+    -fx-font-size: 14;
+    -fx-text-fill: #7a8798;
+}
+
+.sub-checkout-summary {
+    -fx-background-color: #eef3f8;
+    -fx-background-radius: 16;
+    -fx-border-color: #d8e2ee;
+    -fx-border-radius: 16;
+    -fx-padding: 14;
+}
+
+.sub-checkout-summary-title {
+    -fx-font-size: 30;
+    -fx-font-weight: 800;
+    -fx-text-fill: #1f2937;
+    -fx-padding: 0 0 6 0;
+}
+
+.sub-checkout-total {
+    -fx-font-size: 31;
+    -fx-font-weight: 900;
+    -fx-text-fill: #0f172a;
+}
+
+.sub-checkout-bullets {
+    -fx-background-color: #0b1737;
+    -fx-background-radius: 14;
+    -fx-padding: 14;
+}
+
+.sub-checkout-bullet {
+    -fx-font-size: 16;
+    -fx-font-weight: 700;
+    -fx-text-fill: #e5edf7;
+}
+
+.web-view {
+    -fx-background-radius: 12;
+    -fx-border-color: #d9e2ee;
+    -fx-border-radius: 12;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.1), 16, 0.18, 0, 4);
 }

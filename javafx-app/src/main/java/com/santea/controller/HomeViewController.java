@@ -196,6 +196,7 @@ public class HomeViewController {
 
     private void scrollTo(Node section) {
         if (homeScroll == null || section == null || homeScroll.getContent() == null) {
+            AppNavigator.showHome();
             return;
         }
 

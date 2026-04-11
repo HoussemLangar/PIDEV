@@ -85,21 +85,6 @@ public class ProfileMfaController {
     }
 
     @FXML
-    private void handleNavHome() {
-        AppNavigator.showHome();
-    }
-
-    @FXML
-    private void handleNavServices() {
-        AppNavigator.showHome();
-    }
-
-    @FXML
-    private void handleOpenMfaPage() {
-        AppNavigator.showProfileMfa();
-    }
-
-    @FXML
     private void handleOpenProfilePage() {
         AppNavigator.showProfileSettings();
     }

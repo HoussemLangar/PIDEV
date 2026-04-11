@@ -2,6 +2,8 @@ package com.santea.controller;
 
 import com.santea.navigation.AppNavigator;
 import com.santea.service.AuthService;
+import com.santea.service.GoogleOAuthService;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.Button;
@@ -15,6 +17,7 @@ import java.util.Optional;
 
 public class LoginViewController {
     private final AuthService authService = new AuthService();
+    private final GoogleOAuthService googleOAuthService = new GoogleOAuthService();
 
     @FXML
     private TextField emailField;
@@ -65,7 +68,48 @@ public class LoginViewController {
 
     @FXML
     private void handleGoogleLogin() {
-        handleOAuth("Google");
+        showFeedback("Ouverture de Google Auth...", true);
+
+        Task<GoogleOAuthService.AuthResult> task = new Task<>() {
+            @Override
+            protected GoogleOAuthService.AuthResult call() {
+                return googleOAuthService.authenticate();
+            }
+        };
+
+        task.setOnSucceeded(event -> {
+            GoogleOAuthService.AuthResult authResult = task.getValue();
+            if (authResult == null || !authResult.success() || authResult.profile() == null) {
+                showFeedback(authResult == null ? "Echec Google OAuth." : authResult.message(), false);
+                return;
+            }
+
+            GoogleOAuthService.GoogleProfile profile = authResult.profile();
+            AuthService.LoginResult response = authService.loginWithOAuth(
+                    "Google",
+                    profile.email(),
+                    profile.nom(),
+                    profile.prenom()
+            );
+
+            showFeedback(response.message(), response.success());
+            if (response.success()) {
+                if (response.user() != null && "ROLE_ADMIN".equalsIgnoreCase(response.user().getRole())) {
+                    AppNavigator.showAdminFaceVerification();
+                } else {
+                    AppNavigator.showHome();
+                }
+            }
+        });
+
+        task.setOnFailed(event -> {
+            Throwable ex = task.getException();
+            showFeedback("Erreur Google OAuth: " + (ex == null ? "inconnue" : ex.getMessage()), false);
+        });
+
+        Thread thread = new Thread(task, "google-oauth-task");
+        thread.setDaemon(true);
+        thread.start();
     }
 
     @FXML

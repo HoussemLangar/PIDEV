@@ -1,24 +1,27 @@
 package com.santea.service;
 
 import com.santea.config.DatabaseConfig;
+import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
 public class InvoiceService {
-    private static final DateTimeFormatter NUMBER_FMT = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+    private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     private final DatabaseService databaseService;
 
@@ -26,19 +29,23 @@ public class InvoiceService {
         this.databaseService = new DatabaseService(DatabaseConfig.fromEnvironment());
     }
 
-    public InvoiceResult createInvoice(int userId, int abonnementId, String planType, BigDecimal amountTtc, String currency) {
+    public InvoiceResult createInvoice(int userId, int abonnementId, String planType, BigDecimal amountTtc, String currency, String outputDirectory) {
         if (userId <= 0 || abonnementId <= 0) {
             return InvoiceResult.failure("Parametres de facture invalides.");
+        }
+        if (outputDirectory == null || outputDirectory.isBlank()) {
+            return InvoiceResult.failure("Aucun emplacement de sauvegarde de facture fourni.");
         }
 
         try {
             ensureFactureTable();
-            Path pdfPath = generatePdf(planType, amountTtc, currency);
-            String numero = "FAC-" + NUMBER_FMT.format(LocalDateTime.now()) + "-" + UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+            String numero = buildInvoiceNumber();
 
-            BigDecimal tvaRate = new BigDecimal("0.19");
-            BigDecimal montantHt = amountTtc.divide(BigDecimal.ONE.add(tvaRate), 2, RoundingMode.HALF_UP);
+            BigDecimal tvaRate = new BigDecimal("19.00");
+            BigDecimal montantHt = amountTtc.divide(new BigDecimal("1.19"), 2, RoundingMode.HALF_UP);
             BigDecimal montantTva = amountTtc.subtract(montantHt).setScale(2, RoundingMode.HALF_UP);
+            InvoiceContext context = loadInvoiceContext(userId, abonnementId, numero, planType, amountTtc, montantHt, tvaRate, montantTva, currency);
+            Path pdfPath = generatePdf(context, outputDirectory);
 
             String sql = "INSERT INTO factures (numero, user_id, abonnement_id, montant_ht, tva_taux, tva_montant, montant_ttc, devise, pdf_path, created_at) "
                     + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -85,60 +92,183 @@ public class InvoiceService {
         }
     }
 
-    private Path generatePdf(String planType, BigDecimal amount, String currency) throws IOException {
-        Path folder = Paths.get("generated-invoices");
+    private Path generatePdf(InvoiceContext context, String outputDirectory) throws IOException {
+        Path folder = Paths.get(outputDirectory);
         Files.createDirectories(folder);
 
-        String fileName = "invoice_" + NUMBER_FMT.format(LocalDateTime.now()) + "_" + UUID.randomUUID().toString().substring(0, 16) + ".pdf";
+        String fileName = "facture-" + context.invoiceNumber + ".pdf";
         Path file = folder.resolve(fileName);
 
-        String amountLine = amount.setScale(2, RoundingMode.HALF_UP) + " " + safeCurrency(currency);
-        String content = "BT\n/F1 24 Tf\n50 790 Td\n(Facture SANTEA) Tj\n"
-                + "0 -30 Td\n/F1 12 Tf\n(Plan: " + escapePdf(planType) + ") Tj\n"
-                + "0 -18 Td\n(Montant TTC: " + escapePdf(amountLine) + ") Tj\n"
-                + "0 -18 Td\n(Date: " + escapePdf(LocalDateTime.now().toString()) + ") Tj\n"
-                + "0 -18 Td\n(Merci pour votre abonnement.) Tj\nET";
-
-        byte[] stream = content.getBytes(StandardCharsets.US_ASCII);
-
-        StringBuilder pdf = new StringBuilder();
-        pdf.append("%PDF-1.4\n");
-        int xref1 = pdf.length();
-        pdf.append("1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n");
-        int xref2 = pdf.length();
-        pdf.append("2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj\n");
-        int xref3 = pdf.length();
-        pdf.append("3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >> endobj\n");
-        int xref4 = pdf.length();
-        pdf.append("4 0 obj << /Length ").append(stream.length).append(" >> stream\n");
-        pdf.append(content).append("\nendstream endobj\n");
-        int xref5 = pdf.length();
-        pdf.append("5 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj\n");
-
-        int xrefPos = pdf.length();
-        pdf.append("xref\n0 6\n");
-        pdf.append("0000000000 65535 f \n");
-        pdf.append(formatXref(xref1));
-        pdf.append(formatXref(xref2));
-        pdf.append(formatXref(xref3));
-        pdf.append(formatXref(xref4));
-        pdf.append(formatXref(xref5));
-        pdf.append("trailer << /Size 6 /Root 1 0 R >>\nstartxref\n");
-        pdf.append(xrefPos).append("\n%%EOF\n");
-
-        Files.writeString(file, pdf.toString(), StandardCharsets.US_ASCII);
+        String html = buildInvoicePdfHtml(context);
+        try (OutputStream outputStream = Files.newOutputStream(file)) {
+            PdfRendererBuilder builder = new PdfRendererBuilder();
+            builder.useFastMode();
+            builder.withHtmlContent(html, null);
+            builder.toStream(outputStream);
+            builder.run();
+        } catch (Exception exception) {
+            throw new IOException("Rendu PDF impossible: " + exception.getMessage(), exception);
+        }
         return file;
     }
 
-    private String formatXref(int offset) {
-        return String.format("%010d 00000 n \n", offset);
+    private InvoiceContext loadInvoiceContext(
+            int userId,
+            int abonnementId,
+            String invoiceNumber,
+            String fallbackPlanType,
+            BigDecimal amountTtc,
+            BigDecimal montantHt,
+            BigDecimal tvaRate,
+            BigDecimal montantTva,
+            String currency
+    ) {
+        String sql = "SELECT "
+                + "u.nom, u.prenom, u.email, u.adresse, "
+                + "a.nom AS abonnement_nom, a.date_debut, a.date_fin "
+                + "FROM users u "
+                + "LEFT JOIN abonnements a ON a.id = ? "
+                + "WHERE u.id = ? LIMIT 1";
+
+        String fullName = "";
+        String email = "";
+        String address = "";
+        String planName = safe(fallbackPlanType);
+        LocalDate startDate = null;
+        LocalDate endDate = null;
+
+        try (Connection connection = databaseService.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, abonnementId);
+            statement.setInt(2, userId);
+
+            try (ResultSet rs = statement.executeQuery()) {
+                if (rs.next()) {
+                    String nom = safe(rs.getString("nom"));
+                    String prenom = safe(rs.getString("prenom"));
+                    fullName = (nom + " " + prenom).trim();
+                    email = safe(rs.getString("email"));
+                    address = safe(rs.getString("adresse"));
+                    String dbPlan = safe(rs.getString("abonnement_nom"));
+                    if (!dbPlan.isBlank()) {
+                        planName = dbPlan;
+                    }
+
+                    java.sql.Date dStart = rs.getDate("date_debut");
+                    java.sql.Date dEnd = rs.getDate("date_fin");
+                    startDate = dStart == null ? null : dStart.toLocalDate();
+                    endDate = dEnd == null ? null : dEnd.toLocalDate();
+                }
+            }
+        } catch (SQLException ignored) {
+            // Non bloquant: fallback sur valeurs minimales.
+        }
+
+        if (fullName.isBlank()) {
+            fullName = email;
+        }
+
+        return new InvoiceContext(
+                invoiceNumber,
+                LocalDateTime.now(),
+                fullName,
+                email,
+                address,
+                planName,
+                startDate,
+                endDate,
+                amount(montantHt),
+                amount(tvaRate),
+                amount(montantTva),
+                amount(amountTtc),
+                safeCurrency(currency)
+        );
     }
 
-    private String escapePdf(String value) {
+    private String buildInvoicePdfHtml(InvoiceContext context) {
+        return "<!DOCTYPE html>"
+                + "<html lang=\"fr\">"
+                + "<head>"
+            + "<meta charset=\"UTF-8\"/>"
+                + "<style>"
+                + "body{font-family:DejaVu Sans,Arial,sans-serif;color:#1f2937;font-size:12px;}"
+                + ".header-table{width:100%;border-collapse:collapse;}"
+                + ".header-left{text-align:left;vertical-align:top;}"
+                + ".header-right{text-align:right;vertical-align:top;}"
+                + ".brand{font-size:20px;font-weight:bold;color:#0288D1;}"
+                + ".invoice-box{margin-top:10px;padding:16px;border:1px solid #e5e7eb;border-radius:8px;}"
+                + ".row-table{width:100%;border-collapse:collapse;margin-top:6px;}"
+                + ".row-left{width:58%;vertical-align:top;}"
+                + ".row-right{width:42%;vertical-align:top;}"
+                + ".muted{color:#6b7280;}"
+                + "table{width:100%;border-collapse:collapse;margin-top:16px;}"
+                + "th,td{border-bottom:1px solid #e5e7eb;padding:8px;text-align:left;}"
+                + "th{background:#f9fafb;}"
+                + ".total{text-align:right;margin-top:12px;}"
+                + ".total strong{font-size:14px;}"
+                + ".footer{margin-top:24px;font-size:11px;color:#6b7280;}"
+                + "</style>"
+                + "</head>"
+                + "<body>"
+                + "<table class=\"header-table\"><tr>"
+                + "<td class=\"header-left\"><div class=\"brand\">SANTEA</div></td>"
+                + "<td class=\"header-right\"><div><strong>Facture</strong> #" + escapeHtml(context.invoiceNumber) + "</div>"
+                + "<div class=\"muted\">Date: " + escapeHtml(formatDate(context.createdAt.toLocalDate())) + "</div></td>"
+                + "</tr></table>"
+                + "<div class=\"invoice-box\">"
+                + "<table class=\"row-table\"><tr><td class=\"row-left\"><strong>Client</strong><br/>"
+                + escapeHtml(defaultIfBlank(context.customerName, context.customerEmail)) + "<br/>"
+                + escapeHtml(context.customerEmail) + "<br/>"
+                + escapeHtml(context.customerAddress)
+                + "</td><td class=\"row-right\"><strong>Abonnement</strong><br/>"
+                + escapeHtml(context.planName) + "<br/>"
+                + "Debut: " + escapeHtml(formatDate(context.startDate)) + "<br/>"
+                + "Fin: " + escapeHtml(formatDate(context.endDate))
+                + "</td></tr></table></div>"
+                + "<table><thead><tr><th>Description</th><th>Qte</th><th>Prix HT</th><th>Total HT</th></tr></thead><tbody><tr>"
+                + "<td>Abonnement " + escapeHtml(context.planName) + " (1 mois)</td>"
+                + "<td>1</td>"
+                + "<td>" + escapeHtml(context.amountHt) + " " + escapeHtml(context.currency) + "</td>"
+                + "<td>" + escapeHtml(context.amountHt) + " " + escapeHtml(context.currency) + "</td>"
+                + "</tr></tbody></table>"
+                + "<div class=\"total\"><div>Sous-total: " + escapeHtml(context.amountHt) + " " + escapeHtml(context.currency) + "</div>"
+                + "<div>TVA (" + escapeHtml(context.tvaRate) + "%): " + escapeHtml(context.tvaAmount) + " " + escapeHtml(context.currency) + "</div>"
+                + "<strong>Total TTC: " + escapeHtml(context.amountTtc) + " " + escapeHtml(context.currency) + "</strong></div>"
+                + "<div class=\"footer\">Merci pour votre confiance. Cette facture a ete generee automatiquement.</div>"
+                + "</body></html>";
+    }
+
+    private String buildInvoiceNumber() {
+        String suffix = UUID.randomUUID().toString().replace("-", "").substring(0, 6).toUpperCase();
+        return "INV-" + LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE) + "-" + suffix;
+    }
+
+    private String amount(BigDecimal value) {
+        return (value == null ? BigDecimal.ZERO : value).setScale(2, RoundingMode.HALF_UP).toPlainString();
+    }
+
+    private String formatDate(LocalDate date) {
+        return date == null ? "" : DATE_FMT.format(date);
+    }
+
+    private String defaultIfBlank(String value, String fallback) {
+        String candidate = safe(value);
+        return candidate.isBlank() ? safe(fallback) : candidate;
+    }
+
+    private String safe(String value) {
+        return value == null ? "" : value.trim();
+    }
+
+    private String escapeHtml(String value) {
         if (value == null) {
             return "";
         }
-        return value.replace("(", "[").replace(")", "]");
+        return value
+                .replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;");
     }
 
     private String safeCurrency(String currency) {
@@ -156,5 +286,22 @@ public class InvoiceService {
         public static InvoiceResult failure(String message) {
             return new InvoiceResult(false, "", "", message);
         }
+    }
+
+    private record InvoiceContext(
+            String invoiceNumber,
+            LocalDateTime createdAt,
+            String customerName,
+            String customerEmail,
+            String customerAddress,
+            String planName,
+            LocalDate startDate,
+            LocalDate endDate,
+            String amountHt,
+            String tvaRate,
+            String tvaAmount,
+            String amountTtc,
+            String currency
+    ) {
     }
 }
