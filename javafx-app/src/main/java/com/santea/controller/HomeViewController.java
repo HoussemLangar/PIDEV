@@ -758,12 +758,7 @@ public class HomeViewController {
         if (!guardPremiumAccess()) {
             return;
         }
-        AppNavigator.showFeaturePage("Journal sante", "Suivi quotidien", List.of(
-                "Poids et IMC",
-                "Sommeil",
-                "Hydratation",
-                "Activite"
-        ));
+        AppNavigator.showSanteQuotidiennePage();
     }
 
     private void openSymptomsPage() {

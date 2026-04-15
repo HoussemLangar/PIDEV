@@ -113,31 +113,31 @@ services:
     tty: true
     stdin_open: true
 
-  javafx-xpra:
-    build:
-      context: ./docker/javafx-xpra
-      dockerfile: Dockerfile
-    container_name: pidev-javafx-xpra
-    working_dir: /workspace/javafx-app
-    volumes:
-      - ./javafx-app:/workspace/javafx-app
-    ports:
-      - "127.0.0.1:14500:14500"
-    environment:
-      XPRA_DISPLAY: ":100"
-      XPRA_PORT: "14500"
-      APP_COMMAND: "cd /workspace/javafx-app && mvn javafx:run"
-      DB_HOST: db
-      DB_PORT: 3306
-      DB_NAME: pidev
-      DB_USER: symfony
-      DB_PASSWORD: symfony
-    command: bash -lc /usr/local/bin/start-xpra.sh
-    networks:
-      - pidev-network
-    restart: unless-stopped
-    tty: true
-    stdin_open: true
+  # javafx-xpra:
+  #   build:
+  #     context: ./docker/javafx-xpra
+  #     dockerfile: Dockerfile
+  #   container_name: pidev-javafx-xpra
+  #   working_dir: /workspace/javafx-app
+  #   volumes:
+  #     - ./javafx-app:/workspace/javafx-app
+  #   ports:
+  #     - "127.0.0.1:14500:14500"
+  #   environment:
+  #     XPRA_DISPLAY: ":100"
+  #     XPRA_PORT: "14500"
+  #     APP_COMMAND: "cd /workspace/javafx-app && mvn javafx:run"
+  #     DB_HOST: db
+  #     DB_PORT: 3306
+  #     DB_NAME: pidev
+  #     DB_USER: symfony
+  #     DB_PASSWORD: symfony
+  #   command: bash -lc /usr/local/bin/start-xpra.sh
+  #   networks:
+  #     - pidev-network
+  #   restart: unless-stopped
+  #   tty: true
+  #   stdin_open: true
 
 # =========================
 # Réseaux
