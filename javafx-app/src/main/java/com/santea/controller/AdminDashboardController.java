@@ -61,7 +61,12 @@ public class AdminDashboardController {
 
     @FXML
     private void handleSanteQuotidienneAdmin() {
-        AppNavigator.showSanteQuotidienneAdmin();
+        try {
+            AppNavigator.showSanteQuotidienneAdmin();
+        } catch (Exception exception) {
+            exception.printStackTrace();
+            showFeedback("Erreur ouverture Santé Quotidienne admin : " + exception.getMessage(), false);
+        }
     }
 
     @FXML

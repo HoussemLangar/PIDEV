@@ -101,7 +101,9 @@ public class SanteQuotidienneAdminRepository {
         String sql = "SELECT "
                 + "COUNT(sq.id) AS total_entries, "
                 + "COUNT(DISTINCT sq.user_id) AS users_with_entries, "
-                + "COUNT(DISTINCT CASE WHEN u.role = 'ROLE_PATIENT' THEN u.id END) AS total_patient_users "
+                + "COUNT(DISTINCT CASE WHEN u.role = 'ROLE_PATIENT' THEN u.id END) AS total_patient_users, "
+                + "COUNT(CASE WHEN DATE(sq.date) = CURDATE() THEN 1 END) AS today_entries, "
+                + "COUNT(CASE WHEN sq.date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY) THEN 1 END) AS week_entries "
                 + "FROM users u "
                 + "LEFT JOIN sante_quotidienne sq ON u.id = sq.user_id";
 
@@ -114,19 +116,23 @@ public class SanteQuotidienneAdminRepository {
                 int usersWithEntries = resultSet.getInt("users_with_entries");
                 int totalPatientUsers = resultSet.getInt("total_patient_users");
                 int patientsWithoutEntries = Math.max(totalPatientUsers - usersWithEntries, 0);
+                int todayEntries = resultSet.getInt("today_entries");
+                int weekEntries = resultSet.getInt("week_entries");
 
                 return new StatisticsData(
                     totalEntries,
                     usersWithEntries,
                     totalPatientUsers,
-                    patientsWithoutEntries
+                    patientsWithoutEntries,
+                    todayEntries,
+                    weekEntries
                 );
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
 
-        return new StatisticsData(0, 0, 0, 0);
+        return new StatisticsData(0, 0, 0, 0, 0, 0);
     }
 
     /**
@@ -249,12 +255,16 @@ public class SanteQuotidienneAdminRepository {
         public final int usersWithEntries;
         public final int totalPatientUsers;
         public final int patientsWithoutEntries;
+        public final int todayEntries;
+        public final int weekEntries;
 
-        public StatisticsData(int totalEntries, int usersWithEntries, int totalPatientUsers, int patientsWithoutEntries) {
+        public StatisticsData(int totalEntries, int usersWithEntries, int totalPatientUsers, int patientsWithoutEntries, int todayEntries, int weekEntries) {
             this.totalEntries = totalEntries;
             this.usersWithEntries = usersWithEntries;
             this.totalPatientUsers = totalPatientUsers;
             this.patientsWithoutEntries = patientsWithoutEntries;
+            this.todayEntries = todayEntries;
+            this.weekEntries = weekEntries;
         }
     }
 }
