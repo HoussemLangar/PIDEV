@@ -5,6 +5,7 @@
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/controller/AdminDashboardController.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/controller/AdminFaceVerificationController.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/controller/AppBaseViewController.java
+/home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/controller/AppointmentViewController.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/controller/AuthBaseViewController.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/controller/BannedViewController.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/controller/FeaturePageController.java
@@ -69,6 +70,7 @@
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/repository/UserRepository.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/service/AdminDashboardService.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/service/AdminOperationsService.java
+/home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/service/AppointmentService.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/service/AuthService.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/service/AuthSession.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/service/AuthorizationPolicyService.java

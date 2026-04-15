@@ -16,6 +16,7 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public class AdminOperationsService {
@@ -49,6 +50,54 @@ public class AdminOperationsService {
         } catch (SQLException exception) {
             return ActionResult.failure("Approbation impossible: " + exception.getMessage());
         }
+    }
+
+    public List<PendingApprovalRow> listPendingProfessionalApprovals() {
+        String sql = "SELECT id, nom, prenom, email, role, created_at "
+                + "FROM users "
+                + "WHERE deleted_at IS NULL AND email_verified = 1 AND admin_approved = 0 "
+                + "ORDER BY created_at ASC LIMIT 100";
+
+        List<PendingApprovalRow> rows = new ArrayList<>();
+        try (Connection connection = databaseService.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql);
+             ResultSet rs = statement.executeQuery()) {
+            while (rs.next()) {
+                rows.add(new PendingApprovalRow(
+                        rs.getInt("id"),
+                        rs.getString("nom"),
+                        rs.getString("prenom"),
+                        rs.getString("email"),
+                        rs.getString("role"),
+                        toLocalDateTime(rs.getTimestamp("created_at"))
+                ));
+            }
+        } catch (SQLException ignored) {
+        }
+
+        return rows;
+    }
+
+    public ActionResult approveAllPendingProfessionalAccounts(String approvedRole) {
+        List<PendingApprovalRow> pending = listPendingProfessionalApprovals();
+        if (pending.isEmpty()) {
+            return ActionResult.success("Aucun compte en attente de validation.");
+        }
+
+        int approved = 0;
+        String role = normalizeRole(approvedRole);
+        if (role.isBlank()) {
+            role = "ROLE_MEDECIN";
+        }
+
+        for (PendingApprovalRow row : pending) {
+            ActionResult result = approveProfessionalAccount(row.id(), role);
+            if (result.success()) {
+                approved++;
+            }
+        }
+
+        return ActionResult.success("Comptes approuves: " + approved + "/" + pending.size());
     }
 
     public ActionResult banUser(int userId, String reason, LocalDateTime until) {
@@ -154,19 +203,136 @@ public class AdminOperationsService {
         return rows;
     }
 
-    public ActionResult moderateContent(int contentId, String moderationStatus, String reason) {
-        String sql = "UPDATE contenus SET moderation_status = ?, moderation_reason = ?, updated_at = ? WHERE id = ?";
+    public ActionResult markSuspiciousLoginBlocked(int loginId, boolean blocked) {
+        ensureSuspiciousTable();
+        String sql = "UPDATE suspicious_logins SET blocked = ? WHERE id = ?";
         try (Connection connection = databaseService.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, safe(moderationStatus));
-            statement.setString(2, safe(reason));
-            statement.setTimestamp(3, Timestamp.valueOf(LocalDateTime.now()));
-            statement.setInt(4, contentId);
+            statement.setBoolean(1, blocked);
+            statement.setInt(2, loginId);
             int changed = statement.executeUpdate();
-            return changed == 1 ? ActionResult.success("Moderation appliquee.") : ActionResult.failure("Contenu introuvable.");
+            if (changed == 1) {
+                return ActionResult.success(blocked ? "Alerte marquee comme bloquee." : "Alerte marquee comme non bloquee.");
+            }
+            return ActionResult.failure("Alerte introuvable.");
         } catch (SQLException exception) {
-            return ActionResult.failure("Moderation non disponible (table contenus absente ou schema different): " + exception.getMessage());
+            return ActionResult.failure("Mise a jour alerte impossible: " + exception.getMessage());
         }
+    }
+
+    public List<ModerationRow> listModerationQueue() {
+        List<ModerationRow> rows = new ArrayList<>();
+
+        String sqlSymfony = "SELECT c.id, c.titre, c.type, c.statut, c.created_at, u.email AS auteur_email "
+                + "FROM contenu c "
+                + "LEFT JOIN users u ON c.auteur_id = u.id "
+                + "WHERE c.statut IN ('en_attente', 'valide', 'publie', 'rejete') "
+                + "ORDER BY c.created_at DESC LIMIT 80";
+
+        String sqlLegacy = "SELECT c.id, c.title AS titre, c.type, c.moderation_status AS statut, c.created_at, u.email AS auteur_email "
+                + "FROM contenus c "
+                + "LEFT JOIN users u ON c.user_id = u.id "
+                + "ORDER BY c.created_at DESC LIMIT 80";
+
+        if (fillModerationRows(rows, sqlSymfony) || fillModerationRows(rows, sqlLegacy)) {
+            return rows;
+        }
+
+        return List.of();
+    }
+
+    public ActionResult moderateContent(int contentId, String moderationStatus, String reason) {
+        String status = normalizeModerationStatus(moderationStatus);
+        if (status.isBlank()) {
+            return ActionResult.failure("Statut de moderation invalide.");
+        }
+
+        String[] sqlOptions = new String[] {
+                "UPDATE contenu SET statut = ?, updated_at = ? WHERE id = ?",
+                "UPDATE contenus SET moderation_status = ?, moderation_reason = ?, updated_at = ? WHERE id = ?"
+        };
+
+        for (String sql : sqlOptions) {
+            try (Connection connection = databaseService.getConnection();
+                 PreparedStatement statement = connection.prepareStatement(sql)) {
+                if (sql.contains("contenu SET statut")) {
+                    statement.setString(1, status);
+                    statement.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
+                    statement.setInt(3, contentId);
+                } else {
+                    statement.setString(1, status);
+                    statement.setString(2, safe(reason));
+                    statement.setTimestamp(3, Timestamp.valueOf(LocalDateTime.now()));
+                    statement.setInt(4, contentId);
+                }
+
+                int changed = statement.executeUpdate();
+                if (changed == 1) {
+                    return ActionResult.success("Moderation appliquee.");
+                }
+            } catch (SQLException ignored) {
+            }
+        }
+
+        return ActionResult.failure("Moderation non disponible (table contenu absente ou schema different).");
+    }
+
+    public List<UserScoreRow> listTopUserScores(int limit) {
+        int safeLimit = Math.max(1, Math.min(limit, 100));
+        String sql = "SELECT id, nom, prenom, email, role, email_verified, admin_approved, is_banned, created_at "
+                + "FROM users "
+                + "WHERE deleted_at IS NULL "
+                + "ORDER BY created_at DESC LIMIT 500";
+
+        List<UserScoreRow> rows = new ArrayList<>();
+
+        try (Connection connection = databaseService.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql);
+             ResultSet rs = statement.executeQuery()) {
+            while (rs.next()) {
+                User user = new User();
+                user.setId(rs.getInt("id"));
+                user.setNom(rs.getString("nom"));
+                user.setPrenom(rs.getString("prenom"));
+                user.setEmail(rs.getString("email"));
+                user.setRole(rs.getString("role"));
+                user.setEmailVerified(rs.getBoolean("email_verified"));
+                user.setAdminApproved(rs.getBoolean("admin_approved"));
+                user.setIsBanned(rs.getBoolean("is_banned"));
+                user.setCreatedAt(toLocalDateTime(rs.getTimestamp("created_at")));
+
+                UserScoreSummary score = computeUserScore(user);
+                rows.add(new UserScoreRow(
+                        user.getId() == null ? 0 : user.getId(),
+                        safe(user.getNom()),
+                        safe(user.getPrenom()),
+                        safe(user.getEmail()),
+                        safe(user.getRole()),
+                        score.scoreTotal(),
+                        supportPriorityLabel(score.scoreTotal())
+                ));
+            }
+        } catch (SQLException ignored) {
+        }
+
+        rows.sort(Comparator.comparingInt(UserScoreRow::score).reversed());
+        if (rows.size() > safeLimit) {
+            return new ArrayList<>(rows.subList(0, safeLimit));
+        }
+        return rows;
+    }
+
+    public int averageUserScore() {
+        List<UserScoreRow> all = listTopUserScores(100);
+        if (all.isEmpty()) {
+            return 0;
+        }
+
+        int total = 0;
+        for (UserScoreRow row : all) {
+            total += row.score();
+        }
+        return (int) Math.round((double) total / all.size());
     }
 
     public ActionResult exportCsvReports() {
@@ -214,7 +380,28 @@ public class AdminOperationsService {
             return AdminVoiceResult.success("Alertes securite: " + suspicious.size());
         }
 
-        return AdminVoiceResult.success("Commande comprise mais aucune action directe executee. Exemples: 'export csv', 'sessions actives', 'logins suspects'.");
+        if (normalized.contains("validation") || normalized.contains("comptes en attente")) {
+            List<PendingApprovalRow> pending = listPendingProfessionalApprovals();
+            return AdminVoiceResult.success("Comptes en attente de validation: " + pending.size());
+        }
+
+        if ((normalized.contains("approuve") || normalized.contains("valide")) && normalized.contains("tout")) {
+            ActionResult approved = approveAllPendingProfessionalAccounts("ROLE_MEDECIN");
+            return approved.success() ? AdminVoiceResult.success(approved.message()) : AdminVoiceResult.failure(approved.message());
+        }
+
+        if (normalized.contains("moderation") || normalized.contains("contenu en attente")) {
+            List<ModerationRow> moderationRows = listModerationQueue();
+            long pending = moderationRows.stream().filter(r -> "en_attente".equalsIgnoreCase(r.status())).count();
+            return AdminVoiceResult.success("Contenus en moderation: " + pending);
+        }
+
+        if (normalized.contains("score") || normalized.contains("scoring")) {
+            int average = averageUserScore();
+            return AdminVoiceResult.success("Score moyen utilisateurs: " + average + "/100");
+        }
+
+        return AdminVoiceResult.success("Commande comprise mais aucune action directe executee. Exemples: 'export csv', 'sessions actives', 'logins suspects', 'validation', 'moderation', 'score'.");
     }
 
     public UserScoreSummary computeUserScore(User user) {
@@ -257,25 +444,14 @@ public class AdminOperationsService {
     }
 
     private void writePaymentsCsv(Path target) throws IOException, SQLException {
-        StringBuilder out = new StringBuilder("session_id,user_id,plan_type,amount,currency,status,updated_at\n");
+        StringBuilder out = new StringBuilder("reference,user_id,plan_type,amount,currency,status,updated_at\n");
 
-        String sql = "SELECT session_id, user_id, plan_type, amount, currency, status, updated_at FROM stripe_payments ORDER BY updated_at DESC LIMIT 200";
-        try (Connection connection = databaseService.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql);
-             ResultSet rs = statement.executeQuery()) {
-            while (rs.next()) {
-                out.append(csv(rs.getString("session_id"))).append(',')
-                        .append(rs.getInt("user_id")).append(',')
-                        .append(csv(rs.getString("plan_type"))).append(',')
-                        .append(rs.getBigDecimal("amount")).append(',')
-                        .append(csv(rs.getString("currency"))).append(',')
-                        .append(csv(rs.getString("status"))).append(',')
-                        .append(csv(String.valueOf(rs.getTimestamp("updated_at"))))
-                        .append('\n');
-            }
-        } catch (SQLException exception) {
-            out.append("no_data,0,NA,0,EUR,table_missing,")
-                    .append(csv(exception.getMessage()))
+        String stripeSql = "SELECT session_id, user_id, plan_type, amount, currency, status, updated_at FROM stripe_payments ORDER BY updated_at DESC LIMIT 200";
+        String factureSql = "SELECT numero, user_id, abonnement_id, montant_ttc, devise, 'paid' AS status, created_at FROM factures ORDER BY created_at DESC LIMIT 200";
+
+        if (!fillPaymentsFromStripe(out, stripeSql) && !fillPaymentsFromFacture(out, factureSql)) {
+            out.append("no_data,0,NA,0,TND,table_missing,")
+                    .append(csv("Aucune source de paiements disponible"))
                     .append('\n');
         }
 
@@ -289,6 +465,8 @@ public class AdminOperationsService {
         out.append("users_pending,").append(scalar("SELECT COUNT(*) FROM users WHERE admin_approved = 0 AND email_verified = 1")).append('\n');
         out.append("suspicious_total,").append(scalarWithFallback("SELECT COUNT(*) FROM suspicious_logins", 0)).append('\n');
         out.append("payments_total,").append(scalarWithFallback("SELECT COUNT(*) FROM stripe_payments", 0)).append('\n');
+        out.append("subscriptions_active,").append(scalarWithFallback("SELECT COUNT(*) FROM abonnements WHERE statut = 'actif'", 0)).append('\n');
+        out.append("pending_moderation,").append(scalarWithFallback("SELECT COUNT(*) FROM contenu WHERE statut = 'en_attente'", 0)).append('\n');
         Files.writeString(target, out.toString(), StandardCharsets.UTF_8);
     }
 
@@ -305,6 +483,66 @@ public class AdminOperationsService {
             return scalar(sql);
         } catch (SQLException exception) {
             return fallback;
+        }
+    }
+
+    private boolean fillModerationRows(List<ModerationRow> rows, String sql) {
+        try (Connection connection = databaseService.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql);
+             ResultSet rs = statement.executeQuery()) {
+            while (rs.next()) {
+                rows.add(new ModerationRow(
+                        rs.getInt("id"),
+                        safe(rs.getString("titre")),
+                        safe(rs.getString("type")),
+                        safe(rs.getString("statut")),
+                        safe(rs.getString("auteur_email")),
+                        toLocalDateTime(rs.getTimestamp("created_at"))
+                ));
+            }
+            return true;
+        } catch (SQLException ignored) {
+            return false;
+        }
+    }
+
+    private boolean fillPaymentsFromStripe(StringBuilder out, String sql) {
+        try (Connection connection = databaseService.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql);
+             ResultSet rs = statement.executeQuery()) {
+            while (rs.next()) {
+                out.append(csv(rs.getString("session_id"))).append(',')
+                        .append(rs.getInt("user_id")).append(',')
+                        .append(csv(rs.getString("plan_type"))).append(',')
+                        .append(rs.getBigDecimal("amount")).append(',')
+                        .append(csv(rs.getString("currency"))).append(',')
+                        .append(csv(rs.getString("status"))).append(',')
+                        .append(csv(String.valueOf(rs.getTimestamp("updated_at"))))
+                        .append('\n');
+            }
+            return true;
+        } catch (SQLException ignored) {
+            return false;
+        }
+    }
+
+    private boolean fillPaymentsFromFacture(StringBuilder out, String sql) {
+        try (Connection connection = databaseService.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql);
+             ResultSet rs = statement.executeQuery()) {
+            while (rs.next()) {
+                out.append(csv(rs.getString("numero"))).append(',')
+                        .append(rs.getInt("user_id")).append(',')
+                        .append(csv("ABONNEMENT_" + rs.getString("abonnement_id"))).append(',')
+                        .append(rs.getBigDecimal("montant_ttc")).append(',')
+                        .append(csv(rs.getString("devise"))).append(',')
+                        .append(csv("paid")).append(',')
+                        .append(csv(String.valueOf(rs.getTimestamp("created_at"))))
+                        .append('\n');
+            }
+            return true;
+        } catch (SQLException ignored) {
+            return false;
         }
     }
 
@@ -371,6 +609,27 @@ public class AdminOperationsService {
         };
     }
 
+    private String normalizeModerationStatus(String status) {
+        String normalized = safe(status).toLowerCase();
+        return switch (normalized) {
+            case "valide", "publie", "rejete", "en_attente" -> normalized;
+            case "approved", "approve", "accept" -> "valide";
+            case "reject", "rejected" -> "rejete";
+            case "pending" -> "en_attente";
+            default -> "";
+        };
+    }
+
+    private String supportPriorityLabel(int score) {
+        if (score < 50) {
+            return "Haute";
+        }
+        if (score < 75) {
+            return "Moyenne";
+        }
+        return "Normale";
+    }
+
     public record ActionResult(boolean success, String message) {
         public static ActionResult success(String message) {
             return new ActionResult(true, message);
@@ -392,6 +651,24 @@ public class AdminOperationsService {
     ) {
     }
 
+    public record PendingApprovalRow(
+            int id,
+            String nom,
+            String prenom,
+            String email,
+            String currentRole,
+            LocalDateTime createdAt
+    ) {
+        public String displayName() {
+            String fullName = (safePart(prenom) + " " + safePart(nom)).trim();
+            return fullName.isBlank() ? email : fullName;
+        }
+
+        private static String safePart(String value) {
+            return value == null ? "" : value.trim();
+        }
+    }
+
     public record SuspiciousLoginRow(
             int id,
             int userId,
@@ -401,6 +678,35 @@ public class AdminOperationsService {
             boolean blocked,
             LocalDateTime createdAt
     ) {
+    }
+
+    public record ModerationRow(
+            int id,
+            String title,
+            String type,
+            String status,
+            String authorEmail,
+            LocalDateTime createdAt
+    ) {
+    }
+
+    public record UserScoreRow(
+            int userId,
+            String nom,
+            String prenom,
+            String email,
+            String role,
+            int score,
+            String supportPriority
+    ) {
+        public String displayName() {
+            String fullName = (safePart(prenom) + " " + safePart(nom)).trim();
+            return fullName.isBlank() ? email : fullName;
+        }
+
+        private static String safePart(String value) {
+            return value == null ? "" : value.trim();
+        }
     }
 
     public record AdminVoiceResult(boolean success, String message) {

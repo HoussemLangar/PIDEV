@@ -2300,3 +2300,330 @@
     -fx-border-radius: 12;
     -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.1), 16, 0.18, 0, 4);
 }
+
+/* ===== APPOINTMENTS ===== */
+.appt-page-root {
+    -fx-background-color: linear-gradient(to bottom right, #e9f2f9 0%, #eef5fa 55%, #f4f8fb 100%);
+}
+
+.appt-shell {
+    -fx-padding: 8 0 14 0;
+    -fx-max-width: 1320;
+    -fx-fill-width: false;
+}
+
+.appt-hero-card {
+    -fx-background-color: linear-gradient(to right, #0d8abc 0%, #0a6d96 55%, #1e40af 100%);
+    -fx-background-radius: 20;
+    -fx-padding: 24 22 24 22;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.24), 30, 0.18, 0, 8);
+}
+
+.appt-hero-badge {
+    -fx-background-color: rgba(255,255,255,0.2);
+    -fx-background-radius: 50;
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 12;
+    -fx-font-weight: 800;
+    -fx-padding: 6 14 6 14;
+}
+
+.appt-hero-title {
+    -fx-font-size: 52;
+    -fx-font-weight: 900;
+    -fx-text-fill: #ffffff;
+}
+
+.appt-hero-subtitle {
+    -fx-font-size: 16;
+    -fx-text-fill: rgba(255,255,255,0.9);
+}
+
+.appt-hero-actions {
+    -fx-padding: 6 0 0 0;
+}
+
+.appt-search-input,
+.appt-filter-control,
+.appt-textarea {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 10;
+    -fx-border-color: #d8e5f0;
+    -fx-border-radius: 10;
+    -fx-border-width: 1.2;
+    -fx-font-size: 13;
+    -fx-text-fill: #14213d;
+}
+
+.appt-search-input {
+    -fx-padding: 10 12 10 12;
+    -fx-pref-width: 280;
+}
+
+.appt-textarea {
+    -fx-padding: 8 10 8 10;
+}
+
+.appt-hero-btn-primary,
+.appt-btn-primary,
+.appt-btn-secondary,
+.appt-btn-danger,
+.appt-btn-soft,
+.appt-hero-btn-ghost,
+.appt-hero-btn-voice {
+    -fx-background-radius: 10;
+    -fx-font-size: 13;
+    -fx-font-weight: 800;
+    -fx-padding: 9 14 9 14;
+    -fx-cursor: hand;
+}
+
+.appt-hero-btn-primary,
+.appt-btn-primary {
+    -fx-background-color: linear-gradient(to right, #35bdf6, #0d8abc);
+    -fx-text-fill: #ffffff;
+}
+
+.appt-hero-btn-ghost {
+    -fx-background-color: rgba(255,255,255,0.16);
+    -fx-text-fill: #ffffff;
+    -fx-border-color: rgba(255,255,255,0.34);
+    -fx-border-width: 1.4;
+    -fx-border-radius: 10;
+}
+
+.appt-hero-btn-voice {
+    -fx-background-color: linear-gradient(to right, #0f9ac4, #00c9a7);
+    -fx-text-fill: #ffffff;
+}
+
+.appt-btn-secondary {
+    -fx-background-color: #e2e8f0;
+    -fx-text-fill: #1e293b;
+}
+
+.appt-btn-soft {
+    -fx-background-color: #f1f5f9;
+    -fx-text-fill: #475569;
+    -fx-border-color: #d8e2ee;
+    -fx-border-width: 1;
+    -fx-border-radius: 10;
+}
+
+.appt-btn-danger {
+    -fx-background-color: #ef4444;
+    -fx-text-fill: #ffffff;
+}
+
+.appt-restricted-card {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 16;
+    -fx-border-color: #f3d8b6;
+    -fx-border-radius: 16;
+    -fx-padding: 18 16 18 16;
+}
+
+.appt-restricted-title {
+    -fx-font-size: 22;
+    -fx-font-weight: 900;
+    -fx-text-fill: #9a3412;
+}
+
+.appt-restricted-text {
+    -fx-font-size: 14;
+    -fx-text-fill: #475569;
+}
+
+.appt-card {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 16;
+    -fx-border-color: #dce6f1;
+    -fx-border-radius: 16;
+    -fx-padding: 14 14 14 14;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.08), 20, 0.14, 0, 3);
+}
+
+.appt-card-title {
+    -fx-font-size: 28;
+    -fx-font-weight: 900;
+    -fx-text-fill: #14213d;
+}
+
+.appt-card-subtitle {
+    -fx-font-size: 13;
+    -fx-text-fill: #64748b;
+}
+
+.appt-read-badge {
+    -fx-background-color: #e0f2fe;
+    -fx-background-radius: 999;
+    -fx-text-fill: #0284c7;
+    -fx-font-size: 12;
+    -fx-font-weight: 800;
+    -fx-padding: 4 12 4 12;
+}
+
+.appt-filters-row {
+    -fx-padding: 4 0 0 0;
+}
+
+.appt-filters-row .appt-filter-control {
+    -fx-pref-width: 200;
+}
+
+.appt-row {
+    -fx-background-color: #f8fbff;
+    -fx-background-radius: 12;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 12;
+    -fx-padding: 12 12 12 12;
+}
+
+.appt-row-title {
+    -fx-font-size: 22;
+    -fx-font-weight: 900;
+    -fx-text-fill: #0f172a;
+}
+
+.appt-row-meta {
+    -fx-font-size: 14;
+    -fx-text-fill: #334155;
+}
+
+.appt-row-note {
+    -fx-font-size: 12;
+    -fx-text-fill: #64748b;
+}
+
+.appt-status-pill {
+    -fx-background-radius: 999;
+    -fx-font-size: 12;
+    -fx-font-weight: 800;
+    -fx-padding: 4 10 4 10;
+}
+
+.appt-status-confirmed {
+    -fx-background-color: #dcfce7;
+    -fx-text-fill: #15803d;
+}
+
+.appt-status-refused,
+.appt-status-cancelled {
+    -fx-background-color: #fee2e2;
+    -fx-text-fill: #b91c1c;
+}
+
+.appt-status-pending {
+    -fx-background-color: #fef3c7;
+    -fx-text-fill: #92400e;
+}
+
+.appt-row-empty {
+    -fx-background-color: #f8fafc;
+    -fx-background-radius: 12;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 12;
+    -fx-padding: 12 12 12 12;
+}
+
+.appt-row-empty-label {
+    -fx-font-size: 13;
+    -fx-text-fill: #64748b;
+}
+
+.appt-booking-shell {
+    -fx-padding: 4 0 0 0;
+}
+
+.appt-booking-grid {
+    -fx-alignment: top-center;
+}
+
+.appt-booking-grid > .appt-card {
+    -fx-pref-width: 600;
+    -fx-max-width: 620;
+    -fx-min-width: 320;
+}
+
+.appt-field-label {
+    -fx-font-size: 12;
+    -fx-font-weight: 800;
+    -fx-text-fill: #334155;
+}
+
+.appt-slot-btn {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 10;
+    -fx-border-color: #d7e4f1;
+    -fx-border-radius: 10;
+    -fx-border-width: 1.2;
+    -fx-font-size: 12;
+    -fx-font-weight: 800;
+    -fx-text-fill: #1f2937;
+    -fx-padding: 8 10 8 10;
+}
+
+.appt-slot-btn:selected {
+    -fx-background-color: linear-gradient(to right, #35bdf6, #0d8abc);
+    -fx-text-fill: #ffffff;
+    -fx-border-color: transparent;
+}
+
+.appt-slot-empty {
+    -fx-font-size: 13;
+    -fx-text-fill: #64748b;
+}
+
+.appt-feedback {
+    -fx-font-size: 13;
+    -fx-font-weight: 700;
+}
+
+.appt-feedback-success {
+    -fx-text-fill: #0f766e;
+}
+
+.appt-feedback-error {
+    -fx-text-fill: #b91c1c;
+}
+
+.appt-dialog {
+    -fx-background-color: #f4f8fb;
+    -fx-background-radius: 18;
+    -fx-border-color: #dbe7f2;
+    -fx-border-radius: 18;
+    -fx-padding: 14;
+}
+
+.appt-dialog:header .header-panel {
+    -fx-background-color: linear-gradient(to right, #0d8abc, #2563eb);
+    -fx-background-radius: 14;
+    -fx-padding: 14;
+}
+
+.appt-dialog:header .header-panel .label {
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 14;
+    -fx-font-weight: 800;
+}
+
+.appt-dialog .content.label {
+    -fx-font-size: 13;
+    -fx-text-fill: #334155;
+}
+
+.appt-dialog .button-bar .button {
+    -fx-background-radius: 10;
+    -fx-font-size: 12;
+    -fx-font-weight: 800;
+    -fx-padding: 8 12 8 12;
+}
+
+.appt-dialog .button-bar .button:default {
+    -fx-background-color: linear-gradient(to right, #35bdf6, #0d8abc);
+    -fx-text-fill: #ffffff;
+}
+
+.appt-dialog-danger:header .header-panel {
+    -fx-background-color: linear-gradient(to right, #ef4444, #b91c1c);
+}
