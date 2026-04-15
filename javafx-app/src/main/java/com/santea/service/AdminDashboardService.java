@@ -8,7 +8,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -86,23 +85,6 @@ public class AdminDashboardService {
 
             if (resultSet.next()) {
                 return resultSet.getInt(1);
-            }
-        } catch (SQLException ignored) {
-            return 0;
-        }
-
-        return 0;
-    }
-
-    private int scalarCountWithDate(String sql, String date) {
-        try (Connection connection = databaseService.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
-
-            statement.setString(1, date);
-            try (ResultSet resultSet = statement.executeQuery()) {
-                if (resultSet.next()) {
-                    return resultSet.getInt(1);
-                }
             }
         } catch (SQLException ignored) {
             return 0;

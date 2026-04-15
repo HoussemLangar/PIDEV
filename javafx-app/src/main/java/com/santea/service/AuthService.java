@@ -5,16 +5,25 @@ import com.santea.model.User;
 import com.santea.repository.UserRepository;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Period;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.List;
 import java.util.regex.Pattern;
 
 public class AuthService {
-        private static final int DEFAULT_REMEMBER_DAYS = 7;
+    private static final int DEFAULT_REMEMBER_DAYS = 7;
+    private static final int EMAIL_HISTORY_LIMIT = 40;
     private static final Pattern EMAIL_PATTERN =
             Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
 
@@ -86,6 +95,7 @@ public class AuthService {
 
         AuthSession.login(user);
         registerUserSession(user);
+        rememberSuccessfulLoginEmail(user.getEmail());
         if (rememberMe && user.getId() != null) {
             AuthSession.persistLogin(user.getId(), LocalDateTime.now().plusDays(resolveRememberDays()));
         } else {
@@ -142,6 +152,7 @@ public class AuthService {
 
         AuthSession.login(user);
         registerUserSession(user);
+        rememberSuccessfulLoginEmail(user.getEmail());
         AuthSession.clearPersistedLogin();
         return LoginResult.success(user, "Connexion OAuth réussie via " + provider + ".");
     }
@@ -175,6 +186,7 @@ public class AuthService {
         }
 
         AuthSession.login(user);
+        rememberSuccessfulLoginEmail(user.getEmail());
         return true;
     }
 
@@ -459,6 +471,146 @@ public class AuthService {
 
     public TwoFactorService getTwoFactorService() {
         return twoFactorService;
+    }
+
+    public List<String> suggestLoginEmails(int limit) {
+        int safeLimit = Math.max(1, Math.min(limit, 20));
+        LinkedHashSet<String> emails = new LinkedHashSet<>();
+
+        for (String remembered : loadRememberedLoginEmails()) {
+            if (!isBlank(remembered)) {
+                emails.add(remembered.trim().toLowerCase());
+                if (emails.size() >= safeLimit) {
+                    return new ArrayList<>(emails);
+                }
+            }
+        }
+
+        if (!databaseService.canConnect()) {
+            return new ArrayList<>(emails);
+        }
+
+        ensureSecurityTables();
+
+        List<String> queryAttempts = List.of(
+                "SELECT u.email "
+                        + "FROM user_sessions s "
+                        + "INNER JOIN users u ON s.user_id = u.id "
+                        + "WHERE u.email IS NOT NULL AND TRIM(u.email) <> '' "
+                        + "GROUP BY u.id, u.email "
+                        + "ORDER BY MAX(s.last_seen_at) DESC "
+                        + "LIMIT ?",
+                "SELECT u.email "
+                        + "FROM user_sessions s "
+                        + "INNER JOIN users u ON s.user_id = u.id "
+                        + "WHERE u.email IS NOT NULL AND TRIM(u.email) <> '' "
+                        + "GROUP BY u.id, u.email "
+                        + "ORDER BY MAX(s.created_at) DESC "
+                        + "LIMIT ?",
+                "SELECT u.email "
+                        + "FROM user_sessions s "
+                        + "INNER JOIN users u ON s.user_id = u.id "
+                        + "WHERE u.email IS NOT NULL AND TRIM(u.email) <> '' "
+                        + "GROUP BY u.id, u.email "
+                        + "ORDER BY MAX(s.id) DESC "
+                        + "LIMIT ?"
+        );
+
+        for (String sql : queryAttempts) {
+            if (fillSuggestedEmailsFromSessions(sql, safeLimit, emails)) {
+                break;
+            }
+        }
+
+        return new ArrayList<>(emails);
+    }
+
+    private Path loginEmailHistoryPath() {
+        String home = System.getProperty("user.home", ".");
+        return Path.of(home, ".santea", "login-email-history.txt");
+    }
+
+    private List<String> loadRememberedLoginEmails() {
+        Path path = loginEmailHistoryPath();
+        if (!Files.exists(path)) {
+            return List.of();
+        }
+
+        try {
+            List<String> lines = Files.readAllLines(path, StandardCharsets.UTF_8);
+            LinkedHashSet<String> unique = new LinkedHashSet<>();
+            for (String line : lines) {
+                String email = defaultString(line).trim().toLowerCase();
+                if (!isBlank(email)) {
+                    unique.add(email);
+                }
+            }
+            return new ArrayList<>(unique);
+        } catch (IOException exception) {
+            return List.of();
+        }
+    }
+
+    private void rememberSuccessfulLoginEmail(String email) {
+        String normalized = defaultString(email).trim().toLowerCase();
+        if (isBlank(normalized) || !EMAIL_PATTERN.matcher(normalized).matches()) {
+            return;
+        }
+
+        LinkedHashSet<String> history = new LinkedHashSet<>();
+        history.add(normalized);
+        history.addAll(loadRememberedLoginEmails());
+
+        List<String> limited = new ArrayList<>();
+        for (String value : history) {
+            if (!isBlank(value)) {
+                limited.add(value);
+                if (limited.size() >= EMAIL_HISTORY_LIMIT) {
+                    break;
+                }
+            }
+        }
+
+        Path path = loginEmailHistoryPath();
+        try {
+            Path parent = path.getParent();
+            if (parent != null) {
+                Files.createDirectories(parent);
+            }
+
+            String content = String.join("\n", limited);
+            if (!content.isBlank()) {
+                content = content + "\n";
+            }
+
+            Files.writeString(
+                    path,
+                    content,
+                    StandardCharsets.UTF_8,
+                    StandardOpenOption.CREATE,
+                    StandardOpenOption.TRUNCATE_EXISTING,
+                    StandardOpenOption.WRITE
+            );
+        } catch (IOException ignored) {
+        }
+    }
+
+    private boolean fillSuggestedEmailsFromSessions(String sql, int limit, LinkedHashSet<String> emails) {
+        try (java.sql.Connection connection = databaseService.getConnection();
+             java.sql.PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, limit);
+            try (java.sql.ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    String email = defaultString(rs.getString("email")).trim();
+                    if (!email.isBlank()) {
+                        emails.add(email);
+                    }
+                }
+            }
+            return !emails.isEmpty();
+        } catch (java.sql.SQLException ignored) {
+            return false;
+        }
     }
 
     private void registerUserSession(User user) {

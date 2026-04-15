@@ -1,143 +1,365 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.LineChart?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.chart.PieChart?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="com.santea.controller.AdminDashboardController"
-      styleClass="admin-root" spacing="18">
+<BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.santea.controller.AdminDashboardController"
+            styleClass="bo-root">
 
-    <HBox alignment="CENTER_LEFT" spacing="10" styleClass="admin-topbar">
-        <padding>
-            <Insets top="14" right="20" bottom="14" left="20"/>
-        </padding>
-        <Button text="Accueil" styleClass="admin-btn-secondary" onAction="#handleBackHome"/>
-        <Button text="Rafraichir" styleClass="admin-btn-secondary" onAction="#handleRefresh"/>
-        <Button text="Approuver en attente" styleClass="admin-btn-secondary" onAction="#handleApproveAllPending"/>
-        <Button text="Deconnexion" styleClass="admin-btn-danger" onAction="#handleLogout"/>
-        <Label text="Dashboard Admin SANTEA" styleClass="admin-title"/>
-    </HBox>
+    <left>
+        <VBox styleClass="bo-sidebar" prefWidth="220" minWidth="220" maxWidth="220" spacing="10">
+            <padding>
+                <Insets top="16" right="12" bottom="16" left="12"/>
+            </padding>
 
-    <ScrollPane fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" styleClass="admin-scroll">
-        <content>
-            <VBox spacing="16" styleClass="admin-shell">
-                <padding>
-                    <Insets top="18" right="18" bottom="20" left="18"/>
-                </padding>
+            <Label text="SANTEA" styleClass="bo-brand"/>
 
-                <FlowPane hgap="12" vgap="12" prefWrapLength="1120">
-                    <VBox spacing="4" styleClass="admin-card stat-blue">
-                        <Label text="Utilisateurs Total" styleClass="admin-card-label"/>
-                        <Label fx:id="usersTotalLabel" text="0" styleClass="admin-card-value"/>
-                    </VBox>
-                    <VBox spacing="4" styleClass="admin-card stat-green">
-                        <Label text="Abonnements Actifs" styleClass="admin-card-label"/>
-                        <Label fx:id="activeSubscriptionsLabel" text="0" styleClass="admin-card-value"/>
-                    </VBox>
-                    <VBox spacing="4" styleClass="admin-card stat-orange">
-                        <Label text="Revenus du Mois (TND)" styleClass="admin-card-label"/>
-                        <Label fx:id="monthlyRevenueLabel" text="0.00" styleClass="admin-card-value"/>
-                    </VBox>
-                    <VBox spacing="4" styleClass="admin-card stat-purple">
-                        <Label text="Paiements en Attente" styleClass="admin-card-label"/>
-                        <Label fx:id="pendingPaymentsLabel" text="0" styleClass="admin-card-value"/>
-                    </VBox>
-                    <VBox spacing="4" styleClass="admin-card stat-red">
-                        <Label text="Comptes bannis" styleClass="admin-card-label"/>
-                        <Label fx:id="usersBannedLabel" text="0" styleClass="admin-card-value"/>
-                    </VBox>
-                    <VBox spacing="4" styleClass="admin-card stat-cyan">
-                        <Label text="Emails verifies" styleClass="admin-card-label"/>
-                        <Label fx:id="usersVerifiedLabel" text="0" styleClass="admin-card-value"/>
-                    </VBox>
-                    <VBox spacing="4" styleClass="admin-card stat-orange">
-                        <Label text="Validation en attente" styleClass="admin-card-label"/>
-                        <Label fx:id="usersPendingLabel" text="0" styleClass="admin-card-value"/>
-                    </VBox>
-                    <VBox spacing="4" styleClass="admin-card stat-purple">
-                        <Label text="Alertes securite" styleClass="admin-card-label"/>
-                        <Label fx:id="suspiciousBlockedLabel" text="0" styleClass="admin-card-value"/>
-                    </VBox>
-                    <VBox spacing="4" styleClass="admin-card stat-cyan">
-                        <Label text="Rendez-vous aujourd'hui" styleClass="admin-card-label"/>
-                        <Label fx:id="appointmentsTodayLabel" text="0" styleClass="admin-card-value"/>
-                    </VBox>
-                    <VBox spacing="4" styleClass="admin-card stat-green">
-                        <Label text="Paiements valides" styleClass="admin-card-label"/>
-                        <Label fx:id="paymentsSucceededLabel" text="0" styleClass="admin-card-value"/>
-                    </VBox>
-                    <VBox spacing="4" styleClass="admin-card stat-blue">
-                        <Label text="Sessions actives" styleClass="admin-card-label"/>
-                        <Label fx:id="activeSessionsLabel" text="0" styleClass="admin-card-value"/>
-                    </VBox>
-                    <VBox spacing="4" styleClass="admin-card stat-red">
-                        <Label text="Moderation a traiter" styleClass="admin-card-label"/>
-                        <Label fx:id="moderationPendingLabel" text="0" styleClass="admin-card-value"/>
-                    </VBox>
-                    <VBox spacing="4" styleClass="admin-card stat-blue">
-                        <Label text="Score moyen utilisateurs" styleClass="admin-card-label"/>
-                        <Label fx:id="scoreAverageLabel" text="0" styleClass="admin-card-value"/>
-                    </VBox>
-                </FlowPane>
+            <Button fx:id="navDashboardButton" text="Dashboard" styleClass="bo-nav-btn bo-nav-active" onAction="#handleNavDashboard"/>
 
-                <HBox spacing="10">
-                    <Button text="Exporter CSV" styleClass="admin-btn-secondary" onAction="#handleExportCsv"/>
-                    <Button text="Revoquer session" styleClass="admin-btn-secondary" onAction="#handleRevokeLatestSession"/>
-                    <Button text="Connexions suspectes" styleClass="admin-btn-secondary" onAction="#handleReviewSuspicious"/>
-                    <Button text="Assistant vocal (API)" styleClass="admin-btn-secondary" onAction="#handleVoiceAssistant"/>
+            <Label text="GESTION UTILISATEURS" styleClass="bo-nav-section"/>
+            <Button fx:id="navUsersButton" text="Utilisateurs" styleClass="bo-nav-btn" onAction="#handleNavUsers"/>
+            <Button fx:id="navValidationButton" text="Validation comptes" styleClass="bo-nav-btn" onAction="#handleNavValidation"/>
+            <Button fx:id="navSessionsButton" text="Sessions" styleClass="bo-nav-btn" onAction="#handleNavSessions"/>
+            <Button fx:id="navSuspiciousButton" text="Connexions suspectes" styleClass="bo-nav-btn" onAction="#handleNavSuspicious"/>
+
+            <Label text="ABONNEMENTS" styleClass="bo-nav-section"/>
+            <Button fx:id="navSubscriptionsButton" text="Abonnements" styleClass="bo-nav-btn" onAction="#handleNavSubscriptions"/>
+            <Button fx:id="navRevenuesButton" text="Revenus &amp; facturation" styleClass="bo-nav-btn" onAction="#handleNavRevenues"/>
+
+            <Label text="SERVICES MEDICAUX" styleClass="bo-nav-section"/>
+            <Button text="Accompagnements" styleClass="bo-nav-btn bo-nav-btn-disabled" disable="true"/>
+
+            <VBox styleClass="bo-admin-card" spacing="4">
+                <Label text="Principal Admin" styleClass="bo-admin-name"/>
+                <Label text="ADMINISTRATEUR" styleClass="bo-admin-role"/>
+                <HBox spacing="8" styleClass="bo-admin-actions">
+                    <Button text="Accueil" styleClass="bo-mini-btn" onAction="#handleBackHome"/>
+                    <Button text="Logout" styleClass="bo-mini-btn bo-mini-btn-danger" onAction="#handleLogout"/>
                 </HBox>
-
-                <Label fx:id="adminFeedbackLabel" text="" visible="false" managed="false" styleClass="alert" wrapText="true"/>
-
-                <FlowPane hgap="14" vgap="14" prefWrapLength="1120">
-                    <VBox spacing="10" styleClass="admin-panel">
-                        <HBox alignment="CENTER_LEFT" spacing="8">
-                            <Label text="Validation des comptes" styleClass="admin-section-title"/>
-                        </HBox>
-                        <VBox fx:id="pendingApprovalsBox" spacing="8"/>
-                    </VBox>
-
-                    <VBox spacing="10" styleClass="admin-panel">
-                        <HBox alignment="CENTER_LEFT" spacing="8">
-                            <Label text="Sessions actives" styleClass="admin-section-title"/>
-                        </HBox>
-                        <VBox fx:id="activeSessionsBox" spacing="8"/>
-                    </VBox>
-
-                    <VBox spacing="10" styleClass="admin-panel">
-                        <HBox alignment="CENTER_LEFT" spacing="8">
-                            <Label text="Connexions suspectes" styleClass="admin-section-title"/>
-                        </HBox>
-                        <VBox fx:id="suspiciousLoginsBox" spacing="8"/>
-                    </VBox>
-
-                    <VBox spacing="10" styleClass="admin-panel">
-                        <HBox alignment="CENTER_LEFT" spacing="8">
-                            <Label text="Moderation contenu" styleClass="admin-section-title"/>
-                        </HBox>
-                        <VBox fx:id="moderationQueueBox" spacing="8"/>
-                    </VBox>
-
-                    <VBox spacing="10" styleClass="admin-panel">
-                        <HBox alignment="CENTER_LEFT" spacing="8">
-                            <Label text="Suivi score utilisateurs" styleClass="admin-section-title"/>
-                        </HBox>
-                        <VBox fx:id="userScoresBox" spacing="8"/>
-                    </VBox>
-
-                    <VBox spacing="10" styleClass="admin-panel">
-                        <HBox alignment="CENTER_LEFT" spacing="8">
-                            <Label text="Derniers bannissements" styleClass="admin-section-title"/>
-                        </HBox>
-                        <VBox fx:id="latestBansBox" spacing="8"/>
-                    </VBox>
-                </FlowPane>
             </VBox>
-        </content>
-    </ScrollPane>
-</VBox>
+
+            <VBox styleClass="bo-settings-card" spacing="8">
+                <Label text="Theme" styleClass="bo-settings-title"/>
+                <HBox spacing="6">
+                    <Button text="Clair" styleClass="bo-setting-pill"/>
+                    <Button text="Sombre" styleClass="bo-setting-pill"/>
+                </HBox>
+                <Label text="Langue" styleClass="bo-settings-title"/>
+                <HBox spacing="6">
+                    <Button text="FR" styleClass="bo-setting-pill"/>
+                    <Button text="EN" styleClass="bo-setting-pill"/>
+                    <Button text="AR" styleClass="bo-setting-pill"/>
+                </HBox>
+            </VBox>
+        </VBox>
+    </left>
+
+    <center>
+        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" styleClass="bo-scroll">
+            <content>
+                <VBox styleClass="bo-content" spacing="14">
+                    <padding>
+                        <Insets top="16" right="16" bottom="20" left="16"/>
+                    </padding>
+
+                    <VBox styleClass="bo-header-modern" spacing="8">
+                        <HBox alignment="CENTER_LEFT" spacing="10">
+                            <Label fx:id="headerTitleLabel" text="Dashboard Admin" styleClass="bo-header-title"/>
+                            <Label fx:id="headerSubtitleLabel" text="Vue d'ensemble de la plateforme SANTEA" styleClass="bo-header-subtitle"/>
+                        </HBox>
+                        <HBox spacing="8">
+                            <Label text="Systeme operationnel" styleClass="bo-header-pill"/>
+                            <Label text="15/04/2026 16:28" styleClass="bo-header-pill"/>
+                        </HBox>
+                        <HBox spacing="8" alignment="CENTER_RIGHT">
+                            <Button text="Validation" styleClass="bo-header-icon-btn" onAction="#handleNavValidation"/>
+                            <Button text="Securite" styleClass="bo-header-icon-btn" onAction="#handleNavSuspicious"/>
+                            <Button text="Exporter" styleClass="bo-header-export" onAction="#handleExportCsv"/>
+                            <Button text="Assistant vocal" styleClass="bo-header-export" onAction="#handleVoiceAssistant"/>
+                            <Button text="Rafraichir" styleClass="bo-header-export" onAction="#handleRefresh"/>
+                        </HBox>
+                    </VBox>
+
+                    <Label fx:id="adminFeedbackLabel" text="" visible="false" managed="false" styleClass="bo-feedback" wrapText="true"/>
+
+                    <StackPane>
+                        <VBox fx:id="pageDashboard" spacing="14">
+                            <FlowPane hgap="12" vgap="12" prefWrapLength="1100">
+                                <VBox styleClass="bo-stat-card bo-stat-blue" spacing="8">
+                                    <HBox styleClass="bo-stat-top" spacing="10">
+                                        <Label text="US" styleClass="bo-stat-icon"/>
+                                        <Label text="+12%" styleClass="bo-stat-badge"/>
+                                    </HBox>
+                                    <Label text="UTILISATEURS TOTAL" styleClass="bo-stat-label"/>
+                                    <Label fx:id="usersTotalLabel" text="0" styleClass="bo-stat-value"/>
+                                    <HBox spacing="10">
+                                        <Label fx:id="usersActiveLabel" text="0" styleClass="bo-stat-detail"/>
+                                        <Label fx:id="usersBannedLabel" text="0" styleClass="bo-stat-detail"/>
+                                    </HBox>
+                                    <Button text="Gerer les utilisateurs" styleClass="bo-stat-link" onAction="#handleNavUsers"/>
+                                </VBox>
+
+                                <VBox styleClass="bo-stat-card bo-stat-green" spacing="8">
+                                    <HBox styleClass="bo-stat-top" spacing="10">
+                                        <Label text="AB" styleClass="bo-stat-icon"/>
+                                        <Label text="+8%" styleClass="bo-stat-badge"/>
+                                    </HBox>
+                                    <Label text="ABONNEMENTS ACTIFS" styleClass="bo-stat-label"/>
+                                    <Label fx:id="activeSubscriptionsLabel" text="0" styleClass="bo-stat-value"/>
+                                    <HBox spacing="10">
+                                        <Label fx:id="subscriptionsExpiredMiniLabel" text="0" styleClass="bo-stat-detail"/>
+                                        <Label fx:id="subscriptionsCancelledMiniLabel" text="0" styleClass="bo-stat-detail"/>
+                                    </HBox>
+                                    <Button text="Voir les abonnements" styleClass="bo-stat-link" onAction="#handleNavSubscriptions"/>
+                                </VBox>
+
+                                <VBox styleClass="bo-stat-card bo-stat-orange" spacing="8">
+                                    <HBox styleClass="bo-stat-top" spacing="10">
+                                        <Label text="RV" styleClass="bo-stat-icon"/>
+                                        <Label text="+15%" styleClass="bo-stat-badge"/>
+                                    </HBox>
+                                    <Label text="REVENUS DU MOIS" styleClass="bo-stat-label"/>
+                                    <Label fx:id="monthlyRevenueLabel" text="0.00" styleClass="bo-stat-value"/>
+                                    <HBox spacing="10">
+                                        <Label fx:id="totalRevenueMiniLabel" text="0.00 TND" styleClass="bo-stat-detail"/>
+                                    </HBox>
+                                    <Button text="Details des revenus" styleClass="bo-stat-link" onAction="#handleNavRevenues"/>
+                                </VBox>
+
+                                <VBox styleClass="bo-stat-card bo-stat-purple" spacing="8">
+                                    <HBox styleClass="bo-stat-top" spacing="10">
+                                        <Label text="PA" styleClass="bo-stat-icon"/>
+                                        <Label text="!" styleClass="bo-stat-badge"/>
+                                    </HBox>
+                                    <Label text="PAIEMENTS EN ATTENTE" styleClass="bo-stat-label"/>
+                                    <Label fx:id="pendingPaymentsLabel" text="0" styleClass="bo-stat-value"/>
+                                    <HBox spacing="10">
+                                        <Label fx:id="paymentsSucceededLabel" text="0" styleClass="bo-stat-detail"/>
+                                    </HBox>
+                                    <Button text="Gerer les factures" styleClass="bo-stat-link" onAction="#handleNavRevenues"/>
+                                </VBox>
+                            </FlowPane>
+
+                            <HBox spacing="12" styleClass="bo-charts-section">
+                                <VBox styleClass="bo-chart-card bo-chart-large" spacing="10" HBox.hgrow="ALWAYS">
+                                    <HBox alignment="CENTER_LEFT" spacing="10">
+                                        <VBox spacing="2">
+                                            <Label text="Inscriptions (30 derniers jours)" styleClass="bo-chart-title"/>
+                                            <Label text="Evolution des nouvelles inscriptions sur le mois" styleClass="bo-chart-subtitle"/>
+                                        </VBox>
+                                    </HBox>
+                                    <LineChart fx:id="registrationsLineChart" legendVisible="false" animated="false" createSymbols="false" prefHeight="220" styleClass="bo-line-chart">
+                                        <xAxis>
+                                            <CategoryAxis/>
+                                        </xAxis>
+                                        <yAxis>
+                                            <NumberAxis/>
+                                        </yAxis>
+                                    </LineChart>
+                                </VBox>
+
+                                <VBox styleClass="bo-chart-card bo-chart-medium" spacing="10" prefWidth="360">
+                                    <VBox spacing="2">
+                                        <Label text="Revenus par Type" styleClass="bo-chart-title"/>
+                                        <Label text="Repartition des revenus par role" styleClass="bo-chart-subtitle"/>
+                                    </VBox>
+                                    <PieChart fx:id="revenuePieChart" prefHeight="220" legendVisible="true" labelsVisible="false" animated="false" styleClass="bo-pie-chart"/>
+                                    <HBox spacing="10">
+                                        <Label fx:id="revenueTotalAmountLabel" text="Revenus: 0.00 TND" styleClass="bo-page-chip"/>
+                                        <Label fx:id="revenueMonthlyAmountLabel" text="Ce mois: 0.00 TND" styleClass="bo-page-chip"/>
+                                    </HBox>
+                                </VBox>
+                            </HBox>
+
+                            <FlowPane hgap="12" vgap="12" prefWrapLength="1100">
+                                <VBox styleClass="bo-mini-card" spacing="4">
+                                    <Label text="Emails verifies" styleClass="bo-mini-label"/>
+                                    <Label fx:id="usersVerifiedLabel" text="0" styleClass="bo-mini-value"/>
+                                </VBox>
+                                <VBox styleClass="bo-mini-card" spacing="4">
+                                    <Label text="Validation en attente" styleClass="bo-mini-label"/>
+                                    <Label fx:id="usersPendingLabel" text="0" styleClass="bo-mini-value"/>
+                                </VBox>
+                                <VBox styleClass="bo-mini-card" spacing="4">
+                                    <Label text="Connexions suspectes" styleClass="bo-mini-label"/>
+                                    <Label fx:id="suspiciousBlockedLabel" text="0" styleClass="bo-mini-value"/>
+                                </VBox>
+                                <VBox styleClass="bo-mini-card" spacing="4">
+                                    <Label text="Sessions actives" styleClass="bo-mini-label"/>
+                                    <Label fx:id="activeSessionsLabel" text="0" styleClass="bo-mini-value"/>
+                                </VBox>
+                                <VBox styleClass="bo-mini-card" spacing="4">
+                                    <Label text="Moderation" styleClass="bo-mini-label"/>
+                                    <Label fx:id="moderationPendingLabel" text="0" styleClass="bo-mini-value"/>
+                                </VBox>
+                                <VBox styleClass="bo-mini-card" spacing="4">
+                                    <Label text="Score moyen" styleClass="bo-mini-label"/>
+                                    <Label fx:id="scoreAverageLabel" text="0" styleClass="bo-mini-value"/>
+                                </VBox>
+                            </FlowPane>
+
+                            <FlowPane hgap="12" vgap="12" prefWrapLength="1100">
+                                <VBox styleClass="bo-panel" spacing="8">
+                                    <Label text="Validation des comptes" styleClass="bo-panel-title"/>
+                                    <VBox fx:id="pendingApprovalsBox" spacing="8"/>
+                                </VBox>
+                                <VBox styleClass="bo-panel" spacing="8">
+                                    <Label text="Sessions actives" styleClass="bo-panel-title"/>
+                                    <VBox fx:id="activeSessionsBox" spacing="8"/>
+                                </VBox>
+                                <VBox styleClass="bo-panel" spacing="8">
+                                    <Label text="Connexions suspectes" styleClass="bo-panel-title"/>
+                                    <VBox fx:id="suspiciousLoginsBox" spacing="8"/>
+                                </VBox>
+                                <VBox styleClass="bo-panel" spacing="8">
+                                    <Label text="Moderation contenu" styleClass="bo-panel-title"/>
+                                    <VBox fx:id="moderationQueueBox" spacing="8"/>
+                                </VBox>
+                                <VBox styleClass="bo-panel" spacing="8">
+                                    <Label text="Suivi score utilisateurs" styleClass="bo-panel-title"/>
+                                    <VBox fx:id="userScoresBox" spacing="8"/>
+                                </VBox>
+                                <VBox styleClass="bo-panel" spacing="8">
+                                    <Label text="Derniers bannissements" styleClass="bo-panel-title"/>
+                                    <VBox fx:id="latestBansBox" spacing="8"/>
+                                </VBox>
+                            </FlowPane>
+                        </VBox>
+
+                        <VBox fx:id="pageUsers" spacing="12" visible="false" managed="false">
+                            <HBox spacing="12">
+                                <Label fx:id="usersTotalCountLabel" text="Total: 0" styleClass="bo-page-chip"/>
+                                <Label fx:id="usersScoreAverageLabel" text="Score moyen: 0/100" styleClass="bo-page-chip"/>
+                            </HBox>
+                            <HBox spacing="8" styleClass="bo-table-filters">
+                                <TextField fx:id="usersSearchField" promptText="Rechercher utilisateur..." HBox.hgrow="ALWAYS"/>
+                                <ComboBox fx:id="usersRoleFilterCombo" prefWidth="190"/>
+                                <ComboBox fx:id="usersStatusFilterCombo" prefWidth="190"/>
+                                <Button text="Filtrer" styleClass="bo-view-btn" onAction="#handleUsersApplyFilters"/>
+                                <Button fx:id="usersListModeButton" text="Liste" styleClass="bo-view-btn" onAction="#handleUsersListMode"/>
+                                <Button fx:id="usersGridModeButton" text="Grille" styleClass="bo-view-btn" onAction="#handleUsersGridMode"/>
+                            </HBox>
+                            <FlowPane fx:id="usersRowsBox" styleClass="bo-items-container bo-items-list" hgap="10" vgap="10" prefWrapLength="2200"/>
+                            <HBox spacing="8" alignment="CENTER_RIGHT" styleClass="bo-pagination-wrap">
+                                <Label fx:id="usersPaginationInfoLabel" text="Affichage 0-0 sur 0" styleClass="bo-pagination-label"/>
+                                <Button fx:id="usersPrevPageButton" text="Prev" styleClass="bo-view-btn" onAction="#handleUsersPrevPage"/>
+                                <Button fx:id="usersNextPageButton" text="Next" styleClass="bo-view-btn" onAction="#handleUsersNextPage"/>
+                            </HBox>
+                        </VBox>
+
+                        <VBox fx:id="pageValidation" spacing="12" visible="false" managed="false">
+                            <FlowPane hgap="10" vgap="10" prefWrapLength="1000">
+                                <Label fx:id="validationTotalLabel" text="Total: 0" styleClass="bo-page-chip"/>
+                                <Label fx:id="validationEmailConfirmedLabel" text="Email verifies: 0" styleClass="bo-page-chip"/>
+                                <Label fx:id="validationEmailNotConfirmedLabel" text="Email non verifies: 0" styleClass="bo-page-chip"/>
+                                <Label fx:id="validationAdminPendingLabel" text="Admin en attente: 0" styleClass="bo-page-chip"/>
+                            </FlowPane>
+                            <HBox spacing="8" styleClass="bo-table-filters">
+                                <TextField fx:id="validationSearchField" promptText="Rechercher..." HBox.hgrow="ALWAYS"/>
+                                <ComboBox fx:id="validationEmailFilterCombo" prefWidth="200"/>
+                                <Button text="Filtrer" styleClass="bo-view-btn" onAction="#handleValidationApplyFilters"/>
+                                <Button text="Approuver tous" styleClass="bo-view-btn" onAction="#handleApproveAllPending"/>
+                                <Button text="Renvoyer emails" styleClass="bo-view-btn" onAction="#handleResendAllValidation"/>
+                                <Button fx:id="validationListModeButton" text="Liste" styleClass="bo-view-btn" onAction="#handleValidationListMode"/>
+                                <Button fx:id="validationGridModeButton" text="Grille" styleClass="bo-view-btn" onAction="#handleValidationGridMode"/>
+                            </HBox>
+                            <FlowPane fx:id="validationRowsBox" styleClass="bo-items-container bo-items-list" hgap="10" vgap="10" prefWrapLength="2200"/>
+                            <HBox spacing="8" alignment="CENTER_RIGHT" styleClass="bo-pagination-wrap">
+                                <Label fx:id="validationPaginationInfoLabel" text="Affichage 0-0 sur 0" styleClass="bo-pagination-label"/>
+                                <Button fx:id="validationPrevPageButton" text="Prev" styleClass="bo-view-btn" onAction="#handleValidationPrevPage"/>
+                                <Button fx:id="validationNextPageButton" text="Next" styleClass="bo-view-btn" onAction="#handleValidationNextPage"/>
+                            </HBox>
+                        </VBox>
+
+                        <VBox fx:id="pageSessions" spacing="12" visible="false" managed="false">
+                            <HBox spacing="8" styleClass="bo-table-filters">
+                                <TextField fx:id="sessionsSearchField" promptText="Rechercher session, ip, token..." HBox.hgrow="ALWAYS"/>
+                                <ComboBox fx:id="sessionsDeviceFilterCombo" prefWidth="180"/>
+                                <Button text="Filtrer" styleClass="bo-view-btn" onAction="#handleSessionsApplyFilters"/>
+                                <Button fx:id="sessionsListModeButton" text="Liste" styleClass="bo-view-btn" onAction="#handleSessionsListMode"/>
+                                <Button fx:id="sessionsGridModeButton" text="Grille" styleClass="bo-view-btn" onAction="#handleSessionsGridMode"/>
+                            </HBox>
+                            <FlowPane fx:id="sessionsRowsBox" styleClass="bo-items-container bo-items-list" hgap="10" vgap="10" prefWrapLength="2200"/>
+                            <HBox spacing="8" alignment="CENTER_RIGHT" styleClass="bo-pagination-wrap">
+                                <Label fx:id="sessionsPaginationInfoLabel" text="Affichage 0-0 sur 0" styleClass="bo-pagination-label"/>
+                                <Button fx:id="sessionsPrevPageButton" text="Prev" styleClass="bo-view-btn" onAction="#handleSessionsPrevPage"/>
+                                <Button fx:id="sessionsNextPageButton" text="Next" styleClass="bo-view-btn" onAction="#handleSessionsNextPage"/>
+                            </HBox>
+                        </VBox>
+
+                        <VBox fx:id="pageSuspicious" spacing="12" visible="false" managed="false">
+                            <HBox spacing="8" styleClass="bo-table-filters">
+                                <TextField fx:id="suspiciousSearchField" promptText="Rechercher alerte..." HBox.hgrow="ALWAYS"/>
+                                <ComboBox fx:id="suspiciousBlockedFilterCombo" prefWidth="180"/>
+                                <Button text="Filtrer" styleClass="bo-view-btn" onAction="#handleSuspiciousApplyFilters"/>
+                                <Button fx:id="suspiciousListModeButton" text="Liste" styleClass="bo-view-btn" onAction="#handleSuspiciousListMode"/>
+                                <Button fx:id="suspiciousGridModeButton" text="Grille" styleClass="bo-view-btn" onAction="#handleSuspiciousGridMode"/>
+                            </HBox>
+                            <FlowPane fx:id="suspiciousRowsBox" styleClass="bo-items-container bo-items-list" hgap="10" vgap="10" prefWrapLength="2200"/>
+                            <HBox spacing="8" alignment="CENTER_RIGHT" styleClass="bo-pagination-wrap">
+                                <Label fx:id="suspiciousPaginationInfoLabel" text="Affichage 0-0 sur 0" styleClass="bo-pagination-label"/>
+                                <Button fx:id="suspiciousPrevPageButton" text="Prev" styleClass="bo-view-btn" onAction="#handleSuspiciousPrevPage"/>
+                                <Button fx:id="suspiciousNextPageButton" text="Next" styleClass="bo-view-btn" onAction="#handleSuspiciousNextPage"/>
+                            </HBox>
+                        </VBox>
+
+                        <VBox fx:id="pageSubscriptions" spacing="12" visible="false" managed="false">
+                            <FlowPane hgap="10" vgap="10" prefWrapLength="1000">
+                                <Label fx:id="subscriptionsTotalLabel" text="Total: 0" styleClass="bo-page-chip"/>
+                                <Label fx:id="subscriptionsActiveLabel" text="Actifs: 0" styleClass="bo-page-chip"/>
+                                <Label fx:id="subscriptionsExpiredLabel" text="Expires: 0" styleClass="bo-page-chip"/>
+                                <Label fx:id="subscriptionsCancelledLabel" text="Annules: 0" styleClass="bo-page-chip"/>
+                            </FlowPane>
+                            <HBox spacing="8" styleClass="bo-table-filters">
+                                <TextField fx:id="subscriptionsSearchField" promptText="Rechercher abonnement..." HBox.hgrow="ALWAYS"/>
+                                <ComboBox fx:id="subscriptionsStatusFilterCombo" prefWidth="180"/>
+                                <Button text="Filtrer" styleClass="bo-view-btn" onAction="#handleSubscriptionsApplyFilters"/>
+                                <Button fx:id="subscriptionsListModeButton" text="Liste" styleClass="bo-view-btn" onAction="#handleSubscriptionsListMode"/>
+                                <Button fx:id="subscriptionsGridModeButton" text="Grille" styleClass="bo-view-btn" onAction="#handleSubscriptionsGridMode"/>
+                            </HBox>
+                            <FlowPane fx:id="subscriptionsRowsBox" styleClass="bo-items-container bo-items-list" hgap="10" vgap="10" prefWrapLength="2200"/>
+                            <HBox spacing="8" alignment="CENTER_RIGHT" styleClass="bo-pagination-wrap">
+                                <Label fx:id="subscriptionsPaginationInfoLabel" text="Affichage 0-0 sur 0" styleClass="bo-pagination-label"/>
+                                <Button fx:id="subscriptionsPrevPageButton" text="Prev" styleClass="bo-view-btn" onAction="#handleSubscriptionsPrevPage"/>
+                                <Button fx:id="subscriptionsNextPageButton" text="Next" styleClass="bo-view-btn" onAction="#handleSubscriptionsNextPage"/>
+                            </HBox>
+                        </VBox>
+
+                        <VBox fx:id="pageRevenues" spacing="12" visible="false" managed="false">
+                            <FlowPane hgap="10" vgap="10" prefWrapLength="1000">
+                                <Label fx:id="revenueTotalInvoicesLabel" text="Factures: 0" styleClass="bo-page-chip"/>
+                            </FlowPane>
+                            <HBox spacing="8" styleClass="bo-table-filters">
+                                <TextField fx:id="revenuesSearchField" promptText="Rechercher facture/client..." HBox.hgrow="ALWAYS"/>
+                                <ComboBox fx:id="revenuesPlanFilterCombo" prefWidth="180"/>
+                                <Button text="Filtrer" styleClass="bo-view-btn" onAction="#handleRevenuesApplyFilters"/>
+                                <Button fx:id="revenuesListModeButton" text="Liste" styleClass="bo-view-btn" onAction="#handleRevenuesListMode"/>
+                                <Button fx:id="revenuesGridModeButton" text="Grille" styleClass="bo-view-btn" onAction="#handleRevenuesGridMode"/>
+                            </HBox>
+                            <FlowPane fx:id="revenuesRowsBox" styleClass="bo-items-container bo-items-list" hgap="10" vgap="10" prefWrapLength="2200"/>
+                            <HBox spacing="8" alignment="CENTER_RIGHT" styleClass="bo-pagination-wrap">
+                                <Label fx:id="revenuesPaginationInfoLabel" text="Affichage 0-0 sur 0" styleClass="bo-pagination-label"/>
+                                <Button fx:id="revenuesPrevPageButton" text="Prev" styleClass="bo-view-btn" onAction="#handleRevenuesPrevPage"/>
+                                <Button fx:id="revenuesNextPageButton" text="Next" styleClass="bo-view-btn" onAction="#handleRevenuesNextPage"/>
+                            </HBox>
+                        </VBox>
+                    </StackPane>
+                </VBox>
+            </content>
+        </ScrollPane>
+    </center>
+</BorderPane>

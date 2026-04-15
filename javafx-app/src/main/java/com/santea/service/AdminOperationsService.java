@@ -2,8 +2,10 @@ package com.santea.service;
 
 import com.santea.config.DatabaseConfig;
 import com.santea.model.User;
+import com.santea.repository.UserRepository;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -13,17 +15,24 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 public class AdminOperationsService {
     private final DatabaseService databaseService;
+    private final UserRepository userRepository;
+    private final EmailService emailService;
 
     public AdminOperationsService() {
         this.databaseService = new DatabaseService(DatabaseConfig.fromEnvironment());
+        this.userRepository = new UserRepository(this.databaseService);
+        this.emailService = new EmailService();
     }
 
     public ActionResult approveProfessionalAccount(int userId, String approvedRole) {
@@ -133,6 +142,71 @@ public class AdminOperationsService {
             return changed == 1 ? ActionResult.success("Utilisateur debanni.") : ActionResult.failure("Utilisateur introuvable.");
         } catch (SQLException exception) {
             return ActionResult.failure("Debannissement impossible: " + exception.getMessage());
+        }
+    }
+
+    public ActionResult updateUserByAdmin(
+            int userId,
+            String nom,
+            String prenom,
+            String email,
+            String role,
+            boolean emailVerified,
+            boolean adminApproved,
+            boolean banned
+    ) {
+        if (userId <= 0) {
+            return ActionResult.failure("Utilisateur invalide.");
+        }
+
+        String normalizedEmail = safe(email).toLowerCase();
+        if (normalizedEmail.isBlank()) {
+            return ActionResult.failure("Email obligatoire.");
+        }
+
+        String normalizedRole = normalizeAdminEditableRole(role);
+        if (normalizedRole.isBlank()) {
+            return ActionResult.failure("Role invalide.");
+        }
+
+        String sql = "UPDATE users SET nom = ?, prenom = ?, email = ?, role = ?, email_verified = ?, admin_approved = ?, is_banned = ?, updated_at = ? "
+                + "WHERE id = ? AND deleted_at IS NULL";
+
+        try (Connection connection = databaseService.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, safe(nom));
+            statement.setString(2, safe(prenom));
+            statement.setString(3, normalizedEmail);
+            statement.setString(4, normalizedRole);
+            statement.setBoolean(5, emailVerified);
+            statement.setBoolean(6, adminApproved);
+            statement.setBoolean(7, banned);
+            statement.setTimestamp(8, Timestamp.valueOf(LocalDateTime.now()));
+            statement.setInt(9, userId);
+            int changed = statement.executeUpdate();
+            return changed == 1 ? ActionResult.success("Utilisateur mis a jour.") : ActionResult.failure("Utilisateur introuvable ou deja supprime.");
+        } catch (SQLException exception) {
+            return ActionResult.failure("Mise a jour impossible: " + exception.getMessage());
+        }
+    }
+
+    public ActionResult softDeleteUserByAdmin(int userId) {
+        if (userId <= 0) {
+            return ActionResult.failure("Utilisateur invalide.");
+        }
+
+        String sql = "UPDATE users SET deleted_at = ?, updated_at = ? WHERE id = ? AND deleted_at IS NULL";
+        Timestamp now = Timestamp.valueOf(LocalDateTime.now());
+
+        try (Connection connection = databaseService.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setTimestamp(1, now);
+            statement.setTimestamp(2, now);
+            statement.setInt(3, userId);
+            int changed = statement.executeUpdate();
+            return changed == 1 ? ActionResult.success("Utilisateur supprime (suppression logique).") : ActionResult.failure("Utilisateur introuvable ou deja supprime.");
+        } catch (SQLException exception) {
+            return ActionResult.failure("Suppression impossible: " + exception.getMessage());
         }
     }
 
@@ -335,19 +409,333 @@ public class AdminOperationsService {
         return (int) Math.round((double) total / all.size());
     }
 
+    public List<AdminUserRow> listUsersForAdmin(int limit) {
+        int safeLimit = Math.max(1, Math.min(limit, 300));
+        String sql = "SELECT id, nom, prenom, email, role, subscription_status, created_at, is_banned, email_verified, admin_approved "
+                + "FROM users WHERE deleted_at IS NULL ORDER BY created_at DESC LIMIT ?";
+
+        List<AdminUserRow> rows = new ArrayList<>();
+        try (Connection connection = databaseService.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, safeLimit);
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    User user = new User();
+                    user.setId(rs.getInt("id"));
+                    user.setNom(rs.getString("nom"));
+                    user.setPrenom(rs.getString("prenom"));
+                    user.setEmail(rs.getString("email"));
+                    user.setRole(rs.getString("role"));
+                    user.setSubscriptionStatus(rs.getString("subscription_status"));
+                    user.setIsBanned(rs.getBoolean("is_banned"));
+                    user.setEmailVerified(rs.getBoolean("email_verified"));
+                    user.setAdminApproved(rs.getBoolean("admin_approved"));
+                    user.setCreatedAt(toLocalDateTime(rs.getTimestamp("created_at")));
+
+                    UserScoreSummary score = computeUserScore(user);
+                    rows.add(new AdminUserRow(
+                            user.getId() == null ? 0 : user.getId(),
+                            safe(user.getNom()),
+                            safe(user.getPrenom()),
+                            safe(user.getEmail()),
+                            safe(user.getRole()),
+                            safe(user.getSubscriptionStatus()),
+                            Boolean.TRUE.equals(user.getIsBanned()),
+                            Boolean.TRUE.equals(user.getEmailVerified()),
+                            Boolean.TRUE.equals(user.getAdminApproved()),
+                            user.getCreatedAt(),
+                            score.scoreTotal(),
+                            supportPriorityLabel(score.scoreTotal())
+                    ));
+                }
+            }
+        } catch (SQLException ignored) {
+        }
+
+        return rows;
+    }
+
+    public ValidationStats loadValidationStats() {
+        int total = scalarWithFallback("SELECT COUNT(*) FROM users WHERE deleted_at IS NULL", 0);
+        int emailConfirmed = scalarWithFallback("SELECT COUNT(*) FROM users WHERE deleted_at IS NULL AND email_verified = 1", 0);
+        int emailNotConfirmed = scalarWithFallback("SELECT COUNT(*) FROM users WHERE deleted_at IS NULL AND email_verified = 0", 0);
+        int adminPending = scalarWithFallback("SELECT COUNT(*) FROM users WHERE deleted_at IS NULL AND email_verified = 1 AND admin_approved = 0", 0);
+        return new ValidationStats(total, emailConfirmed, emailNotConfirmed, adminPending);
+    }
+
+    public List<ValidationUserRow> listValidationUsers(int limit) {
+        int safeLimit = Math.max(1, Math.min(limit, 300));
+        String sql = "SELECT id, nom, prenom, email, email_verified, admin_approved, created_at "
+                + "FROM users WHERE deleted_at IS NULL ORDER BY created_at DESC LIMIT ?";
+
+        List<ValidationUserRow> rows = new ArrayList<>();
+        try (Connection connection = databaseService.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, safeLimit);
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    rows.add(new ValidationUserRow(
+                            rs.getInt("id"),
+                            safe(rs.getString("nom")),
+                            safe(rs.getString("prenom")),
+                            safe(rs.getString("email")),
+                            rs.getBoolean("email_verified"),
+                            rs.getBoolean("admin_approved"),
+                            toLocalDateTime(rs.getTimestamp("created_at"))
+                    ));
+                }
+            }
+        } catch (SQLException ignored) {
+        }
+        return rows;
+    }
+
+    public ActionResult approveValidationUser(int userId) {
+        if (userId <= 0) {
+            return ActionResult.failure("Utilisateur invalide.");
+        }
+
+        String sql = "UPDATE users SET admin_approved = 1, updated_at = ? WHERE id = ?";
+        try (Connection connection = databaseService.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now()));
+            statement.setInt(2, userId);
+            int changed = statement.executeUpdate();
+            return changed == 1 ? ActionResult.success("Compte approuve.") : ActionResult.failure("Utilisateur introuvable.");
+        } catch (SQLException exception) {
+            return ActionResult.failure("Approbation impossible: " + exception.getMessage());
+        }
+    }
+
+    public ActionResult resendValidationEmail(int userId) {
+        if (userId <= 0) {
+            return ActionResult.failure("Utilisateur invalide.");
+        }
+
+        Optional<User> userOptional = userRepository.findById(userId);
+        if (userOptional.isEmpty()) {
+            return ActionResult.failure("Utilisateur introuvable.");
+        }
+
+        User user = userOptional.get();
+        String email = safe(user.getEmail()).toLowerCase();
+        if (email.isBlank()) {
+            return ActionResult.failure("Adresse email indisponible pour cet utilisateur.");
+        }
+
+        String token = generateOpaqueToken(64);
+        boolean tokenSaved = userRepository.updateEmailVerificationToken(userId, token, LocalDateTime.now().plusDays(2));
+        if (!tokenSaved) {
+            return ActionResult.failure("Impossible de regenerer le token de verification.");
+        }
+
+        String fullName = (safe(user.getNom()) + " " + safe(user.getPrenom())).trim();
+        boolean mailSent = emailService.sendEmailVerification(email, fullName.isBlank() ? "Utilisateur" : fullName, token);
+        if (mailSent) {
+            return ActionResult.success("Email de verification re-envoye a " + email + ".");
+        }
+
+        String reason = safe(emailService.getLastError());
+        return ActionResult.failure("Email non envoye. Cause: " + (reason.isBlank() ? "configuration SMTP manquante" : reason));
+    }
+
+    public ActionResult resendValidationEmailMock(int userId) {
+        return resendValidationEmail(userId);
+    }
+
+    public ActionResult triggerPasswordResetByAdmin(int userId) {
+        if (userId <= 0) {
+            return ActionResult.failure("Utilisateur invalide.");
+        }
+
+        Optional<User> userOptional = userRepository.findById(userId);
+        if (userOptional.isEmpty()) {
+            return ActionResult.failure("Utilisateur introuvable.");
+        }
+
+        User user = userOptional.get();
+        String email = safe(user.getEmail()).toLowerCase();
+        if (email.isBlank()) {
+            return ActionResult.failure("Adresse email indisponible pour cet utilisateur.");
+        }
+
+        userRepository.deleteExpiredOrUsedResetTokens(userId);
+        Optional<UserRepository.PasswordResetTokenRecord> token =
+                userRepository.createPasswordResetToken(userId, LocalDateTime.now().plusHours(1));
+
+        if (token.isEmpty()) {
+            return ActionResult.failure("Generation du token de reinitialisation impossible.");
+        }
+
+        String fullName = (safe(user.getNom()) + " " + safe(user.getPrenom())).trim();
+        boolean mailSent = emailService.sendPasswordReset(email, fullName.isBlank() ? "Utilisateur" : fullName, token.get().token());
+
+        if (mailSent) {
+            return ActionResult.success("Email de reinitialisation envoye a " + email + ".");
+        }
+
+        String reason = safe(emailService.getLastError());
+        return ActionResult.success(
+                "Email non envoye (" + (reason.isBlank() ? "SMTP non configure" : reason)
+                        + "). Token de secours: " + token.get().token()
+        );
+    }
+
+    public SubscriptionStats loadSubscriptionStats() {
+        int total = scalarWithFallback("SELECT COUNT(*) FROM abonnements", 0);
+        int active = scalarWithFallback("SELECT COUNT(*) FROM abonnements WHERE LOWER(statut) = 'actif'", 0);
+        int expired = scalarWithFallback("SELECT COUNT(*) FROM abonnements WHERE LOWER(statut) IN ('expire', 'expiré', 'expired')", 0);
+        int cancelled = scalarWithFallback("SELECT COUNT(*) FROM abonnements WHERE LOWER(statut) IN ('annule', 'annulé', 'cancelled')", 0);
+        return new SubscriptionStats(total, active, expired, cancelled);
+    }
+
+    public List<SubscriptionRow> listSubscriptionsForAdmin(int limit) {
+        int safeLimit = Math.max(1, Math.min(limit, 300));
+        String sql = "SELECT a.id, a.type_abonnement, a.statut, a.date_debut, a.date_fin, a.prix, "
+                + "u.nom, u.prenom, u.email, u.id AS user_id "
+                + "FROM abonnements a "
+                + "LEFT JOIN users u ON a.user_id = u.id "
+                + "ORDER BY a.created_at DESC LIMIT ?";
+
+        List<SubscriptionRow> rows = new ArrayList<>();
+        try (Connection connection = databaseService.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, safeLimit);
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    LocalDate start = toLocalDate(rs.getDate("date_debut"));
+                    LocalDate end = toLocalDate(rs.getDate("date_fin"));
+                    BigDecimal price = rs.getBigDecimal("prix") == null ? BigDecimal.ZERO : rs.getBigDecimal("prix");
+
+                    rows.add(new SubscriptionRow(
+                            rs.getInt("id"),
+                            rs.getInt("user_id"),
+                            safe(rs.getString("nom")),
+                            safe(rs.getString("prenom")),
+                            safe(rs.getString("email")),
+                            safe(rs.getString("type_abonnement")),
+                            safe(rs.getString("statut")),
+                            start,
+                            end,
+                            price
+                    ));
+                }
+            }
+        } catch (SQLException ignored) {
+        }
+
+        return rows;
+    }
+
+    public ActionResult updateSubscription(int subscriptionId, String type, String status, LocalDate dateFin) {
+        if (subscriptionId <= 0) {
+            return ActionResult.failure("Abonnement invalide.");
+        }
+
+        String sql = "UPDATE abonnements SET type_abonnement = ?, statut = ?, date_fin = ?, updated_at = ? WHERE id = ?";
+        try (Connection connection = databaseService.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, safe(type));
+            statement.setString(2, safe(status));
+            if (dateFin == null) {
+                statement.setDate(3, null);
+            } else {
+                statement.setDate(3, java.sql.Date.valueOf(dateFin));
+            }
+            statement.setTimestamp(4, Timestamp.valueOf(LocalDateTime.now()));
+            statement.setInt(5, subscriptionId);
+            int changed = statement.executeUpdate();
+            if (changed == 1) {
+                syncUserFromSubscription(subscriptionId);
+                return ActionResult.success("Abonnement mis a jour.");
+            }
+            return ActionResult.failure("Abonnement introuvable.");
+        } catch (SQLException exception) {
+            return ActionResult.failure("Mise a jour impossible: " + exception.getMessage());
+        }
+    }
+
+    public ActionResult cancelSubscription(int subscriptionId) {
+        if (subscriptionId <= 0) {
+            return ActionResult.failure("Abonnement invalide.");
+        }
+
+        String sql = "UPDATE abonnements SET statut = 'annule', date_fin = CURDATE(), updated_at = ? WHERE id = ?";
+        try (Connection connection = databaseService.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now()));
+            statement.setInt(2, subscriptionId);
+            int changed = statement.executeUpdate();
+            if (changed == 1) {
+                syncUserFromSubscription(subscriptionId);
+                return ActionResult.success("Abonnement annule.");
+            }
+            return ActionResult.failure("Abonnement introuvable.");
+        } catch (SQLException exception) {
+            return ActionResult.failure("Annulation impossible: " + exception.getMessage());
+        }
+    }
+
+    public RevenueStats loadRevenueStats() {
+        int totalInvoices = scalarWithFallback("SELECT COUNT(*) FROM factures", 0);
+        BigDecimal total = decimalWithFallback("SELECT COALESCE(SUM(montant_ttc), 0) FROM factures", BigDecimal.ZERO);
+        BigDecimal month = decimalWithFallback(
+                "SELECT COALESCE(SUM(montant_ttc), 0) FROM factures WHERE created_at >= DATE_FORMAT(CURDATE(), '%Y-%m-01') AND created_at < DATE_FORMAT(DATE_ADD(CURDATE(), INTERVAL 1 MONTH), '%Y-%m-01')",
+                BigDecimal.ZERO
+        );
+        return new RevenueStats(totalInvoices, total, month);
+    }
+
+    public List<RevenueRow> listRevenuesForAdmin(int limit) {
+        int safeLimit = Math.max(1, Math.min(limit, 300));
+        String sql = "SELECT f.numero, f.montant_ttc, f.devise, f.created_at, f.pdf_path, "
+                + "u.nom, u.prenom, a.type_abonnement "
+                + "FROM factures f "
+                + "LEFT JOIN users u ON f.user_id = u.id "
+                + "LEFT JOIN abonnements a ON f.abonnement_id = a.id "
+                + "ORDER BY f.created_at DESC LIMIT ?";
+
+        List<RevenueRow> rows = new ArrayList<>();
+        try (Connection connection = databaseService.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, safeLimit);
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    rows.add(new RevenueRow(
+                            safe(rs.getString("numero")),
+                            safe(rs.getString("nom")),
+                            safe(rs.getString("prenom")),
+                            safe(rs.getString("type_abonnement")),
+                            rs.getBigDecimal("montant_ttc") == null ? BigDecimal.ZERO : rs.getBigDecimal("montant_ttc"),
+                            safe(rs.getString("devise")),
+                            toLocalDateTime(rs.getTimestamp("created_at")),
+                            safe(rs.getString("pdf_path"))
+                    ));
+                }
+            }
+        } catch (SQLException ignored) {
+        }
+
+        return rows;
+    }
+
     public ActionResult exportCsvReports() {
+        return exportCsvReports(Paths.get("generated-exports"));
+    }
+
+    public ActionResult exportCsvReports(Path exportDir) {
         if (!databaseService.canConnect()) {
             return ActionResult.failure("Connexion base impossible: " + databaseService.getLastConnectionError());
         }
 
         try {
-            Path exportDir = Paths.get("generated-exports");
-            Files.createDirectories(exportDir);
+            Path outputDirectory = exportDir == null ? Paths.get("generated-exports") : exportDir;
+            Files.createDirectories(outputDirectory);
 
             String stamp = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss").format(LocalDateTime.now());
-            Path usersCsv = exportDir.resolve("users_" + stamp + ".csv");
-            Path paymentsCsv = exportDir.resolve("payments_" + stamp + ".csv");
-            Path statsCsv = exportDir.resolve("stats_" + stamp + ".csv");
+            Path usersCsv = outputDirectory.resolve("users_" + stamp + ".csv");
+            Path paymentsCsv = outputDirectory.resolve("payments_" + stamp + ".csv");
+            Path statsCsv = outputDirectory.resolve("stats_" + stamp + ".csv");
 
             writeUsersCsv(usersCsv);
             writePaymentsCsv(paymentsCsv);
@@ -486,6 +874,72 @@ public class AdminOperationsService {
         }
     }
 
+    private BigDecimal decimalWithFallback(String sql, BigDecimal fallback) {
+        try (Connection connection = databaseService.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql);
+             ResultSet rs = statement.executeQuery()) {
+            if (rs.next()) {
+                BigDecimal value = rs.getBigDecimal(1);
+                return value == null ? fallback : value;
+            }
+            return fallback;
+        } catch (SQLException exception) {
+            return fallback;
+        }
+    }
+
+    private LocalDate toLocalDate(java.sql.Date value) {
+        return value == null ? null : value.toLocalDate();
+    }
+
+    private void syncUserFromSubscription(int subscriptionId) {
+        String select = "SELECT user_id, type_abonnement, statut, date_fin FROM abonnements WHERE id = ? LIMIT 1";
+        try (Connection connection = databaseService.getConnection();
+             PreparedStatement statement = connection.prepareStatement(select)) {
+            statement.setInt(1, subscriptionId);
+            try (ResultSet rs = statement.executeQuery()) {
+                if (!rs.next()) {
+                    return;
+                }
+
+                int userId = rs.getInt("user_id");
+                if (userId <= 0) {
+                    return;
+                }
+
+                String type = safe(rs.getString("type_abonnement"));
+                String statut = safe(rs.getString("statut")).toLowerCase();
+                LocalDate end = toLocalDate(rs.getDate("date_fin"));
+
+                String userRole = type;
+                String userSubscriptionStatus = "ACTIVE";
+                String subscriptionType = type;
+
+                if (statut.contains("annul") || statut.contains("expir") || (end != null && end.isBefore(LocalDate.now()))) {
+                    userRole = "ROLE_USER";
+                    userSubscriptionStatus = "EXPIRED";
+                    subscriptionType = null;
+                }
+
+                String update = "UPDATE users SET role = ?, subscription_status = ?, subscription_type = ?, subscription_end_at = ?, updated_at = ? WHERE id = ?";
+                try (PreparedStatement up = connection.prepareStatement(update)) {
+                    up.setString(1, userRole);
+                    up.setString(2, userSubscriptionStatus);
+                    up.setString(3, subscriptionType);
+                    if (end == null) {
+                        up.setTimestamp(4, null);
+                    } else {
+                        up.setTimestamp(4, Timestamp.valueOf(end.atStartOfDay()));
+                    }
+                    up.setTimestamp(5, Timestamp.valueOf(LocalDateTime.now()));
+                    up.setInt(6, userId);
+                    up.executeUpdate();
+                }
+            }
+        } catch (SQLException ignored) {
+        }
+    }
+
     private boolean fillModerationRows(List<ModerationRow> rows, String sql) {
         try (Connection connection = databaseService.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql);
@@ -597,6 +1051,15 @@ public class AdminOperationsService {
         return value == null ? "" : value.trim();
     }
 
+    private String generateOpaqueToken(int maxLength) {
+        String token = UUID.randomUUID().toString().replace("-", "")
+                + UUID.randomUUID().toString().replace("-", "");
+        if (token.length() <= maxLength) {
+            return token;
+        }
+        return token.substring(0, Math.max(1, maxLength));
+    }
+
     private int boolScore(Boolean value, int score) {
         return Boolean.TRUE.equals(value) ? score : 0;
     }
@@ -605,6 +1068,14 @@ public class AdminOperationsService {
         String normalized = safe(role).toUpperCase();
         return switch (normalized) {
             case "ROLE_MEDECIN", "ROLE_PHARMACIEN", "ROLE_COACH", "ROLE_NUTRITIONNISTE" -> normalized;
+            default -> "";
+        };
+    }
+
+    private String normalizeAdminEditableRole(String role) {
+        String normalized = safe(role).toUpperCase();
+        return switch (normalized) {
+            case "ROLE_ADMIN", "ROLE_PATIENT", "ROLE_USER", "ROLE_MEDECIN", "ROLE_PHARMACIEN", "ROLE_COACH", "ROLE_NUTRITIONNISTE" -> normalized;
             default -> "";
         };
     }
@@ -702,6 +1173,114 @@ public class AdminOperationsService {
         public String displayName() {
             String fullName = (safePart(prenom) + " " + safePart(nom)).trim();
             return fullName.isBlank() ? email : fullName;
+        }
+
+        private static String safePart(String value) {
+            return value == null ? "" : value.trim();
+        }
+    }
+
+    public record AdminUserRow(
+            int id,
+            String nom,
+            String prenom,
+            String email,
+            String role,
+            String subscriptionStatus,
+            boolean banned,
+            boolean emailVerified,
+            boolean adminApproved,
+            LocalDateTime createdAt,
+            int score,
+            String supportPriority
+    ) {
+        public String displayName() {
+            String fullName = (safePart(prenom) + " " + safePart(nom)).trim();
+            return fullName.isBlank() ? email : fullName;
+        }
+
+        private static String safePart(String value) {
+            return value == null ? "" : value.trim();
+        }
+    }
+
+    public record ValidationStats(
+            int totalUsers,
+            int emailConfirmed,
+            int emailNotConfirmed,
+            int adminPending
+    ) {
+    }
+
+    public record ValidationUserRow(
+            int id,
+            String nom,
+            String prenom,
+            String email,
+            boolean emailVerified,
+            boolean adminApproved,
+            LocalDateTime createdAt
+    ) {
+        public String displayName() {
+            String fullName = (safePart(prenom) + " " + safePart(nom)).trim();
+            return fullName.isBlank() ? email : fullName;
+        }
+
+        private static String safePart(String value) {
+            return value == null ? "" : value.trim();
+        }
+    }
+
+    public record SubscriptionStats(
+            int total,
+            int active,
+            int expired,
+            int cancelled
+    ) {
+    }
+
+    public record SubscriptionRow(
+            int id,
+            int userId,
+            String nom,
+            String prenom,
+            String email,
+            String type,
+            String status,
+            LocalDate dateDebut,
+            LocalDate dateFin,
+            BigDecimal price
+    ) {
+        public String displayName() {
+            String fullName = (safePart(prenom) + " " + safePart(nom)).trim();
+            return fullName.isBlank() ? email : fullName;
+        }
+
+        private static String safePart(String value) {
+            return value == null ? "" : value.trim();
+        }
+    }
+
+    public record RevenueStats(
+            int totalInvoices,
+            BigDecimal totalRevenue,
+            BigDecimal monthlyRevenue
+    ) {
+    }
+
+    public record RevenueRow(
+            String invoiceNumber,
+            String nom,
+            String prenom,
+            String planType,
+            BigDecimal totalTtc,
+            String currency,
+            LocalDateTime createdAt,
+            String pdfPath
+    ) {
+        public String displayName() {
+            String fullName = (safePart(prenom) + " " + safePart(nom)).trim();
+            return fullName.isBlank() ? "Client" : fullName;
         }
 
         private static String safePart(String value) {

@@ -85,4 +85,5 @@
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/service/SubscriptionService.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/service/TwoFactorService.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/ui/ConfirmDialogs.java
+/home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/ui/ModalDialogs.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/module-info.java
