@@ -32,6 +32,7 @@
                 <Hyperlink text="À propos" styleClass="home-nav-link" onAction="#handleScrollToAbout"/>
                 <Hyperlink text="Services" styleClass="home-nav-link" onAction="#handleScrollToServices"/>
                 <Hyperlink text="Blog" styleClass="home-nav-link" onAction="#handleScrollToBlog"/>
+                <Hyperlink text="Rendez-Vous" styleClass="home-nav-link" onAction="#handleOpenAppointments"/>
                 <Hyperlink text="Contact" styleClass="home-nav-link" onAction="#handleScrollToContact"/>
             </HBox>
 
@@ -176,7 +177,7 @@
                                         <Label text="Rendez-vous médicaux" styleClass="home-card-kicker"/>
                                         <Label text="Réservez une consultation aujourd'hui" wrapText="true" styleClass="home-card-title"/>
                                         <Label text="Prenez rendez-vous facilement avec nos médecins certifiés. Profitez d'une prise en charge rapide pour tous vos besoins de santé." wrapText="true" styleClass="home-card-text"/>
-                                        <Button text="Prendre rendez-vous" styleClass="btn-appointment-main"/>
+                                        <Button text="Prendre rendez-vous" styleClass="btn-appointment-main" onAction="#handleOpenAppointments"/>
                                     </VBox>
                                 </HBox>
 

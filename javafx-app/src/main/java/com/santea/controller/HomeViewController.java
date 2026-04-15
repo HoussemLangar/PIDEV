@@ -200,6 +200,16 @@ public class HomeViewController {
         scrollTo(contactSection);
     }
 
+    @FXML
+    private void handleOpenAppointments() {
+        hideAllMenus();
+        if (!AuthSession.isAuthenticated()) {
+            AppNavigator.showLogin();
+            return;
+        }
+        AppNavigator.showAppointmentsPage();
+    }
+
     private void scrollTo(Node section) {
         if (homeScroll == null || section == null || homeScroll.getContent() == null) {
             AppNavigator.showHome();
@@ -782,14 +792,11 @@ public class HomeViewController {
     }
 
     private void openAppointmentsPage() {
-        if (!guardPremiumAccess()) {
+        if (!AuthSession.isAuthenticated()) {
+            AppNavigator.showLogin();
             return;
         }
-        AppNavigator.showFeaturePage("Rendez-vous", "Gestion des consultations", List.of(
-                "Rendez-vous a venir",
-                "Historique",
-                "Prendre un nouveau rendez-vous"
-        ));
+        AppNavigator.showAppointmentsPage();
     }
 
     private void openPharmacyPage() {

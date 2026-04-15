@@ -18,6 +18,7 @@
         </padding>
         <Button text="Accueil" styleClass="admin-btn-secondary" onAction="#handleBackHome"/>
         <Button text="Rafraichir" styleClass="admin-btn-secondary" onAction="#handleRefresh"/>
+        <Button text="Approuver en attente" styleClass="admin-btn-secondary" onAction="#handleApproveAllPending"/>
         <Button text="Deconnexion" styleClass="admin-btn-danger" onAction="#handleLogout"/>
         <Label text="Dashboard Admin SANTEA" styleClass="admin-title"/>
     </HBox>
@@ -31,14 +32,26 @@
 
                 <FlowPane hgap="12" vgap="12" prefWrapLength="1120">
                     <VBox spacing="4" styleClass="admin-card stat-blue">
-                        <Label text="Utilisateurs" styleClass="admin-card-label"/>
+                        <Label text="Utilisateurs Total" styleClass="admin-card-label"/>
                         <Label fx:id="usersTotalLabel" text="0" styleClass="admin-card-value"/>
+                    </VBox>
+                    <VBox spacing="4" styleClass="admin-card stat-green">
+                        <Label text="Abonnements Actifs" styleClass="admin-card-label"/>
+                        <Label fx:id="activeSubscriptionsLabel" text="0" styleClass="admin-card-value"/>
+                    </VBox>
+                    <VBox spacing="4" styleClass="admin-card stat-orange">
+                        <Label text="Revenus du Mois (TND)" styleClass="admin-card-label"/>
+                        <Label fx:id="monthlyRevenueLabel" text="0.00" styleClass="admin-card-value"/>
+                    </VBox>
+                    <VBox spacing="4" styleClass="admin-card stat-purple">
+                        <Label text="Paiements en Attente" styleClass="admin-card-label"/>
+                        <Label fx:id="pendingPaymentsLabel" text="0" styleClass="admin-card-value"/>
                     </VBox>
                     <VBox spacing="4" styleClass="admin-card stat-red">
                         <Label text="Comptes bannis" styleClass="admin-card-label"/>
                         <Label fx:id="usersBannedLabel" text="0" styleClass="admin-card-value"/>
                     </VBox>
-                    <VBox spacing="4" styleClass="admin-card stat-green">
+                    <VBox spacing="4" styleClass="admin-card stat-cyan">
                         <Label text="Emails verifies" styleClass="admin-card-label"/>
                         <Label fx:id="usersVerifiedLabel" text="0" styleClass="admin-card-value"/>
                     </VBox>
@@ -62,6 +75,14 @@
                         <Label text="Sessions actives" styleClass="admin-card-label"/>
                         <Label fx:id="activeSessionsLabel" text="0" styleClass="admin-card-value"/>
                     </VBox>
+                    <VBox spacing="4" styleClass="admin-card stat-red">
+                        <Label text="Moderation a traiter" styleClass="admin-card-label"/>
+                        <Label fx:id="moderationPendingLabel" text="0" styleClass="admin-card-value"/>
+                    </VBox>
+                    <VBox spacing="4" styleClass="admin-card stat-blue">
+                        <Label text="Score moyen utilisateurs" styleClass="admin-card-label"/>
+                        <Label fx:id="scoreAverageLabel" text="0" styleClass="admin-card-value"/>
+                    </VBox>
                 </FlowPane>
 
                 <HBox spacing="10">
@@ -73,10 +94,49 @@
 
                 <Label fx:id="adminFeedbackLabel" text="" visible="false" managed="false" styleClass="alert" wrapText="true"/>
 
-                <VBox spacing="10" styleClass="admin-list-wrap">
-                    <Label text="Derniers bannissements" styleClass="admin-section-title"/>
-                    <VBox fx:id="latestBansBox" spacing="8"/>
-                </VBox>
+                <FlowPane hgap="14" vgap="14" prefWrapLength="1120">
+                    <VBox spacing="10" styleClass="admin-panel">
+                        <HBox alignment="CENTER_LEFT" spacing="8">
+                            <Label text="Validation des comptes" styleClass="admin-section-title"/>
+                        </HBox>
+                        <VBox fx:id="pendingApprovalsBox" spacing="8"/>
+                    </VBox>
+
+                    <VBox spacing="10" styleClass="admin-panel">
+                        <HBox alignment="CENTER_LEFT" spacing="8">
+                            <Label text="Sessions actives" styleClass="admin-section-title"/>
+                        </HBox>
+                        <VBox fx:id="activeSessionsBox" spacing="8"/>
+                    </VBox>
+
+                    <VBox spacing="10" styleClass="admin-panel">
+                        <HBox alignment="CENTER_LEFT" spacing="8">
+                            <Label text="Connexions suspectes" styleClass="admin-section-title"/>
+                        </HBox>
+                        <VBox fx:id="suspiciousLoginsBox" spacing="8"/>
+                    </VBox>
+
+                    <VBox spacing="10" styleClass="admin-panel">
+                        <HBox alignment="CENTER_LEFT" spacing="8">
+                            <Label text="Moderation contenu" styleClass="admin-section-title"/>
+                        </HBox>
+                        <VBox fx:id="moderationQueueBox" spacing="8"/>
+                    </VBox>
+
+                    <VBox spacing="10" styleClass="admin-panel">
+                        <HBox alignment="CENTER_LEFT" spacing="8">
+                            <Label text="Suivi score utilisateurs" styleClass="admin-section-title"/>
+                        </HBox>
+                        <VBox fx:id="userScoresBox" spacing="8"/>
+                    </VBox>
+
+                    <VBox spacing="10" styleClass="admin-panel">
+                        <HBox alignment="CENTER_LEFT" spacing="8">
+                            <Label text="Derniers bannissements" styleClass="admin-section-title"/>
+                        </HBox>
+                        <VBox fx:id="latestBansBox" spacing="8"/>
+                    </VBox>
+                </FlowPane>
             </VBox>
         </content>
     </ScrollPane>
