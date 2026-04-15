@@ -42,6 +42,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -81,6 +82,8 @@ public class AdminDashboardController {
     private List<AdminOperationsService.SuspiciousLoginRow> suspiciousCache = List.of();
     private List<AdminOperationsService.SubscriptionRow> subscriptionsCache = List.of();
     private List<AdminOperationsService.RevenueRow> revenuesCache = List.of();
+    private List<AdminOperationsService.CommunityRow> communityCache = List.of();
+    private List<AdminOperationsService.AppointmentAdminRow> appointmentsAdminCache = List.of();
     private List<AdminOperationsService.PendingApprovalRow> pendingApprovalsCache = List.of();
     private List<AdminOperationsService.ModerationRow> moderationCache = List.of();
     private List<AdminOperationsService.UserScoreRow> scoresCache = List.of();
@@ -91,6 +94,8 @@ public class AdminDashboardController {
     private int suspiciousPage;
     private int subscriptionsPage;
     private int revenuesPage;
+    private int communityPage;
+    private int appointmentsAdminPage;
 
     private boolean usersGridMode = true;
     private boolean validationGridMode = true;
@@ -98,6 +103,8 @@ public class AdminDashboardController {
     private boolean suspiciousGridMode = true;
     private boolean subscriptionsGridMode = true;
     private boolean revenuesGridMode = true;
+    private boolean communityGridMode = true;
+    private boolean appointmentsAdminGridMode = true;
 
     @FXML
     private Label headerTitleLabel;
@@ -118,6 +125,10 @@ public class AdminDashboardController {
     private Button navSubscriptionsButton;
     @FXML
     private Button navRevenuesButton;
+    @FXML
+    private Button navCommunityButton;
+    @FXML
+    private Button navAppointmentsAdminButton;
 
     @FXML
     private VBox pageDashboard;
@@ -133,6 +144,10 @@ public class AdminDashboardController {
     private VBox pageSubscriptions;
     @FXML
     private VBox pageRevenues;
+    @FXML
+    private VBox pageCommunity;
+    @FXML
+    private VBox pageAppointmentsAdmin;
 
     @FXML
     private Label usersTotalLabel;
@@ -307,6 +322,62 @@ public class AdminDashboardController {
     private Button revenuesNextPageButton;
 
     @FXML
+    private Label communityTotalLabel;
+    @FXML
+    private Label communityPendingLabel;
+    @FXML
+    private Label communityPublishedLabel;
+    @FXML
+    private Label communityRejectedLabel;
+    @FXML
+    private TextField communitySearchField;
+    @FXML
+    private ComboBox<String> communityStatusFilterCombo;
+    @FXML
+    private ComboBox<String> communityTypeFilterCombo;
+    @FXML
+    private Button communityListModeButton;
+    @FXML
+    private Button communityGridModeButton;
+    @FXML
+    private FlowPane communityRowsBox;
+    @FXML
+    private Label communityPaginationInfoLabel;
+    @FXML
+    private Button communityPrevPageButton;
+    @FXML
+    private Button communityNextPageButton;
+
+    @FXML
+    private Label appointmentsAdminTotalLabel;
+    @FXML
+    private Label appointmentsAdminPendingLabel;
+    @FXML
+    private Label appointmentsAdminConfirmedLabel;
+    @FXML
+    private Label appointmentsAdminRefusedLabel;
+    @FXML
+    private Label appointmentsAdminCancelledLabel;
+    @FXML
+    private TextField appointmentsAdminSearchField;
+    @FXML
+    private ComboBox<String> appointmentsAdminStatusFilterCombo;
+    @FXML
+    private ComboBox<String> appointmentsAdminDateFilterCombo;
+    @FXML
+    private Button appointmentsAdminListModeButton;
+    @FXML
+    private Button appointmentsAdminGridModeButton;
+    @FXML
+    private FlowPane appointmentsAdminRowsBox;
+    @FXML
+    private Label appointmentsAdminPaginationInfoLabel;
+    @FXML
+    private Button appointmentsAdminPrevPageButton;
+    @FXML
+    private Button appointmentsAdminNextPageButton;
+
+    @FXML
     private VBox latestBansBox;
     @FXML
     private VBox pendingApprovalsBox;
@@ -367,12 +438,34 @@ public class AdminDashboardController {
         ));
         revenuesPlanFilterCombo.getSelectionModel().selectFirst();
 
+        communityStatusFilterCombo.setItems(FXCollections.observableArrayList(
+            "Tous statuts", "en_attente", "publie", "valide", "rejete"
+        ));
+        communityStatusFilterCombo.getSelectionModel().selectFirst();
+
+        communityTypeFilterCombo.setItems(FXCollections.observableArrayList(
+            "Tous types", "article", "video", "pdf", "lien"
+        ));
+        communityTypeFilterCombo.getSelectionModel().selectFirst();
+
+        appointmentsAdminStatusFilterCombo.setItems(FXCollections.observableArrayList(
+            "Tous statuts", "en_attente", "confirme", "refuse", "annule"
+        ));
+        appointmentsAdminStatusFilterCombo.getSelectionModel().selectFirst();
+
+        appointmentsAdminDateFilterCombo.setItems(FXCollections.observableArrayList(
+            "Toutes dates", "Aujourd'hui", "7 prochains jours", "Passe"
+        ));
+        appointmentsAdminDateFilterCombo.getSelectionModel().selectFirst();
+
         updateModeButtons(usersListModeButton, usersGridModeButton, usersGridMode);
         updateModeButtons(validationListModeButton, validationGridModeButton, validationGridMode);
         updateModeButtons(sessionsListModeButton, sessionsGridModeButton, sessionsGridMode);
         updateModeButtons(suspiciousListModeButton, suspiciousGridModeButton, suspiciousGridMode);
         updateModeButtons(subscriptionsListModeButton, subscriptionsGridModeButton, subscriptionsGridMode);
         updateModeButtons(revenuesListModeButton, revenuesGridModeButton, revenuesGridMode);
+        updateModeButtons(communityListModeButton, communityGridModeButton, communityGridMode);
+        updateModeButtons(appointmentsAdminListModeButton, appointmentsAdminGridModeButton, appointmentsAdminGridMode);
     }
 
     @FXML
@@ -419,6 +512,16 @@ public class AdminDashboardController {
     @FXML
     private void handleNavRevenues() {
         showPage(pageRevenues, navRevenuesButton, "Revenus & facturation", "Factures, montants et export financier.");
+    }
+
+    @FXML
+    private void handleNavCommunity() {
+        showPage(pageCommunity, navCommunityButton, "Community", "Moderation, validation et publication des contenus.");
+    }
+
+    @FXML
+    private void handleNavAppointmentsAdmin() {
+        showPage(pageAppointmentsAdmin, navAppointmentsAdminButton, "Rendez-vous", "Pilotage admin des demandes et statuts de rendez-vous.");
     }
 
     @FXML
@@ -518,6 +621,16 @@ public class AdminDashboardController {
         if (normalized.contains("revenu") || normalized.contains("factur")) {
             handleNavRevenues();
             showFeedback("Ouverture section revenus.", true);
+            return;
+        }
+        if (normalized.contains("community") || normalized.contains("communaute") || normalized.contains("contenu")) {
+            handleNavCommunity();
+            showFeedback("Ouverture section community.", true);
+            return;
+        }
+        if (normalized.contains("rendez") || normalized.contains("appointment") || normalized.contains("rdv")) {
+            handleNavAppointmentsAdmin();
+            showFeedback("Ouverture section rendez-vous.", true);
             return;
         }
 
@@ -706,8 +819,78 @@ public class AdminDashboardController {
         renderRevenuesPage();
     }
 
+    @FXML
+    private void handleCommunityApplyFilters() {
+        communityPage = 0;
+        renderCommunityPage();
+    }
+
+    @FXML
+    private void handleCommunityPrevPage() {
+        communityPage = Math.max(0, communityPage - 1);
+        renderCommunityPage();
+    }
+
+    @FXML
+    private void handleCommunityNextPage() {
+        communityPage++;
+        renderCommunityPage();
+    }
+
+    @FXML
+    private void handleCommunityListMode() {
+        communityGridMode = false;
+        renderCommunityPage();
+    }
+
+    @FXML
+    private void handleCommunityGridMode() {
+        communityGridMode = true;
+        renderCommunityPage();
+    }
+
+    @FXML
+    private void handleAppointmentsAdminApplyFilters() {
+        appointmentsAdminPage = 0;
+        renderAppointmentsAdminPage();
+    }
+
+    @FXML
+    private void handleAppointmentsAdminPrevPage() {
+        appointmentsAdminPage = Math.max(0, appointmentsAdminPage - 1);
+        renderAppointmentsAdminPage();
+    }
+
+    @FXML
+    private void handleAppointmentsAdminNextPage() {
+        appointmentsAdminPage++;
+        renderAppointmentsAdminPage();
+    }
+
+    @FXML
+    private void handleAppointmentsAdminListMode() {
+        appointmentsAdminGridMode = false;
+        renderAppointmentsAdminPage();
+    }
+
+    @FXML
+    private void handleAppointmentsAdminGridMode() {
+        appointmentsAdminGridMode = true;
+        renderAppointmentsAdminPage();
+    }
+
     private void showPage(VBox page, Button navButton, String title, String subtitle) {
-        List<VBox> pages = List.of(pageDashboard, pageUsers, pageValidation, pageSessions, pageSuspicious, pageSubscriptions, pageRevenues);
+        List<VBox> pages = List.of(
+                pageDashboard,
+                pageUsers,
+                pageValidation,
+                pageSessions,
+                pageSuspicious,
+                pageSubscriptions,
+                pageRevenues,
+                pageCommunity,
+                pageAppointmentsAdmin
+        );
         for (VBox current : pages) {
             boolean active = current == page;
             current.setVisible(active);
@@ -721,7 +904,9 @@ public class AdminDashboardController {
                 navSessionsButton,
                 navSuspiciousButton,
                 navSubscriptionsButton,
-                navRevenuesButton
+                navRevenuesButton,
+                navCommunityButton,
+                navAppointmentsAdminButton
         );
         for (Button current : navButtons) {
             current.getStyleClass().remove("bo-nav-active");
@@ -736,6 +921,8 @@ public class AdminDashboardController {
         AdminDashboardService.AdminDashboardData data = adminDashboardService.loadData();
         AdminOperationsService.SubscriptionStats subscriptionStats = adminOperationsService.loadSubscriptionStats();
         AdminOperationsService.RevenueStats revenueStats = adminOperationsService.loadRevenueStats();
+        AdminOperationsService.CommunityStats communityStats = adminOperationsService.loadCommunityStats();
+        AdminOperationsService.AppointmentAdminStats appointmentStats = adminOperationsService.loadAppointmentAdminStats();
 
         usersTotalLabel.setText(String.valueOf(data.totalUsers()));
         usersBannedLabel.setText(String.valueOf(data.bannedUsers()));
@@ -766,12 +953,25 @@ public class AdminDashboardController {
         revenueTotalAmountLabel.setText("Revenus: " + money(revenueStats.totalRevenue()) + " TND");
         revenueMonthlyAmountLabel.setText("Ce mois: " + money(revenueStats.monthlyRevenue()) + " TND");
 
+        communityTotalLabel.setText("Total: " + communityStats.total());
+        communityPendingLabel.setText("En attente: " + communityStats.pending());
+        communityPublishedLabel.setText("Publies/Valides: " + communityStats.published());
+        communityRejectedLabel.setText("Rejetes: " + communityStats.rejected());
+
+        appointmentsAdminTotalLabel.setText("Total: " + appointmentStats.total());
+        appointmentsAdminPendingLabel.setText("En attente: " + appointmentStats.pending());
+        appointmentsAdminConfirmedLabel.setText("Confirmes: " + appointmentStats.confirmed());
+        appointmentsAdminRefusedLabel.setText("Refuses: " + appointmentStats.refused());
+        appointmentsAdminCancelledLabel.setText("Annules: " + appointmentStats.cancelled());
+
         usersCache = adminOperationsService.listUsersForAdmin(300);
         validationCache = adminOperationsService.listValidationUsers(300);
         sessionsCache = adminOperationsService.listActiveSessions();
         suspiciousCache = adminOperationsService.listSuspiciousLogins();
         subscriptionsCache = adminOperationsService.listSubscriptionsForAdmin(300);
         revenuesCache = adminOperationsService.listRevenuesForAdmin(300);
+        communityCache = adminOperationsService.listCommunityForAdmin(300);
+        appointmentsAdminCache = adminOperationsService.listAppointmentsForAdmin(300);
         pendingApprovalsCache = adminOperationsService.listPendingProfessionalApprovals();
         moderationCache = adminOperationsService.listModerationQueue();
         scoresCache = adminOperationsService.listTopUserScores(50);
@@ -788,6 +988,8 @@ public class AdminDashboardController {
         renderSuspiciousPage();
         renderSubscriptionsPage();
         renderRevenuesPage();
+        renderCommunityPage();
+        renderAppointmentsAdminPage();
 
         renderQuickPanels();
     }
@@ -1210,6 +1412,138 @@ public class AdminDashboardController {
 
         updateModeButtons(revenuesListModeButton, revenuesGridModeButton, revenuesGridMode);
         updatePagination(page, revenuesPaginationInfoLabel, revenuesPrevPageButton, revenuesNextPageButton);
+    }
+
+    private void renderCommunityPage() {
+        String keyword = normalize(communitySearchField.getText());
+        String statusFilter = normalize(communityStatusFilterCombo.getValue());
+        String typeFilter = normalize(communityTypeFilterCombo.getValue());
+
+        List<AdminOperationsService.CommunityRow> filtered = communityCache.stream()
+                .filter(row -> keyword.isBlank() || normalize(
+                        "#" + row.id() + " " + row.title() + " " + row.authorDisplay() + " " + row.category() + " " + row.tags()
+                ).contains(keyword))
+                .filter(row -> statusFilter.isBlank() || "tous statuts".equals(statusFilter) || normalize(row.status()).equals(statusFilter))
+                .filter(row -> typeFilter.isBlank() || "tous types".equals(typeFilter) || normalize(row.type()).equals(typeFilter))
+                .sorted(Comparator.comparing(AdminOperationsService.CommunityRow::createdAt, Comparator.nullsLast(Comparator.reverseOrder())))
+                .toList();
+
+        PageSlice<AdminOperationsService.CommunityRow> page = page(filtered, communityPage);
+        communityPage = page.pageIndex();
+
+        applyContainerMode(communityRowsBox, communityGridMode);
+        communityRowsBox.getChildren().clear();
+
+        if (page.items().isEmpty()) {
+            communityRowsBox.getChildren().add(createEmptyCard("Aucun contenu community."));
+        } else {
+            for (AdminOperationsService.CommunityRow row : page.items()) {
+                String status = normalizeStatusLabel(row.status());
+                String details = "Type: " + safe(row.type())
+                        + " | Categorie: " + safe(row.category())
+                        + " | Tags: " + safe(row.tags())
+                        + " | Likes: " + row.likesCount()
+                        + " | Commentaires: " + row.commentsCount()
+                        + " | Score: " + String.format(Locale.ROOT, "%.3f", row.score())
+                        + " | MAJ: " + formatDateTime(row.updatedAt());
+
+                Button validateButton = buildRowButton("Valider", "admin-btn-xs-primary", () -> {
+                    AdminOperationsService.ActionResult result = adminOperationsService.updateCommunityStatusByAdmin(row.id(), "valide", "Validation admin dashboard");
+                    showFeedback(result.message(), result.success());
+                    refresh();
+                });
+                Button publishButton = buildRowButton("Publier", "admin-btn-xs-secondary", () -> {
+                    AdminOperationsService.ActionResult result = adminOperationsService.updateCommunityStatusByAdmin(row.id(), "publie", "Publication admin dashboard");
+                    showFeedback(result.message(), result.success());
+                    refresh();
+                });
+                Button rejectButton = buildRowButton("Rejeter", "admin-btn-xs-danger", () -> {
+                    AdminOperationsService.ActionResult result = adminOperationsService.updateCommunityStatusByAdmin(row.id(), "rejete", "Rejet admin dashboard");
+                    showFeedback(result.message(), result.success());
+                    refresh();
+                });
+                Button pendingButton = buildRowButton("En attente", "admin-btn-xs-warning", () -> {
+                    AdminOperationsService.ActionResult result = adminOperationsService.updateCommunityStatusByAdmin(row.id(), "en_attente", "Retour file moderation");
+                    showFeedback(result.message(), result.success());
+                    refresh();
+                });
+
+                String title = "#" + row.id() + " - " + safe(row.title()) + " (" + safe(row.authorDisplay()) + ")";
+                Node node = communityGridMode
+                        ? createGridCard(title, details, status, validateButton, publishButton, rejectButton, pendingButton)
+                        : createListRow(title, details, validateButton, publishButton, rejectButton, pendingButton);
+                communityRowsBox.getChildren().add(node);
+            }
+        }
+
+        updateModeButtons(communityListModeButton, communityGridModeButton, communityGridMode);
+        updatePagination(page, communityPaginationInfoLabel, communityPrevPageButton, communityNextPageButton);
+    }
+
+    private void renderAppointmentsAdminPage() {
+        String keyword = normalize(appointmentsAdminSearchField.getText());
+        String statusFilter = normalize(appointmentsAdminStatusFilterCombo.getValue());
+        String dateFilter = safe(appointmentsAdminDateFilterCombo.getValue());
+
+        List<AdminOperationsService.AppointmentAdminRow> filtered = appointmentsAdminCache.stream()
+                .filter(row -> keyword.isBlank() || normalize(
+                        "#" + row.id() + " " + row.patientDisplay() + " " + row.doctorDisplay() + " " + row.motif()
+                ).contains(keyword))
+                .filter(row -> statusFilter.isBlank() || "tous statuts".equals(statusFilter) || normalize(row.status()).equals(statusFilter))
+                .filter(row -> matchAppointmentDateFilter(row.date(), dateFilter))
+                .sorted(Comparator
+                        .comparing(AdminOperationsService.AppointmentAdminRow::date, Comparator.nullsLast(Comparator.reverseOrder()))
+                        .thenComparing(AdminOperationsService.AppointmentAdminRow::time, Comparator.nullsLast(Comparator.reverseOrder())))
+                .toList();
+
+        PageSlice<AdminOperationsService.AppointmentAdminRow> page = page(filtered, appointmentsAdminPage);
+        appointmentsAdminPage = page.pageIndex();
+
+        applyContainerMode(appointmentsAdminRowsBox, appointmentsAdminGridMode);
+        appointmentsAdminRowsBox.getChildren().clear();
+
+        if (page.items().isEmpty()) {
+            appointmentsAdminRowsBox.getChildren().add(createEmptyCard("Aucun rendez-vous."));
+        } else {
+            for (AdminOperationsService.AppointmentAdminRow row : page.items()) {
+                String status = normalizeStatusLabel(row.status());
+                String dateTime = formatDate(row.date()) + " " + formatTime(row.time());
+                String details = "Patient: " + safe(row.patientDisplay())
+                        + " | Medecin: " + safe(row.doctorDisplay())
+                        + " | Date: " + dateTime
+                        + " | Motif: " + safe(row.motif());
+
+                Button confirmButton = buildRowButton("Confirmer", "admin-btn-xs-primary", () -> {
+                    AdminOperationsService.ActionResult result = adminOperationsService.updateAppointmentStatusByAdmin(row.id(), "confirme");
+                    showFeedback(result.message(), result.success());
+                    refresh();
+                });
+                Button refuseButton = buildRowButton("Refuser", "admin-btn-xs-danger", () -> {
+                    AdminOperationsService.ActionResult result = adminOperationsService.updateAppointmentStatusByAdmin(row.id(), "refuse");
+                    showFeedback(result.message(), result.success());
+                    refresh();
+                });
+                Button cancelButton = buildRowButton("Annuler", "admin-btn-xs-warning", () -> {
+                    AdminOperationsService.ActionResult result = adminOperationsService.updateAppointmentStatusByAdmin(row.id(), "annule");
+                    showFeedback(result.message(), result.success());
+                    refresh();
+                });
+                Button pendingButton = buildRowButton("En attente", "admin-btn-xs-secondary", () -> {
+                    AdminOperationsService.ActionResult result = adminOperationsService.updateAppointmentStatusByAdmin(row.id(), "en_attente");
+                    showFeedback(result.message(), result.success());
+                    refresh();
+                });
+
+                String title = "#" + row.id() + " - " + safe(row.patientDisplay()) + " -> " + safe(row.doctorDisplay());
+                Node node = appointmentsAdminGridMode
+                        ? createGridCard(title, details, status, confirmButton, refuseButton, cancelButton, pendingButton)
+                        : createListRow(title, details, confirmButton, refuseButton, cancelButton, pendingButton);
+                appointmentsAdminRowsBox.getChildren().add(node);
+            }
+        }
+
+        updateModeButtons(appointmentsAdminListModeButton, appointmentsAdminGridModeButton, appointmentsAdminGridMode);
+        updatePagination(page, appointmentsAdminPaginationInfoLabel, appointmentsAdminPrevPageButton, appointmentsAdminNextPageButton);
     }
 
     private void renderLatestBans(List<String> rows) {
@@ -1650,6 +1984,38 @@ public class AdminDashboardController {
         return true;
     }
 
+    private boolean matchAppointmentDateFilter(LocalDate date, String filter) {
+        if (date == null) {
+            return "Toutes dates".equals(filter);
+        }
+
+        LocalDate today = LocalDate.now();
+        if ("Aujourd'hui".equals(filter)) {
+            return date.equals(today);
+        }
+        if ("7 prochains jours".equals(filter)) {
+            return !date.isBefore(today) && !date.isAfter(today.plusDays(7));
+        }
+        if ("Passe".equals(filter)) {
+            return date.isBefore(today);
+        }
+        return true;
+    }
+
+    private String normalizeStatusLabel(String raw) {
+        String normalized = normalize(raw);
+        return switch (normalized) {
+            case "en_attente", "pending", "requested" -> "EN ATTENTE";
+            case "publie", "published" -> "PUBLIE";
+            case "valide", "approved" -> "VALIDE";
+            case "rejete", "rejected" -> "REJETE";
+            case "confirme", "confirmed" -> "CONFIRME";
+            case "refuse", "refused" -> "REFUSE";
+            case "annule", "cancelled", "canceled" -> "ANNULE";
+            default -> safe(raw).toUpperCase(Locale.ROOT);
+        };
+    }
+
     private int averageScore(List<AdminOperationsService.AdminUserRow> rows) {
         if (rows.isEmpty()) {
             return 0;
@@ -1717,6 +2083,13 @@ public class AdminDashboardController {
             return "-";
         }
         return value.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+    }
+
+    private String formatTime(LocalTime value) {
+        if (value == null) {
+            return "--:--";
+        }
+        return value.format(DateTimeFormatter.ofPattern("HH:mm"));
     }
 
     private String money(BigDecimal value) {

@@ -31,7 +31,7 @@
                 <Hyperlink text="Accueil" styleClass="home-nav-link" onAction="#handleScrollToTop"/>
                 <Hyperlink text="À propos" styleClass="home-nav-link" onAction="#handleScrollToAbout"/>
                 <Hyperlink text="Services" styleClass="home-nav-link" onAction="#handleScrollToServices"/>
-                <Hyperlink text="Blog" styleClass="home-nav-link" onAction="#handleScrollToBlog"/>
+                <Hyperlink text="Community" styleClass="home-nav-link" onAction="#handleOpenCommunity"/>
                 <Hyperlink text="Rendez-Vous" styleClass="home-nav-link" onAction="#handleOpenAppointments"/>
                 <Hyperlink text="Contact" styleClass="home-nav-link" onAction="#handleScrollToContact"/>
             </HBox>
@@ -263,12 +263,27 @@
 
                     <VBox fx:id="blogSection" spacing="18" styleClass="home-section home-blog-section">
                         <VBox spacing="14" alignment="CENTER" styleClass="section-shell">
-                            <Label text="Forum &amp; Publications" styleClass="home-section-title"/>
-                            <Label text="Retrouvez les dernières ressources et échanges de la communauté SANTÉA" styleClass="home-section-subtitle"/>
+                            <Label text="Community" styleClass="home-section-title"/>
+                            <Label text="Extraits recents des contenus publies par la communaute SANTEA" styleClass="home-section-subtitle"/>
                             <HBox spacing="14" alignment="CENTER" styleClass="home-blog-grid">
-                                <VBox spacing="8" styleClass="home-blog-card"><Label text="Article" styleClass="home-card-kicker"/><Label text="Conseils bien-être" styleClass="home-card-title"/><Label text="Articles, astuces et recommandations pour améliorer votre santé au quotidien." wrapText="true" styleClass="home-card-text"/><Hyperlink text="Lire la suite" styleClass="home-read-link"/></VBox>
-                                <VBox spacing="8" styleClass="home-blog-card"><Label text="Publication" styleClass="home-card-kicker"/><Label text="Retours de la communauté" styleClass="home-card-title"/><Label text="Échangez avec les autres utilisateurs et découvrez les expériences partagées." wrapText="true" styleClass="home-card-text"/><Hyperlink text="Lire la suite" styleClass="home-read-link"/></VBox>
-                                <VBox spacing="8" styleClass="home-blog-card"><Label text="Guide" styleClass="home-card-kicker"/><Label text="Ressources pratiques" styleClass="home-card-title"/><Label text="Vidéo, PDF et guides pour rester informé et agir efficacement." wrapText="true" styleClass="home-card-text"/><Hyperlink text="Lire la suite" styleClass="home-read-link"/></VBox>
+                                <VBox spacing="8" styleClass="home-blog-card">
+                                    <Label fx:id="communityCard1KickerLabel" text="ARTICLE" styleClass="home-card-kicker"/>
+                                    <Label fx:id="communityCard1TitleLabel" text="Conseils bien-etre" styleClass="home-card-title"/>
+                                    <Label fx:id="communityCard1ExcerptLabel" text="Articles, astuces et recommandations pour ameliorer votre sante au quotidien." wrapText="true" styleClass="home-card-text"/>
+                                    <Hyperlink text="Lire la suite" styleClass="home-read-link" onAction="#handleOpenCommunity"/>
+                                </VBox>
+                                <VBox spacing="8" styleClass="home-blog-card">
+                                    <Label fx:id="communityCard2KickerLabel" text="PUBLICATION" styleClass="home-card-kicker"/>
+                                    <Label fx:id="communityCard2TitleLabel" text="Retours de la communaute" styleClass="home-card-title"/>
+                                    <Label fx:id="communityCard2ExcerptLabel" text="Echangez avec les autres utilisateurs et decouvrez les experiences partagees." wrapText="true" styleClass="home-card-text"/>
+                                    <Hyperlink text="Lire la suite" styleClass="home-read-link" onAction="#handleOpenCommunity"/>
+                                </VBox>
+                                <VBox spacing="8" styleClass="home-blog-card">
+                                    <Label fx:id="communityCard3KickerLabel" text="GUIDE" styleClass="home-card-kicker"/>
+                                    <Label fx:id="communityCard3TitleLabel" text="Ressources pratiques" styleClass="home-card-title"/>
+                                    <Label fx:id="communityCard3ExcerptLabel" text="Video, PDF et guides pour rester informe et agir efficacement." wrapText="true" styleClass="home-card-text"/>
+                                    <Hyperlink text="Lire la suite" styleClass="home-read-link" onAction="#handleOpenCommunity"/>
+                                </VBox>
                             </HBox>
                         </VBox>
                     </VBox>

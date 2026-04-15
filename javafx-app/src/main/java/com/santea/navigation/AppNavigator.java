@@ -98,6 +98,10 @@ public final class AppNavigator {
         showAppPage("/com/santea/fxml/appointments.fxml");
     }
 
+    public static void showContentCommunityPage() {
+        showAppPage("/com/santea/fxml/content_community.fxml");
+    }
+
     private static void showAppPage(String contentFxmlPath) {
         Parent contentRoot = loadFxml(contentFxmlPath);
         showInAppBase(contentRoot);

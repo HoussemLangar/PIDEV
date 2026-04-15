@@ -10,6 +10,6 @@
         <fx:include source="components/navbar.fxml"/>
     </top>
     <center>
-        <StackPane fx:id="contentContainer"/>
+        <StackPane fx:id="contentContainer" styleClass="app-content-host"/>
     </center>
 </BorderPane>

@@ -21,51 +21,74 @@
             styleClass="bo-root">
 
     <left>
-        <VBox styleClass="bo-sidebar" prefWidth="220" minWidth="220" maxWidth="220" spacing="10">
-            <padding>
-                <Insets top="16" right="12" bottom="16" left="12"/>
-            </padding>
+        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED"
+                    prefWidth="236" minWidth="236" maxWidth="236" styleClass="bo-sidebar-scroll">
+            <content>
+                <VBox styleClass="bo-sidebar" spacing="12">
+                    <padding>
+                        <Insets top="18" right="14" bottom="18" left="14"/>
+                    </padding>
 
-            <Label text="SANTEA" styleClass="bo-brand"/>
+                    <VBox styleClass="bo-brand-shell" spacing="3">
+                        <Label text="SANTEA" styleClass="bo-brand"/>
+                        <Label text="Back-Office Control Center" styleClass="bo-brand-subtitle"/>
+                    </VBox>
 
-            <Button fx:id="navDashboardButton" text="Dashboard" styleClass="bo-nav-btn bo-nav-active" onAction="#handleNavDashboard"/>
+                    <VBox styleClass="bo-nav-group" spacing="4">
+                        <Label text="GENERAL" styleClass="bo-nav-section"/>
+                        <Button fx:id="navDashboardButton" text="Dashboard" styleClass="bo-nav-btn bo-nav-active" onAction="#handleNavDashboard"/>
+                    </VBox>
 
-            <Label text="GESTION UTILISATEURS" styleClass="bo-nav-section"/>
-            <Button fx:id="navUsersButton" text="Utilisateurs" styleClass="bo-nav-btn" onAction="#handleNavUsers"/>
-            <Button fx:id="navValidationButton" text="Validation comptes" styleClass="bo-nav-btn" onAction="#handleNavValidation"/>
-            <Button fx:id="navSessionsButton" text="Sessions" styleClass="bo-nav-btn" onAction="#handleNavSessions"/>
-            <Button fx:id="navSuspiciousButton" text="Connexions suspectes" styleClass="bo-nav-btn" onAction="#handleNavSuspicious"/>
+                    <VBox styleClass="bo-nav-group" spacing="4">
+                        <Label text="GESTION UTILISATEURS" styleClass="bo-nav-section"/>
+                        <Button fx:id="navUsersButton" text="Utilisateurs" styleClass="bo-nav-btn" onAction="#handleNavUsers"/>
+                        <Button fx:id="navValidationButton" text="Validation comptes" styleClass="bo-nav-btn" onAction="#handleNavValidation"/>
+                        <Button fx:id="navSessionsButton" text="Sessions" styleClass="bo-nav-btn" onAction="#handleNavSessions"/>
+                        <Button fx:id="navSuspiciousButton" text="Connexions suspectes" styleClass="bo-nav-btn" onAction="#handleNavSuspicious"/>
+                    </VBox>
 
-            <Label text="ABONNEMENTS" styleClass="bo-nav-section"/>
-            <Button fx:id="navSubscriptionsButton" text="Abonnements" styleClass="bo-nav-btn" onAction="#handleNavSubscriptions"/>
-            <Button fx:id="navRevenuesButton" text="Revenus &amp; facturation" styleClass="bo-nav-btn" onAction="#handleNavRevenues"/>
+                    <VBox styleClass="bo-nav-group" spacing="4">
+                        <Label text="ABONNEMENTS" styleClass="bo-nav-section"/>
+                        <Button fx:id="navSubscriptionsButton" text="Abonnements" styleClass="bo-nav-btn" onAction="#handleNavSubscriptions"/>
+                        <Button fx:id="navRevenuesButton" text="Revenus &amp; facturation" styleClass="bo-nav-btn" onAction="#handleNavRevenues"/>
+                    </VBox>
 
-            <Label text="SERVICES MEDICAUX" styleClass="bo-nav-section"/>
-            <Button text="Accompagnements" styleClass="bo-nav-btn bo-nav-btn-disabled" disable="true"/>
+                    <VBox styleClass="bo-nav-group" spacing="4">
+                        <Label text="SERVICES MEDICAUX" styleClass="bo-nav-section"/>
+                        <Button text="Accompagnements" styleClass="bo-nav-btn bo-nav-btn-disabled" disable="true"/>
+                    </VBox>
 
-            <VBox styleClass="bo-admin-card" spacing="4">
-                <Label text="Principal Admin" styleClass="bo-admin-name"/>
-                <Label text="ADMINISTRATEUR" styleClass="bo-admin-role"/>
-                <HBox spacing="8" styleClass="bo-admin-actions">
-                    <Button text="Accueil" styleClass="bo-mini-btn" onAction="#handleBackHome"/>
-                    <Button text="Logout" styleClass="bo-mini-btn bo-mini-btn-danger" onAction="#handleLogout"/>
-                </HBox>
-            </VBox>
+                    <VBox styleClass="bo-nav-group" spacing="4">
+                        <Label text="COMMUNITY &amp; RDV" styleClass="bo-nav-section"/>
+                        <Button fx:id="navCommunityButton" text="Community" styleClass="bo-nav-btn" onAction="#handleNavCommunity"/>
+                        <Button fx:id="navAppointmentsAdminButton" text="Rendez-vous" styleClass="bo-nav-btn" onAction="#handleNavAppointmentsAdmin"/>
+                    </VBox>
 
-            <VBox styleClass="bo-settings-card" spacing="8">
-                <Label text="Theme" styleClass="bo-settings-title"/>
-                <HBox spacing="6">
-                    <Button text="Clair" styleClass="bo-setting-pill"/>
-                    <Button text="Sombre" styleClass="bo-setting-pill"/>
-                </HBox>
-                <Label text="Langue" styleClass="bo-settings-title"/>
-                <HBox spacing="6">
-                    <Button text="FR" styleClass="bo-setting-pill"/>
-                    <Button text="EN" styleClass="bo-setting-pill"/>
-                    <Button text="AR" styleClass="bo-setting-pill"/>
-                </HBox>
-            </VBox>
-        </VBox>
+                    <VBox styleClass="bo-admin-card" spacing="4">
+                        <Label text="Principal Admin" styleClass="bo-admin-name"/>
+                        <Label text="ADMINISTRATEUR" styleClass="bo-admin-role"/>
+                        <HBox spacing="8" styleClass="bo-admin-actions">
+                            <Button text="Accueil" styleClass="bo-mini-btn" onAction="#handleBackHome"/>
+                            <Button text="Logout" styleClass="bo-mini-btn bo-mini-btn-danger" onAction="#handleLogout"/>
+                        </HBox>
+                    </VBox>
+
+                    <VBox styleClass="bo-settings-card" spacing="8">
+                        <Label text="Theme" styleClass="bo-settings-title"/>
+                        <HBox spacing="6">
+                            <Button text="Clair" styleClass="bo-setting-pill"/>
+                            <Button text="Sombre" styleClass="bo-setting-pill"/>
+                        </HBox>
+                        <Label text="Langue" styleClass="bo-settings-title"/>
+                        <HBox spacing="6">
+                            <Button text="FR" styleClass="bo-setting-pill"/>
+                            <Button text="EN" styleClass="bo-setting-pill"/>
+                            <Button text="AR" styleClass="bo-setting-pill"/>
+                        </HBox>
+                    </VBox>
+                </VBox>
+            </content>
+        </ScrollPane>
     </left>
 
     <center>
@@ -355,6 +378,53 @@
                                 <Label fx:id="revenuesPaginationInfoLabel" text="Affichage 0-0 sur 0" styleClass="bo-pagination-label"/>
                                 <Button fx:id="revenuesPrevPageButton" text="Prev" styleClass="bo-view-btn" onAction="#handleRevenuesPrevPage"/>
                                 <Button fx:id="revenuesNextPageButton" text="Next" styleClass="bo-view-btn" onAction="#handleRevenuesNextPage"/>
+                            </HBox>
+                        </VBox>
+
+                        <VBox fx:id="pageCommunity" spacing="12" visible="false" managed="false">
+                            <FlowPane hgap="10" vgap="10" prefWrapLength="1000">
+                                <Label fx:id="communityTotalLabel" text="Total: 0" styleClass="bo-page-chip"/>
+                                <Label fx:id="communityPendingLabel" text="En attente: 0" styleClass="bo-page-chip"/>
+                                <Label fx:id="communityPublishedLabel" text="Publies/Valides: 0" styleClass="bo-page-chip"/>
+                                <Label fx:id="communityRejectedLabel" text="Rejetes: 0" styleClass="bo-page-chip"/>
+                            </FlowPane>
+                            <HBox spacing="8" styleClass="bo-table-filters">
+                                <TextField fx:id="communitySearchField" promptText="Rechercher contenu, auteur, tags..." HBox.hgrow="ALWAYS"/>
+                                <ComboBox fx:id="communityStatusFilterCombo" prefWidth="180"/>
+                                <ComboBox fx:id="communityTypeFilterCombo" prefWidth="170"/>
+                                <Button text="Filtrer" styleClass="bo-view-btn" onAction="#handleCommunityApplyFilters"/>
+                                <Button fx:id="communityListModeButton" text="Liste" styleClass="bo-view-btn" onAction="#handleCommunityListMode"/>
+                                <Button fx:id="communityGridModeButton" text="Grille" styleClass="bo-view-btn" onAction="#handleCommunityGridMode"/>
+                            </HBox>
+                            <FlowPane fx:id="communityRowsBox" styleClass="bo-items-container bo-items-list" hgap="10" vgap="10" prefWrapLength="2200"/>
+                            <HBox spacing="8" alignment="CENTER_RIGHT" styleClass="bo-pagination-wrap">
+                                <Label fx:id="communityPaginationInfoLabel" text="Affichage 0-0 sur 0" styleClass="bo-pagination-label"/>
+                                <Button fx:id="communityPrevPageButton" text="Prev" styleClass="bo-view-btn" onAction="#handleCommunityPrevPage"/>
+                                <Button fx:id="communityNextPageButton" text="Next" styleClass="bo-view-btn" onAction="#handleCommunityNextPage"/>
+                            </HBox>
+                        </VBox>
+
+                        <VBox fx:id="pageAppointmentsAdmin" spacing="12" visible="false" managed="false">
+                            <FlowPane hgap="10" vgap="10" prefWrapLength="1000">
+                                <Label fx:id="appointmentsAdminTotalLabel" text="Total: 0" styleClass="bo-page-chip"/>
+                                <Label fx:id="appointmentsAdminPendingLabel" text="En attente: 0" styleClass="bo-page-chip"/>
+                                <Label fx:id="appointmentsAdminConfirmedLabel" text="Confirmes: 0" styleClass="bo-page-chip"/>
+                                <Label fx:id="appointmentsAdminRefusedLabel" text="Refuses: 0" styleClass="bo-page-chip"/>
+                                <Label fx:id="appointmentsAdminCancelledLabel" text="Annules: 0" styleClass="bo-page-chip"/>
+                            </FlowPane>
+                            <HBox spacing="8" styleClass="bo-table-filters">
+                                <TextField fx:id="appointmentsAdminSearchField" promptText="Rechercher patient, medecin, motif..." HBox.hgrow="ALWAYS"/>
+                                <ComboBox fx:id="appointmentsAdminStatusFilterCombo" prefWidth="180"/>
+                                <ComboBox fx:id="appointmentsAdminDateFilterCombo" prefWidth="170"/>
+                                <Button text="Filtrer" styleClass="bo-view-btn" onAction="#handleAppointmentsAdminApplyFilters"/>
+                                <Button fx:id="appointmentsAdminListModeButton" text="Liste" styleClass="bo-view-btn" onAction="#handleAppointmentsAdminListMode"/>
+                                <Button fx:id="appointmentsAdminGridModeButton" text="Grille" styleClass="bo-view-btn" onAction="#handleAppointmentsAdminGridMode"/>
+                            </HBox>
+                            <FlowPane fx:id="appointmentsAdminRowsBox" styleClass="bo-items-container bo-items-list" hgap="10" vgap="10" prefWrapLength="2200"/>
+                            <HBox spacing="8" alignment="CENTER_RIGHT" styleClass="bo-pagination-wrap">
+                                <Label fx:id="appointmentsAdminPaginationInfoLabel" text="Affichage 0-0 sur 0" styleClass="bo-pagination-label"/>
+                                <Button fx:id="appointmentsAdminPrevPageButton" text="Prev" styleClass="bo-view-btn" onAction="#handleAppointmentsAdminPrevPage"/>
+                                <Button fx:id="appointmentsAdminNextPageButton" text="Next" styleClass="bo-view-btn" onAction="#handleAppointmentsAdminNextPage"/>
                             </HBox>
                         </VBox>
                     </StackPane>

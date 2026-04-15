@@ -17,6 +17,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -349,6 +350,224 @@ public class AdminOperationsService {
         }
 
         return ActionResult.failure("Moderation non disponible (table contenu absente ou schema different).");
+    }
+
+    public CommunityStats loadCommunityStats() {
+        int total = scalarWithFallback("SELECT COUNT(*) FROM contenu", -1);
+        if (total < 0) {
+            total = scalarWithFallback("SELECT COUNT(*) FROM contenus", 0);
+        }
+
+        int pending = scalarWithFallback("SELECT COUNT(*) FROM contenu WHERE statut = 'en_attente'", -1);
+        if (pending < 0) {
+            pending = scalarWithFallback("SELECT COUNT(*) FROM contenus WHERE LOWER(moderation_status) IN ('en_attente', 'pending')", 0);
+        }
+
+        int published = scalarWithFallback("SELECT COUNT(*) FROM contenu WHERE statut IN ('publie', 'valide')", -1);
+        if (published < 0) {
+            published = scalarWithFallback("SELECT COUNT(*) FROM contenus WHERE LOWER(moderation_status) IN ('publie', 'valide', 'approved')", 0);
+        }
+
+        int rejected = scalarWithFallback("SELECT COUNT(*) FROM contenu WHERE statut = 'rejete'", -1);
+        if (rejected < 0) {
+            rejected = scalarWithFallback("SELECT COUNT(*) FROM contenus WHERE LOWER(moderation_status) IN ('rejete', 'rejected')", 0);
+        }
+
+        return new CommunityStats(total, pending, published, rejected);
+    }
+
+    public List<CommunityRow> listCommunityForAdmin(int limit) {
+        int safeLimit = Math.max(1, Math.min(limit, 300));
+        List<CommunityRow> rows = new ArrayList<>();
+
+        String sqlSymfony = "SELECT c.id, c.titre, c.type, c.statut, c.categorie, c.tags, c.created_at, c.updated_at, "
+                + "u.nom AS auteur_nom, u.prenom AS auteur_prenom, u.email AS auteur_email, "
+                + "(SELECT COUNT(*) FROM likes l WHERE l.contenu_id = c.id) AS likes_count, "
+                + "(SELECT COUNT(*) FROM commentaires cm WHERE cm.contenu_id = c.id) AS comments_count, "
+                + "COALESCE(s.score_article, 0) AS score_article "
+                + "FROM contenu c "
+                + "LEFT JOIN users u ON u.id = c.auteur_id "
+                + "LEFT JOIN article_scores s ON s.contenu_id = c.id "
+                + "ORDER BY c.created_at DESC LIMIT ?";
+
+        String sqlLegacy = "SELECT c.id, c.title AS titre, c.type, c.moderation_status AS statut, c.category AS categorie, c.tags, c.created_at, c.updated_at, "
+                + "u.nom AS auteur_nom, u.prenom AS auteur_prenom, u.email AS auteur_email, "
+                + "0 AS likes_count, 0 AS comments_count, 0 AS score_article "
+                + "FROM contenus c "
+                + "LEFT JOIN users u ON u.id = c.user_id "
+                + "ORDER BY c.created_at DESC LIMIT ?";
+
+        if (fillCommunityRows(rows, sqlSymfony, safeLimit) || fillCommunityRows(rows, sqlLegacy, safeLimit)) {
+            return rows;
+        }
+
+        return List.of();
+    }
+
+    public ActionResult updateCommunityStatusByAdmin(int contentId, String moderationStatus, String reason) {
+        String status = normalizeModerationStatus(moderationStatus);
+        if (contentId <= 0) {
+            return ActionResult.failure("Contenu invalide.");
+        }
+        if (status.isBlank()) {
+            return ActionResult.failure("Statut community invalide.");
+        }
+
+        String sqlSymfony = "UPDATE contenu SET statut = ?, date_publication = ?, updated_at = ? WHERE id = ?";
+        String sqlLegacy = "UPDATE contenus SET moderation_status = ?, moderation_reason = ?, updated_at = ? WHERE id = ?";
+
+        for (String sql : new String[] {sqlSymfony, sqlLegacy}) {
+            try (Connection connection = databaseService.getConnection();
+                 PreparedStatement statement = connection.prepareStatement(sql)) {
+                Timestamp now = Timestamp.valueOf(LocalDateTime.now());
+                if (sql.equals(sqlSymfony)) {
+                    statement.setString(1, status);
+                    if ("publie".equals(status) || "valide".equals(status)) {
+                        statement.setTimestamp(2, now);
+                    } else {
+                        statement.setTimestamp(2, null);
+                    }
+                    statement.setTimestamp(3, now);
+                    statement.setInt(4, contentId);
+                } else {
+                    statement.setString(1, status);
+                    statement.setString(2, safe(reason));
+                    statement.setTimestamp(3, now);
+                    statement.setInt(4, contentId);
+                }
+
+                int changed = statement.executeUpdate();
+                if (changed == 1) {
+                    return ActionResult.success("Statut community mis a jour.");
+                }
+            } catch (SQLException ignored) {
+            }
+        }
+
+        return ActionResult.failure("Mise a jour community indisponible (schema non compatible).");
+    }
+
+    public AppointmentAdminStats loadAppointmentAdminStats() {
+        int total = scalarWithFallback("SELECT COUNT(*) FROM rendez_vous", -1);
+        if (total < 0) {
+            total = scalarWithFallback("SELECT COUNT(*) FROM appointments", 0);
+        }
+
+        int pending = scalarWithFallback("SELECT COUNT(*) FROM rendez_vous WHERE LOWER(statut) IN ('en_attente', 'pending', 'requested')", -1);
+        if (pending < 0) {
+            pending = scalarWithFallback("SELECT COUNT(*) FROM appointments WHERE LOWER(status) IN ('en_attente', 'pending', 'requested')", 0);
+        }
+
+        int confirmed = scalarWithFallback("SELECT COUNT(*) FROM rendez_vous WHERE LOWER(statut) IN ('confirme', 'confirmed')", -1);
+        if (confirmed < 0) {
+            confirmed = scalarWithFallback("SELECT COUNT(*) FROM appointments WHERE LOWER(status) IN ('confirme', 'confirmed')", 0);
+        }
+
+        int refused = scalarWithFallback("SELECT COUNT(*) FROM rendez_vous WHERE LOWER(statut) IN ('refuse', 'rejected')", -1);
+        if (refused < 0) {
+            refused = scalarWithFallback("SELECT COUNT(*) FROM appointments WHERE LOWER(status) IN ('refuse', 'rejected')", 0);
+        }
+
+        int cancelled = scalarWithFallback("SELECT COUNT(*) FROM rendez_vous WHERE LOWER(statut) IN ('annule', 'cancelled')", -1);
+        if (cancelled < 0) {
+            cancelled = scalarWithFallback("SELECT COUNT(*) FROM appointments WHERE LOWER(status) IN ('annule', 'cancelled')", 0);
+        }
+
+        return new AppointmentAdminStats(total, pending, confirmed, refused, cancelled);
+    }
+
+    public List<AppointmentAdminRow> listAppointmentsForAdmin(int limit) {
+        int safeLimit = Math.max(1, Math.min(limit, 300));
+        List<AppointmentAdminRow> rows = new ArrayList<>();
+
+        String sqlSymfony = "SELECT r.id, r.date_rdv, r.heure_rdv, r.statut, r.motif, r.created_at, "
+                + "pu.nom AS patient_nom, pu.prenom AS patient_prenom, pu.email AS patient_email, "
+                + "mu.nom AS medecin_nom, mu.prenom AS medecin_prenom, mu.email AS medecin_email "
+                + "FROM rendez_vous r "
+                + "LEFT JOIN patients p ON p.id = r.patient_id "
+                + "LEFT JOIN users pu ON pu.id = p.user_id "
+                + "LEFT JOIN medecins m ON m.id = r.medecin_id "
+                + "LEFT JOIN users mu ON mu.id = m.user_id "
+                + "ORDER BY r.date_rdv DESC, r.heure_rdv DESC LIMIT ?";
+
+        String sqlLegacy = "SELECT a.id, DATE(a.appointment_date) AS date_rdv, TIME(a.appointment_time) AS heure_rdv, a.status AS statut, a.reason AS motif, a.created_at, "
+                + "pu.nom AS patient_nom, pu.prenom AS patient_prenom, pu.email AS patient_email, "
+                + "mu.nom AS medecin_nom, mu.prenom AS medecin_prenom, mu.email AS medecin_email "
+                + "FROM appointments a "
+                + "LEFT JOIN users pu ON pu.id = a.patient_id "
+                + "LEFT JOIN users mu ON mu.id = a.doctor_id "
+                + "ORDER BY a.appointment_date DESC, a.appointment_time DESC LIMIT ?";
+
+        if (fillAppointmentRows(rows, sqlSymfony, safeLimit) || fillAppointmentRows(rows, sqlLegacy, safeLimit)) {
+            return rows;
+        }
+
+        return List.of();
+    }
+
+    public ActionResult updateAppointmentStatusByAdmin(int appointmentId, String status) {
+        String normalized = normalizeAppointmentStatus(status);
+        if (appointmentId <= 0) {
+            return ActionResult.failure("Rendez-vous invalide.");
+        }
+        if (normalized.isBlank()) {
+            return ActionResult.failure("Statut rendez-vous invalide.");
+        }
+
+        String lockSql = "SELECT disponibilite_id FROM rendez_vous WHERE id = ? FOR UPDATE";
+        String updateSql = "UPDATE rendez_vous SET statut = ?, updated_at = ? WHERE id = ?";
+        String freeSlotSql = "UPDATE disponibilites SET statut = 'disponible', updated_at = ? WHERE id = ?";
+
+        try (Connection connection = databaseService.getConnection()) {
+            connection.setAutoCommit(false);
+
+            Integer disponibiliteId = null;
+            try (PreparedStatement lock = connection.prepareStatement(lockSql)) {
+                lock.setInt(1, appointmentId);
+                try (ResultSet rs = lock.executeQuery()) {
+                    if (!rs.next()) {
+                        connection.rollback();
+                        return ActionResult.failure("Rendez-vous introuvable.");
+                    }
+                    disponibiliteId = nullableInt(rs, "disponibilite_id");
+                }
+            }
+
+            Timestamp now = Timestamp.valueOf(LocalDateTime.now());
+            try (PreparedStatement update = connection.prepareStatement(updateSql)) {
+                update.setString(1, normalized);
+                update.setTimestamp(2, now);
+                update.setInt(3, appointmentId);
+                update.executeUpdate();
+            }
+
+            if (("refuse".equals(normalized) || "annule".equals(normalized)) && disponibiliteId != null) {
+                try (PreparedStatement free = connection.prepareStatement(freeSlotSql)) {
+                    free.setTimestamp(1, now);
+                    free.setInt(2, disponibiliteId);
+                    free.executeUpdate();
+                }
+            }
+
+            connection.commit();
+            return ActionResult.success("Statut rendez-vous mis a jour.");
+        } catch (SQLException ignored) {
+        }
+
+        String fallbackSql = "UPDATE appointments SET status = ?, updated_at = ? WHERE id = ?";
+        try (Connection connection = databaseService.getConnection();
+             PreparedStatement statement = connection.prepareStatement(fallbackSql)) {
+            statement.setString(1, normalized);
+            statement.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
+            statement.setInt(3, appointmentId);
+            int changed = statement.executeUpdate();
+            if (changed == 1) {
+                return ActionResult.success("Statut rendez-vous mis a jour.");
+            }
+            return ActionResult.failure("Rendez-vous introuvable.");
+        } catch (SQLException exception) {
+            return ActionResult.failure("Mise a jour rendez-vous impossible: " + exception.getMessage());
+        }
     }
 
     public List<UserScoreRow> listTopUserScores(int limit) {
@@ -892,6 +1111,15 @@ public class AdminOperationsService {
         return value == null ? null : value.toLocalDate();
     }
 
+    private LocalTime toLocalTime(java.sql.Time value) {
+        return value == null ? null : value.toLocalTime();
+    }
+
+    private Integer nullableInt(ResultSet resultSet, String column) throws SQLException {
+        int value = resultSet.getInt(column);
+        return resultSet.wasNull() ? null : value;
+    }
+
     private void syncUserFromSubscription(int subscriptionId) {
         String select = "SELECT user_id, type_abonnement, statut, date_fin FROM abonnements WHERE id = ? LIMIT 1";
         try (Connection connection = databaseService.getConnection();
@@ -953,6 +1181,63 @@ public class AdminOperationsService {
                         safe(rs.getString("auteur_email")),
                         toLocalDateTime(rs.getTimestamp("created_at"))
                 ));
+            }
+            return true;
+        } catch (SQLException ignored) {
+            return false;
+        }
+    }
+
+    private boolean fillCommunityRows(List<CommunityRow> rows, String sql, int limit) {
+        try (Connection connection = databaseService.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, limit);
+
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    String author = displayName(rs.getString("auteur_nom"), rs.getString("auteur_prenom"), rs.getString("auteur_email"));
+                    rows.add(new CommunityRow(
+                            rs.getInt("id"),
+                            safe(rs.getString("titre")),
+                            safe(rs.getString("type")),
+                            safe(rs.getString("statut")),
+                            author,
+                            safe(rs.getString("categorie")),
+                            safe(rs.getString("tags")),
+                            rs.getInt("likes_count"),
+                            rs.getInt("comments_count"),
+                            rs.getDouble("score_article"),
+                            toLocalDateTime(rs.getTimestamp("created_at")),
+                            toLocalDateTime(rs.getTimestamp("updated_at"))
+                    ));
+                }
+            }
+            return true;
+        } catch (SQLException ignored) {
+            return false;
+        }
+    }
+
+    private boolean fillAppointmentRows(List<AppointmentAdminRow> rows, String sql, int limit) {
+        try (Connection connection = databaseService.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, limit);
+
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    String patient = displayName(rs.getString("patient_nom"), rs.getString("patient_prenom"), rs.getString("patient_email"));
+                    String doctor = displayName(rs.getString("medecin_nom"), rs.getString("medecin_prenom"), rs.getString("medecin_email"));
+                    rows.add(new AppointmentAdminRow(
+                            rs.getInt("id"),
+                            patient,
+                            doctor,
+                            toLocalDate(rs.getDate("date_rdv")),
+                            toLocalTime(rs.getTime("heure_rdv")),
+                            safe(rs.getString("statut")),
+                            safe(rs.getString("motif")),
+                            toLocalDateTime(rs.getTimestamp("created_at"))
+                    ));
+                }
             }
             return true;
         } catch (SQLException ignored) {
@@ -1089,6 +1374,25 @@ public class AdminOperationsService {
             case "pending" -> "en_attente";
             default -> "";
         };
+    }
+
+    private String normalizeAppointmentStatus(String status) {
+        String normalized = safe(status).toLowerCase();
+        return switch (normalized) {
+            case "en_attente", "pending", "requested" -> "en_attente";
+            case "confirme", "confirmed", "approve", "approved" -> "confirme";
+            case "refuse", "rejected", "reject" -> "refuse";
+            case "annule", "cancelled", "canceled", "cancel" -> "annule";
+            default -> "";
+        };
+    }
+
+    private String displayName(String nom, String prenom, String email) {
+        String full = (safe(prenom) + " " + safe(nom)).trim();
+        if (!full.isBlank()) {
+            return full;
+        }
+        return safe(email).isBlank() ? "Inconnu" : safe(email);
     }
 
     private String supportPriorityLabel(int score) {
@@ -1287,6 +1591,51 @@ public class AdminOperationsService {
             return value == null ? "" : value.trim();
         }
     }
+
+        public record CommunityStats(
+            int total,
+            int pending,
+            int published,
+            int rejected
+        ) {
+        }
+
+        public record CommunityRow(
+            int id,
+            String title,
+            String type,
+            String status,
+            String authorDisplay,
+            String category,
+            String tags,
+            int likesCount,
+            int commentsCount,
+            double score,
+            LocalDateTime createdAt,
+            LocalDateTime updatedAt
+        ) {
+        }
+
+        public record AppointmentAdminStats(
+            int total,
+            int pending,
+            int confirmed,
+            int refused,
+            int cancelled
+        ) {
+        }
+
+        public record AppointmentAdminRow(
+            int id,
+            String patientDisplay,
+            String doctorDisplay,
+            LocalDate date,
+            LocalTime time,
+            String status,
+            String motif,
+            LocalDateTime createdAt
+        ) {
+        }
 
     public record AdminVoiceResult(boolean success, String message) {
         public static AdminVoiceResult success(String message) {

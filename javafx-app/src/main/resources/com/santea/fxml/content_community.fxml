@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.Priority?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.santea.controller.ContentCommunityController"
+            styleClass="blog-root">
+
+    <center>
+    <ScrollPane fitToWidth="true" hbarPolicy="NEVER" styleClass="blog-scroll"
+                maxWidth="1.7976931348623157E308" maxHeight="1.7976931348623157E308">
+        <content>
+            <VBox spacing="16" alignment="TOP_CENTER" styleClass="blog-shell">
+                <padding>
+                    <Insets top="20" right="18" bottom="24" left="18"/>
+                </padding>
+
+                <VBox fx:id="blockedCard" spacing="8" visible="false" managed="false" styleClass="blog-blocked-card" maxWidth="1240">
+                    <Label text="Acces restreint" styleClass="blog-blocked-title"/>
+                    <Label fx:id="blockedMessageLabel" text="Abonnement requis" styleClass="blog-blocked-text" wrapText="true"/>
+                    <Button text="Voir abonnements" styleClass="blog-ghost-btn" onAction="#handleOpenSubscription"/>
+                </VBox>
+
+                <VBox fx:id="moduleContent" spacing="14" maxWidth="1240" styleClass="blog-module-root">
+                    <VBox spacing="16" styleClass="blog-hero-card">
+                        <HBox alignment="CENTER_LEFT" spacing="10">
+                            <Label fx:id="heroChipLabel" text="Blog &amp; Forum" styleClass="blog-chip"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Button fx:id="heroPrimaryButton" text="+ Ajouter un contenu" styleClass="blog-add-btn" onAction="#handleHeroPrimaryAction"/>
+                            <Button fx:id="heroBackButton" text="← Retour" styleClass="blog-back-btn" visible="false" managed="false" onAction="#handleHeroBackAction"/>
+                        </HBox>
+
+                        <Label fx:id="heroTitleLabel" text="Articles, Forum &amp; Guides" styleClass="blog-hero-title"/>
+                        <Label fx:id="heroSubtitleLabel" text="Explorez les contenus validés, échangez et laissez vos commentaires." styleClass="blog-hero-subtitle" wrapText="true"/>
+
+                        <HBox fx:id="filtersBar" spacing="8" alignment="CENTER_LEFT" styleClass="blog-filters-row">
+                            <TextField fx:id="searchField" promptText="Rechercher un contenu..." styleClass="blog-input" HBox.hgrow="ALWAYS"/>
+                            <ComboBox fx:id="typeFilterCombo" prefWidth="132" styleClass="blog-input"/>
+                            <ComboBox fx:id="categoryFilterCombo" prefWidth="160" styleClass="blog-input"/>
+                            <Button fx:id="mineOnlyButton" text="Mon contenu" styleClass="blog-filter-btn" onAction="#handleToggleMine"/>
+                            <Button text="↺ Réinitialiser" styleClass="blog-filter-btn" onAction="#handleResetFilters"/>
+                        </HBox>
+                    </VBox>
+
+                    <VBox fx:id="listModeSection" spacing="12" visible="true" managed="true">
+                        <VBox fx:id="recommendedSection" spacing="8" styleClass="blog-content-panel" visible="false" managed="false">
+                            <HBox alignment="CENTER_LEFT">
+                                <Label text="Recommandé pour vous" styleClass="blog-panel-title"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Label text="Personnalisé" styleClass="blog-personalized-badge"/>
+                            </HBox>
+                            <Label text="Top 4 contenus avec les meilleurs scores." styleClass="blog-panel-subtitle"/>
+                            <FlowPane fx:id="recommendedCardsPane" hgap="12" vgap="12" prefWrapLength="1180"/>
+                        </VBox>
+
+                        <VBox spacing="8" styleClass="blog-content-panel">
+                            <Label text="Tous les contenus" styleClass="blog-panel-title"/>
+                            <Label text="Liste filtrable — mise à jour en temps réel." styleClass="blog-panel-subtitle"/>
+                            <FlowPane fx:id="contentCardsPane" hgap="12" vgap="12" prefWrapLength="1180"/>
+                        </VBox>
+                    </VBox>
+
+                    <VBox fx:id="createModeSection" spacing="12" visible="false" managed="false" styleClass="blog-content-panel">
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <Label text="Titre *" styleClass="blog-field-label"/>
+                            <TextField fx:id="createTitleField" promptText="Titre du contenu" styleClass="blog-input" HBox.hgrow="ALWAYS"/>
+                            <Label text="Type de contenu *" styleClass="blog-field-label"/>
+                            <ComboBox fx:id="createTypeCombo" prefWidth="170" styleClass="blog-input"/>
+                        </HBox>
+
+                        <Label text="Description" styleClass="blog-field-label"/>
+                        <TextArea fx:id="createDescriptionArea" promptText="Résumé court (optionnel)" wrapText="true" prefRowCount="3" styleClass="blog-textarea"/>
+
+                        <Label fx:id="createBodyLabel" text="Article" styleClass="blog-field-label"/>
+                        <TextArea fx:id="createBodyArea" promptText="Rédigez votre article" wrapText="true" prefRowCount="8" styleClass="blog-textarea"/>
+
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <VBox spacing="6" HBox.hgrow="ALWAYS">
+                                <Label text="Catégorie" styleClass="blog-field-label"/>
+                                <ComboBox fx:id="createCategoryCombo" styleClass="blog-input"/>
+                            </VBox>
+                            <VBox spacing="6" HBox.hgrow="ALWAYS">
+                                <Label text="Tags (séparés par des virgules)" styleClass="blog-field-label"/>
+                                <TextField fx:id="createTagsField" promptText="Ex: santé, prévention" styleClass="blog-input"/>
+                            </VBox>
+                        </HBox>
+
+                        <HBox spacing="8" alignment="CENTER_RIGHT">
+                            <Button text="Annuler" styleClass="blog-ghost-btn" onAction="#handleCancelCreate"/>
+                            <Button fx:id="saveContentButton" text="Publier (en attente)" styleClass="blog-add-btn" onAction="#handleSaveContent"/>
+                        </HBox>
+                    </VBox>
+
+                    <VBox fx:id="detailModeSection" spacing="12" visible="false" managed="false">
+                        <VBox spacing="8" styleClass="blog-content-panel">
+                            <HBox spacing="8" alignment="CENTER_LEFT">
+                                <Label fx:id="detailTypeBadge" text="ARTICLE" styleClass="blog-type-badge"/>
+                                <Label fx:id="detailDateLabel" text="" styleClass="blog-muted-text"/>
+                                <Label fx:id="detailAuthorLabel" text="" styleClass="blog-muted-text"/>
+                            </HBox>
+
+                            <Label fx:id="detailBodyLabel" text="" wrapText="true" styleClass="blog-detail-body"/>
+
+                            <HBox spacing="8" alignment="CENTER_LEFT">
+                                <Button fx:id="detailLikeButton" text="❤ 0" styleClass="blog-meta-btn" onAction="#handleToggleLike"/>
+                                <Label fx:id="detailCommentsCountLabel" text="Commentaires ( 0 )" styleClass="blog-meta-btn"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Button fx:id="detailEditButton" text="Modifier" styleClass="blog-filter-btn" onAction="#handleEditSelected"/>
+                                <Button fx:id="detailDeleteButton" text="Supprimer" styleClass="blog-danger-btn" onAction="#handleDeleteSelected"/>
+                            </HBox>
+                        </VBox>
+
+                        <VBox spacing="8" styleClass="blog-content-panel">
+                            <HBox fx:id="adminModerationRow" spacing="8" alignment="CENTER_LEFT" visible="false" managed="false">
+                                <Label text="Modération admin" styleClass="blog-field-label"/>
+                                <ComboBox fx:id="adminStatusCombo" prefWidth="150" styleClass="blog-input"/>
+                                <Button text="Appliquer" styleClass="blog-filter-btn" onAction="#handleApplyAdminStatus"/>
+                            </HBox>
+
+                            <Label text="Commentaires" styleClass="blog-panel-title"/>
+                            <VBox fx:id="commentsListBox" spacing="8"/>
+
+                            <TextArea fx:id="newCommentArea" promptText="Écrivez votre commentaire" wrapText="true" prefRowCount="3" styleClass="blog-textarea"/>
+                            <HBox alignment="CENTER_RIGHT">
+                                <Button text="Ajouter commentaire" styleClass="blog-add-btn" onAction="#handleAddComment"/>
+                            </HBox>
+                        </VBox>
+                    </VBox>
+
+                    <VBox fx:id="adminQueueSection" spacing="8" visible="false" managed="false" styleClass="blog-content-panel">
+                        <Label text="File de modération" styleClass="blog-panel-title"/>
+                        <FlowPane fx:id="moderationCardsPane" hgap="12" vgap="12" prefWrapLength="1180"/>
+                    </VBox>
+
+                    <Label fx:id="feedbackLabel" text="" styleClass="blog-feedback" wrapText="true"/>
+
+                    <HBox alignment="CENTER" styleClass="blog-footer-row">
+                        <Label text="2026 SANTÉA - All Rights Reserved" styleClass="blog-footer-text"/>
+                    </HBox>
+                </VBox>
+            </VBox>
+        </content>
+    </ScrollPane>
+    </center>
+
+</BorderPane>
