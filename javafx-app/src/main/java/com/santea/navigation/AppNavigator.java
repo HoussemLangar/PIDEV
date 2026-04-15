@@ -97,6 +97,10 @@ public final class AppNavigator {
         showAppPage("/com/santea/fxml/sante_quotidienne.fxml");
     }
 
+    public static void showSanteQuotidienneAdmin() {
+        showAppPage("/com/santea/fxml/sante_quotidienne_admin.fxml");
+    }
+
     private static void showAppPage(String contentFxmlPath) {
         Parent contentRoot = loadFxml(contentFxmlPath);
         showInAppBase(contentRoot);

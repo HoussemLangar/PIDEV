@@ -68,7 +68,7 @@
 
                         <HBox spacing="12">
                             <VBox spacing="6" HBox.hgrow="ALWAYS">
-                                <Label text="Calories" styleClass="field-label"/>
+                                <Label text="Calories brulées" styleClass="field-label"/>
                                 <TextField fx:id="caloriesField" styleClass="form-control" promptText="Ex: 2200"/>
                             </VBox>
                             <VBox spacing="6" HBox.hgrow="ALWAYS">

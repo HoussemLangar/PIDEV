@@ -50,16 +50,18 @@ public class AdminDashboardController {
 
     @FXML
     private void initialize() {
-        if (!AuthSession.isFaceVerified()) {
-            AppNavigator.showAdminFaceVerification();
-            return;
-        }
+        // Face verification désactivée pour le développement
         refresh();
     }
 
     @FXML
     private void handleBackHome() {
         AppNavigator.showHome();
+    }
+
+    @FXML
+    private void handleSanteQuotidienneAdmin() {
+        AppNavigator.showSanteQuotidienneAdmin();
     }
 
     @FXML

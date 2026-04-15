@@ -117,10 +117,7 @@ public class HomeViewController {
     @FXML
     private void handleOpenAdminDashboard() {
         hideAllMenus();
-        if (!AuthSession.isFaceVerified()) {
-            AppNavigator.showAdminFaceVerification();
-            return;
-        }
+        // Face verification désactivée pour le développement
         AppNavigator.showAdminDashboard();
     }
 

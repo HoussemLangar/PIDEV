@@ -1,0 +1,2 @@
+session_id,user_id,plan_type,amount,currency,status,updated_at
+no_data,0,NA,0,EUR,table_missing,"Table 'pidev.stripe_payments' doesn't exist"

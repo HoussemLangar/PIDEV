@@ -1,4 +1,4 @@
-FROM php:8.1-apache
+FROM php:8.2-apache
 
 # Installation dépendances système + ssl-cert
 RUN apt-get update && apt-get install -y \
@@ -22,13 +22,13 @@ RUN apt-get update && apt-get install -y \
     gd \
     opcache
 
-# Installation Blackfire PHP Probe
-RUN install -m 0755 -d /etc/apt/keyrings \
-    && curl -fsSL https://packages.blackfire.io/gpg.key | gpg --dearmor -o /etc/apt/keyrings/blackfire.gpg \
-    && echo "deb [signed-by=/etc/apt/keyrings/blackfire.gpg] https://packages.blackfire.io/debian any main" > /etc/apt/sources.list.d/blackfire.list \
-    && apt-get update \
-    && apt-get install -y blackfire-php \
-    && rm -rf /var/lib/apt/lists/*
+# Installation Blackfire PHP Probe (optionnel - commenté pour éviter issues DNS)
+# RUN install -m 0755 -d /etc/apt/keyrings \
+#     && curl -fsSL https://packages.blackfire.io/gpg.key | gpg --dearmor -o /etc/apt/keyrings/blackfire.gpg \
+#     && echo "deb [signed-by=/etc/apt/keyrings/blackfire.gpg] https://packages.blackfire.io/debian any main" > /etc/apt/sources.list.d/blackfire.list \
+#     && apt-get update \
+#     && apt-get install -y blackfire-php \
+#     && rm -rf /var/lib/apt/lists/*
 
 # Générer certificat SSL local
 RUN make-ssl-cert generate-default-snakeoil --force-overwrite
