@@ -93,6 +93,51 @@ public final class AppNavigator {
         showAppPage("/com/santea/fxml/profile_mfa.fxml");
     }
 
+    public static void showTeleconsultation() {
+        showAppPage("/com/santea/fxml/teleconsultation.fxml");
+    }
+
+    public static void showTeleconsultationSchedule() {
+        showAppPage("/com/santea/fxml/teleconsultation_schedule.fxml");
+    }
+
+    public static void showTeleconsultationShow(int id) {
+        ModuleContext.setTeleconsultationId(id);
+        showAppPage("/com/santea/fxml/teleconsultation_show.fxml");
+    }
+
+    public static void showTeleconsultationJoin(int id) {
+        ModuleContext.setTeleconsultationId(id);
+        showAppPage("/com/santea/fxml/teleconsultation_join.fxml");
+    }
+
+    public static void showDocumentSharing() {
+        showAppPage("/com/santea/fxml/document_sharing.fxml");
+    }
+
+    public static void showDocumentUpload() {
+        showAppPage("/com/santea/fxml/document_upload.fxml");
+    }
+
+    public static void showDocumentShow(int id) {
+        ModuleContext.setDocumentId(id);
+        showAppPage("/com/santea/fxml/document_show.fxml");
+    }
+
+    public static void showDocumentShare(int id) {
+        ModuleContext.setDocumentId(id);
+        showAppPage("/com/santea/fxml/document_share.fxml");
+    }
+
+    public static void showMessaging() {
+        showAppPage("/com/santea/fxml/messaging.fxml");
+    }
+
+    public static void showMessageShow(int id) {
+        ModuleContext.setConversationId(id);
+        showAppPage("/com/santea/fxml/message_show.fxml");
+    }
+
     private static void showAppPage(String contentFxmlPath) {
         Parent contentRoot = loadFxml(contentFxmlPath);
         showInAppBase(contentRoot);
@@ -110,7 +155,7 @@ public final class AppNavigator {
             throw new RuntimeException("Impossible de charger la base applicative", exception);
         }
 
-        applyScene(buildScene(baseRoot));
+        applyScene(buildAppScene(baseRoot));
     }
 
     private static void showAuthPage(String contentFxmlPath) {
@@ -152,6 +197,21 @@ public final class AppNavigator {
         if (cssResource == null) {
             throw new RuntimeException("Ressource CSS introuvable: /com/santea/styles/auth.css");
         }
+        scene.getStylesheets().add(cssResource.toExternalForm());
+        return scene;
+    }
+
+    private static Scene buildAppScene(Parent root) {
+        Scene scene = new Scene(root);
+        URL sharedCssResource = Main.class.getResource("/com/santea/styles/auth.css");
+        if (sharedCssResource == null) {
+            throw new RuntimeException("Ressource CSS introuvable: /com/santea/styles/auth.css");
+        }
+        URL cssResource = Main.class.getResource("/com/santea/styles/app.css");
+        if (cssResource == null) {
+            throw new RuntimeException("Ressource CSS introuvable: /com/santea/styles/app.css");
+        }
+        scene.getStylesheets().add(sharedCssResource.toExternalForm());
         scene.getStylesheets().add(cssResource.toExternalForm());
         return scene;
     }

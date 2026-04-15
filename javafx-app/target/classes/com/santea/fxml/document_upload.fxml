@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Priority?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.santea.controller.DocumentUploadController"
+      spacing="20" styleClass="document-root">
+    <children>
+        <HBox alignment="CENTER_LEFT">
+            <VBox spacing="4">
+                <Label text="Uploader un document" styleClass="page-title"/>
+                <Label fx:id="selectedFileLabel" text="Aucun fichier sélectionné" styleClass="section-subtitle"/>
+            </VBox>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button fx:id="backButton" text="Retour" styleClass="btn-secondary"/>
+        </HBox>
+
+        <VBox spacing="12" styleClass="doc-detail-card" maxWidth="760">
+            <Button fx:id="chooseFileButton" text="Choisir un fichier" styleClass="btn-info"/>
+            <ComboBox fx:id="documentTypeCombo" promptText="Type de document"/>
+            <TextArea fx:id="descriptionArea" wrapText="true" prefRowCount="6" styleClass="tele-readonly-area"/>
+            <HBox spacing="10">
+                <Button fx:id="uploadButton" text="Uploader" styleClass="btn-success"/>
+                <Button fx:id="cancelButton" text="Annuler" styleClass="btn-secondary"/>
+            </HBox>
+        </VBox>
+    </children>
+</VBox>

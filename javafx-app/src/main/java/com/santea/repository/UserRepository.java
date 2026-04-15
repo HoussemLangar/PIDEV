@@ -12,6 +12,9 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 public class UserRepository {
@@ -68,6 +71,46 @@ public class UserRepository {
             }
         } catch (SQLException exception) {
             return Optional.empty();
+        }
+    }
+
+    public List<User> findByRole(String role) {
+        return findByRoles(Collections.singletonList(role));
+    }
+
+    public List<User> findByRoles(List<String> roles) {
+        if (roles == null || roles.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        String placeholders = String.join(",", Collections.nCopies(roles.size(), "?"));
+        String sql = "SELECT id, username, email, password, nom, prenom, role, email_verified, admin_approved, "
+                + "is_banned, ban_reason, ban_until, subscription_status, subscription_type, subscription_end_at, "
+                + "theme_preference, locale, mfa_enabled, google_authenticator_secret, "
+                + "telephone, adresse, date_naissance, reminder_enabled, avatar_data, avatar_mime "
+                + "FROM users WHERE role IN (" + placeholders + ") OR subscription_type IN (" + placeholders + ") "
+                + "ORDER BY username ASC";
+
+        try (Connection connection = databaseService.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            int index = 1;
+            for (String role : roles) {
+                statement.setString(index++, role);
+            }
+            for (String role : roles) {
+                statement.setString(index++, role);
+            }
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                List<User> users = new ArrayList<>();
+                while (resultSet.next()) {
+                    users.add(mapUser(resultSet));
+                }
+                return users;
+            }
+        } catch (SQLException exception) {
+            return Collections.emptyList();
         }
     }
 

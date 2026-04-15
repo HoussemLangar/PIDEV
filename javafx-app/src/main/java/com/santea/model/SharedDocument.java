@@ -117,4 +117,27 @@ public class SharedDocument {
     public void setAccesses(List<Object> accesses) {
         this.accesses = accesses;
     }
+
+    public boolean isPublic() {
+        return Boolean.TRUE.equals(isPublic);
+    }
+
+    public String getFileSizeFormatted() {
+        if (fileSize == null || fileSize <= 0) {
+            return "0 B";
+        }
+
+        String[] units = {"B", "KB", "MB", "GB", "TB"};
+        int index = (int) (Math.log(fileSize) / Math.log(1024));
+        index = Math.min(index, units.length - 1);
+        double value = fileSize / Math.pow(1024, index);
+        return String.format("%.2f %s", value, units[index]);
+    }
+
+    public boolean hasUserAccess(User user) {
+        if (user == null) {
+            return false;
+        }
+        return (owner != null && owner.getId().equals(user.getId())) || isPublic();
+    }
 }

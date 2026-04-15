@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Priority?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.santea.controller.DocumentShowController"
+      spacing="20" styleClass="document-root">
+    <children>
+        <HBox alignment="CENTER_LEFT" spacing="12">
+            <VBox spacing="4">
+                <Label fx:id="documentNameLabel" text="Document" styleClass="page-title"/>
+                <Label fx:id="documentOwnerLabel" text="" styleClass="section-subtitle"/>
+            </VBox>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button fx:id="backButton" text="Retour" styleClass="btn-secondary"/>
+        </HBox>
+
+        <VBox spacing="16" styleClass="doc-detail-card">
+            <HBox alignment="CENTER_LEFT" spacing="16">
+                <StackPane styleClass="doc-hero-icon">
+                    <Label text="■" styleClass="doc-hero-icon-symbol"/>
+                </StackPane>
+                <VBox spacing="6" HBox.hgrow="ALWAYS">
+                    <HBox spacing="8">
+                        <Label fx:id="documentTypeBadgeLabel" text="TYPE" styleClass="doc-row-badge doc-row-shared-badge"/>
+                        <Label fx:id="documentVisibilityBadgeLabel" text="PRIVÉ" styleClass="doc-row-badge doc-row-owner-badge"/>
+                    </HBox>
+                    <Label fx:id="documentMimeTypeLabel" text="" styleClass="doc-muted"/>
+                </VBox>
+            </HBox>
+            <HBox spacing="12">
+                <VBox spacing="4" HBox.hgrow="ALWAYS" styleClass="doc-info-box">
+                    <Label text="Type" styleClass="detail-label"/>
+                    <Label fx:id="documentTypeLabel" text="--" styleClass="detail-value"/>
+                </VBox>
+                <VBox spacing="4" HBox.hgrow="ALWAYS" styleClass="doc-info-box">
+                    <Label text="Taille" styleClass="detail-label"/>
+                    <Label fx:id="documentSizeLabel" text="--" styleClass="detail-value"/>
+                </VBox>
+                <VBox spacing="4" HBox.hgrow="ALWAYS" styleClass="doc-info-box">
+                    <Label text="Uploadé le" styleClass="detail-label"/>
+                    <Label fx:id="documentUploadedLabel" text="--" styleClass="detail-value"/>
+                </VBox>
+            </HBox>
+            <HBox spacing="12">
+                <VBox spacing="4" HBox.hgrow="ALWAYS" styleClass="doc-info-box">
+                    <Label text="Partagé avec" styleClass="detail-label"/>
+                    <Label fx:id="sharedWithCountLabel" text="0" styleClass="detail-value"/>
+                </VBox>
+                <VBox spacing="4" HBox.hgrow="ALWAYS" styleClass="doc-info-box">
+                    <Label text="Téléchargements" styleClass="detail-label"/>
+                    <Label fx:id="totalAccessCountLabel" text="0" styleClass="detail-value"/>
+                </VBox>
+            </HBox>
+            <TextArea fx:id="documentDescriptionArea" editable="false" wrapText="true" prefRowCount="5" styleClass="tele-readonly-area"/>
+            <HBox spacing="10">
+                <Button fx:id="downloadButton" text="Télécharger" styleClass="btn-success"/>
+                <Button fx:id="shareButton" text="Partager" styleClass="btn-secondary"/>
+                <Button fx:id="deleteButton" text="Supprimer" styleClass="btn-danger"/>
+            </HBox>
+        </VBox>
+
+        <VBox spacing="12" styleClass="doc-detail-card" VBox.vgrow="ALWAYS">
+            <Label text="Informations de partage" styleClass="doc-panel-title"/>
+            <Separator/>
+            <ListView fx:id="accessListView" VBox.vgrow="ALWAYS" styleClass="document-list"/>
+        </VBox>
+    </children>
+</VBox>

@@ -114,4 +114,111 @@ public class Teleconsultation {
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
+
+    public String getJitsiRoomName() {
+        return roomName;
+    }
+
+    public void setJitsiRoomName(String roomName) {
+        this.roomName = roomName;
+    }
+
+    public String getJitsiRoomUrl() {
+        return "https://meet.jit.si/" + (roomName != null ? roomName : "");
+    }
+
+    public Integer getPatientId() {
+        return recipient != null ? recipient.getId() : null;
+    }
+
+    public Integer getProfessionalId() {
+        return initiator != null ? initiator.getId() : null;
+    }
+
+    public Integer getDurationMinutes() {
+        if (durationSeconds == null) return 0;
+        return durationSeconds / 60;
+    }
+
+    public void startConsultation() {
+        this.status = "ongoing";
+        this.startedAt = LocalDateTime.now();
+    }
+
+    public void endConsultation() {
+        this.status = "completed";
+        this.endedAt = LocalDateTime.now();
+        if (startedAt != null) {
+            this.durationSeconds = (int) java.time.temporal.ChronoUnit.SECONDS.between(startedAt, endedAt);
+        }
+    }
+
+    public void cancelConsultation() {
+        this.status = "cancelled";
+    }
+
+    public boolean isActive() {
+        return isOngoing();
+    }
+
+    public boolean isOngoing() {
+        return "ongoing".equalsIgnoreCase(status);
+    }
+
+    public boolean isPending() {
+        return "pending".equalsIgnoreCase(status);
+    }
+
+    public boolean isRequested() {
+        return "requested".equalsIgnoreCase(status);
+    }
+
+    public boolean isCompleted() {
+        return "completed".equalsIgnoreCase(status);
+    }
+
+    public boolean isCancel() {
+        return "cancelled".equalsIgnoreCase(status);
+    }
+
+    public String getDurationFormatted() {
+        if (durationSeconds == null || durationSeconds <= 0) {
+            return "-";
+        }
+
+        int hours = durationSeconds / 3600;
+        int minutes = (durationSeconds % 3600) / 60;
+        int seconds = durationSeconds % 60;
+        StringBuilder out = new StringBuilder();
+        if (hours > 0) {
+            out.append(hours).append("h");
+        }
+        if (minutes > 0) {
+            if (out.length() > 0) out.append(" ");
+            out.append(minutes).append("m");
+        }
+        if (seconds > 0 || out.length() == 0) {
+            if (out.length() > 0) out.append(" ");
+            out.append(seconds).append("s");
+        }
+        return out.toString();
+    }
+
+    public String getNotes() {
+        return description;
+    }
+
+    public void setNotes(String notes) {
+        this.description = notes;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return endedAt != null ? endedAt : startedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        if (endedAt == null) {
+            this.endedAt = updatedAt;
+        }
+    }
 }

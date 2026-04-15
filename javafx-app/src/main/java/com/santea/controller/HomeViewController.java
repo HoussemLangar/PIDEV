@@ -200,6 +200,30 @@ public class HomeViewController {
         scrollTo(contactSection);
     }
 
+    @FXML
+    private void handleOpenTeleconsultation() {
+        if (!guardPremiumAccess()) {
+            return;
+        }
+        AppNavigator.showTeleconsultation();
+    }
+
+    @FXML
+    private void handleOpenDocuments() {
+        if (!guardPremiumAccess()) {
+            return;
+        }
+        AppNavigator.showDocumentSharing();
+    }
+
+    @FXML
+    private void handleOpenMessaging() {
+        if (!guardPremiumAccess()) {
+            return;
+        }
+        AppNavigator.showMessaging();
+    }
+
     private void scrollTo(Node section) {
         if (homeScroll == null || section == null || homeScroll.getContent() == null) {
             AppNavigator.showHome();
@@ -703,44 +727,28 @@ public class HomeViewController {
         if (!guardPremiumAccess()) {
             return;
         }
-        List<String> lines = new ArrayList<>();
-        for (HomeDashboardService.ConversationPreview conversation : dashboardData.conversations()) {
-            lines.add(conversation.otherUserDisplay() + " | " + safe(conversation.lastMessage()));
-        }
-        if (lines.isEmpty()) {
-            lines.add("Aucune conversation.");
-        }
-        AppNavigator.showFeaturePage("Messages", "Messagerie securisee", lines);
+        AppNavigator.showMessaging();
     }
 
     private void openConversationPage(HomeDashboardService.ConversationPreview conversation) {
-        AppNavigator.showFeaturePage("Conversation", "Discussion avec " + conversation.otherUserDisplay(), List.of(
-                "Dernier message: " + safe(conversation.lastMessage()),
-                "Date: " + formatDate(conversation.lastMessageAt()),
-                "Non lus: " + conversation.unreadInConversation()
-        ));
+        if (!guardPremiumAccess()) {
+            return;
+        }
+        AppNavigator.showMessaging();
     }
 
     private void openDocumentsPage() {
         if (!guardPremiumAccess()) {
             return;
         }
-        AppNavigator.showFeaturePage("Documents", "Gestion documentaire", List.of(
-                "Voir mes documents",
-                "Televerser un document",
-                "Partager avec un professionnel"
-        ));
+        AppNavigator.showDocumentSharing();
     }
 
     private void openTeleconsultationPage() {
         if (!guardPremiumAccess()) {
             return;
         }
-        AppNavigator.showFeaturePage("Teleconsultation", "Consultations video", List.of(
-                "Planning des sessions",
-                "Historique des consultations",
-                "Lancer une consultation"
-        ));
+        AppNavigator.showTeleconsultation();
     }
 
     private void openPlansPage() {

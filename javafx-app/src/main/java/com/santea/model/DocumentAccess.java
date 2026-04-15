@@ -87,4 +87,17 @@ public class DocumentAccess {
     public void setPermission(String permission) {
         this.permission = permission;
     }
+
+    public boolean isExpired() {
+        return expiresAt != null && expiresAt.isBefore(LocalDateTime.now());
+    }
+
+    public boolean canAccess() {
+        return Boolean.TRUE.equals(isActive) && !isExpired();
+    }
+
+    public void incrementAccessCount() {
+        this.accessCount = (accessCount == null ? 0 : accessCount) + 1;
+        this.accessedAt = LocalDateTime.now();
+    }
 }

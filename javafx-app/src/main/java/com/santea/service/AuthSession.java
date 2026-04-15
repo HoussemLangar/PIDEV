@@ -49,6 +49,10 @@ public final class AuthSession {
         return currentUser;
     }
 
+    public static AuthSession getInstance() {
+        return new AuthSession();
+    }
+
     public static boolean isFaceVerified() {
         return faceVerified;
     }

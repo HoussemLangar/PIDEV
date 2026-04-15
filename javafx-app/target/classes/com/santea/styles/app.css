@@ -1,0 +1,1036 @@
+/* ===== APP STYLES ===== */
+.root {
+    -fx-font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    -fx-background-color: #f8fcff;
+}
+
+/* ===== COMMON STYLES ===== */
+.page-title {
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #0f172a;
+}
+
+.section-subtitle {
+    -fx-font-size: 16px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #64748b;
+}
+
+.btn-primary {
+    -fx-background-color: linear-gradient(to right, #40C4FF, #0288D1);
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 10 20 10 20;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-effect: dropshadow(gaussian, rgba(64,196,255,0.3), 10, 0.2, 0, 2);
+}
+
+.btn-primary:hover {
+    -fx-background-color: linear-gradient(to right, #0288D1, #01579B);
+    -fx-cursor: hand;
+    -fx-translate-y: -1;
+    -fx-effect: dropshadow(gaussian, rgba(64,196,255,0.42), 14, 0.24, 0, 4);
+}
+
+.btn-primary:pressed {
+    -fx-translate-y: 1;
+    -fx-effect: dropshadow(gaussian, rgba(64,196,255,0.22), 8, 0.14, 0, 1);
+}
+
+.btn-secondary {
+    -fx-background-color: #64748b;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 8 16 8 16;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+}
+
+.btn-secondary:hover {
+    -fx-background-color: #475569;
+    -fx-cursor: hand;
+    -fx-translate-y: -1;
+}
+
+.btn-secondary:pressed {
+    -fx-translate-y: 1;
+}
+
+.btn-success {
+    -fx-background-color: #10b981;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 8 16 8 16;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+}
+
+.btn-success:hover {
+    -fx-background-color: #059669;
+    -fx-cursor: hand;
+    -fx-translate-y: -1;
+    -fx-effect: dropshadow(gaussian, rgba(16,185,129,0.30), 12, 0.22, 0, 4);
+}
+
+.btn-success:pressed {
+    -fx-translate-y: 1;
+    -fx-effect: dropshadow(gaussian, rgba(16,185,129,0.18), 8, 0.14, 0, 1);
+}
+
+.btn-danger {
+    -fx-background-color: #ef4444;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 8 16 8 16;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+}
+
+.btn-danger:hover {
+    -fx-background-color: #dc2626;
+    -fx-cursor: hand;
+    -fx-translate-y: -1;
+}
+
+.btn-danger:pressed {
+    -fx-translate-y: 1;
+}
+
+.btn-info {
+    -fx-background-color: #3b82f6;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 8 16 8 16;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+}
+
+.btn-info:hover {
+    -fx-background-color: #2563eb;
+    -fx-cursor: hand;
+    -fx-translate-y: -1;
+    -fx-effect: dropshadow(gaussian, rgba(59,130,246,0.28), 12, 0.22, 0, 4);
+}
+
+.btn-info:pressed {
+    -fx-translate-y: 1;
+    -fx-effect: dropshadow(gaussian, rgba(59,130,246,0.18), 8, 0.14, 0, 1);
+}
+
+.btn-new-conversation {
+    -fx-background-color: #10b981;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-size: 16px;
+    -fx-padding: 4 12 4 12;
+    -fx-background-radius: 50%;
+    -fx-min-width: 32px;
+    -fx-min-height: 32px;
+}
+
+.btn-send {
+    -fx-background-color: linear-gradient(to right, #40C4FF, #0288D1);
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 8 16 8 16;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+}
+
+/* ===== TELECONSULTATION STYLES ===== */
+.teleconsultation-root {
+    -fx-padding: 30 40 30 40;
+    -fx-background-color: linear-gradient(to bottom, #f8fafc, #eef2ff);
+}
+
+.teleconsultation-header {
+    -fx-alignment: center-left;
+}
+
+.teleconsultation-tabs .tab-pane {
+    -fx-tab-min-width: 120px;
+}
+
+.teleconsultation-tabs .tab-label {
+    -fx-font-size: 14px;
+    -fx-font-weight: 600;
+}
+
+.consultation-list {
+    -fx-background-color: white;
+    -fx-border-color: #e2e8f0;
+    -fx-border-width: 1;
+    -fx-border-radius: 14;
+    -fx-background-radius: 14;
+    -fx-padding: 8;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.08), 18, 0.2, 0, 3);
+}
+
+.consultation-history-list {
+    -fx-background-color: white;
+    -fx-border-color: #e2e8f0;
+    -fx-border-width: 2;
+    -fx-border-radius: 14;
+    -fx-background-radius: 14;
+    -fx-padding: 8;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.08), 18, 0.2, 0, 3);
+}
+
+.consultation-info {
+    -fx-background-color: white;
+    -fx-border-color: #e2e8f0;
+    -fx-border-width: 1;
+    -fx-border-radius: 16;
+    -fx-background-radius: 16;
+    -fx-padding: 20;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.08), 16, 0.2, 0, 2);
+}
+
+.info-label {
+    -fx-font-size: 12px;
+    -fx-text-fill: #64748b;
+    -fx-font-weight: 600;
+}
+
+.info-value {
+    -fx-font-size: 14px;
+    -fx-text-fill: #0f172a;
+    -fx-font-weight: 700;
+}
+
+.jitsi-view {
+    -fx-border-color: #e2e8f0;
+    -fx-border-width: 1;
+    -fx-border-radius: 14;
+    -fx-background-radius: 14;
+}
+
+.notes-label {
+    -fx-font-size: 14px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #0f172a;
+}
+
+.notes-area {
+    -fx-border-color: #e6edf6;
+    -fx-border-width: 1;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+}
+
+.tele-header-btn,
+.tele-action-btn,
+.doc-side-panel .button,
+.msg-start-card .button {
+    -fx-font-weight: 700;
+}
+
+.tele-header,
+.doc-header,
+.msg-page-header {
+    -fx-alignment: center-left;
+}
+
+.tele-index-icon,
+.doc-index-icon,
+.msg-index-icon {
+    -fx-min-width: 52;
+    -fx-min-height: 52;
+    -fx-max-width: 52;
+    -fx-max-height: 52;
+    -fx-background-radius: 14;
+}
+
+.tele-index-icon {
+    -fx-background-color: linear-gradient(to bottom right, #8b5cf6, #7c3aed);
+}
+
+.doc-index-icon {
+    -fx-background-color: linear-gradient(to bottom right, #10b981, #059669);
+}
+
+.msg-index-icon {
+    -fx-background-color: linear-gradient(to bottom right, #0d8abc, #0a6d96);
+}
+
+.tele-index-icon-text,
+.doc-index-icon-text,
+.msg-index-icon-text {
+    -fx-text-fill: white;
+    -fx-font-size: 16px;
+    -fx-font-weight: 800;
+}
+
+.tele-stats-grid {
+    -fx-hgap: 16;
+    -fx-vgap: 16;
+}
+
+.tele-stat-card {
+    -fx-min-width: 220;
+    -fx-padding: 20;
+    -fx-background-radius: 16;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.12), 18, 0.2, 0, 4);
+}
+
+.tele-stat-completed {
+    -fx-background-color: linear-gradient(to bottom right, #10b981, #059669);
+}
+
+.tele-stat-pending {
+    -fx-background-color: linear-gradient(to bottom right, #f59e0b, #d97706);
+}
+
+.tele-stat-duration {
+    -fx-background-color: linear-gradient(to bottom right, #3b82f6, #2563eb);
+}
+
+.tele-stat-average {
+    -fx-background-color: linear-gradient(to bottom right, #ec4899, #db2777);
+}
+
+.tele-stat-badge,
+.tele-stat-value,
+.tele-stat-caption {
+    -fx-text-fill: white;
+}
+
+.tele-stat-badge {
+    -fx-font-size: 12px;
+    -fx-font-weight: 700;
+}
+
+.tele-stat-value {
+    -fx-font-size: 34px;
+    -fx-font-weight: 800;
+}
+
+.tele-stat-caption {
+    -fx-font-size: 13px;
+    -fx-opacity: 0.9;
+}
+
+.tele-tab-pane,
+.doc-tab-pane {
+    -fx-background-color: transparent;
+}
+
+.tele-tab-pane .tab-header-area,
+.doc-tab-pane .tab-header-area {
+    -fx-padding: 0 0 12 0;
+}
+
+.tele-tab-pane .tab-header-background,
+.doc-tab-pane .tab-header-background {
+    -fx-background-color: transparent;
+}
+
+.tele-tab-pane .tab,
+.doc-tab-pane .tab {
+    -fx-background-color: white;
+    -fx-background-radius: 12;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 12;
+    -fx-padding: 8 16 8 16;
+}
+
+.tele-tab-pane .tab:selected {
+    -fx-background-color: linear-gradient(to right, #8b5cf6, #7c3aed);
+    -fx-border-color: transparent;
+    -fx-effect: dropshadow(gaussian, rgba(139,92,246,0.28), 12, 0.2, 0, 3);
+}
+
+.doc-tab-pane .tab:selected {
+    -fx-background-color: linear-gradient(to right, #10b981, #059669);
+    -fx-border-color: transparent;
+    -fx-effect: dropshadow(gaussian, rgba(16,185,129,0.24), 12, 0.2, 0, 3);
+}
+
+.tele-tab-pane .tab:hover,
+.doc-tab-pane .tab:hover {
+    -fx-cursor: hand;
+    -fx-translate-y: -1;
+}
+
+.tele-tab-pane .tab:pressed,
+.doc-tab-pane .tab:pressed {
+    -fx-translate-y: 1;
+}
+
+.tele-tab-pane .tab .tab-label,
+.doc-tab-pane .tab .tab-label {
+    -fx-font-size: 13px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #64748b;
+}
+
+.tele-tab-pane .tab:selected .tab-label,
+.doc-tab-pane .tab:selected .tab-label {
+    -fx-text-fill: white;
+}
+
+.tele-scroll,
+.doc-scroll,
+.message-scroll {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.tele-scroll > .viewport,
+.doc-scroll > .viewport,
+.message-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+
+.tele-detail-panel,
+.doc-side-panel {
+    -fx-padding: 4 0 4 0;
+}
+
+.tele-detail-card,
+.doc-detail-card,
+.msg-start-card,
+.msg-list-card {
+    -fx-background-color: white;
+    -fx-background-radius: 16;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 16;
+    -fx-padding: 18;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.08), 18, 0.2, 0, 3);
+}
+
+.tele-panel-title,
+.doc-panel-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #1e293b;
+}
+
+.tele-detail-main-title,
+.doc-main-title,
+.chat-title {
+    -fx-font-size: 20px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #1e293b;
+}
+
+.tele-detail-muted,
+.doc-muted,
+.chat-subtitle {
+    -fx-text-fill: #64748b;
+    -fx-font-size: 13px;
+}
+
+.tele-page-status-row {
+    -fx-padding: 0 0 4 0;
+}
+
+.tele-avatar-chip {
+    -fx-min-width: 58;
+    -fx-min-height: 58;
+    -fx-max-width: 58;
+    -fx-max-height: 58;
+    -fx-background-color: linear-gradient(to bottom right, #06b6d4, #0891b2);
+    -fx-background-radius: 14;
+}
+
+.tele-avatar-initials {
+    -fx-text-fill: white;
+    -fx-font-size: 22px;
+    -fx-font-weight: 800;
+}
+
+.tele-type-chip {
+    -fx-min-width: 46;
+    -fx-min-height: 46;
+    -fx-background-color: linear-gradient(to bottom right, #ede9fe, #ddd6fe);
+    -fx-background-radius: 12;
+}
+
+.tele-type-chip-icon {
+    -fx-text-fill: #7c3aed;
+    -fx-font-size: 18px;
+}
+
+.tele-info-box,
+.doc-info-box {
+    -fx-background-color: #f8fafc;
+    -fx-background-radius: 12;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 12;
+    -fx-padding: 12;
+}
+
+.tele-consultation-card,
+.tele-history-row,
+.doc-row-card {
+    -fx-background-color: white;
+    -fx-background-radius: 16;
+    -fx-border-radius: 16;
+    -fx-border-color: #e2e8f0;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.05), 12, 0.15, 0, 2);
+}
+
+.tele-consultation-card:hover,
+.tele-history-row:hover,
+.doc-row-card:hover,
+.msg-conversation-row:hover {
+    -fx-cursor: hand;
+    -fx-translate-y: -2;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.12), 20, 0.2, 0, 5);
+}
+
+.tele-ongoing-card {
+    -fx-border-color: #fca5a5;
+    -fx-border-width: 2;
+}
+
+.tele-upcoming-card {
+    -fx-border-color: #fbbf24;
+    -fx-border-width: 2;
+}
+
+.tele-card-title,
+.doc-row-title,
+.msg-conversation-title {
+    -fx-font-size: 15px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #1e293b;
+}
+
+.tele-card-participant {
+    -fx-font-size: 14px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #334155;
+}
+
+.tele-card-label {
+    -fx-font-size: 11px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #94a3b8;
+}
+
+.tele-list-avatar {
+    -fx-min-width: 48;
+    -fx-min-height: 48;
+    -fx-max-width: 48;
+    -fx-max-height: 48;
+    -fx-background-color: linear-gradient(to bottom right, #06b6d4, #0891b2);
+    -fx-background-radius: 12;
+}
+
+.tele-list-avatar-text {
+    -fx-text-fill: white;
+    -fx-font-size: 16px;
+    -fx-font-weight: 800;
+}
+
+.tele-row-arrow,
+.msg-conversation-arrow {
+    -fx-text-fill: #cbd5e1;
+    -fx-font-size: 16px;
+    -fx-font-weight: 800;
+}
+
+.tele-card-subtitle,
+.tele-card-description,
+.doc-row-subtitle,
+.msg-conversation-preview,
+.msg-conversation-time,
+.doc-access-meta {
+    -fx-text-fill: #64748b;
+    -fx-font-size: 13px;
+}
+
+.tele-empty-state,
+.doc-empty-state {
+    -fx-background-color: linear-gradient(to bottom right, #eef2ff, #f8fafc);
+    -fx-background-radius: 16;
+    -fx-border-color: #c7d2fe;
+    -fx-border-radius: 16;
+    -fx-border-style: segments(4, 4);
+}
+
+.empty-state-button {
+    -fx-padding: 10 18 10 18;
+}
+
+.row-action-button {
+    -fx-padding: 8 12 8 12;
+}
+
+.row-action-graphic {
+    -fx-alignment: center-left;
+}
+
+.row-action-icon,
+.row-action-label {
+    -fx-text-fill: white;
+    -fx-font-weight: 700;
+}
+
+.row-action-icon {
+    -fx-background-color: rgba(255,255,255,0.18);
+    -fx-background-radius: 999;
+    -fx-padding: 2 6 2 6;
+    -fx-font-size: 11px;
+    -fx-min-width: 18;
+    -fx-alignment: center;
+}
+
+.row-action-label {
+    -fx-font-size: 12px;
+}
+
+.tele-empty-title {
+    -fx-font-size: 18px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #1e293b;
+}
+
+.tele-empty-subtitle {
+    -fx-font-size: 13px;
+    -fx-text-fill: #64748b;
+}
+
+.tele-status-pill,
+.doc-row-badge,
+.msg-row-badge,
+.unread-badge {
+    -fx-padding: 5 10 5 10;
+    -fx-background-radius: 999;
+    -fx-font-size: 12px;
+    -fx-font-weight: 800;
+}
+
+.tele-status-live {
+    -fx-background-color: #fee2e2;
+    -fx-text-fill: #b91c1c;
+}
+
+.tele-status-warning {
+    -fx-background-color: #ffedd5;
+    -fx-text-fill: #c2410c;
+}
+
+.tele-status-pending {
+    -fx-background-color: #fef3c7;
+    -fx-text-fill: #92400e;
+}
+
+.tele-status-success {
+    -fx-background-color: #dcfce7;
+    -fx-text-fill: #166534;
+}
+
+.tele-status-danger {
+    -fx-background-color: #fee2e2;
+    -fx-text-fill: #991b1b;
+}
+
+.tele-status-neutral {
+    -fx-background-color: #e2e8f0;
+    -fx-text-fill: #475569;
+}
+
+.tele-readonly-area,
+.tele-time-field,
+.message-input {
+    -fx-background-color: #f8fafc;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 12;
+    -fx-background-radius: 12;
+}
+
+.doc-storage-badge {
+    -fx-background-color: linear-gradient(to right, #3b82f6, #2563eb);
+    -fx-text-fill: white;
+    -fx-padding: 8 16 8 16;
+    -fx-background-radius: 999;
+    -fx-font-size: 13px;
+    -fx-font-weight: 700;
+}
+
+.doc-hero-icon {
+    -fx-min-width: 70;
+    -fx-min-height: 70;
+    -fx-background-color: linear-gradient(to bottom right, #10b981, #059669);
+    -fx-background-radius: 18;
+}
+
+.doc-hero-icon-symbol {
+    -fx-text-fill: white;
+    -fx-font-size: 26px;
+    -fx-font-weight: 800;
+}
+
+.doc-row-owner-badge {
+    -fx-background-color: #fef3c7;
+    -fx-text-fill: #92400e;
+}
+
+.doc-row-shared-badge {
+    -fx-background-color: #f3e8ff;
+    -fx-text-fill: #7c3aed;
+}
+
+.doc-row-public-badge {
+    -fx-background-color: #d1fae5;
+    -fx-text-fill: #059669;
+}
+
+.doc-list-icon {
+    -fx-min-width: 44;
+    -fx-min-height: 44;
+    -fx-max-width: 44;
+    -fx-max-height: 44;
+    -fx-background-color: linear-gradient(to bottom right, #dbeafe, #bfdbfe);
+    -fx-background-radius: 12;
+}
+
+.doc-list-icon-text {
+    -fx-text-fill: #2563eb;
+    -fx-font-size: 12px;
+    -fx-font-weight: 800;
+}
+
+.doc-access-title {
+    -fx-font-size: 14px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #1e293b;
+}
+
+.msg-page-header {
+    -fx-padding: 0 0 4 0;
+}
+
+.msg-start-subtitle {
+    -fx-text-fill: #64748b;
+    -fx-font-size: 13px;
+}
+
+.chat-wrapper {
+    -fx-background-color: white;
+    -fx-background-radius: 18;
+    -fx-border-color: #dbeafe;
+    -fx-border-radius: 18;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.10), 18, 0.2, 0, 3);
+}
+
+.chat-header {
+    -fx-padding: 18 22 18 22;
+    -fx-background-color: linear-gradient(to right, #1e40af, #3b82f6, #06b6d4);
+    -fx-background-radius: 18 18 0 0;
+    -fx-spacing: 14;
+}
+
+.chat-title,
+.chat-subtitle {
+    -fx-text-fill: white;
+}
+
+.chat-avatar-shell {
+    -fx-min-width: 46;
+    -fx-min-height: 46;
+    -fx-max-width: 46;
+    -fx-max-height: 46;
+    -fx-background-color: rgba(255,255,255,0.18);
+    -fx-border-color: rgba(255,255,255,0.35);
+    -fx-border-radius: 999;
+    -fx-background-radius: 999;
+}
+
+.chat-avatar-text {
+    -fx-text-fill: white;
+    -fx-font-size: 16px;
+    -fx-font-weight: 800;
+}
+
+.chat-subtitle {
+    -fx-opacity: 0.8;
+}
+
+.chat-messages {
+    -fx-background-color: #f8fafc;
+}
+
+.msg-bubble {
+    -fx-background-radius: 18;
+}
+
+.msg-bubble-own {
+    -fx-background-color: linear-gradient(to right, #3b82f6, #1d4ed8);
+}
+
+.msg-bubble-other {
+    -fx-background-color: white;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 18;
+}
+
+.msg-bubble-content {
+    -fx-font-size: 13px;
+}
+
+.msg-bubble-own .msg-bubble-content,
+.msg-bubble-own .msg-bubble-meta {
+    -fx-text-fill: white;
+}
+
+.msg-bubble-other .msg-bubble-content {
+    -fx-text-fill: #0f172a;
+}
+
+.msg-bubble-meta {
+    -fx-font-size: 11px;
+    -fx-opacity: 0.8;
+}
+
+.msg-row-badge,
+.unread-badge {
+    -fx-background-color: linear-gradient(to right, #ff6b6b, #ee5a52);
+    -fx-text-fill: white;
+}
+
+.chat-input-area {
+    -fx-padding: 16 18 16 18;
+    -fx-background-color: white;
+    -fx-border-color: #e2e8f0 transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
+}
+
+/* ===== DOCUMENT SHARING STYLES ===== */
+.document-root {
+    -fx-padding: 28 40 28 40;
+    -fx-background-color: linear-gradient(to bottom, #f8fafc, #f0fdf4);
+}
+
+.document-header {
+    -fx-alignment: center-left;
+}
+
+.search-field {
+    -fx-padding: 10 14 10 14;
+    -fx-border-color: #e2e8f0;
+    -fx-border-width: 2;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+    -fx-pref-width: 250px;
+}
+
+.document-list {
+    -fx-background-color: white;
+    -fx-border-color: #e2e8f0;
+    -fx-border-width: 1;
+    -fx-border-radius: 16;
+    -fx-background-radius: 16;
+    -fx-padding: 8;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.08), 18, 0.2, 0, 3);
+}
+
+.document-details {
+    -fx-background-color: white;
+    -fx-border-color: #e2e8f0;
+    -fx-border-width: 1;
+    -fx-border-radius: 16;
+    -fx-background-radius: 16;
+    -fx-padding: 20;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.08), 18, 0.2, 0, 3);
+}
+
+.detail-label {
+    -fx-font-size: 12px;
+    -fx-text-fill: #64748b;
+    -fx-font-weight: 600;
+}
+
+.detail-value {
+    -fx-font-size: 14px;
+    -fx-text-fill: #0f172a;
+    -fx-font-weight: 500;
+}
+
+.sharing-section {
+    -fx-background-color: #f8fafc;
+    -fx-border-color: #e6edf6;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 15;
+}
+
+.access-choice {
+    -fx-padding: 6 10 6 10;
+}
+
+.share-field {
+    -fx-padding: 6 10 6 10;
+    -fx-border-color: #e6edf6;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+}
+
+/* ===== MESSAGING STYLES ===== */
+.messaging-root {
+    -fx-padding: 30 40 30 40;
+    -fx-background-color: linear-gradient(to bottom, #eff6ff, #f8fafc);
+}
+
+.conversations-panel {
+    -fx-background-color: white;
+    -fx-border-color: #e2e8f0;
+    -fx-border-width: 1;
+    -fx-border-radius: 16;
+    -fx-background-radius: 16;
+    -fx-padding: 18;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.08), 18, 0.2, 0, 3);
+}
+
+.panel-title {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #0f172a;
+}
+
+.conversations-header {
+    -fx-alignment: center-left;
+}
+
+.conversation-list {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.conversation-list .list-cell {
+    -fx-background-color: transparent;
+    -fx-padding: 0 0 10 0;
+}
+
+.conversation-list .list-cell:filled:selected,
+.conversation-list .list-cell:filled:hover {
+    -fx-background-color: transparent;
+}
+
+.messages-panel {
+    -fx-background-color: white;
+    -fx-border-color: #e2e8f0;
+    -fx-border-width: 1;
+    -fx-border-radius: 16;
+    -fx-background-radius: 16;
+    -fx-padding: 0;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.08), 18, 0.2, 0, 3);
+}
+
+.conversation-info {
+    -fx-background-color: linear-gradient(to right, #1e40af, #3b82f6, #06b6d4);
+    -fx-background-radius: 16 16 0 0;
+    -fx-padding: 18 20 18 20;
+}
+
+.conversation-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+}
+
+.conversation-partner {
+    -fx-font-size: 12px;
+    -fx-text-fill: #64748b;
+}
+
+.message-list {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.message-input-section {
+    -fx-background-color: white;
+    -fx-border-color: #e2e8f0;
+    -fx-border-width: 1 0 0 0;
+    -fx-padding: 16 18 16 18;
+}
+
+.message-input {
+    -fx-background-color: #f8fafc;
+    -fx-border-color: #e2e8f0;
+    -fx-border-width: 1.5;
+    -fx-border-radius: 16;
+    -fx-background-radius: 16;
+    -fx-padding: 10 12 10 12;
+}
+
+.unread-badge {
+    -fx-background-color: linear-gradient(to right, #ff6b6b, #ee5a52);
+    -fx-text-fill: white;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+    -fx-padding: 4 10 4 10;
+    -fx-background-radius: 20;
+}
+
+.msg-recipient-combo {
+    -fx-background-color: white;
+    -fx-border-color: #e2e8f0;
+    -fx-border-width: 2;
+    -fx-border-radius: 12;
+    -fx-background-radius: 12;
+    -fx-padding: 4 6 4 6;
+}
+
+.msg-conversation-row {
+    -fx-background-color: white;
+    -fx-background-radius: 14;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 14;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.05), 12, 0.15, 0, 2);
+}
+
+.msg-conversation-avatar {
+    -fx-min-width: 48;
+    -fx-min-height: 48;
+    -fx-max-width: 48;
+    -fx-max-height: 48;
+    -fx-background-color: linear-gradient(to bottom right, #e0f2fe, #bae6fd);
+    -fx-background-radius: 999;
+}
+
+.msg-conversation-avatar-text {
+    -fx-text-fill: #0d8abc;
+    -fx-font-size: 15px;
+    -fx-font-weight: 800;
+}
+
+.msg-conversation-role {
+    -fx-text-fill: #0d8abc;
+    -fx-font-size: 12px;
+    -fx-font-weight: 700;
+}
+
+.msg-empty-state {
+    -fx-background-color: linear-gradient(to bottom right, #e0f2fe, #f0f9ff);
+    -fx-background-radius: 16;
+    -fx-border-color: #7dd3fc;
+    -fx-border-radius: 16;
+    -fx-border-style: segments(4, 4);
+}
+
+.online-status {
+    -fx-font-size: 12px;
+    -fx-text-fill: rgba(255,255,255,0.78);
+}
+
+.message-display {
+    -fx-background-color: #f8fafc;
+    -fx-padding: 18;
+}
+
+.message-scroll {
+    -fx-background-color: #f8fafc;
+    -fx-background: #f8fafc;
+    -fx-border-color: transparent;
+}

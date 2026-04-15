@@ -18,7 +18,11 @@ public class Main extends Application {
 
         try {
             AppNavigator.initialize(primaryStage);
-            new AuthService().tryRestoreRememberedSession();
+            try {
+                new AuthService().tryRestoreRememberedSession();
+            } catch (Throwable throwable) {
+                throwable.printStackTrace();
+            }
             AppNavigator.showHome();
         } catch (Throwable throwable) {
             String startupError = stackTraceToString(throwable);

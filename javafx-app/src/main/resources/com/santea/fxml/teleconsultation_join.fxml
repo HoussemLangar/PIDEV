@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Priority?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.web.WebView?>
+
+<VBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.santea.controller.TeleconsultationJoinController"
+      spacing="16" styleClass="teleconsultation-root">
+    <children>
+        <HBox alignment="CENTER_LEFT">
+            <Label text="Consultation Jitsi Meet" styleClass="page-title"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button fx:id="backButton" text="Retour" styleClass="btn-secondary"/>
+        </HBox>
+        <WebView fx:id="jitsiWebView" VBox.vgrow="ALWAYS" styleClass="jitsi-view"/>
+        <Label text="Assurez-vous que votre caméra et microphone sont activés." styleClass="section-subtitle"/>
+    </children>
+</VBox>

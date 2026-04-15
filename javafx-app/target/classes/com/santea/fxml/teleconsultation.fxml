@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.santea.controller.TeleconsultationController"
+      spacing="20" styleClass="teleconsultation-root">
+    <children>
+        <HBox alignment="CENTER_LEFT" styleClass="tele-header">
+            <HBox alignment="CENTER_LEFT" spacing="16">
+                <StackPane styleClass="tele-index-icon">
+                    <Label text="TV" styleClass="tele-index-icon-text"/>
+                </StackPane>
+                <VBox spacing="4">
+                    <Label text="Téléconsultations" styleClass="page-title"/>
+                    <Label text="Consultez vos médecins à distance" styleClass="section-subtitle"/>
+                </VBox>
+            </HBox>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button fx:id="scheduleConsultationButton" text="Planifier une consultation" styleClass="btn-primary tele-header-btn"/>
+        </HBox>
+
+        <FlowPane hgap="16" vgap="16" styleClass="tele-stats-grid">
+            <children>
+                <VBox spacing="6" styleClass="tele-stat-card tele-stat-completed">
+                    <Label text="Complétées" styleClass="tele-stat-badge"/>
+                    <Label fx:id="completedCountLabel" text="0" styleClass="tele-stat-value"/>
+                    <Label text="Consultations réalisées" styleClass="tele-stat-caption"/>
+                </VBox>
+                <VBox spacing="6" styleClass="tele-stat-card tele-stat-pending">
+                    <Label text="En attente" styleClass="tele-stat-badge"/>
+                    <Label fx:id="pendingCountLabel" text="0" styleClass="tele-stat-value"/>
+                    <Label text="Rendez-vous à venir" styleClass="tele-stat-caption"/>
+                </VBox>
+                <VBox spacing="6" styleClass="tele-stat-card tele-stat-duration">
+                    <Label text="Durée" styleClass="tele-stat-badge"/>
+                    <Label fx:id="hoursCountLabel" text="0" styleClass="tele-stat-value"/>
+                    <Label text="Heures totales" styleClass="tele-stat-caption"/>
+                </VBox>
+                <VBox spacing="6" styleClass="tele-stat-card tele-stat-average">
+                    <Label text="Moyenne" styleClass="tele-stat-badge"/>
+                    <Label fx:id="averageMinutesLabel" text="0" styleClass="tele-stat-value"/>
+                    <Label text="Minutes par session" styleClass="tele-stat-caption"/>
+                </VBox>
+            </children>
+        </FlowPane>
+
+        <TabPane fx:id="consultationTabs" tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS" styleClass="tele-tab-pane">
+            <tabs>
+                <Tab text="En cours">
+                    <content>
+                        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" styleClass="tele-scroll">
+                            <content>
+                                <VBox fx:id="ongoingContainer" spacing="16" styleClass="tele-card-list">
+                                    <padding>
+                                        <Insets top="12" right="12" bottom="12" left="12"/>
+                                    </padding>
+                                </VBox>
+                            </content>
+                        </ScrollPane>
+                    </content>
+                </Tab>
+                <Tab text="À venir">
+                    <content>
+                        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" styleClass="tele-scroll">
+                            <content>
+                                <VBox fx:id="upcomingContainer" spacing="16" styleClass="tele-card-list">
+                                    <padding>
+                                        <Insets top="12" right="12" bottom="12" left="12"/>
+                                    </padding>
+                                </VBox>
+                            </content>
+                        </ScrollPane>
+                    </content>
+                </Tab>
+                <Tab text="Historique">
+                    <content>
+                        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" styleClass="tele-scroll">
+                            <content>
+                                <VBox fx:id="pastContainer" spacing="12" styleClass="tele-history-list">
+                                    <padding>
+                                        <Insets top="12" right="12" bottom="12" left="12"/>
+                                    </padding>
+                                </VBox>
+                            </content>
+                        </ScrollPane>
+                    </content>
+                </Tab>
+            </tabs>
+        </TabPane>
+    </children>
+</VBox>

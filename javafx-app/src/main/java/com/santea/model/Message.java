@@ -14,6 +14,21 @@ public class Message {
 
     public Message() {
     }
+    
+    /**
+     * Constructor matching Symfony Message entity structure
+     * @param conversation Conversation object
+     * @param sender Sender user
+     * @param recipient Recipient user
+     * @param content Message content
+     */
+    public Message(Conversation conversation, User sender, User recipient, String content) {
+        this.conversation = conversation;
+        this.sender = sender;
+        this.recipient = recipient;
+        this.content = content;
+        this.isRead = false;
+    }
 
     public Integer getId() {
         return id;
