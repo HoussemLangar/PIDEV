@@ -762,11 +762,7 @@ public class HomeViewController {
         if (!guardPremiumAccess()) {
             return;
         }
-        AppNavigator.showFeaturePage("Mes symptomes", "Historique et suivi", List.of(
-                "Declaration des symptomes",
-                "Evolution dans le temps",
-                "Alertes de suivi"
-        ));
+        AppNavigator.showSymptomesQuotidiensPage();
     }
 
     private void openSubscriptionPage() {

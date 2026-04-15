@@ -18,6 +18,7 @@
 /home/pidev/Esprit-PIDEV-3A41-2026-SANTEA/javafx-app/src/main/java/com/santea/controller/SanteQuotidienneAdminViewController.java
 /home/pidev/Esprit-PIDEV-3A41-2026-SANTEA/javafx-app/src/main/java/com/santea/controller/SanteQuotidienneViewController.java
 /home/pidev/Esprit-PIDEV-3A41-2026-SANTEA/javafx-app/src/main/java/com/santea/controller/SubscriptionViewController.java
+/home/pidev/Esprit-PIDEV-3A41-2026-SANTEA/javafx-app/src/main/java/com/santea/controller/SymptomesQuotidiensViewController.java
 /home/pidev/Esprit-PIDEV-3A41-2026-SANTEA/javafx-app/src/main/java/com/santea/model/Abonnement.java
 /home/pidev/Esprit-PIDEV-3A41-2026-SANTEA/javafx-app/src/main/java/com/santea/model/Accompagnement.java
 /home/pidev/Esprit-PIDEV-3A41-2026-SANTEA/javafx-app/src/main/java/com/santea/model/AccompanimentPlan.java
@@ -69,6 +70,7 @@
 /home/pidev/Esprit-PIDEV-3A41-2026-SANTEA/javafx-app/src/main/java/com/santea/model/UserSession.java
 /home/pidev/Esprit-PIDEV-3A41-2026-SANTEA/javafx-app/src/main/java/com/santea/navigation/AppNavigator.java
 /home/pidev/Esprit-PIDEV-3A41-2026-SANTEA/javafx-app/src/main/java/com/santea/repository/SanteQuotidienneAdminRepository.java
+/home/pidev/Esprit-PIDEV-3A41-2026-SANTEA/javafx-app/src/main/java/com/santea/repository/SymptomesQuotidiensRepository.java
 /home/pidev/Esprit-PIDEV-3A41-2026-SANTEA/javafx-app/src/main/java/com/santea/repository/UserRepository.java
 /home/pidev/Esprit-PIDEV-3A41-2026-SANTEA/javafx-app/src/main/java/com/santea/service/AdminDashboardService.java
 /home/pidev/Esprit-PIDEV-3A41-2026-SANTEA/javafx-app/src/main/java/com/santea/service/AdminOperationsService.java
@@ -86,6 +88,7 @@
 /home/pidev/Esprit-PIDEV-3A41-2026-SANTEA/javafx-app/src/main/java/com/santea/service/SanteQuotidienneService.java
 /home/pidev/Esprit-PIDEV-3A41-2026-SANTEA/javafx-app/src/main/java/com/santea/service/StripeCheckoutService.java
 /home/pidev/Esprit-PIDEV-3A41-2026-SANTEA/javafx-app/src/main/java/com/santea/service/SubscriptionService.java
+/home/pidev/Esprit-PIDEV-3A41-2026-SANTEA/javafx-app/src/main/java/com/santea/service/SymptomesQuotidiensService.java
 /home/pidev/Esprit-PIDEV-3A41-2026-SANTEA/javafx-app/src/main/java/com/santea/service/TwoFactorService.java
 /home/pidev/Esprit-PIDEV-3A41-2026-SANTEA/javafx-app/src/main/java/com/santea/ui/ConfirmDialogs.java
 /home/pidev/Esprit-PIDEV-3A41-2026-SANTEA/javafx-app/src/main/java/module-info.java
