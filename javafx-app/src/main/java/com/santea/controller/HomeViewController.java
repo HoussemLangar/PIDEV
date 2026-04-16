@@ -755,11 +755,7 @@ public class HomeViewController {
         if (!guardPremiumAccess()) {
             return;
         }
-        AppNavigator.showFeaturePage("Mes plans", "Accompagnement personnalise", List.of(
-                "Plan nutrition",
-                "Plan activite physique",
-                "Suivi de progression"
-        ));
+        AppNavigator.showAccompanimentPlans();
     }
 
     private void openJournalPage() {

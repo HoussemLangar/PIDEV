@@ -45,10 +45,14 @@ public class DocumentRepository {
     public List<SharedDocument> findByOwnerId(String ownerId) {
         List<SharedDocument> result = new ArrayList<>();
         documents.values().forEach(doc -> {
-            if (doc.getOwner().getId().toString().equals(ownerId)) {
+            if (doc != null
+                && doc.getOwner() != null
+                && doc.getOwner().getId() != null
+                && doc.getOwner().getId().toString().equals(ownerId)) {
                 result.add(doc);
             }
         });
+        result.sort(Comparator.comparing(SharedDocument::getUploadedAt, Comparator.nullsLast(Comparator.reverseOrder())));
         return result;
     }
     
@@ -134,7 +138,12 @@ public class DocumentRepository {
         List<DocumentAccess> result = new ArrayList<>();
         accesses.values().forEach(accessList -> {
             accessList.forEach(access -> {
-                if (access.getSharedWith().getId().toString().equals(userId) && access.getIsActive()) {
+                if (access != null
+                    && access.getSharedWith() != null
+                    && access.getSharedWith().getId() != null
+                    && access.getSharedWith().getId().toString().equals(userId)
+                    && Boolean.TRUE.equals(access.getIsActive())
+                    && (access.getExpiresAt() == null || access.getExpiresAt().isAfter(LocalDateTime.now()))) {
                     result.add(access);
                 }
             });

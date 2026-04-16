@@ -18,8 +18,8 @@ public class AccompanimentPlan {
     private Integer durationWeeks;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private List<Object> exercisePlans;
-    private List<Object> dietPlans;
+    private List<PlanExercice> exercisePlans;
+    private List<PlanRegime> dietPlans;
 
     public AccompanimentPlan() {
         this.exercisePlans = new ArrayList<>();
@@ -130,19 +130,53 @@ public class AccompanimentPlan {
         this.updatedAt = updatedAt;
     }
 
-    public List<Object> getExercisePlans() {
+    public List<PlanExercice> getExercisePlans() {
         return exercisePlans;
     }
 
-    public void setExercisePlans(List<Object> exercisePlans) {
+    public void setExercisePlans(List<PlanExercice> exercisePlans) {
         this.exercisePlans = exercisePlans;
     }
 
-    public List<Object> getDietPlans() {
+    public List<PlanRegime> getDietPlans() {
         return dietPlans;
     }
 
-    public void setDietPlans(List<Object> dietPlans) {
+    public void setDietPlans(List<PlanRegime> dietPlans) {
         this.dietPlans = dietPlans;
+    }
+
+    public boolean isActive() {
+        return "active".equalsIgnoreCase(status);
+    }
+
+    public boolean isCompleted() {
+        return "completed".equalsIgnoreCase(status);
+    }
+
+    public boolean isCancelled() {
+        return "cancelled".equalsIgnoreCase(status);
+    }
+
+    public int getProgressPercentage() {
+        if (isCompleted()) {
+            return 100;
+        }
+        if (isCancelled()) {
+            return 0;
+        }
+        if (startDate == null || endDate == null) {
+            return isActive() ? 35 : 15;
+        }
+        long totalSeconds = java.time.Duration.between(startDate, endDate).getSeconds();
+        if (totalSeconds <= 0) {
+            return isActive() ? 50 : 15;
+        }
+        long elapsedSeconds = java.time.Duration.between(startDate, LocalDateTime.now()).getSeconds();
+        int progress = (int) Math.round((elapsedSeconds * 100.0) / totalSeconds);
+        if (isActive()) {
+            return Math.max(5, Math.min(progress, 95));
+        }
+        return Math.max(0, Math.min(progress, 100));
     }
 }

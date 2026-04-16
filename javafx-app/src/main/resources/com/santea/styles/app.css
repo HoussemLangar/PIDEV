@@ -297,6 +297,206 @@
     -fx-text-fill: white;
 }
 
+/* ===== FINAL MESSAGING / CONVERSATION OVERRIDES ===== */
+
+.messaging-root {
+    -fx-background-color: linear-gradient(to bottom, #f8fafc, #eff6ff);
+}
+
+.messaging-root .msg-start-card,
+.messaging-root .msg-list-card,
+.messaging-root .chat-wrapper {
+    -fx-background-color: white;
+    -fx-background-radius: 16;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 16;
+    -fx-border-width: 1;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.08), 14, 0.2, 0, 3);
+}
+
+.messaging-root .conversation-list,
+.messaging-root .conversation-list .list-cell,
+.messaging-root .conversation-list .list-cell:filled:selected,
+.messaging-root .conversation-list .list-cell:filled:hover {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.messaging-root .msg-conversation-row {
+    -fx-background-color: linear-gradient(to bottom right, #ffffff, #f8fafc);
+    -fx-background-radius: 14;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 14;
+    -fx-border-width: 1;
+}
+
+.messaging-root .msg-conversation-row:hover {
+    -fx-background-color: linear-gradient(to bottom right, #f8fafc, #eef2ff);
+    -fx-cursor: hand;
+}
+
+.messaging-root .chat-header {
+    -fx-background-color: linear-gradient(to right, #1e40af, #3b82f6, #06b6d4);
+    -fx-background-radius: 16 16 0 0;
+}
+
+.messaging-root .btn-info,
+.messaging-root .btn-send {
+    -fx-background-color: linear-gradient(to bottom right, #0d8abc, #0a6d96);
+    -fx-text-fill: white;
+    -fx-font-weight: 700;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-padding: 12 24 12 24;
+}
+
+.messaging-root .btn-info:hover,
+.messaging-root .btn-send:hover {
+    -fx-background-color: linear-gradient(to bottom right, #0a6d96, #075575);
+    -fx-cursor: hand;
+}
+
+/* ===== FINAL MESSAGING POLISH ===== */
+
+.messaging-root {
+    -fx-padding: 26 34 26 34;
+    -fx-spacing: 16;
+}
+
+.messaging-root .msg-page-header {
+    -fx-padding: 4 0 8 0;
+}
+
+.messaging-root .msg-index-icon {
+    -fx-min-width: 50;
+    -fx-min-height: 50;
+    -fx-max-width: 50;
+    -fx-max-height: 50;
+    -fx-background-radius: 13;
+}
+
+.messaging-root .msg-start-card,
+.messaging-root .msg-list-card {
+    -fx-padding: 20;
+    -fx-background-color: #ffffff;
+    -fx-border-color: #dbe3ef;
+    -fx-border-width: 1;
+    -fx-background-radius: 18;
+    -fx-border-radius: 18;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.09), 16, 0.2, 0, 4);
+}
+
+.messaging-root .msg-start-card .combo-box,
+.messaging-root .msg-start-card .text-field,
+.messaging-root .msg-recipient-combo {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #d6e0ee;
+    -fx-border-width: 1.5;
+    -fx-border-radius: 12;
+    -fx-background-radius: 12;
+    -fx-padding: 5 8 5 8;
+}
+
+.messaging-root .msg-recipient-combo .arrow-button {
+    -fx-background-color: #f1f5f9;
+    -fx-background-radius: 0 11 11 0;
+}
+
+.messaging-root .msg-recipient-combo:focused {
+    -fx-border-color: #60a5fa;
+    -fx-effect: dropshadow(gaussian, rgba(96,165,250,0.24), 10, 0.2, 0, 0);
+}
+
+.messaging-root .msg-start-card .btn-info {
+    -fx-font-size: 18px;
+    -fx-font-weight: 700;
+    -fx-padding: 11 26 11 26;
+}
+
+.messaging-root .msg-list-card .panel-title,
+.messaging-root .msg-start-card .panel-title {
+    -fx-font-size: 18px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #1e293b;
+}
+
+.messaging-root .msg-conversation-row {
+    -fx-padding: 16 18 16 18;
+    -fx-background-color: #ffffff;
+    -fx-border-color: #dbe3ef;
+    -fx-border-width: 1;
+    -fx-background-radius: 16;
+    -fx-border-radius: 16;
+}
+
+.messaging-root .msg-conversation-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #1e293b;
+}
+
+.messaging-root .msg-conversation-preview,
+.messaging-root .msg-conversation-time,
+.messaging-root .msg-conversation-role {
+    -fx-font-size: 13px;
+}
+
+.messaging-root .conversation-list .list-cell {
+    -fx-padding: 0 0 12 0;
+}
+
+/* Final teleconsultation visibility overrides */
+.teleconsultation-root .tele-schedule-btn {
+    -fx-background-color: linear-gradient(to bottom right, #8b5cf6, #7c3aed);
+    -fx-text-fill: white;
+    -fx-font-weight: 700;
+    -fx-font-size: 14px;
+    -fx-padding: 12 24 12 24;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-border-color: transparent;
+}
+
+.teleconsultation-root .tele-schedule-btn:hover {
+    -fx-background-color: linear-gradient(to bottom right, #7c3aed, #6d28d9);
+    -fx-cursor: hand;
+}
+
+.teleconsultation-root .tele-stat-card {
+    -fx-min-width: 220;
+    -fx-padding: 20;
+    -fx-background-radius: 14;
+    -fx-border-radius: 14;
+    -fx-border-width: 1;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.10), 12, 0.18, 0, 3);
+}
+
+.teleconsultation-root .tele-stat-completed {
+    -fx-background-color: linear-gradient(to bottom right, #dcfce7, #bbf7d0);
+    -fx-border-color: #86efac;
+}
+
+.teleconsultation-root .tele-stat-pending {
+    -fx-background-color: linear-gradient(to bottom right, #fef3c7, #fde68a);
+    -fx-border-color: #fcd34d;
+}
+
+.teleconsultation-root .tele-stat-duration {
+    -fx-background-color: linear-gradient(to bottom right, #dbeafe, #bfdbfe);
+    -fx-border-color: #93c5fd;
+}
+
+.teleconsultation-root .tele-stat-average {
+    -fx-background-color: linear-gradient(to bottom right, #fce7f3, #fbcfe8);
+    -fx-border-color: #f9a8d4;
+}
+
+.teleconsultation-root .tele-stat-badge,
+.teleconsultation-root .tele-stat-value,
+.teleconsultation-root .tele-stat-caption {
+    -fx-text-fill: #1e293b;
+}
+
 .tele-stat-badge {
     -fx-font-size: 12px;
     -fx-font-weight: 700;
@@ -1019,6 +1219,164 @@
     -fx-border-style: segments(4, 4);
 }
 
+.plan-root,
+.plan-show-root,
+.plan-create-root {
+    -fx-padding: 30 40 30 40;
+    -fx-background-color: linear-gradient(to bottom, #f8fafc, #eff6ff);
+}
+
+.plan-index-icon {
+    -fx-min-width: 52;
+    -fx-min-height: 52;
+    -fx-max-width: 52;
+    -fx-max-height: 52;
+    -fx-background-color: linear-gradient(to bottom right, #06b6d4, #0891b2);
+    -fx-background-radius: 14;
+}
+
+.plan-create-icon {
+    -fx-min-width: 52;
+    -fx-min-height: 52;
+    -fx-max-width: 52;
+    -fx-max-height: 52;
+    -fx-background-color: linear-gradient(to bottom right, #667eea, #764ba2);
+    -fx-background-radius: 14;
+}
+
+.plan-stats-grid {
+    -fx-hgap: 16;
+    -fx-vgap: 16;
+}
+
+.plan-stat-card {
+    -fx-min-width: 240;
+    -fx-padding: 20;
+    -fx-background-radius: 16;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.12), 18, 0.2, 0, 4);
+}
+
+.plan-stat-active {
+    -fx-background-color: linear-gradient(to bottom right, #10b981, #059669);
+}
+
+.plan-stat-secondary {
+    -fx-background-color: linear-gradient(to bottom right, #3b82f6, #2563eb);
+}
+
+.plan-stat-tertiary {
+    -fx-background-color: linear-gradient(to bottom right, #f59e0b, #d97706);
+}
+
+.plan-create-section,
+.plan-list-section,
+.plan-detail-card {
+    -fx-background-color: white;
+    -fx-background-radius: 16;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 16;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.08), 18, 0.2, 0, 3);
+}
+
+.plan-patient-row,
+.plan-list-card {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 14;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 14;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.05), 12, 0.15, 0, 2);
+}
+
+.plan-patient-row:hover,
+.plan-list-card:hover {
+    -fx-cursor: hand;
+    -fx-translate-y: -2;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.12), 20, 0.2, 0, 5);
+}
+
+.plan-avatar-chip {
+    -fx-min-width: 44;
+    -fx-min-height: 44;
+    -fx-max-width: 44;
+    -fx-max-height: 44;
+    -fx-background-color: linear-gradient(to bottom right, #06b6d4, #0891b2);
+    -fx-background-radius: 12;
+}
+
+.plan-avatar-text {
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-font-weight: 800;
+}
+
+.plan-card-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #1e293b;
+}
+
+.plan-card-subtitle {
+    -fx-font-size: 13px;
+    -fx-text-fill: #64748b;
+}
+
+.plan-card-description {
+    -fx-font-size: 13px;
+    -fx-text-fill: #475569;
+}
+
+.plan-status-pill {
+    -fx-padding: 6 12 6 12;
+    -fx-background-radius: 999;
+    -fx-font-size: 12px;
+    -fx-font-weight: 800;
+}
+
+.plan-status-active {
+    -fx-background-color: #dcfce7;
+    -fx-text-fill: #166534;
+}
+
+.plan-status-completed {
+    -fx-background-color: #dbeafe;
+    -fx-text-fill: #1e40af;
+}
+
+.plan-status-cancelled {
+    -fx-background-color: #fee2e2;
+    -fx-text-fill: #991b1b;
+}
+
+.plan-status-draft {
+    -fx-background-color: #fef3c7;
+    -fx-text-fill: #92400e;
+}
+
+.plan-progress-shell {
+    -fx-spacing: 0;
+}
+
+.plan-progress-track {
+    -fx-background-color: #e2e8f0;
+    -fx-background-radius: 999;
+    -fx-min-height: 10;
+}
+
+.plan-progress-bar {
+    -fx-background-color: linear-gradient(to right, #10b981, #059669);
+    -fx-background-radius: 999;
+    -fx-min-height: 10;
+}
+
+.plan-empty-state,
+.plan-empty-mini {
+    -fx-background-color: linear-gradient(to bottom right, #e0f2fe, #f0f9ff);
+    -fx-background-radius: 16;
+    -fx-border-color: #7dd3fc;
+    -fx-border-radius: 16;
+    -fx-border-style: segments(4, 4);
+}
+
 .online-status {
     -fx-font-size: 12px;
     -fx-text-fill: rgba(255,255,255,0.78);
@@ -1033,4 +1391,542 @@
     -fx-background-color: #f8fafc;
     -fx-background: #f8fafc;
     -fx-border-color: transparent;
+}
+
+/* ===== SYMFONY PARITY OVERRIDES (MODULES) ===== */
+
+/* Typography */
+.page-title {
+    -fx-font-size: 28px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #1a1a2e;
+}
+
+.section-subtitle,
+.msg-start-subtitle,
+.tele-detail-muted,
+.doc-muted,
+.chat-subtitle {
+    -fx-font-size: 14px;
+    -fx-text-fill: #64748b;
+}
+
+/* Module page wrappers */
+.teleconsultation-root,
+.document-root,
+.messaging-root {
+    -fx-padding: 30 40 30 40;
+    -fx-background-color: transparent;
+}
+
+/* Header module icons (48x48, radius 12) */
+.tele-index-icon,
+.doc-index-icon,
+.msg-index-icon {
+    -fx-min-width: 48;
+    -fx-min-height: 48;
+    -fx-max-width: 48;
+    -fx-max-height: 48;
+    -fx-background-radius: 12;
+}
+
+.tele-index-icon-text,
+.doc-index-icon-text,
+.msg-index-icon-text {
+    -fx-font-size: 15px;
+    -fx-font-weight: 800;
+}
+
+/* Core cards */
+.tele-detail-card,
+.doc-detail-card,
+.msg-start-card,
+.msg-list-card,
+.chat-wrapper,
+.conversations-panel,
+.messages-panel,
+.consultation-list,
+.consultation-history-list,
+.document-list,
+.document-details {
+    -fx-background-color: white;
+    -fx-background-radius: 16;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 16;
+    -fx-border-width: 1;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.06), 8, 0.16, 0, 2);
+}
+
+.panel-title,
+.tele-panel-title,
+.doc-panel-title {
+    -fx-font-size: 18px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #1a1a2e;
+}
+
+.tele-detail-main-title,
+.doc-main-title,
+.chat-title,
+.conversation-title {
+    -fx-font-size: 17px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #1a1a2e;
+}
+
+/* Generic action buttons close to Symfony inline styles */
+.btn-primary,
+.btn-send {
+    -fx-background-color: linear-gradient(to bottom right, #8b5cf6, #7c3aed);
+    -fx-text-fill: white;
+    -fx-font-weight: 600;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-padding: 12 24 12 24;
+    -fx-effect: dropshadow(gaussian, rgba(139,92,246,0.30), 12, 0.22, 0, 4);
+}
+
+.btn-info {
+    -fx-background-color: linear-gradient(to bottom right, #0D8ABC, #0a6d96);
+    -fx-text-fill: white;
+    -fx-font-weight: 600;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-padding: 12 24 12 24;
+    -fx-effect: dropshadow(gaussian, rgba(13,138,188,0.25), 12, 0.22, 0, 4);
+}
+
+.btn-success {
+    -fx-background-color: linear-gradient(to bottom right, #10b981, #059669);
+    -fx-text-fill: white;
+    -fx-font-weight: 600;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-padding: 12 24 12 24;
+    -fx-effect: dropshadow(gaussian, rgba(16,185,129,0.30), 12, 0.22, 0, 4);
+}
+
+.btn-danger {
+    -fx-background-color: linear-gradient(to bottom right, #ef4444, #dc2626);
+    -fx-text-fill: white;
+    -fx-font-weight: 600;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-padding: 12 24 12 24;
+    -fx-effect: dropshadow(gaussian, rgba(239,68,68,0.30), 12, 0.22, 0, 4);
+}
+
+.btn-secondary {
+    -fx-background-color: #f1f5f9;
+    -fx-text-fill: #475569;
+    -fx-font-weight: 600;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-padding: 12 24 12 24;
+    -fx-border-color: #e2e8f0;
+    -fx-border-width: 1;
+}
+
+/* Messaging */
+.msg-conversation-row {
+    -fx-background-radius: 14;
+    -fx-border-radius: 14;
+    -fx-border-color: #e2e8f0;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.04), 6, 0.16, 0, 1);
+}
+
+.msg-conversation-title {
+    -fx-font-size: 17px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #1a1a2e;
+}
+
+.msg-conversation-preview,
+.msg-conversation-time {
+    -fx-font-size: 14px;
+    -fx-text-fill: #64748b;
+}
+
+.chat-wrapper {
+    -fx-border-color: #e2e8f0;
+    -fx-border-width: 1;
+    -fx-background-radius: 14;
+    -fx-border-radius: 14;
+}
+
+.chat-header {
+    -fx-background-color: linear-gradient(to bottom right, #1e40af, #3b82f6, #06b6d4);
+    -fx-padding: 18 24 18 24;
+}
+
+.chat-avatar-shell {
+    -fx-min-width: 46;
+    -fx-min-height: 46;
+    -fx-max-width: 46;
+    -fx-max-height: 46;
+}
+
+.chat-messages {
+    -fx-background-color: #f8fafc;
+}
+
+.msg-bubble-own {
+    -fx-background-color: linear-gradient(to bottom right, #3b82f6, #1d4ed8);
+}
+
+.msg-bubble-other {
+    -fx-background-color: white;
+    -fx-border-color: #e2e8f0;
+}
+
+.message-input {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+/* Documents */
+.doc-storage-badge {
+    -fx-background-color: linear-gradient(to bottom right, #3b82f6, #2563eb);
+    -fx-background-radius: 20;
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+    -fx-padding: 8 16 8 16;
+}
+
+.doc-row-badge,
+.tele-status-pill,
+.msg-row-badge,
+.unread-badge,
+.plan-status-pill {
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+}
+
+.doc-list-icon,
+.tele-type-chip,
+.tele-info-box,
+.doc-info-box {
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+}
+
+.doc-row-title {
+    -fx-font-size: 14px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #1e293b;
+}
+
+.doc-row-subtitle,
+.doc-access-meta {
+    -fx-font-size: 13px;
+    -fx-text-fill: #64748b;
+}
+
+/* Teleconsultation */
+.tele-stat-card {
+    -fx-background-radius: 14;
+    -fx-padding: 24;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.25), 12, 0.22, 0, 4);
+}
+
+.tele-stat-badge {
+    -fx-padding: 6 12 6 12;
+    -fx-background-color: rgba(255,255,255,0.2);
+    -fx-background-radius: 20;
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+}
+
+.tele-stat-value {
+    -fx-font-size: 32px;
+    -fx-font-weight: 700;
+}
+
+.tele-stat-caption {
+    -fx-font-size: 14px;
+    -fx-text-fill: rgba(255,255,255,0.82);
+}
+
+.tele-tab-pane .tab {
+    -fx-background-color: transparent;
+    -fx-padding: 10 20 10 20;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-border-width: 0;
+}
+
+.tele-tab-pane .tab .tab-label {
+    -fx-text-fill: #64748b;
+    -fx-font-weight: 600;
+    -fx-font-size: 13px;
+}
+
+.tele-tab-pane .tab:selected {
+    -fx-background-color: linear-gradient(to bottom right, #ef4444, #dc2626);
+}
+
+.tele-tab-pane .tab:selected .tab-label {
+    -fx-text-fill: white;
+}
+
+.tele-consultation-card,
+.tele-history-row {
+    -fx-background-radius: 14;
+    -fx-border-radius: 14;
+}
+
+.tele-ongoing-card {
+    -fx-border-color: #fca5a5;
+    -fx-border-width: 2;
+}
+
+.tele-upcoming-card {
+    -fx-border-color: #fbbf24;
+    -fx-border-width: 2;
+}
+
+.tele-card-title,
+.tele-card-participant {
+    -fx-font-size: 15px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #1e293b;
+}
+
+.tele-card-subtitle,
+.tele-card-description {
+    -fx-font-size: 13px;
+    -fx-text-fill: #64748b;
+}
+
+.tele-info-label {
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #94a3b8;
+}
+
+.tele-info-value {
+    -fx-font-size: 16px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #1e293b;
+}
+
+/* ===== TELECONSULTATION + PLAN VISIBILITY FIXES ===== */
+
+.plan-header {
+    -fx-alignment: center-left;
+}
+
+.plan-index-icon-text {
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-font-weight: 800;
+}
+
+.tele-card-list,
+.tele-history-list {
+    -fx-background-color: transparent;
+    -fx-padding: 2 0 2 0;
+}
+
+.tele-history-list {
+    -fx-spacing: 12;
+}
+
+.tele-detail-card .text-field,
+.tele-detail-card .date-picker,
+.tele-detail-card .combo-box,
+.tele-detail-card .spinner,
+.plan-detail-card .text-field,
+.plan-detail-card .date-picker,
+.plan-detail-card .combo-box,
+.plan-detail-card .spinner {
+    -fx-background-color: white;
+    -fx-border-color: #dbe3ef;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+    -fx-text-fill: #0f172a;
+    -fx-prompt-text-fill: #94a3b8;
+}
+
+.tele-detail-card .text-area,
+.plan-detail-card .text-area {
+    -fx-background-color: white;
+    -fx-border-color: #dbe3ef;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+}
+
+.tele-detail-card .text-area .content,
+.plan-detail-card .text-area .content {
+    -fx-background-color: white;
+    -fx-background-radius: 10;
+}
+
+.tele-detail-card .text-area,
+.plan-detail-card .text-area,
+.tele-detail-card .text-area .text,
+.plan-detail-card .text-area .text {
+    -fx-text-fill: #0f172a;
+    -fx-prompt-text-fill: #94a3b8;
+}
+
+.tele-detail-card .combo-box .list-cell,
+.plan-detail-card .combo-box .list-cell,
+.tele-detail-card .date-picker .text-field,
+.plan-detail-card .date-picker .text-field,
+.tele-detail-card .spinner .text-field,
+.plan-detail-card .spinner .text-field {
+    -fx-text-fill: #0f172a;
+}
+
+.tele-panel-title,
+.plan-card-title {
+    -fx-text-fill: #1e293b;
+}
+
+.tele-detail-muted,
+.plan-card-subtitle,
+.plan-card-description {
+    -fx-text-fill: #64748b;
+}
+
+/* Missing generic classes referenced in FXML */
+.app-content-scroll {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.app-content-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+
+.doc-list-shell {
+    -fx-background-color: transparent;
+}
+
+.login-form,
+.register-form {
+    -fx-background-color: transparent;
+}
+
+.auth-floating-icons {
+    -fx-opacity: 0.8;
+}
+
+/* Restore explicit module backgrounds for readability */
+.teleconsultation-root {
+    -fx-background-color: linear-gradient(to bottom, #f8fafc, #eef2ff);
+}
+
+.plan-root,
+.plan-show-root,
+.plan-create-root {
+    -fx-background-color: linear-gradient(to bottom, #f8fafc, #eff6ff);
+}
+
+/* Ensure plan section containers also style form controls */
+.plan-create-section .text-field,
+.plan-create-section .date-picker,
+.plan-create-section .combo-box,
+.plan-create-section .spinner,
+.plan-list-section .text-field,
+.plan-list-section .date-picker,
+.plan-list-section .combo-box,
+.plan-list-section .spinner {
+    -fx-background-color: white;
+    -fx-border-color: #dbe3ef;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+    -fx-text-fill: #0f172a;
+    -fx-prompt-text-fill: #94a3b8;
+}
+
+.plan-create-section .text-area,
+.plan-list-section .text-area {
+    -fx-background-color: white;
+    -fx-border-color: #dbe3ef;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+}
+
+.plan-create-section .text-area .content,
+.plan-list-section .text-area .content {
+    -fx-background-color: white;
+    -fx-background-radius: 10;
+}
+
+.plan-create-section .text-area,
+.plan-create-section .text-area .text,
+.plan-list-section .text-area,
+.plan-list-section .text-area .text {
+    -fx-text-fill: #0f172a;
+    -fx-prompt-text-fill: #94a3b8;
+}
+
+/* Keep dropdown popup rows readable */
+.combo-box-popup .list-view {
+    -fx-background-color: white;
+    -fx-border-color: #dbe3ef;
+}
+
+.combo-box-popup .list-cell {
+    -fx-background-color: white;
+    -fx-text-fill: #0f172a;
+}
+
+.combo-box-popup .list-cell:filled:selected,
+.combo-box-popup .list-cell:filled:hover {
+    -fx-background-color: #eef2ff;
+    -fx-text-fill: #1e293b;
+}
+
+/* ===== TELECONSULTATION HARDENED VISIBILITY ===== */
+
+.tele-header-btn {
+    -fx-background-color: linear-gradient(to bottom right, #8b5cf6, #7c3aed);
+    -fx-text-fill: white;
+    -fx-font-weight: 700;
+    -fx-font-size: 14px;
+    -fx-padding: 12 24 12 24;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-border-color: transparent;
+    -fx-effect: dropshadow(gaussian, rgba(139,92,246,0.35), 14, 0.24, 0, 4);
+}
+
+.tele-header-btn:hover {
+    -fx-background-color: linear-gradient(to bottom right, #7c3aed, #6d28d9);
+    -fx-cursor: hand;
+}
+
+.tele-stat-card {
+    -fx-min-width: 220;
+    -fx-padding: 20;
+    -fx-background-color: white;
+    -fx-background-radius: 14;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 14;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.12), 14, 0.2, 0, 4);
+}
+
+.tele-stat-completed {
+    -fx-background-color: linear-gradient(to bottom right, #10b981, #059669);
+}
+
+.tele-stat-pending {
+    -fx-background-color: linear-gradient(to bottom right, #f59e0b, #d97706);
+}
+
+.tele-stat-duration {
+    -fx-background-color: linear-gradient(to bottom right, #3b82f6, #2563eb);
+}
+
+.tele-stat-average {
+    -fx-background-color: linear-gradient(to bottom right, #ec4899, #db2777);
+}
+
+.tele-stat-badge,
+.tele-stat-value,
+.tele-stat-caption {
+    -fx-text-fill: white;
 }

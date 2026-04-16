@@ -16,8 +16,14 @@ import javafx.stage.FileChooser;
 
 import java.io.File;
 import java.nio.file.Files;
+import java.util.Set;
 
 public class DocumentUploadController extends AppBaseViewController {
+    private static final long MAX_FILE_SIZE_BYTES = 50L * 1024L * 1024L;
+    private static final Set<String> ALLOWED_EXTENSIONS = Set.of(
+        "pdf", "jpg", "jpeg", "png", "doc", "docx", "xls", "xlsx"
+    );
+
     @FXML private Label selectedFileLabel;
     @FXML private Button backButton;
     @FXML private Button chooseFileButton;
@@ -54,10 +60,44 @@ public class DocumentUploadController extends AppBaseViewController {
 
     private void upload() {
         User currentUser = AuthSession.getCurrentUser();
-        if (selectedFile == null || currentUser == null) {
+        if (currentUser == null) {
+            showAlert("Erreur", "Session invalide.");
+            return;
+        }
+        if (selectedFile == null) {
             showAlert("Erreur", "Veuillez choisir un fichier.");
             return;
         }
+        if (!selectedFile.exists() || !selectedFile.isFile()) {
+            showAlert("Erreur", "Fichier invalide.");
+            return;
+        }
+        if (selectedFile.length() <= 0) {
+            showAlert("Erreur", "Le fichier est vide.");
+            return;
+        }
+        if (selectedFile.length() > MAX_FILE_SIZE_BYTES) {
+            showAlert("Erreur", "Le fichier dépasse 50 MB.");
+            return;
+        }
+        String fileName = selectedFile.getName() == null ? "" : selectedFile.getName().trim();
+        int dot = fileName.lastIndexOf('.');
+        String extension = dot >= 0 && dot < fileName.length() - 1 ? fileName.substring(dot + 1).toLowerCase() : "";
+        if (!ALLOWED_EXTENSIONS.contains(extension)) {
+            showAlert("Erreur", "Format non supporté. Utilisez PDF, Word, Excel ou Image.");
+            return;
+        }
+        String documentType = documentTypeCombo.getValue();
+        if (documentType == null || documentType.isBlank()) {
+            showAlert("Erreur", "Veuillez sélectionner un type de document.");
+            return;
+        }
+        String description = descriptionArea.getText() == null ? "" : descriptionArea.getText().trim();
+        if (description.length() > 2000) {
+            showAlert("Erreur", "La description est trop longue (max 2000 caractères).");
+            return;
+        }
+
         try {
             byte[] bytes = Files.readAllBytes(selectedFile.toPath());
             String mimeType = Files.probeContentType(selectedFile.toPath());
@@ -66,8 +106,8 @@ public class DocumentUploadController extends AppBaseViewController {
                 bytes,
                 mimeType == null ? "application/octet-stream" : mimeType,
                 currentUser,
-                descriptionArea.getText(),
-                documentTypeCombo.getValue()
+                description,
+                documentType
             );
             if (document == null) {
                 showAlert("Erreur", "Upload refusé.");

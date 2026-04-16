@@ -30,8 +30,9 @@ public class DocumentShareController extends AppBaseViewController {
     @FXML private Label documentNameLabel;
     @FXML private Button backButton;
     @FXML private Button shareButton;
+    @FXML private Button updateButton;
     @FXML private Button cancelButton;
-    @FXML private Button revokeButton;
+    @FXML private Button deleteButton;
     @FXML private ComboBox<User> recipientCombo;
     @FXML private ComboBox<String> permissionCombo;
     @FXML private DatePicker expiresAtPicker;
@@ -40,6 +41,7 @@ public class DocumentShareController extends AppBaseViewController {
     private final DocumentStorageService service = new DocumentStorageService();
     private final UserRepository userRepository = new UserRepository(new DatabaseService(DatabaseConfig.fromEnvironment()));
     private SharedDocument document;
+    private DocumentAccess selectedAccess;
 
     @Override
     public void initialize(java.net.URL location, java.util.ResourceBundle resources) {
@@ -51,6 +53,10 @@ public class DocumentShareController extends AppBaseViewController {
         document = service.getDocument(String.valueOf(id));
         if (document == null) {
             throw new IllegalStateException("Document introuvable");
+        }
+        User currentUser = AuthSession.getCurrentUser();
+        if (currentUser == null || document.getOwner() == null || !document.getOwner().getId().equals(currentUser.getId())) {
+            throw new IllegalStateException("Accès refusé: seul le propriétaire peut partager ce document");
         }
         documentNameLabel.setText(document.getFileName());
         permissionCombo.setItems(FXCollections.observableArrayList("view", "download"));
@@ -72,10 +78,14 @@ public class DocumentShareController extends AppBaseViewController {
             }
         });
         render();
+        accessListView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> onAccessSelected(newValue));
         backButton.setOnAction(event -> AppNavigator.showDocumentShow(document.getId()));
         cancelButton.setOnAction(event -> AppNavigator.showDocumentShow(document.getId()));
         shareButton.setOnAction(event -> share());
-        revokeButton.setOnAction(event -> revoke());
+        updateButton.setOnAction(event -> updateSelectedAccess());
+        deleteButton.setOnAction(event -> deleteSelectedAccess());
+        updateButton.setDisable(true);
+        deleteButton.setDisable(true);
     }
 
     private void render() {
@@ -86,9 +96,13 @@ public class DocumentShareController extends AppBaseViewController {
         User owner = document.getOwner();
         String role = owner.getSubscriptionType() != null && !owner.getSubscriptionType().isBlank() ? owner.getSubscriptionType() : owner.getRole();
         if ("ROLE_PATIENT".equals(role)) {
-            return userRepository.findByRoles(List.of("ROLE_MEDECIN", "ROLE_PHARMACIEN", "ROLE_COACH", "ROLE_NUTRITIONNISTE"));
+            return userRepository.findByRoles(List.of("ROLE_MEDECIN", "ROLE_PHARMACIEN", "ROLE_COACH", "ROLE_NUTRITIONNISTE")).stream()
+                .filter(user -> user != null && user.getId() != null && !user.getId().equals(owner.getId()))
+                .toList();
         }
-        return userRepository.findByRole("ROLE_PATIENT");
+        return userRepository.findByRole("ROLE_PATIENT").stream()
+            .filter(user -> user != null && user.getId() != null && !user.getId().equals(owner.getId()))
+            .toList();
     }
 
     private ListCell<User> buildUserCell() {
@@ -107,23 +121,108 @@ public class DocumentShareController extends AppBaseViewController {
             showAlert("Erreur", "Veuillez sélectionner un utilisateur.");
             return;
         }
+        if (document.getOwner() != null && document.getOwner().getId() != null && document.getOwner().getId().equals(recipient.getId())) {
+            showAlert("Erreur", "Vous ne pouvez pas partager un document avec vous-même.");
+            return;
+        }
+
+        String permission = permissionCombo.getValue();
+        if (permission == null || permission.isBlank() || !("view".equals(permission) || "download".equals(permission))) {
+            showAlert("Erreur", "Permission invalide.");
+            return;
+        }
+
+        if (expiresAtPicker.getValue() != null && expiresAtPicker.getValue().isBefore(java.time.LocalDate.now())) {
+            showAlert("Erreur", "La date d'expiration ne peut pas être dans le passé.");
+            return;
+        }
+
         LocalDateTime expiresAt = expiresAtPicker.getValue() == null ? null : expiresAtPicker.getValue().atStartOfDay();
-        DocumentAccess access = service.shareDocument(String.valueOf(document.getId()), recipient, permissionCombo.getValue(), expiresAt);
+        DocumentAccess access = service.shareDocument(String.valueOf(document.getId()), recipient, permission, expiresAt);
         if (access == null) {
             showAlert("Erreur", "Partage refusé.");
             return;
         }
         render();
+        resetSelection();
     }
 
-    private void revoke() {
-        DocumentAccess access = accessListView.getSelectionModel().getSelectedItem();
-        if (access == null || access.getSharedWith() == null) {
+    private void updateSelectedAccess() {
+        if (selectedAccess == null || selectedAccess.getSharedWith() == null) {
             showAlert("Erreur", "Veuillez sélectionner un accès.");
             return;
         }
-        service.revokeAccess(String.valueOf(document.getId()), String.valueOf(access.getSharedWith().getId()));
+
+        String permission = permissionCombo.getValue();
+        if (permission == null || permission.isBlank() || !List.of("view", "download").contains(permission)) {
+            showAlert("Erreur", "Permission invalide.");
+            return;
+        }
+
+        if (expiresAtPicker.getValue() != null && expiresAtPicker.getValue().isBefore(java.time.LocalDate.now())) {
+            showAlert("Erreur", "La date d'expiration ne peut pas être dans le passé.");
+            return;
+        }
+
+        LocalDateTime expiresAt = expiresAtPicker.getValue() == null ? null : expiresAtPicker.getValue().atStartOfDay();
+        DocumentAccess updated = service.shareDocument(
+            String.valueOf(document.getId()),
+            selectedAccess.getSharedWith(),
+            permission,
+            expiresAt
+        );
+
+        if (updated == null) {
+            showAlert("Erreur", "Mise à jour refusée.");
+            return;
+        }
+
         render();
+        resetSelection();
+    }
+
+    private void deleteSelectedAccess() {
+        DocumentAccess access = selectedAccess != null ? selectedAccess : accessListView.getSelectionModel().getSelectedItem();
+        if (access == null || access.getSharedWith() == null || access.getSharedWith().getId() == null) {
+            showAlert("Erreur", "Veuillez sélectionner un accès.");
+            return;
+        }
+
+        boolean deleted = service.deleteAccess(String.valueOf(document.getId()), String.valueOf(access.getSharedWith().getId()));
+        if (!deleted) {
+            showAlert("Erreur", "Suppression refusée.");
+            return;
+        }
+
+        render();
+        resetSelection();
+    }
+
+    private void onAccessSelected(DocumentAccess access) {
+        selectedAccess = access;
+        boolean hasSelection = access != null && access.getSharedWith() != null;
+        updateButton.setDisable(!hasSelection);
+        deleteButton.setDisable(!hasSelection);
+
+        if (!hasSelection) {
+            recipientCombo.setDisable(false);
+            return;
+        }
+
+        recipientCombo.setValue(access.getSharedWith());
+        recipientCombo.setDisable(true);
+        permissionCombo.setValue(access.getPermission() == null || access.getPermission().isBlank() ? "view" : access.getPermission());
+        expiresAtPicker.setValue(access.getExpiresAt() == null ? null : access.getExpiresAt().toLocalDate());
+    }
+
+    private void resetSelection() {
+        selectedAccess = null;
+        accessListView.getSelectionModel().clearSelection();
+        recipientCombo.setDisable(false);
+        permissionCombo.setValue("view");
+        expiresAtPicker.setValue(null);
+        updateButton.setDisable(true);
+        deleteButton.setDisable(true);
     }
 
     private void showAlert(String title, String message) {

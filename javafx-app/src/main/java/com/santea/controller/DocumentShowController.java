@@ -16,7 +16,12 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextArea;
+import javafx.stage.FileChooser;
+import javafx.stage.Window;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -67,6 +72,10 @@ public class DocumentShowController extends AppBaseViewController {
         if (document == null) {
             throw new IllegalStateException("Document introuvable");
         }
+        User currentUser = AuthSession.getCurrentUser();
+        if (currentUser == null || !service.hasAccess(String.valueOf(document.getId()), String.valueOf(currentUser.getId()), "view")) {
+            throw new IllegalStateException("Accès refusé à ce document");
+        }
         render();
         backButton.setOnAction(event -> AppNavigator.showDocumentSharing());
         downloadButton.setOnAction(event -> download());
@@ -75,6 +84,8 @@ public class DocumentShowController extends AppBaseViewController {
     }
 
     private void render() {
+        User currentUser = AuthSession.getCurrentUser();
+        boolean isOwner = currentUser != null && document.getOwner() != null && document.getOwner().getId().equals(currentUser.getId());
         documentNameLabel.setText(document.getFileName());
         documentOwnerLabel.setText(document.getOwner() == null ? "" : document.getOwner().getEmail());
         documentTypeLabel.setText(document.getDocumentType() == null ? "--" : document.getDocumentType());
@@ -84,13 +95,13 @@ public class DocumentShowController extends AppBaseViewController {
         documentSizeLabel.setText(document.getFileSizeFormatted());
         documentUploadedLabel.setText(document.getUploadedAt() == null ? "--" : document.getUploadedAt().format(DATE_TIME_FORMAT));
         documentDescriptionArea.setText(document.getDescription() == null ? "" : document.getDescription());
-        var accesses = FXCollections.observableArrayList(service.getAccessHistory(String.valueOf(document.getId())));
+        var accesses = FXCollections.observableArrayList(isOwner
+            ? service.getAccessHistory(String.valueOf(document.getId()))
+            : java.util.List.<DocumentAccess>of());
         accessListView.setItems(accesses);
         sharedWithCountLabel.setText(String.valueOf(accesses.size()));
         int totalAccesses = accesses.stream().mapToInt(item -> item.getAccessCount() == null ? 0 : item.getAccessCount()).sum();
         totalAccessCountLabel.setText(String.valueOf(totalAccesses));
-        User currentUser = AuthSession.getCurrentUser();
-        boolean isOwner = currentUser != null && document.getOwner() != null && document.getOwner().getId().equals(currentUser.getId());
         shareButton.setDisable(!isOwner);
         deleteButton.setDisable(!isOwner);
     }
@@ -105,8 +116,31 @@ public class DocumentShowController extends AppBaseViewController {
             showAlert("Erreur", "Vous n'avez pas la permission de télécharger ce document.");
             return;
         }
+
+        String suggestedName = (document.getFileName() == null || document.getFileName().isBlank())
+            ? "document-" + document.getId()
+            : document.getFileName();
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Enregistrer le document");
+        fileChooser.setInitialFileName(suggestedName);
+        Window owner = downloadButton != null && downloadButton.getScene() != null
+            ? downloadButton.getScene().getWindow()
+            : null;
+        java.io.File destination = fileChooser.showSaveDialog(owner);
+        if (destination == null) {
+            return;
+        }
+
+        try {
+            Path outputPath = destination.toPath();
+            Files.write(outputPath, content);
+        } catch (IOException exception) {
+            showAlert("Erreur", "Impossible d'enregistrer le fichier téléchargé.");
+            return;
+        }
+
         render();
-        showAlert("Succès", "Téléchargement simulé: " + content.length + " octets.");
+        showAlert("Succès", "Document téléchargé: " + destination.getName());
     }
 
     private void delete() {

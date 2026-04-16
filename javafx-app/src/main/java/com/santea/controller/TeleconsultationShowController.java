@@ -72,7 +72,21 @@ public class TeleconsultationShowController extends AppBaseViewController {
         if (found == null) {
             throw new IllegalStateException("Téléconsultation introuvable");
         }
+        User currentUser = AuthSession.getCurrentUser();
+        if (currentUser == null || !isParticipant(found, currentUser)) {
+            throw new IllegalStateException("Accès refusé à cette téléconsultation");
+        }
         return found;
+    }
+
+    private boolean isParticipant(Teleconsultation consultation, User user) {
+        if (consultation == null || user == null || user.getId() == null) {
+            return false;
+        }
+        return (consultation.getInitiator() != null && consultation.getInitiator().getId() != null
+                && consultation.getInitiator().getId().equals(user.getId()))
+            || (consultation.getRecipient() != null && consultation.getRecipient().getId() != null
+                && consultation.getRecipient().getId().equals(user.getId()));
     }
 
     private void render() {
@@ -121,8 +135,17 @@ public class TeleconsultationShowController extends AppBaseViewController {
             return;
         }
         try {
-            LocalTime time = LocalTime.parse(rescheduleTimeField.getText().trim());
+            String rawTime = rescheduleTimeField.getText() == null ? "" : rescheduleTimeField.getText().trim();
+            if (rawTime.isBlank()) {
+                showAlert("Erreur", "Veuillez saisir une heure (HH:mm).");
+                return;
+            }
+            LocalTime time = LocalTime.parse(rawTime);
             LocalDateTime scheduledAt = LocalDateTime.of(rescheduleDatePicker.getValue(), time);
+            if (scheduledAt.isBefore(LocalDateTime.now().plusMinutes(5))) {
+                showAlert("Erreur", "Veuillez choisir un créneau futur (au moins 5 minutes). ");
+                return;
+            }
             service.rescheduleTeleconsultation(String.valueOf(consultation.getId()), scheduledAt);
             consultation = loadConsultation();
             render();

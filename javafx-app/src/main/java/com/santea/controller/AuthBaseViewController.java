@@ -3,6 +3,7 @@ package com.santea.controller;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.ComboBox;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 
 public class AuthBaseViewController {
@@ -20,6 +21,13 @@ public class AuthBaseViewController {
     }
 
     public void setContent(Node content) {
-        contentContainer.getChildren().setAll(content);
+        contentContainer.getChildren().clear();
+        if (content != null) {
+            if (content instanceof Region region) {
+                region.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+            }
+            contentContainer.getChildren().add(content);
+        }
+        contentContainer.requestLayout();
     }
 }

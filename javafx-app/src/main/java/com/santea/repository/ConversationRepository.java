@@ -2,6 +2,7 @@ package com.santea.repository;
 
 import com.santea.model.Conversation;
 import com.santea.model.Message;
+import java.time.LocalDateTime;
 import java.util.*;
 
 /**
@@ -60,10 +61,29 @@ public class ConversationRepository {
     public List<Conversation> findConversationsByUserId(String userId) {
         List<Conversation> result = new ArrayList<>();
         conversations.values().forEach(conv -> {
-            if (conv.getUserOne().getId().toString().equals(userId) || 
-                conv.getUserTwo().getId().toString().equals(userId)) {
+            if (conv != null
+                && conv.getUserOne() != null
+                && conv.getUserOne().getId() != null
+                && conv.getUserTwo() != null
+                && conv.getUserTwo().getId() != null
+                && (conv.getUserOne().getId().toString().equals(userId)
+                    || conv.getUserTwo().getId().toString().equals(userId))) {
                 result.add(conv);
             }
+        });
+        result.sort((c1, c2) -> {
+            LocalDateTime t1 = c1.getLastMessageAt() != null ? c1.getLastMessageAt() : c1.getCreatedAt();
+            LocalDateTime t2 = c2.getLastMessageAt() != null ? c2.getLastMessageAt() : c2.getCreatedAt();
+            if (t1 == null && t2 == null) {
+                return 0;
+            }
+            if (t1 == null) {
+                return 1;
+            }
+            if (t2 == null) {
+                return -1;
+            }
+            return t2.compareTo(t1);
         });
         return result;
     }
@@ -73,7 +93,22 @@ public class ConversationRepository {
      * @return All conversations
      */
     public List<Conversation> findAllConversations() {
-        return new ArrayList<>(conversations.values());
+        List<Conversation> result = new ArrayList<>(conversations.values());
+        result.sort((c1, c2) -> {
+            LocalDateTime t1 = c1.getLastMessageAt() != null ? c1.getLastMessageAt() : c1.getCreatedAt();
+            LocalDateTime t2 = c2.getLastMessageAt() != null ? c2.getLastMessageAt() : c2.getCreatedAt();
+            if (t1 == null && t2 == null) {
+                return 0;
+            }
+            if (t1 == null) {
+                return 1;
+            }
+            if (t2 == null) {
+                return -1;
+            }
+            return t2.compareTo(t1);
+        });
+        return result;
     }
     
     /**

@@ -20,9 +20,12 @@ import javafx.scene.control.TextArea;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Set;
 import java.util.List;
 
 public class TeleconsultationScheduleController extends AppBaseViewController {
+    private static final Set<String> ALLOWED_TYPES = Set.of("general", "follow_up", "emergency", "diagnostic");
+
     @FXML private Button backButton;
     @FXML private Button submitButton;
     @FXML private Button cancelButton;
@@ -57,16 +60,50 @@ public class TeleconsultationScheduleController extends AppBaseViewController {
 
     private void submit() {
         User currentUser = AuthSession.getCurrentUser();
-        if (currentUser == null || datePicker.getValue() == null || recipientCombo.getValue() == null) {
+        if (currentUser == null) {
+            showAlert("Erreur", "Session invalide.");
+            return;
+        }
+        if (recipientCombo.getValue() == null) {
+            showAlert("Erreur", "Veuillez sélectionner un destinataire.");
+            return;
+        }
+        if (datePicker.getValue() == null) {
+            showAlert("Erreur", "Veuillez sélectionner une date.");
+            return;
+        }
+        if (typeCombo.getValue() == null || !ALLOWED_TYPES.contains(typeCombo.getValue())) {
+            showAlert("Erreur", "Type de consultation invalide.");
+            return;
+        }
+
+        LocalDateTime scheduledAt = LocalDateTime.of(datePicker.getValue(), LocalTime.of(hourSpinner.getValue(), minuteSpinner.getValue()));
+        if (scheduledAt.isBefore(LocalDateTime.now().plusMinutes(5))) {
+            showAlert("Erreur", "Veuillez choisir un créneau futur (au moins 5 minutes). ");
+            return;
+        }
+
+        String description = descriptionArea.getText() == null ? "" : descriptionArea.getText().trim();
+        if (description.length() > 2000) {
+            showAlert("Erreur", "La description est trop longue (max 2000 caractères).");
+            return;
+        }
+
+        if (recipientCombo.getItems().stream().noneMatch(user -> user.getId() != null && user.getId().equals(recipientCombo.getValue().getId()))) {
+            showAlert("Erreur", "Destinataire invalide pour votre rôle.");
+            return;
+        }
+
+        if (hourSpinner.getValue() == null || minuteSpinner.getValue() == null) {
             showAlert("Erreur", "Veuillez compléter les champs requis.");
             return;
         }
-        LocalDateTime scheduledAt = LocalDateTime.of(datePicker.getValue(), LocalTime.of(hourSpinner.getValue(), minuteSpinner.getValue()));
+
         Teleconsultation consultation = service.createTeleconsultation(
             currentUser,
             recipientCombo.getValue(),
             typeCombo.getValue(),
-            descriptionArea.getText(),
+            description,
             scheduledAt
         );
         if (consultation == null) {

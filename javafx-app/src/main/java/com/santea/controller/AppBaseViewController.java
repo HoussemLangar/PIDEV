@@ -3,6 +3,7 @@ package com.santea.controller;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -18,7 +19,14 @@ public class AppBaseViewController implements Initializable {
 
     public void setContent(Parent content) {
         if (contentContainer != null) {
-            contentContainer.getChildren().setAll(content);
+            contentContainer.getChildren().clear();
+            if (content != null) {
+                if (content instanceof Region region) {
+                    region.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+                }
+                contentContainer.getChildren().add(content);
+            }
+            contentContainer.requestLayout();
         }
     }
 }

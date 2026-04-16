@@ -62,7 +62,10 @@ public class MessageShowController extends AppBaseViewController {
             .filter(item -> item.getId().equals(id))
             .findFirst()
             .orElseThrow(() -> new IllegalStateException("Conversation introuvable"));
-        backButton.setOnAction(event -> AppNavigator.showMessaging());
+        backButton.setOnAction(event -> {
+            stopRefreshTimer();
+            AppNavigator.showMessaging();
+        });
         sendMessageButton.setOnAction(event -> sendMessage());
         deleteConversationButton.setOnAction(event -> deleteConversation());
         render();
@@ -120,6 +123,11 @@ public class MessageShowController extends AppBaseViewController {
         }
         String content = safe(messageInputArea.getText());
         if (content.isBlank()) {
+            showAlert("Erreur", "Veuillez saisir un message.");
+            return;
+        }
+        if (content.length() > 5000) {
+            showAlert("Erreur", "Message trop long (max 5000 caractères).");
             return;
         }
         try {
@@ -132,17 +140,24 @@ public class MessageShowController extends AppBaseViewController {
     }
 
     private void deleteConversation() {
+        User currentUser = AuthSession.getCurrentUser();
+        if (currentUser == null) {
+            return;
+        }
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Supprimer la conversation");
         alert.setHeaderText("Supprimer cette conversation ?");
         alert.showAndWait().ifPresent(response -> {
             if (response == ButtonType.OK) {
+                messagingService.deleteConversation(currentUser, conversation);
+                stopRefreshTimer();
                 AppNavigator.showMessaging();
             }
         });
     }
 
     private void startRefreshTimer() {
+        stopRefreshTimer();
         refreshTimer = new Timer(true);
         refreshTimer.scheduleAtFixedRate(new TimerTask() {
             @Override
@@ -150,6 +165,14 @@ public class MessageShowController extends AppBaseViewController {
                 Platform.runLater(() -> render());
             }
         }, 0, 2000);
+    }
+
+    private void stopRefreshTimer() {
+        if (refreshTimer != null) {
+            refreshTimer.cancel();
+            refreshTimer.purge();
+            refreshTimer = null;
+        }
     }
 
     private String displayUser(User user) {

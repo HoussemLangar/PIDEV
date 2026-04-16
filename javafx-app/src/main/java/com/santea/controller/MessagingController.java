@@ -9,7 +9,10 @@ import com.santea.repository.UserRepository;
 import com.santea.service.AuthSession;
 import com.santea.service.DatabaseService;
 import com.santea.service.MessagingService;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -23,6 +26,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.util.StringConverter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -41,6 +45,8 @@ public class MessagingController extends AppBaseViewController {
 
     private final MessagingService messagingService = new MessagingService();
     private final UserRepository userRepository = new UserRepository(new DatabaseService(DatabaseConfig.fromEnvironment()));
+    private final List<User> allRecipients = new ArrayList<>();
+    private FilteredList<User> filteredRecipients;
 
     @Override
     public void initialize(java.net.URL location, java.util.ResourceBundle resources) {
@@ -56,9 +62,40 @@ public class MessagingController extends AppBaseViewController {
         if (currentUser == null) {
             return;
         }
-        recipientCombo.setItems(FXCollections.observableArrayList(loadRecipients(currentUser)));
+        allRecipients.clear();
+        allRecipients.addAll(loadRecipients(currentUser));
+        ObservableList<User> baseRecipients = FXCollections.observableArrayList(allRecipients);
+        filteredRecipients = new FilteredList<>(baseRecipients, user -> true);
+        recipientCombo.setItems(filteredRecipients);
         recipientCombo.setCellFactory(param -> buildUserCell());
         recipientCombo.setButtonCell(buildUserCell());
+        recipientCombo.setEditable(true);
+        recipientCombo.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(User user) {
+                return user == null ? "" : displayUser(user) + " • " + safe(user.getEmail());
+            }
+
+            @Override
+            public User fromString(String text) {
+                return findRecipientFromText(text);
+            }
+        });
+
+        recipientCombo.getEditor().textProperty().addListener((observable, oldValue, newValue) -> {
+            applyRecipientFilter(newValue);
+            if (recipientCombo.getEditor().isFocused()) {
+                Platform.runLater(recipientCombo::show);
+            }
+        });
+        recipientCombo.setOnShowing(event -> applyRecipientFilter(recipientCombo.getEditor().getText()));
+        recipientCombo.setOnAction(event -> {
+            User selected = recipientCombo.getValue();
+            if (selected != null) {
+                recipientCombo.getEditor().setText(displayUser(selected) + " • " + safe(selected.getEmail()));
+            }
+        });
+
         recipientCombo.getStyleClass().add("msg-recipient-combo");
     }
 
@@ -132,12 +169,18 @@ public class MessagingController extends AppBaseViewController {
         List<Conversation> conversations = messagingService.findUserConversations(currentUser);
         conversationListView.setItems(FXCollections.observableArrayList(conversations));
         int unreadCount = messagingService.getUnreadCount(currentUser);
-        unreadCountLabel.setText(unreadCount > 0 ? unreadCount + " non lu(s)" : "");
+        boolean hasUnread = unreadCount > 0;
+        unreadCountLabel.setText(hasUnread ? unreadCount + " non lu(s)" : "");
+        unreadCountLabel.setManaged(hasUnread);
+        unreadCountLabel.setVisible(hasUnread);
     }
 
     private void startConversation() {
         User currentUser = AuthSession.getCurrentUser();
         User recipient = recipientCombo.getValue();
+        if (recipient == null) {
+            recipient = findRecipientFromText(recipientCombo.getEditor().getText());
+        }
         if (currentUser == null || recipient == null) {
             showAlert("Erreur", "Veuillez sélectionner un destinataire.");
             return;
@@ -169,6 +212,44 @@ public class MessagingController extends AppBaseViewController {
                 setText(empty || item == null ? null : displayUser(item) + " • " + safe(item.getEmail()));
             }
         };
+    }
+
+    private void applyRecipientFilter(String searchText) {
+        String query = safe(searchText).toLowerCase();
+        if (filteredRecipients != null) {
+            filteredRecipients.setPredicate(user -> query.isBlank() || recipientMatchesQuery(user, query));
+        }
+    }
+
+    private boolean recipientMatchesQuery(User user, String query) {
+        if (user == null || query.isBlank()) {
+            return true;
+        }
+        String name = displayUser(user).toLowerCase();
+        String email = safe(user.getEmail()).toLowerCase();
+        String role = roleLabel(user).toLowerCase();
+        return name.contains(query) || email.contains(query) || role.contains(query);
+    }
+
+    private User findRecipientFromText(String text) {
+        String query = safe(text).toLowerCase();
+        if (query.isBlank()) {
+            return null;
+        }
+
+        for (User user : allRecipients) {
+            String candidate = (displayUser(user) + " • " + safe(user.getEmail())).toLowerCase();
+            if (candidate.equals(query)) {
+                return user;
+            }
+        }
+
+        for (User user : allRecipients) {
+            if (recipientMatchesQuery(user, query)) {
+                return user;
+            }
+        }
+        return null;
     }
 
     private User getOtherUser(Conversation conversation) {

@@ -28,7 +28,7 @@ public class TeleconsultationRepository {
      * @return Teleconsultation or null
      */
     public Teleconsultation findById(String id) {
-        return store.get(Integer.parseInt(id));
+        return store.get(id);
     }
     
     /**
@@ -75,7 +75,8 @@ public class TeleconsultationRepository {
         store.values().forEach(c -> {
             if (c.getProfessionalId() != null && c.getProfessionalId().equals(professionalIdInt) &&
                 c.getScheduledAt() != null && c.getScheduledAt().isAfter(now) &&
-                !c.getStatus().equals("CANCELLED")) {
+                c.getStatus() != null &&
+                !"cancelled".equalsIgnoreCase(c.getStatus())) {
                 result.add(c);
             }
         });

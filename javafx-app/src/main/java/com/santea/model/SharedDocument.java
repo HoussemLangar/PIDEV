@@ -138,6 +138,20 @@ public class SharedDocument {
         if (user == null) {
             return false;
         }
-        return (owner != null && owner.getId().equals(user.getId())) || isPublic();
+        if ((owner != null && owner.getId().equals(user.getId())) || isPublic()) {
+            return true;
+        }
+
+        if (accesses == null || accesses.isEmpty()) {
+            return false;
+        }
+
+        return accesses.stream()
+            .filter(DocumentAccess.class::isInstance)
+            .map(DocumentAccess.class::cast)
+            .anyMatch(access -> access.getSharedWith() != null
+                && access.getSharedWith().getId() != null
+                && access.getSharedWith().getId().equals(user.getId())
+                && access.canAccess());
     }
 }

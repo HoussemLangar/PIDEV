@@ -1,10 +1,18 @@
 package com.santea.service;
 
+import com.santea.config.DatabaseConfig;
 import com.santea.model.SharedDocument;
 import com.santea.model.DocumentAccess;
 import com.santea.model.User;
+import com.santea.repository.UserRepository;
 import java.io.File;
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Timestamp;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -52,6 +60,9 @@ public class DocumentStorageService {
     private static final Map<String, List<DocumentAccess>> documentAccesses = new HashMap<>();
     private static final Map<String, List<DocumentAccess>> userAccesses = new HashMap<>();
     private static final List<DocumentStorageListener> listeners = new ArrayList<>();
+
+    private final DatabaseService databaseService = new DatabaseService(DatabaseConfig.fromEnvironment());
+    private final UserRepository userRepository = new UserRepository(databaseService);
 
     private String getEffectiveRole(User user) {
         return user.getSubscriptionType() != null && !user.getSubscriptionType().isBlank()
@@ -111,6 +122,12 @@ public class DocumentStorageService {
         if (owner == null || owner.getId() == null) {
             return null;
         }
+        if (fileName == null || fileName.isBlank() || fileContent == null || fileContent.length == 0) {
+            return null;
+        }
+        if (mimeType == null || mimeType.isBlank()) {
+            return null;
+        }
 
         // Validate file size
         if (fileContent.length > MAX_FILE_SIZE) {
@@ -155,16 +172,41 @@ public class DocumentStorageService {
             document.setDocumentType(normalizedType);
             document.setUploadedAt(LocalDateTime.now());
             document.setPublic(false);
-            
-            // Generate and set unique ID
-            String docId = UUID.randomUUID().toString();
-            document.setId(docId.hashCode()); // Convert to integer ID
-            
-            // Store document
+
+            String insertSql = "INSERT INTO shared_documents "
+                + "(owner_id, file_name, file_path, mime_type, file_size, file_content, description, uploaded_at, document_type, is_public) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            try (Connection connection = databaseService.getConnection();
+                 PreparedStatement statement = connection.prepareStatement(insertSql, Statement.RETURN_GENERATED_KEYS)) {
+                statement.setInt(1, owner.getId());
+                statement.setString(2, fileName);
+                statement.setString(3, filePath.toString());
+                statement.setString(4, mimeType);
+                statement.setInt(5, fileContent.length);
+                statement.setBytes(6, fileContent);
+                statement.setString(7, description);
+                statement.setTimestamp(8, Timestamp.valueOf(document.getUploadedAt()));
+                statement.setString(9, normalizedType);
+                statement.setBoolean(10, false);
+                statement.executeUpdate();
+
+                int generatedId = 0;
+                try (ResultSet keys = statement.getGeneratedKeys()) {
+                    if (keys.next()) {
+                        generatedId = keys.getInt(1);
+                    }
+                }
+                document.setId(generatedId);
+            } catch (SQLException sqlException) {
+                // fallback to in-memory id when DB insert is not available
+                String docId = UUID.randomUUID().toString();
+                document.setId(docId.hashCode());
+            }
+
             documents.put(String.valueOf(document.getId()), document);
             documentAccesses.put(String.valueOf(document.getId()), new ArrayList<>());
             notifyListeners("UPLOADED", document);
-            
+
             return document;
             
         } catch (IOException e) {
@@ -182,7 +224,7 @@ public class DocumentStorageService {
      * @return DocumentAccess object
      */
     public DocumentAccess shareDocument(String documentId, User sharedWithUser, String permission, LocalDateTime expiresAt) {
-        SharedDocument document = documents.get(documentId);
+        SharedDocument document = getDocument(documentId);
         if (document == null || sharedWithUser == null || sharedWithUser.getId() == null) {
             return null;
         }
@@ -204,12 +246,26 @@ public class DocumentStorageService {
             return null;
         }
         
-        List<DocumentAccess> accesses = documentAccesses.get(documentId);
+        List<DocumentAccess> accesses = documentAccesses.computeIfAbsent(documentId, key -> new ArrayList<>());
         for (DocumentAccess existing : accesses) {
             if (existing.getSharedWith().getId().equals(sharedWithUser.getId())) {
                 existing.setPermission(normalizedPermission);
                 existing.setExpiresAt(expiresAt);
                 existing.setIsActive(true);
+                try (Connection connection = databaseService.getConnection();
+                     PreparedStatement statement = connection.prepareStatement(
+                         "UPDATE document_accesses SET permission = ?, expires_at = ?, is_active = 1 WHERE document_id = ? AND shared_with_id = ?")) {
+                    statement.setString(1, normalizedPermission);
+                    if (expiresAt == null) {
+                        statement.setNull(2, java.sql.Types.TIMESTAMP);
+                    } else {
+                        statement.setTimestamp(2, Timestamp.valueOf(expiresAt));
+                    }
+                    statement.setInt(3, Integer.parseInt(documentId));
+                    statement.setInt(4, sharedWithUser.getId());
+                    statement.executeUpdate();
+                } catch (Exception ignored) {
+                }
                 notifyListeners("SHARED", document);
                 return existing;
             }
@@ -225,6 +281,28 @@ public class DocumentStorageService {
         access.setIsActive(true);
         access.setAccessCount(0);
         accesses.add(access);
+
+        try (Connection connection = databaseService.getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                 "INSERT INTO document_accesses (document_id, shared_with_id, shared_at, expires_at, accessed_at, access_count, is_active, permission) "
+                     + "VALUES (?, ?, ?, ?, NULL, 0, 1, ?)", Statement.RETURN_GENERATED_KEYS)) {
+            statement.setInt(1, Integer.parseInt(documentId));
+            statement.setInt(2, sharedWithUser.getId());
+            statement.setTimestamp(3, Timestamp.valueOf(access.getSharedAt()));
+            if (expiresAt == null) {
+                statement.setNull(4, java.sql.Types.TIMESTAMP);
+            } else {
+                statement.setTimestamp(4, Timestamp.valueOf(expiresAt));
+            }
+            statement.setString(5, normalizedPermission);
+            statement.executeUpdate();
+            try (ResultSet keys = statement.getGeneratedKeys()) {
+                if (keys.next()) {
+                    access.setId(keys.getInt(1));
+                }
+            }
+        } catch (Exception ignored) {
+        }
         
         // Track user accesses
         userAccesses.computeIfAbsent(sharedWithUser.getId().toString(), k -> new ArrayList<>()).add(access);
@@ -239,15 +317,92 @@ public class DocumentStorageService {
      * @return true if revoked successfully
      */
     public boolean revokeAccess(String documentId, String userId) {
+        if (documentId == null || userId == null || userId.isBlank()) {
+            return false;
+        }
+        int parsedUserId;
+        try {
+            parsedUserId = Integer.parseInt(userId);
+        } catch (NumberFormatException exception) {
+            return false;
+        }
         List<DocumentAccess> accesses = documentAccesses.get(documentId);
         if (accesses != null) {
             for (DocumentAccess access : accesses) {
-                if (access.getSharedWith().getId().equals(Integer.parseInt(userId))) {
+                if (access.getSharedWith().getId().equals(parsedUserId)) {
                     access.setIsActive(false);
+                    try (Connection connection = databaseService.getConnection();
+                         PreparedStatement statement = connection.prepareStatement(
+                             "UPDATE document_accesses SET is_active = 0 WHERE document_id = ? AND shared_with_id = ?")) {
+                        statement.setInt(1, Integer.parseInt(documentId));
+                        statement.setInt(2, parsedUserId);
+                        statement.executeUpdate();
+                    } catch (Exception ignored) {
+                    }
                     notifyListeners("REVOKED", access.getDocument());
                     return true;
                 }
             }
+        }
+        try (Connection connection = databaseService.getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                 "UPDATE document_accesses SET is_active = 0 WHERE document_id = ? AND shared_with_id = ?")) {
+            statement.setInt(1, Integer.parseInt(documentId));
+            statement.setInt(2, parsedUserId);
+            return statement.executeUpdate() > 0;
+        } catch (Exception ignored) {
+        }
+        return false;
+    }
+
+    /**
+     * Delete a shared access entry permanently
+     * @param documentId Document ID
+     * @param userId Shared user ID
+     * @return true if deleted
+     */
+    public boolean deleteAccess(String documentId, String userId) {
+        if (documentId == null || userId == null || userId.isBlank()) {
+            return false;
+        }
+
+        int parsedUserId;
+        try {
+            parsedUserId = Integer.parseInt(userId);
+        } catch (NumberFormatException exception) {
+            return false;
+        }
+
+        List<DocumentAccess> accesses = documentAccesses.get(documentId);
+        if (accesses != null) {
+            accesses.removeIf(access -> access.getSharedWith() != null
+                && access.getSharedWith().getId() != null
+                && access.getSharedWith().getId().equals(parsedUserId));
+        }
+
+        List<DocumentAccess> userList = userAccesses.get(userId);
+        if (userList != null) {
+            userList.removeIf(access -> access.getDocument() != null
+                && access.getDocument().getId() != null
+                && String.valueOf(access.getDocument().getId()).equals(documentId));
+        }
+
+        boolean deleted = false;
+        try (Connection connection = databaseService.getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                 "DELETE FROM document_accesses WHERE document_id = ? AND shared_with_id = ?")) {
+            statement.setInt(1, Integer.parseInt(documentId));
+            statement.setInt(2, parsedUserId);
+            deleted = statement.executeUpdate() > 0;
+        } catch (Exception ignored) {
+        }
+
+        if (deleted || accesses != null) {
+            SharedDocument document = getDocument(documentId);
+            if (document != null) {
+                notifyListeners("REVOKED", document);
+            }
+            return true;
         }
         return false;
     }
@@ -260,35 +415,62 @@ public class DocumentStorageService {
      * @return true if user has access
      */
     public boolean hasAccess(String documentId, String userId, String requiredPermission) {
-        SharedDocument document = documents.get(documentId);
+        SharedDocument document = getDocument(documentId);
         if (document == null) {
             return false;
         }
+
+        String neededPermission = requiredPermission == null || requiredPermission.isBlank()
+            ? "view"
+            : requiredPermission;
         
         // Owner always has full access
         if (document.getOwner().getId().toString().equals(userId)) {
             return true;
         }
 
-        if (document.isPublic() && ("view".equalsIgnoreCase(requiredPermission) || "download".equalsIgnoreCase(requiredPermission))) {
+        if (document.isPublic() && ("view".equalsIgnoreCase(neededPermission) || "download".equalsIgnoreCase(neededPermission))) {
             return true;
         }
         
+        try (Connection connection = databaseService.getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                 "SELECT permission, expires_at, is_active FROM document_accesses WHERE document_id = ? AND shared_with_id = ? LIMIT 1")) {
+            statement.setInt(1, Integer.parseInt(documentId));
+            statement.setInt(2, Integer.parseInt(userId));
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    if (!resultSet.getBoolean("is_active")) {
+                        return false;
+                    }
+                    Timestamp expiresTs = resultSet.getTimestamp("expires_at");
+                    if (expiresTs != null && LocalDateTime.now().isAfter(expiresTs.toLocalDateTime())) {
+                        try (PreparedStatement deactivate = connection.prepareStatement(
+                            "UPDATE document_accesses SET is_active = 0 WHERE document_id = ? AND shared_with_id = ?")) {
+                            deactivate.setInt(1, Integer.parseInt(documentId));
+                            deactivate.setInt(2, Integer.parseInt(userId));
+                            deactivate.executeUpdate();
+                        }
+                        return false;
+                    }
+                    return hasPermission(resultSet.getString("permission"), neededPermission);
+                }
+            }
+        } catch (Exception ignored) {
+        }
+
         List<DocumentAccess> accesses = documentAccesses.get(documentId);
         if (accesses == null) {
             return false;
         }
-        
+
         for (DocumentAccess access : accesses) {
             if (access.getSharedWith().getId().toString().equals(userId) && access.canAccess()) {
-                // Check expiration
                 if (access.getExpiresAt() != null && LocalDateTime.now().isAfter(access.getExpiresAt())) {
                     access.setIsActive(false);
                     return false;
                 }
-                
-                // Check permission
-                return hasPermission(access.getPermission(), requiredPermission);
+                return hasPermission(access.getPermission(), neededPermission);
             }
         }
         
@@ -301,6 +483,16 @@ public class DocumentStorageService {
      * @param userId User ID
      */
     public void recordAccess(String documentId, String userId) {
+        try (Connection connection = databaseService.getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                 "UPDATE document_accesses SET access_count = access_count + 1, accessed_at = ? WHERE document_id = ? AND shared_with_id = ?")) {
+            statement.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now()));
+            statement.setInt(2, Integer.parseInt(documentId));
+            statement.setInt(3, Integer.parseInt(userId));
+            statement.executeUpdate();
+        } catch (Exception ignored) {
+        }
+
         List<DocumentAccess> accesses = documentAccesses.get(documentId);
         if (accesses != null) {
             for (DocumentAccess access : accesses) {
@@ -326,15 +518,34 @@ public class DocumentStorageService {
         
         recordAccess(documentId, userId);
         
-        SharedDocument document = documents.get(documentId);
+        SharedDocument document = getDocument(documentId);
         if (document == null) {
             return null;
         }
         
         try {
-            return Files.readAllBytes(Paths.get(document.getFilePath()));
+            Path path = Paths.get(document.getFilePath());
+            if (Files.exists(path)) {
+                return Files.readAllBytes(path);
+            }
+            try (Connection connection = databaseService.getConnection();
+                 PreparedStatement statement = connection.prepareStatement(
+                     "SELECT file_content FROM shared_documents WHERE id = ? LIMIT 1")) {
+                statement.setInt(1, Integer.parseInt(documentId));
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    if (resultSet.next()) {
+                        byte[] bytes = resultSet.getBytes("file_content");
+                        if (bytes != null) {
+                            return bytes;
+                        }
+                    }
+                }
+            }
+            return null;
         } catch (IOException e) {
             System.err.println("Failed to download document: " + e.getMessage());
+            return null;
+        } catch (SQLException ignored) {
             return null;
         }
     }
@@ -346,7 +557,7 @@ public class DocumentStorageService {
      * @return true if deleted successfully
      */
     public boolean deleteDocument(String documentId, String userId) {
-        SharedDocument document = documents.get(documentId);
+        SharedDocument document = getDocument(documentId);
         if (document == null || !document.getOwner().getId().toString().equals(userId)) {
             return false;
         }
@@ -357,8 +568,32 @@ public class DocumentStorageService {
             
             // Remove from collections
             documents.remove(documentId);
-            documentAccesses.remove(documentId);
+            List<DocumentAccess> removedAccesses = documentAccesses.remove(documentId);
+            if (removedAccesses != null && !removedAccesses.isEmpty()) {
+                removedAccesses.forEach(access -> {
+                    User sharedWith = access.getSharedWith();
+                    if (sharedWith != null && sharedWith.getId() != null) {
+                        List<DocumentAccess> userList = userAccesses.get(sharedWith.getId().toString());
+                        if (userList != null) {
+                            userList.removeIf(item -> item.getDocument() != null
+                                && documentId.equals(String.valueOf(item.getDocument().getId())));
+                            if (userList.isEmpty()) {
+                                userAccesses.remove(sharedWith.getId().toString());
+                            }
+                        }
+                    }
+                });
+            }
             notifyListeners("DELETED", document);
+
+            try (Connection connection = databaseService.getConnection();
+                 PreparedStatement statement = connection.prepareStatement(
+                     "DELETE FROM shared_documents WHERE id = ? AND owner_id = ?")) {
+                statement.setInt(1, Integer.parseInt(documentId));
+                statement.setInt(2, Integer.parseInt(userId));
+                statement.executeUpdate();
+            } catch (Exception ignored) {
+            }
             
             return true;
         } catch (IOException e) {
@@ -393,18 +628,20 @@ public class DocumentStorageService {
         
         if (accesses != null) {
             for (DocumentAccess access : accesses) {
-                if (access.getIsActive()) {
+                if (access.canAccess()) {
                     // Check expiration
                     if (access.getExpiresAt() != null && LocalDateTime.now().isAfter(access.getExpiresAt())) {
                         access.setIsActive(false);
                         continue;
                     }
-                    result.add(access.getDocument());
+                    if (access.getDocument() != null) {
+                        result.add(access.getDocument());
+                    }
                 }
             }
         }
-        
-        return result;
+
+        return result.stream().distinct().collect(Collectors.toList());
     }
     
     /**
@@ -413,7 +650,39 @@ public class DocumentStorageService {
      * @return SharedDocument or null
      */
     public SharedDocument getDocument(String documentId) {
-        return documents.get(documentId);
+        String sql = "SELECT id, owner_id, file_name, file_path, mime_type, file_size, description, uploaded_at, document_type, is_public "
+            + "FROM shared_documents WHERE id = ? LIMIT 1";
+        try (Connection connection = databaseService.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, Integer.parseInt(documentId));
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (!resultSet.next()) {
+                    return documents.get(documentId);
+                }
+                Optional<User> owner = userRepository.findById(resultSet.getInt("owner_id"));
+                if (owner.isEmpty()) {
+                    return null;
+                }
+                SharedDocument document = new SharedDocument();
+                document.setId(resultSet.getInt("id"));
+                document.setOwner(owner.get());
+                document.setFileName(resultSet.getString("file_name"));
+                document.setFilePath(resultSet.getString("file_path"));
+                document.setMimeType(resultSet.getString("mime_type"));
+                document.setFileSize(resultSet.getInt("file_size"));
+                document.setDescription(resultSet.getString("description"));
+                Timestamp uploadedAt = resultSet.getTimestamp("uploaded_at");
+                if (uploadedAt != null) {
+                    document.setUploadedAt(uploadedAt.toLocalDateTime());
+                }
+                document.setDocumentType(resultSet.getString("document_type"));
+                document.setPublic(resultSet.getBoolean("is_public"));
+                documents.put(String.valueOf(document.getId()), document);
+                return document;
+            }
+        } catch (Exception exception) {
+            return documents.get(documentId);
+        }
     }
     
     /**
@@ -422,7 +691,46 @@ public class DocumentStorageService {
      * @return List of document accesses
      */
     public List<DocumentAccess> getAccessHistory(String documentId) {
-        return documentAccesses.getOrDefault(documentId, new ArrayList<>());
+        String sql = "SELECT id, shared_with_id, shared_at, expires_at, accessed_at, access_count, is_active, permission "
+            + "FROM document_accesses WHERE document_id = ? ORDER BY shared_at DESC";
+        try (Connection connection = databaseService.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, Integer.parseInt(documentId));
+            List<DocumentAccess> list = new ArrayList<>();
+            SharedDocument document = getDocument(documentId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    Optional<User> sharedWith = userRepository.findById(resultSet.getInt("shared_with_id"));
+                    if (sharedWith.isEmpty()) {
+                        continue;
+                    }
+                    DocumentAccess access = new DocumentAccess();
+                    access.setId(resultSet.getInt("id"));
+                    access.setDocument(document);
+                    access.setSharedWith(sharedWith.get());
+                    Timestamp sharedAt = resultSet.getTimestamp("shared_at");
+                    if (sharedAt != null) {
+                        access.setSharedAt(sharedAt.toLocalDateTime());
+                    }
+                    Timestamp expiresAt = resultSet.getTimestamp("expires_at");
+                    if (expiresAt != null) {
+                        access.setExpiresAt(expiresAt.toLocalDateTime());
+                    }
+                    Timestamp accessedAt = resultSet.getTimestamp("accessed_at");
+                    if (accessedAt != null) {
+                        access.setAccessedAt(accessedAt.toLocalDateTime());
+                    }
+                    access.setAccessCount(resultSet.getInt("access_count"));
+                    access.setIsActive(resultSet.getBoolean("is_active"));
+                    access.setPermission(resultSet.getString("permission"));
+                    list.add(access);
+                }
+            }
+            documentAccesses.put(documentId, new ArrayList<>(list));
+            return list;
+        } catch (Exception exception) {
+            return documentAccesses.getOrDefault(documentId, new ArrayList<>());
+        }
     }
     
     /**
@@ -432,7 +740,10 @@ public class DocumentStorageService {
      */
     private String generateUniqueFileName(String originalFileName) {
         String timestamp = String.valueOf(System.currentTimeMillis());
-        String extension = originalFileName.substring(originalFileName.lastIndexOf('.'));
+        int dotIndex = originalFileName == null ? -1 : originalFileName.lastIndexOf('.');
+        String extension = (dotIndex >= 0 && dotIndex < originalFileName.length() - 1)
+            ? originalFileName.substring(dotIndex)
+            : "";
         return timestamp + extension;
     }
     
@@ -463,6 +774,17 @@ public class DocumentStorageService {
      * @return Total storage in bytes
      */
     public long getTotalStorageByUser(User user) {
+        String sql = "SELECT COALESCE(SUM(file_size), 0) AS total FROM shared_documents WHERE owner_id = ?";
+        try (Connection connection = databaseService.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, user.getId());
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return resultSet.getLong("total");
+                }
+            }
+        } catch (Exception ignored) {
+        }
         return documents.values().stream()
             .filter(doc -> doc.getOwner().getId().equals(user.getId()))
             .mapToLong(SharedDocument::getFileSize)
@@ -475,10 +797,26 @@ public class DocumentStorageService {
      * @return List of documents owned by user
      */
     public List<SharedDocument> findByOwner(User user) {
-        return documents.values().stream()
-            .filter(doc -> doc.getOwner().getId().equals(user.getId()))
-            .sorted(Comparator.comparing(SharedDocument::getUploadedAt).reversed())
-            .collect(Collectors.toList());
+        String sql = "SELECT id FROM shared_documents WHERE owner_id = ? ORDER BY uploaded_at DESC";
+        try (Connection connection = databaseService.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, user.getId());
+            List<SharedDocument> list = new ArrayList<>();
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    SharedDocument document = getDocument(String.valueOf(resultSet.getInt("id")));
+                    if (document != null) {
+                        list.add(document);
+                    }
+                }
+            }
+            return list;
+        } catch (Exception exception) {
+            return documents.values().stream()
+                .filter(doc -> doc.getOwner().getId().equals(user.getId()))
+                .sorted(Comparator.comparing(SharedDocument::getUploadedAt).reversed())
+                .collect(Collectors.toList());
+        }
     }
     
     /**
@@ -487,27 +825,49 @@ public class DocumentStorageService {
      * @return List of documents shared with user
      */
     public List<SharedDocument> findSharedWithUser(User user) {
-        List<SharedDocument> result = new ArrayList<>();
-        List<DocumentAccess> userAccessList = userAccesses.get(user.getId().toString());
-        
-        if (userAccessList != null) {
-            for (DocumentAccess access : userAccessList) {
-                if (access.getIsActive()) {
-                    // Check expiration
-                    if (access.getExpiresAt() != null && 
-                        LocalDateTime.now().isAfter(access.getExpiresAt())) {
-                        access.setIsActive(false);
-                        continue;
+        String sql = "SELECT d.id FROM shared_documents d "
+            + "WHERE EXISTS (SELECT 1 FROM document_accesses a "
+            + "WHERE a.document_id = d.id AND a.shared_with_id = ? AND a.is_active = 1 "
+            + "AND (a.expires_at IS NULL OR a.expires_at > ?)) "
+            + "ORDER BY d.uploaded_at DESC";
+        try (Connection connection = databaseService.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, user.getId());
+            statement.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
+            List<SharedDocument> list = new ArrayList<>();
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    SharedDocument document = getDocument(String.valueOf(resultSet.getInt("id")));
+                    if (document != null) {
+                        list.add(document);
                     }
-                    result.add(access.getDocument());
                 }
             }
+            return list;
+        } catch (Exception exception) {
+            List<SharedDocument> result = new ArrayList<>();
+            List<DocumentAccess> userAccessList = userAccesses.get(user.getId().toString());
+
+            if (userAccessList != null) {
+                for (DocumentAccess access : userAccessList) {
+                    if (access.canAccess()) {
+                        if (access.getExpiresAt() != null &&
+                            LocalDateTime.now().isAfter(access.getExpiresAt())) {
+                            access.setIsActive(false);
+                            continue;
+                        }
+                        if (access.getDocument() != null) {
+                            result.add(access.getDocument());
+                        }
+                    }
+                }
+            }
+
+            return result.stream()
+                .distinct()
+                .sorted(Comparator.comparing(SharedDocument::getUploadedAt).reversed())
+                .collect(Collectors.toList());
         }
-        
-        return result.stream()
-            .distinct()
-            .sorted(Comparator.comparing(SharedDocument::getUploadedAt).reversed())
-            .collect(Collectors.toList());
     }
     
     /**

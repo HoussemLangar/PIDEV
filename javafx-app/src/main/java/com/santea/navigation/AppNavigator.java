@@ -7,6 +7,8 @@ import com.santea.controller.BannedViewController;
 import com.santea.controller.FeaturePageController;
 import com.santea.model.User;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
@@ -16,14 +18,29 @@ import java.net.URL;
 import java.util.List;
 
 public final class AppNavigator {
+    private static final String SHORTCUTS_INSTALLED_KEY = "appNavigator.shortcutsInstalled";
     private static Stage primaryStage;
     private static Scene mainScene;
+    private static Parent appBaseRoot;
+    private static AppBaseViewController appBaseController;
 
     private AppNavigator() {
     }
 
     public static void initialize(Stage stage) {
         primaryStage = stage;
+        primaryStage.setFullScreenExitHint("");
+    }
+
+    public static void toggleFullScreen() {
+        if (primaryStage == null) {
+            throw new IllegalStateException("Stage principal non initialise.");
+        }
+        primaryStage.setFullScreen(!primaryStage.isFullScreen());
+    }
+
+    public static boolean isFullScreen() {
+        return primaryStage != null && primaryStage.isFullScreen();
     }
 
     public static void showHome() {
@@ -138,24 +155,54 @@ public final class AppNavigator {
         showAppPage("/com/santea/fxml/message_show.fxml");
     }
 
+    public static void showAccompanimentPlans() {
+        showAppPage("/com/santea/fxml/accompaniment_plans.fxml");
+    }
+
+    public static void showAccompanimentPlanShow(int id) {
+        ModuleContext.setAccompanimentPlanId(id);
+        showAppPage("/com/santea/fxml/accompaniment_plan_show.fxml");
+    }
+
+    public static void showAccompanimentPlanCreate(int patientUserId) {
+        ModuleContext.setAccompanimentPatientUserId(patientUserId);
+        showAppPage("/com/santea/fxml/accompaniment_plan_create.fxml");
+    }
+
     private static void showAppPage(String contentFxmlPath) {
         Parent contentRoot = loadFxml(contentFxmlPath);
         showInAppBase(contentRoot);
     }
 
     private static void showInAppBase(Parent contentRoot) {
-        FXMLLoader baseLoader = getLoader("/com/santea/fxml/app_base.fxml");
-        Parent baseRoot;
+        ensureAppBaseLoaded();
+        appBaseController.setContent(contentRoot);
 
+        if (mainScene != null && mainScene.getRoot() == appBaseRoot) {
+            return;
+        }
+
+        Scene existingScene = appBaseRoot.getScene();
+        if (existingScene != null) {
+            applyScene(existingScene);
+            return;
+        }
+
+        applyScene(buildAppScene(appBaseRoot));
+    }
+
+    private static void ensureAppBaseLoaded() {
+        if (appBaseRoot != null && appBaseController != null) {
+            return;
+        }
+
+        FXMLLoader baseLoader = getLoader("/com/santea/fxml/app_base.fxml");
         try {
-            baseRoot = baseLoader.load();
-            AppBaseViewController baseController = baseLoader.getController();
-            baseController.setContent(contentRoot);
+            appBaseRoot = baseLoader.load();
+            appBaseController = baseLoader.getController();
         } catch (IOException exception) {
             throw new RuntimeException("Impossible de charger la base applicative", exception);
         }
-
-        applyScene(buildAppScene(baseRoot));
     }
 
     private static void showAuthPage(String contentFxmlPath) {
@@ -221,6 +268,7 @@ public final class AppNavigator {
             throw new IllegalStateException("Stage principal non initialise.");
         }
 
+        boolean wasFullScreen = primaryStage.isFullScreen();
         boolean wasMaximized = primaryStage.isMaximized();
         double previousWidth = primaryStage.getWidth();
         double previousHeight = primaryStage.getHeight();
@@ -229,6 +277,12 @@ public final class AppNavigator {
 
         mainScene = scene;
         primaryStage.setScene(mainScene);
+        installGlobalShortcuts(mainScene);
+
+        if (wasFullScreen) {
+            primaryStage.setFullScreen(true);
+            return;
+        }
 
         if (wasMaximized) {
             primaryStage.setMaximized(true);
@@ -241,5 +295,23 @@ public final class AppNavigator {
             primaryStage.setX(previousX);
             primaryStage.setY(previousY);
         }
+    }
+
+    private static void installGlobalShortcuts(Scene scene) {
+        if (scene == null) {
+            return;
+        }
+
+        if (Boolean.TRUE.equals(scene.getProperties().get(SHORTCUTS_INSTALLED_KEY))) {
+            return;
+        }
+
+        scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
+            if (event.getCode() == KeyCode.F11) {
+                toggleFullScreen();
+                event.consume();
+            }
+        });
+        scene.getProperties().put(SHORTCUTS_INSTALLED_KEY, Boolean.TRUE);
     }
 }

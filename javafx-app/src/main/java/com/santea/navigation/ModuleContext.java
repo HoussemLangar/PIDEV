@@ -4,6 +4,8 @@ public final class ModuleContext {
     private static Integer teleconsultationId;
     private static Integer documentId;
     private static Integer conversationId;
+    private static Integer accompanimentPlanId;
+    private static Integer accompanimentPatientUserId;
 
     private ModuleContext() {
     }
@@ -30,5 +32,21 @@ public final class ModuleContext {
 
     public static void setConversationId(Integer conversationId) {
         ModuleContext.conversationId = conversationId;
+    }
+
+    public static Integer getAccompanimentPlanId() {
+        return accompanimentPlanId;
+    }
+
+    public static void setAccompanimentPlanId(Integer accompanimentPlanId) {
+        ModuleContext.accompanimentPlanId = accompanimentPlanId;
+    }
+
+    public static Integer getAccompanimentPatientUserId() {
+        return accompanimentPatientUserId;
+    }
+
+    public static void setAccompanimentPatientUserId(Integer accompanimentPatientUserId) {
+        ModuleContext.accompanimentPatientUserId = accompanimentPatientUserId;
     }
 }

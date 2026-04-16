@@ -16,7 +16,12 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
+import javafx.stage.Window;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -155,9 +160,41 @@ public class DocumentSharingController extends AppBaseViewController {
         }
         byte[] content = documentService.downloadDocument(String.valueOf(document.getId()), String.valueOf(currentUser.getId()));
         if (content == null) {
+            showAlert("Erreur", "Téléchargement impossible: accès refusé ou fichier introuvable.");
             return;
         }
+
+        String suggestedName = (document.getFileName() == null || document.getFileName().isBlank())
+            ? "document-" + document.getId()
+            : document.getFileName();
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Enregistrer le document");
+        fileChooser.setInitialFileName(suggestedName);
+        Window owner = ownedDocumentsContainer != null && ownedDocumentsContainer.getScene() != null
+            ? ownedDocumentsContainer.getScene().getWindow()
+            : null;
+        java.io.File destination = fileChooser.showSaveDialog(owner);
+        if (destination == null) {
+            return;
+        }
+
+        try {
+            Path outputPath = destination.toPath();
+            Files.write(outputPath, content);
+        } catch (IOException exception) {
+            showAlert("Erreur", "Impossible d'enregistrer le fichier téléchargé.");
+            return;
+        }
+
+        showAlert("Succès", "Document téléchargé: " + destination.getName());
         loadData();
+    }
+
+    private void showAlert(String title, String message) {
+        javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 
     private String resolveTypeAbbreviation(SharedDocument document) {
