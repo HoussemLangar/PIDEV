@@ -1,6 +1,7 @@
 package com.santea.controller;
 
 import com.santea.navigation.AppNavigator;
+import com.santea.model.User;
 import com.santea.service.AuthService;
 import com.santea.service.AdminOperationsService;
 import com.santea.service.AdminDashboardService;
@@ -50,8 +51,25 @@ public class AdminDashboardController {
 
     @FXML
     private void initialize() {
-        // Face verification désactivée pour le développement
+        // Vérification faciale activée pour les admins
+        verifyAdminFaceID();
         refresh();
+    }
+
+    private void verifyAdminFaceID() {
+        try {
+            if (AuthSession.isAuthenticated()) {
+                User currentUser = AuthSession.getCurrentUser();
+                if (currentUser != null && "ROLE_ADMIN".equalsIgnoreCase(currentUser.getRole())) {
+                    // Si la face ID n'a pas été vérifiée, rediriger vers la vérification
+                    if (!AuthSession.isFaceVerified()) {
+                        AppNavigator.showAdminFaceVerification();
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Erreur vérification faciale admin: " + e.getMessage());
+        }
     }
 
     @FXML
@@ -66,6 +84,16 @@ public class AdminDashboardController {
         } catch (Exception exception) {
             exception.printStackTrace();
             showFeedback("Erreur ouverture Santé Quotidienne admin : " + exception.getMessage(), false);
+        }
+    }
+
+    @FXML
+    private void handleSymptomesAdmin() {
+        try {
+            AppNavigator.showSymptomesListeAdmin();
+        } catch (Exception exception) {
+            exception.printStackTrace();
+            showFeedback("Erreur ouverture Symptomes admin : " + exception.getMessage(), false);
         }
     }
 

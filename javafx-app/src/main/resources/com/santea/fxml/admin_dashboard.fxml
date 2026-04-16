@@ -66,6 +66,7 @@
 
                 <HBox spacing="10">
                     <Button text="Santé Quotidienne" styleClass="admin-btn-primary" onAction="#handleSanteQuotidienneAdmin"/>
+                    <Button text="Symptomes" styleClass="admin-btn-primary" onAction="#handleSymptomesAdmin"/>
                     <Button text="Exporter CSV" styleClass="admin-btn-secondary" onAction="#handleExportCsv"/>
                     <Button text="Revoquer session" styleClass="admin-btn-secondary" onAction="#handleRevokeLatestSession"/>
                     <Button text="Connexions suspectes" styleClass="admin-btn-secondary" onAction="#handleReviewSuspicious"/>

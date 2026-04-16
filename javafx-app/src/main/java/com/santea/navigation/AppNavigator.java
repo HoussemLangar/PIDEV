@@ -101,6 +101,10 @@ public final class AppNavigator {
         showAppPage("/com/santea/fxml/sante_quotidienne_admin.fxml");
     }
 
+    public static void showSymptomesListeAdmin() {
+        showAppPage("/com/santea/fxml/symptomes_liste_admin.fxml");
+    }
+
     public static void showSymptomesQuotidiensPage() {
         showAppPage("/com/santea/fxml/symptomes_quotidiens.fxml");
     }

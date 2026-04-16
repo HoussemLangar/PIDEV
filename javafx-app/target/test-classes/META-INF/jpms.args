@@ -1,0 +1,6 @@
+--add-reads
+com.santea.javafxapp=ALL-UNNAMED
+--patch-module
+com.santea.javafxapp=_
+--add-reads
+com.santea.javafxapp=ALL-UNNAMED

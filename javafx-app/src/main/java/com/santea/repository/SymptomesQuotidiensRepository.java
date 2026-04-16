@@ -155,13 +155,44 @@ public class SymptomesQuotidiensRepository {
                                               Integer intensity,
                                               String duration,
                                               String notes) {
+        String ownerSql = "SELECT sq.patient_id FROM symptomes_quotidiens sq "
+                + "JOIN patients p ON p.id = sq.patient_id "
+                + "WHERE sq.id=? AND p.user_id=? LIMIT 1";
+        String duplicateSql = "SELECT 1 FROM symptomes_quotidiens "
+                + "WHERE patient_id=? AND symptome_id=? AND date_symptome=? AND id<>? LIMIT 1";
         String sql = "UPDATE symptomes_quotidiens sq "
                 + "JOIN patients p ON p.id = sq.patient_id "
                 + "SET sq.symptome_id=?, sq.date_symptome=?, sq.intensite=?, sq.duree=?, sq.notes=? "
                 + "WHERE sq.id=? AND p.user_id=?";
 
-        try (Connection connection = databaseService.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection connection = databaseService.getConnection()) {
+            Integer patientId = null;
+            try (PreparedStatement ownerStatement = connection.prepareStatement(ownerSql)) {
+                ownerStatement.setInt(1, entryId);
+                ownerStatement.setInt(2, userId);
+                try (ResultSet ownerResult = ownerStatement.executeQuery()) {
+                    if (ownerResult.next()) {
+                        patientId = ownerResult.getInt("patient_id");
+                    }
+                }
+            }
+            if (patientId == null) {
+                return MutationOutcome.failure("entree introuvable");
+            }
+
+            try (PreparedStatement duplicateStatement = connection.prepareStatement(duplicateSql)) {
+                duplicateStatement.setInt(1, patientId);
+                duplicateStatement.setInt(2, symptomId);
+                duplicateStatement.setDate(3, Date.valueOf(symptomDate));
+                duplicateStatement.setInt(4, entryId);
+                try (ResultSet duplicateResult = duplicateStatement.executeQuery()) {
+                    if (duplicateResult.next()) {
+                        return MutationOutcome.failure("duplicate");
+                    }
+                }
+            }
+
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, symptomId);
             statement.setDate(2, Date.valueOf(symptomDate));
             statement.setInt(3, intensity);
@@ -175,6 +206,7 @@ public class SymptomesQuotidiensRepository {
                 return MutationOutcome.failure("entree introuvable");
             }
             return MutationOutcome.ok();
+            }
         } catch (SQLException exception) {
             return MutationOutcome.failure(exception.getMessage());
         }
