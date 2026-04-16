@@ -702,7 +702,7 @@ public class AdminDashboardController {
 
     @FXML
     private void handleNavCommunity() {
-        showPage(pageCommunity, navCommunityButton, "Community", "Moderation, validation et publication des contenus.");
+        showPage(pageCommunity, navCommunityButton, "Blog", "Moderation, validation et publication des contenus du blog.");
     }
 
     @FXML
@@ -841,9 +841,9 @@ public class AdminDashboardController {
             showFeedback("Ouverture section reservations pharmacie.", true);
             return;
         }
-        if (normalized.contains("community") || normalized.contains("communaute") || normalized.contains("contenu")) {
+        if (normalized.contains("community") || normalized.contains("communaute") || normalized.contains("blog") || normalized.contains("contenu")) {
             handleNavCommunity();
-            showFeedback("Ouverture section community.", true);
+            showFeedback("Ouverture section blog.", true);
             return;
         }
         if (normalized.contains("rendez") || normalized.contains("appointment") || normalized.contains("rdv")) {
@@ -2477,7 +2477,7 @@ public class AdminDashboardController {
         communityRowsBox.getChildren().clear();
 
         if (page.items().isEmpty()) {
-            communityRowsBox.getChildren().add(createEmptyCard("Aucun contenu community."));
+            communityRowsBox.getChildren().add(createEmptyCard("Aucun contenu blog."));
         } else {
             for (AdminOperationsService.CommunityRow row : page.items()) {
                 String status = normalizeStatusLabel(row.status());

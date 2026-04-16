@@ -21,8 +21,13 @@
         <Hyperlink text="Accueil" styleClass="home-nav-link" onAction="#handleScrollToTop"/>
         <Hyperlink text="À propos" styleClass="home-nav-link" onAction="#handleScrollToAbout"/>
         <Hyperlink text="Services" styleClass="home-nav-link" onAction="#handleScrollToServices"/>
-        <Hyperlink text="Community" styleClass="home-nav-link" onAction="#handleOpenCommunity"/>
-        <Hyperlink text="Rendez-Vous" styleClass="home-nav-link" onAction="#handleOpenAppointments"/>
+        <Hyperlink text="Blog" styleClass="home-nav-link" onAction="#handleOpenCommunity"/>
+        <Hyperlink fx:id="navAiToolsLink" text="Outils IA" visible="false" managed="false" styleClass="home-nav-link" onAction="#handleOpenAiTools"/>
+        <Hyperlink fx:id="navJournalLink" text="Mon journal santé" visible="false" managed="false" styleClass="home-nav-link" onAction="#handleOpenJournal"/>
+        <Hyperlink fx:id="navSymptomsLink" text="Mes symptômes" visible="false" managed="false" styleClass="home-nav-link" onAction="#handleOpenSymptoms"/>
+        <Hyperlink fx:id="navPharmaciesLink" text="Pharmacies" visible="false" managed="false" styleClass="home-nav-link" onAction="#handleOpenPharmacy"/>
+        <Hyperlink fx:id="navMaPharmacieLink" text="Ma pharmacie" visible="false" managed="false" styleClass="home-nav-link" onAction="#handleOpenMaPharmacy"/>
+        <Hyperlink fx:id="navAppointmentsLink" text="Rendez-Vous" visible="false" managed="false" styleClass="home-nav-link" onAction="#handleOpenAppointments"/>
         <Hyperlink text="Contact" styleClass="home-nav-link" onAction="#handleScrollToContact"/>
     </HBox>
 

@@ -73,8 +73,8 @@
                     </VBox>
 
                     <VBox styleClass="bo-nav-group" spacing="4">
-                        <Label text="COMMUNITY &amp; RDV" styleClass="bo-nav-section"/>
-                        <Button fx:id="navCommunityButton" text="Community" styleClass="bo-nav-btn" onAction="#handleNavCommunity"/>
+                        <Label text="BLOG &amp; RDV" styleClass="bo-nav-section"/>
+                        <Button fx:id="navCommunityButton" text="Blog" styleClass="bo-nav-btn" onAction="#handleNavCommunity"/>
                         <Button fx:id="navAppointmentsAdminButton" text="Rendez-vous" styleClass="bo-nav-btn" onAction="#handleNavAppointmentsAdmin"/>
                     </VBox>
 
@@ -116,7 +116,7 @@
                     <VBox styleClass="bo-header-modern" spacing="8">
                         <HBox alignment="CENTER_LEFT" spacing="10">
                             <Label fx:id="headerTitleLabel" text="Dashboard Admin" styleClass="bo-header-title"/>
-                            <Label fx:id="headerSubtitleLabel" text="Vue d'ensemble de la plateforme SANTEA" styleClass="bo-header-subtitle"/>
+                            <Label fx:id="headerSubtitleLabel" text="Design et navigation du back-office SANTEA" styleClass="bo-header-subtitle"/>
                         </HBox>
                         <HBox spacing="8">
                             <Label text="Systeme operationnel" styleClass="bo-header-pill"/>

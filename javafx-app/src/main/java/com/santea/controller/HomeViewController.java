@@ -17,6 +17,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.CustomMenuItem;
 import javafx.scene.control.ContentDisplay;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Separator;
@@ -57,6 +58,24 @@ public class HomeViewController {
 
     @FXML
     private Button adminDashboardButton;
+
+    @FXML
+    private Hyperlink navAiToolsLink;
+
+    @FXML
+    private Hyperlink navJournalLink;
+
+    @FXML
+    private Hyperlink navSymptomsLink;
+
+    @FXML
+    private Hyperlink navPharmaciesLink;
+
+    @FXML
+    private Hyperlink navAppointmentsLink;
+
+    @FXML
+    private Hyperlink navMaPharmacieLink;
 
     @FXML
     private Button accountAvatarButton;
@@ -279,6 +298,56 @@ public class HomeViewController {
     }
 
     @FXML
+    private void handleOpenAiTools() {
+        hideAllMenus();
+        if (!AuthSession.isAuthenticated()) {
+            AppNavigator.showLogin();
+            return;
+        }
+        openAiToolsPage();
+    }
+
+    @FXML
+    private void handleOpenJournal() {
+        hideAllMenus();
+        if (!AuthSession.isAuthenticated()) {
+            AppNavigator.showLogin();
+            return;
+        }
+        openJournalPage();
+    }
+
+    @FXML
+    private void handleOpenSymptoms() {
+        hideAllMenus();
+        if (!AuthSession.isAuthenticated()) {
+            AppNavigator.showLogin();
+            return;
+        }
+        openSymptomsPage();
+    }
+
+    @FXML
+    private void handleOpenPlans() {
+        hideAllMenus();
+        if (!AuthSession.isAuthenticated()) {
+            AppNavigator.showLogin();
+            return;
+        }
+        openPlansPage();
+    }
+
+    @FXML
+    private void handleOpenMaPharmacy() {
+        hideAllMenus();
+        if (!AuthSession.isAuthenticated()) {
+            AppNavigator.showLogin();
+            return;
+        }
+        openPharmacyPage();
+    }
+
+    @FXML
     private void handleOpenPharmacy() {
         hideAllMenus();
         if (!AuthSession.isAuthenticated()) {
@@ -322,6 +391,8 @@ public class HomeViewController {
         setVisibleManaged(msgWrap, connected);
         setVisibleManaged(accountAvatarButton, connected);
 
+        applyNavbarModuleVisibility(null);
+
         if (!connected) {
             hideAllMenus();
             setBadge(notifBadgeLabel, 0);
@@ -335,6 +406,8 @@ public class HomeViewController {
             refreshCommunityHighlights();
             return;
         }
+
+        applyNavbarModuleVisibility(user);
 
         boolean isAdmin = "ROLE_ADMIN".equalsIgnoreCase(user.getRole());
         setVisibleManaged(adminDashboardButton, connected && isAdmin);
@@ -413,7 +486,7 @@ public class HomeViewController {
             return type.toUpperCase();
         }
 
-        return "COMMUNITY";
+        return "BLOG";
     }
 
     private void refreshDashboardData() {
@@ -524,6 +597,11 @@ public class HomeViewController {
 
         VBox content = new VBox();
         content.getStyleClass().add("home-dropdown-list");
+        content.getChildren().add(createAccompagnementShortcutsBox());
+
+        Label conversationsTitle = new Label("Conversations recentes");
+        conversationsTitle.getStyleClass().add("home-conversations-title");
+        content.getChildren().add(conversationsTitle);
 
         if (dashboardData.conversations().isEmpty()) {
             VBox emptyState = new VBox(8);
@@ -542,12 +620,59 @@ public class HomeViewController {
             }
         }
 
-        card.getChildren().addAll(header, content);
+        ScrollPane contentScroll = new ScrollPane(content);
+        contentScroll.getStyleClass().add("home-dropdown-scroll");
+        contentScroll.setFitToWidth(true);
+        contentScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        contentScroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        contentScroll.setPannable(true);
+        contentScroll.setPrefViewportHeight(360);
+        contentScroll.setMinViewportHeight(320);
+        contentScroll.setMaxHeight(400);
+
+        card.getChildren().addAll(header, contentScroll);
         CustomMenuItem container = new CustomMenuItem(card, false);
         container.setHideOnClick(false);
         menu.getItems().add(container);
 
         return menu;
+    }
+
+    private VBox createAccompagnementShortcutsBox() {
+        VBox shortcutsBox = new VBox(6);
+        shortcutsBox.getStyleClass().add("home-shortcuts-box");
+
+        Label shortcutsTitle = new Label("Raccourcis accompagnement");
+        shortcutsTitle.getStyleClass().add("home-shortcuts-title");
+
+        HBox firstRow = new HBox(8);
+        firstRow.getStyleClass().add("home-shortcuts-row");
+        firstRow.getChildren().addAll(
+                createShortcutButton("Messages", this::openMessagesPage),
+                createShortcutButton("Documents", this::openDocumentsPage)
+        );
+
+        HBox secondRow = new HBox(8);
+        secondRow.getStyleClass().add("home-shortcuts-row");
+        secondRow.getChildren().addAll(
+                createShortcutButton("Consultations", this::openTeleconsultationPage),
+                createShortcutButton("Mes plans", this::openPlansPage)
+        );
+
+        shortcutsBox.getChildren().addAll(shortcutsTitle, firstRow, secondRow);
+        return shortcutsBox;
+    }
+
+    private Button createShortcutButton(String label, Runnable action) {
+        Button shortcut = new Button(label);
+        shortcut.getStyleClass().add("home-shortcut-btn");
+        shortcut.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(shortcut, Priority.ALWAYS);
+        shortcut.setOnAction(event -> {
+            hideAllMenus();
+            action.run();
+        });
+        return shortcut;
     }
 
     private HBox createNotificationRow(HomeDashboardService.NotificationPreview notification) {
@@ -590,16 +715,24 @@ public class HomeViewController {
 
     private HBox createConversationRow(HomeDashboardService.ConversationPreview conversation) {
         HBox row = new HBox(12);
-        row.getStyleClass().add("home-dropdown-item");
+        row.getStyleClass().addAll("home-dropdown-item", "home-conversation-row");
         row.setAlignment(Pos.TOP_LEFT);
 
-        StackPane iconWrap = new StackPane();
-        iconWrap.getStyleClass().add("home-dropdown-item-icon-wrap");
-        FontIcon icon = new FontIcon("fas-comments");
-        icon.getStyleClass().add("home-dropdown-item-icon");
-        iconWrap.getChildren().add(icon);
+        StackPane avatarWrap = new StackPane();
+        avatarWrap.getStyleClass().add("home-conversation-avatar-wrap");
+        Label initials = new Label(extractInitials(conversation.otherUserDisplay()));
+        initials.getStyleClass().add("home-conversation-avatar");
+        avatarWrap.getChildren().add(initials);
+
+        if (conversation.unreadInConversation() > 0) {
+            Label unreadBadge = new Label(conversation.unreadInConversation() > 99 ? "99+" : String.valueOf(conversation.unreadInConversation()));
+            unreadBadge.getStyleClass().add("home-conversation-unread-badge");
+            StackPane.setAlignment(unreadBadge, Pos.TOP_RIGHT);
+            avatarWrap.getChildren().add(unreadBadge);
+        }
 
         VBox textWrap = new VBox(4);
+        textWrap.getStyleClass().add("home-conversation-text-wrap");
         textWrap.setAlignment(Pos.TOP_LEFT);
         HBox.setHgrow(textWrap, Priority.ALWAYS);
 
@@ -607,21 +740,21 @@ public class HomeViewController {
         titleRow.setAlignment(Pos.CENTER_LEFT);
         Label title = new Label(safe(conversation.otherUserDisplay()));
         title.getStyleClass().add("home-dropdown-item-title");
-        Label when = new Label(formatRelativeDays(conversation.lastMessageAt()));
+        Label when = new Label(formatRelativeTime(conversation.lastMessageAt()));
         when.getStyleClass().add("home-dropdown-time-badge");
         HBox.setHgrow(title, Priority.ALWAYS);
         titleRow.getChildren().addAll(title, when);
 
         String subtitleText = safe(conversation.lastMessage());
-        if (conversation.unreadInConversation() > 0) {
-            subtitleText = "(" + conversation.unreadInConversation() + ") " + subtitleText;
+        if (subtitleText.isBlank()) {
+            subtitleText = "Commencez la conversation";
         }
         Label subtitle = new Label(subtitleText);
-        subtitle.getStyleClass().add("home-dropdown-item-subtitle");
+        subtitle.getStyleClass().addAll("home-dropdown-item-subtitle", "home-conversation-subtitle");
         subtitle.setWrapText(true);
 
         textWrap.getChildren().addAll(titleRow, subtitle);
-        row.getChildren().addAll(iconWrap, textWrap);
+        row.getChildren().addAll(avatarWrap, textWrap);
         row.setOnMouseClicked(event -> {
             hideAllMenus();
             openConversationPage(conversation);
@@ -630,13 +763,47 @@ public class HomeViewController {
         return row;
     }
 
-    private String formatRelativeDays(LocalDateTime dateTime) {
+    private String formatRelativeTime(LocalDateTime dateTime) {
         if (dateTime == null) {
             return "";
         }
-        long days = java.time.Duration.between(dateTime, LocalDateTime.now()).toDays();
-        long normalized = Math.max(0, days);
-        return normalized + " j";
+
+        java.time.Duration duration = java.time.Duration.between(dateTime, LocalDateTime.now());
+        long minutes = Math.max(0, duration.toMinutes());
+        if (minutes < 1) {
+            return "A l'instant";
+        }
+        if (minutes < 60) {
+            return minutes + " min";
+        }
+
+        long hours = duration.toHours();
+        if (hours < 24) {
+            return hours + " h";
+        }
+
+        long days = duration.toDays();
+        if (days < 7) {
+            return days + " j";
+        }
+
+        return DATE_FORMAT.format(dateTime);
+    }
+
+    private String extractInitials(String displayName) {
+        String normalized = safe(displayName);
+        if (normalized.isBlank()) {
+            return "US";
+        }
+
+        String[] parts = normalized.split("\\s+");
+        if (parts.length == 1) {
+            return parts[0].substring(0, 1).toUpperCase();
+        }
+
+        String first = parts[0].substring(0, 1).toUpperCase();
+        String second = parts[1].substring(0, 1).toUpperCase();
+        return first + second;
     }
 
     private ContextMenu buildAccountMenu() {
@@ -652,14 +819,16 @@ public class HomeViewController {
         boolean isPatient = "ROLE_PATIENT".equals(role);
         boolean isMedecin = "ROLE_MEDECIN".equals(role);
         boolean isPharmacien = "ROLE_PHARMACIEN".equals(role);
-        boolean isAdmin = "ROLE_ADMIN".equals(role);
+        boolean isCoach = "ROLE_COACH".equals(role);
+        boolean isNutritionniste = "ROLE_NUTRITIONNISTE".equals(role);
         boolean canTeleconsult = isPatient || isMedecin;
-        boolean canPlan = Set.of("ROLE_PATIENT", "ROLE_MEDECIN", "ROLE_COACH", "ROLE_NUTRITIONNISTE").contains(role);
-        boolean canAiTools = authorizationPolicyService.hasAiToolsAccess(user);
+        boolean canPlan = isPatient || isMedecin || isCoach || isNutritionniste;
+        boolean canAiTools = canAccessAiTools(user);
 
         VBox card = new VBox(10);
         card.getStyleClass().add("account-dropdown-card");
         card.setPrefWidth(320);
+        card.setMaxHeight(460);
 
         StackPane headerWrap = new StackPane();
         headerWrap.getStyleClass().add("account-dropdown-header");
@@ -692,12 +861,13 @@ public class HomeViewController {
         VBox body = new VBox(8);
         body.getStyleClass().add("account-dropdown-body");
 
-        if (isAdmin) {
-            body.getChildren().add(createAccountButton("Dashboard Admin", "fas-chart-line", this::handleOpenAdminDashboard));
-        }
-
         body.getChildren().add(createAccountButton("Paramètres", "fas-user", this::openProfilePage));
         body.getChildren().add(createAccountButton("Sécurité (MFA)", "fas-key", this::openMfaPage));
+        if (canAiTools) {
+            body.getChildren().add(createAccountButton("Outils IA", "fas-robot", this::openAiToolsPage));
+        }
+
+        body.getChildren().add(new Separator());
 
         Button accompagnementToggle = createAccountButton("Accompagnement", "fas-hand-holding-heart", true, () -> {
             // no-op, handled by toggle below
@@ -715,10 +885,6 @@ public class HomeViewController {
         if (canPlan) {
             accompagnementSubmenu.getChildren().add(createSubButton("Mes plans", this::openPlansPage));
         }
-        if (isPatient) {
-            accompagnementSubmenu.getChildren().add(createSubButton("Mon journal sante", this::openJournalPage));
-            accompagnementSubmenu.getChildren().add(createSubButton("Mes symptomes", this::openSymptomsPage));
-        }
 
         accompagnementToggle.setOnAction(event -> {
             boolean show = !accompagnementSubmenu.isVisible();
@@ -729,22 +895,43 @@ public class HomeViewController {
         body.getChildren().add(accompagnementToggle);
         body.getChildren().add(accompagnementSubmenu);
 
-        body.getChildren().add(createAccountButton("Abonnement", "fas-star", this::openSubscriptionPage));
-        if (isPatient || isMedecin) {
-            body.getChildren().add(createAccountButton("Rendez-vous", "fas-calendar-check", this::openAppointmentsPage));
-        }
-        body.getChildren().add(createAccountButton("Communaute", "fas-newspaper", this::openContentCommunityPage));
-        boolean canOpenPharmacy = authorizationPolicyService.decisionForProtectedFeatures(user).allowed();
-        if (canOpenPharmacy) {
-            String pharmacyLabel = isPharmacien ? "Ma pharmacie" : "Pharmacies";
-            body.getChildren().add(createAccountButton(pharmacyLabel, "fas-clinic-medical", this::openPharmacyPage));
-        }
-        if (canAiTools) {
-            body.getChildren().add(createAccountButton("Outils IA", "fas-robot", this::openAiToolsPage));
+        if (isPatient) {
+            Button santeToggle = createAccountButton("Santé quotidienne", "fas-heartbeat", true, () -> {
+                // no-op, handled by toggle below
+            });
+            VBox santeSubmenu = new VBox(6);
+            santeSubmenu.getStyleClass().add("account-submenu-box");
+            santeSubmenu.setVisible(false);
+            santeSubmenu.setManaged(false);
+            santeSubmenu.getChildren().add(createSubButton("Mon journal santé", this::openJournalPage));
+            santeSubmenu.getChildren().add(createSubButton("Mes symptômes", this::openSymptomsPage));
+
+            santeToggle.setOnAction(event -> {
+                boolean show = !santeSubmenu.isVisible();
+                santeSubmenu.setVisible(show);
+                santeSubmenu.setManaged(show);
+            });
+
+            body.getChildren().add(santeToggle);
+            body.getChildren().add(santeSubmenu);
         }
 
-        Separator sep1 = new Separator();
-        body.getChildren().add(sep1);
+        body.getChildren().add(createAccountButton("Abonnement", "fas-star", this::openSubscriptionPage));
+
+        if (isPatient) {
+            body.getChildren().add(createAccountButton("Rendez-vous", "fas-calendar-check", this::openAppointmentsPage));
+            body.getChildren().add(createAccountButton("Rapport global", "fas-file-medical", this::openGlobalReportPage));
+        }
+
+        if (isMedecin) {
+            body.getChildren().add(createAccountButton("Rendez-vous", "fas-calendar-check", this::openAppointmentsPage));
+        }
+
+        if (isPharmacien) {
+            body.getChildren().add(createAccountButton("Ma pharmacie", "fas-clinic-medical", this::openPharmacyPage));
+        }
+
+        body.getChildren().add(new Separator());
 
         HBox themeRow = new HBox(8);
         themeRow.getStyleClass().add("account-inline-row");
@@ -792,7 +979,17 @@ public class HomeViewController {
         logoutBtn.setMaxWidth(Double.MAX_VALUE);
         body.getChildren().add(logoutBtn);
 
-        card.getChildren().addAll(headerWrap, body);
+        ScrollPane bodyScroll = new ScrollPane(body);
+        bodyScroll.getStyleClass().add("account-dropdown-scroll");
+        bodyScroll.setFitToWidth(true);
+        bodyScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        bodyScroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        bodyScroll.setPannable(true);
+        bodyScroll.setPrefViewportHeight(360);
+        bodyScroll.setMinViewportHeight(320);
+        bodyScroll.setMaxHeight(380);
+
+        card.getChildren().addAll(headerWrap, bodyScroll);
 
         CustomMenuItem container = new CustomMenuItem(card, false);
         container.setHideOnClick(false);
@@ -860,9 +1057,21 @@ public class HomeViewController {
     }
 
     private void openAiToolsPage() {
-        if (!guardPremiumAccess()) {
+        User user = AuthSession.getCurrentUser();
+        if (user == null) {
+            AppNavigator.showLogin();
             return;
         }
+
+        if (!canAccessAiTools(user)) {
+            AppNavigator.showFeaturePage("Acces restreint", "Droits d'abonnement", List.of(
+                    "Cette fonctionnalite est reservee aux profils eligibles.",
+                    "Statut actuel: " + safe(user.getSubscriptionStatus()),
+                    "Role effectif: " + humanizeRole(resolveRole(user))
+            ));
+            return;
+        }
+
         AppNavigator.showFeaturePage("Outils IA", "Analyse et recommandations", List.of(
                 "Analyse des symptomes",
                 "Score de risque",
@@ -923,6 +1132,14 @@ public class HomeViewController {
         AppNavigator.showSubscriptionPage();
     }
 
+    private void openGlobalReportPage() {
+        AppNavigator.showFeaturePage("Rapport global", "Synthese de votre suivi", List.of(
+                "Vue patient consolidee",
+                "Evolution des indicateurs",
+                "Recommandations globales"
+        ));
+    }
+
     private void openAppointmentsPage() {
         if (!AuthSession.isAuthenticated()) {
             AppNavigator.showLogin();
@@ -936,13 +1153,6 @@ public class HomeViewController {
             return;
         }
         AppNavigator.showPharmacyPage();
-    }
-
-    private void openContentCommunityPage() {
-        if (!guardPremiumAccess()) {
-            return;
-        }
-        AppNavigator.showContentCommunityPage();
     }
 
     private void openNotificationPage(HomeDashboardService.NotificationPreview notification) {
@@ -984,6 +1194,39 @@ public class HomeViewController {
 
     private String safe(String value) {
         return value == null ? "" : value.trim();
+    }
+
+    private void applyNavbarModuleVisibility(User user) {
+        boolean connected = user != null;
+        String role = connected ? resolveRole(user) : "";
+
+        boolean isPatient = "ROLE_PATIENT".equals(role);
+        boolean isPharmacien = "ROLE_PHARMACIEN".equals(role);
+        boolean pharmacienActive = isPharmacien
+                && AuthorizationPolicyService.STATUS_ACTIVE.equals(authorizationPolicyService.normalizedStatus(user));
+
+        setVisibleManaged(navAiToolsLink, connected);
+        setVisibleManaged(navJournalLink, connected && isPatient);
+        setVisibleManaged(navSymptomsLink, connected && isPatient);
+        setVisibleManaged(navPharmaciesLink, connected && isPatient);
+        setVisibleManaged(navAppointmentsLink, connected && isPatient);
+        setVisibleManaged(navMaPharmacieLink, connected && pharmacienActive);
+    }
+
+    private boolean canAccessAiTools(User user) {
+        if (user == null) {
+            return false;
+        }
+
+        if (authorizationPolicyService.isAdmin(user)) {
+            return true;
+        }
+
+        String role = resolveRole(user);
+        boolean eligibleRole = Set.of("ROLE_PATIENT", "ROLE_MEDECIN", "ROLE_COACH", "ROLE_NUTRITIONNISTE").contains(role);
+        boolean activeSubscription = AuthorizationPolicyService.STATUS_ACTIVE.equals(authorizationPolicyService.normalizedStatus(user));
+
+        return activeSubscription && eligibleRole;
     }
 
     private int computeProfileScore(User user) {

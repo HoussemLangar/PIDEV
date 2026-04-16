@@ -31,8 +31,13 @@
                 <Hyperlink text="Accueil" styleClass="home-nav-link" onAction="#handleScrollToTop"/>
                 <Hyperlink text="À propos" styleClass="home-nav-link" onAction="#handleScrollToAbout"/>
                 <Hyperlink text="Services" styleClass="home-nav-link" onAction="#handleScrollToServices"/>
-                <Hyperlink text="Community" styleClass="home-nav-link" onAction="#handleOpenCommunity"/>
-                <Hyperlink text="Rendez-Vous" styleClass="home-nav-link" onAction="#handleOpenAppointments"/>
+                <Hyperlink text="Blog" styleClass="home-nav-link" onAction="#handleOpenCommunity"/>
+                <Hyperlink fx:id="navAiToolsLink" text="Outils IA" visible="false" managed="false" styleClass="home-nav-link" onAction="#handleOpenAiTools"/>
+                <Hyperlink fx:id="navJournalLink" text="Mon journal santé" visible="false" managed="false" styleClass="home-nav-link" onAction="#handleOpenJournal"/>
+                <Hyperlink fx:id="navSymptomsLink" text="Mes symptômes" visible="false" managed="false" styleClass="home-nav-link" onAction="#handleOpenSymptoms"/>
+                <Hyperlink fx:id="navPharmaciesLink" text="Pharmacies" visible="false" managed="false" styleClass="home-nav-link" onAction="#handleOpenPharmacy"/>
+                <Hyperlink fx:id="navMaPharmacieLink" text="Ma pharmacie" visible="false" managed="false" styleClass="home-nav-link" onAction="#handleOpenMaPharmacy"/>
+                <Hyperlink fx:id="navAppointmentsLink" text="Rendez-Vous" visible="false" managed="false" styleClass="home-nav-link" onAction="#handleOpenAppointments"/>
                 <Hyperlink text="Contact" styleClass="home-nav-link" onAction="#handleScrollToContact"/>
             </HBox>
 
@@ -148,9 +153,9 @@
                             <FlowPane hgap="22" vgap="22" prefWrapLength="1120" alignment="CENTER" styleClass="home-services-grid">
                                 <VBox spacing="12" styleClass="home-service-card"><Label text="◉" styleClass="home-feature-icon gradient-purple"/><Label text="Téléconsultations" styleClass="home-card-title"/><Label text="Consultez vos médecins à distance en visioconférence sécurisée, où que vous soyez." wrapText="true" styleClass="home-card-text"/><Button text="Accéder" styleClass="btn-feature" onAction="#handleOpenTeleconsultation"/></VBox>
                                 <VBox spacing="12" styleClass="home-service-card"><Label text="◉" styleClass="home-feature-icon gradient-blue"/><Label text="Gestion des documents" styleClass="home-card-title"/><Label text="Centralisez et partagez vos documents médicaux en toute sécurité." wrapText="true" styleClass="home-card-text"/><Button text="Accéder" styleClass="btn-feature" onAction="#handleOpenDocuments"/></VBox>
-                                <VBox spacing="12" styleClass="home-service-card"><Label text="◉" styleClass="home-feature-icon gradient-green"/><Label text="Journal santé quotidien" styleClass="home-card-title"/><Label text="Suivez votre poids, IMC, sommeil et activité physique jour après jour." wrapText="true" styleClass="home-card-text"/><Button text="Accéder" styleClass="btn-feature"/></VBox>
-                                <VBox spacing="12" styleClass="home-service-card"><Label text="◉" styleClass="home-feature-icon gradient-cyan"/><Label text="Plans d'accompagnement" styleClass="home-card-title"/><Label text="Programmes personnalisés avec coach sportif et nutritionniste." wrapText="true" styleClass="home-card-text"/><Button text="Accéder" styleClass="btn-feature"/></VBox>
-                                <VBox spacing="12" styleClass="home-service-card"><Label text="◉" styleClass="home-feature-icon gradient-orange"/><Label text="Suivi des symptômes" styleClass="home-card-title"/><Label text="Enregistrez vos symptômes et recevez des diagnostics préliminaires." wrapText="true" styleClass="home-card-text"/><Button text="Accéder" styleClass="btn-feature"/></VBox>
+                                <VBox spacing="12" styleClass="home-service-card"><Label text="◉" styleClass="home-feature-icon gradient-green"/><Label text="Journal santé quotidien" styleClass="home-card-title"/><Label text="Suivez votre poids, IMC, sommeil et activité physique jour après jour." wrapText="true" styleClass="home-card-text"/><Button text="Accéder" styleClass="btn-feature" onAction="#handleOpenJournal"/></VBox>
+                                <VBox spacing="12" styleClass="home-service-card"><Label text="◉" styleClass="home-feature-icon gradient-cyan"/><Label text="Plans d'accompagnement" styleClass="home-card-title"/><Label text="Programmes personnalisés avec coach sportif et nutritionniste." wrapText="true" styleClass="home-card-text"/><Button text="Accéder" styleClass="btn-feature" onAction="#handleOpenPlans"/></VBox>
+                                <VBox spacing="12" styleClass="home-service-card"><Label text="◉" styleClass="home-feature-icon gradient-orange"/><Label text="Suivi des symptômes" styleClass="home-card-title"/><Label text="Enregistrez vos symptômes et recevez des diagnostics préliminaires." wrapText="true" styleClass="home-card-text"/><Button text="Accéder" styleClass="btn-feature" onAction="#handleOpenSymptoms"/></VBox>
                                 <VBox spacing="12" styleClass="home-service-card"><Label text="◉" styleClass="home-feature-icon gradient-teal"/><Label text="Messagerie sécurisée" styleClass="home-card-title"/><Label text="Échangez en toute confidentialité avec vos professionnels de santé." wrapText="true" styleClass="home-card-text"/><Button text="Accéder" styleClass="btn-feature" onAction="#handleOpenMessaging"/></VBox>
                                 <VBox spacing="12" styleClass="home-service-card"><Label text="◉" styleClass="home-feature-icon gradient-pink"/><Label text="Pharmacies de garde" styleClass="home-card-title"/><Label text="Trouvez les pharmacies ouvertes près de chez vous rapidement." wrapText="true" styleClass="home-card-text"/><Button text="Accéder" styleClass="btn-feature"/></VBox>
                                 <VBox spacing="12" styleClass="home-service-card"><Label text="◉" styleClass="home-feature-icon gradient-pink"/><Label text="Pharmacies de garde" styleClass="home-card-title"/><Label text="Trouvez les pharmacies ouvertes près de chez vous rapidement." wrapText="true" styleClass="home-card-text"/><Button text="Accéder" styleClass="btn-feature" onAction="#handleOpenPharmacy"/></VBox>
@@ -208,7 +213,7 @@
                                         <Label text="Santé quotidienne" styleClass="home-card-kicker"/>
                                         <Label text="Suivez votre santé au quotidien" wrapText="true" styleClass="home-card-title"/>
                                         <Label text="Suivez vos indicateurs de santé (poids, IMC, activité, sommeil, alimentation) grâce à un tracker intelligent et centralisé." wrapText="true" styleClass="home-card-text"/>
-                                        <Button text="Mon journal santé" styleClass="btn-appointment-main"/>
+                                        <Button text="Mon journal santé" styleClass="btn-appointment-main" onAction="#handleOpenJournal"/>
                                     </VBox>
                                 </HBox>
 
@@ -223,7 +228,7 @@
                                         <Label text="Téléconsultation" styleClass="home-card-kicker"/>
                                         <Label text="Consultez à distance en vidéo" wrapText="true" styleClass="home-card-title"/>
                                         <Label text="Consultez vos médecins en visioconférence sécurisée depuis chez vous. Aucune installation requise." wrapText="true" styleClass="home-card-text"/>
-                                        <Button text="Mes téléconsultations" styleClass="btn-appointment-main"/>
+                                        <Button text="Mes téléconsultations" styleClass="btn-appointment-main" onAction="#handleOpenTeleconsultation"/>
                                     </VBox>
                                 </HBox>
 
@@ -238,7 +243,7 @@
                                         <Label text="Accompagnement personnalisé" styleClass="home-card-kicker"/>
                                         <Label text="Plans sport &amp; nutrition sur mesure" wrapText="true" styleClass="home-card-title"/>
                                         <Label text="Bénéficiez d'un accompagnement personnalisé avec coach sportif et nutritionniste." wrapText="true" styleClass="home-card-text"/>
-                                        <Button text="Mes plans" styleClass="btn-appointment-main"/>
+                                        <Button text="Mes plans" styleClass="btn-appointment-main" onAction="#handleOpenPlans"/>
                                     </VBox>
                                 </HBox>
 
@@ -262,10 +267,68 @@
 
                     <Separator styleClass="section-divider"/>
 
+                    <VBox spacing="18" styleClass="home-section home-blog-section">
+                        <VBox spacing="14" alignment="CENTER" styleClass="section-shell">
+                            <Label text="Accompagnement" styleClass="home-section-title"/>
+                            <Label text="Messagerie, documents, consultations vidéo et plans personnalisés dans un espace unifié." styleClass="home-section-subtitle"/>
+                            <HBox spacing="14" alignment="CENTER" styleClass="home-blog-grid">
+                                <VBox spacing="8" styleClass="home-blog-card">
+                                    <Label text="ACCOMPAGNEMENT" styleClass="home-card-kicker"/>
+                                    <Label text="Messages sécurisés" styleClass="home-card-title"/>
+                                    <Label text="Discutez directement avec vos professionnels de santé." wrapText="true" styleClass="home-card-text"/>
+                                    <Button text="Ouvrir" styleClass="btn-appointment-main" onAction="#handleOpenMessaging"/>
+                                </VBox>
+                                <VBox spacing="8" styleClass="home-blog-card">
+                                    <Label text="ACCOMPAGNEMENT" styleClass="home-card-kicker"/>
+                                    <Label text="Documents médicaux" styleClass="home-card-title"/>
+                                    <Label text="Centralisez vos comptes rendus et partagez-les rapidement." wrapText="true" styleClass="home-card-text"/>
+                                    <Button text="Ouvrir" styleClass="btn-appointment-main" onAction="#handleOpenDocuments"/>
+                                </VBox>
+                                <VBox spacing="8" styleClass="home-blog-card">
+                                    <Label text="ACCOMPAGNEMENT" styleClass="home-card-kicker"/>
+                                    <Label text="Consultations vidéo" styleClass="home-card-title"/>
+                                    <Label text="Planifiez et rejoignez vos téléconsultations en un clic." wrapText="true" styleClass="home-card-text"/>
+                                    <Button text="Ouvrir" styleClass="btn-appointment-main" onAction="#handleOpenTeleconsultation"/>
+                                </VBox>
+                                <VBox spacing="8" styleClass="home-blog-card">
+                                    <Label text="ACCOMPAGNEMENT" styleClass="home-card-kicker"/>
+                                    <Label text="Mes plans" styleClass="home-card-title"/>
+                                    <Label text="Suivez vos objectifs nutrition et activité avec votre équipe." wrapText="true" styleClass="home-card-text"/>
+                                    <Button text="Ouvrir" styleClass="btn-appointment-main" onAction="#handleOpenPlans"/>
+                                </VBox>
+                            </HBox>
+                        </VBox>
+                    </VBox>
+
+                    <Separator styleClass="section-divider"/>
+
+                    <VBox spacing="18" styleClass="home-section home-blog-section">
+                        <VBox spacing="14" alignment="CENTER" styleClass="section-shell">
+                            <Label text="Santé quotidienne" styleClass="home-section-title"/>
+                            <Label text="Un suivi quotidien clair de votre journal santé et de vos symptômes." styleClass="home-section-subtitle"/>
+                            <HBox spacing="14" alignment="CENTER" styleClass="home-blog-grid">
+                                <VBox spacing="8" styleClass="home-blog-card">
+                                    <Label text="SUIVI QUOTIDIEN" styleClass="home-card-kicker"/>
+                                    <Label text="Mon journal santé" styleClass="home-card-title"/>
+                                    <Label text="Visualisez vos indicateurs de santé et vos habitudes quotidiennes." wrapText="true" styleClass="home-card-text"/>
+                                    <Button text="Ouvrir" styleClass="btn-appointment-main" onAction="#handleOpenJournal"/>
+                                </VBox>
+                                <VBox spacing="8" styleClass="home-blog-card">
+                                    <Label text="SUIVI QUOTIDIEN" styleClass="home-card-kicker"/>
+                                    <Label text="Mes symptômes" styleClass="home-card-title"/>
+                                    <Label text="Déclarez vos symptômes et gardez un historique exploitable." wrapText="true" styleClass="home-card-text"/>
+                                    <Button text="Ouvrir" styleClass="btn-appointment-main" onAction="#handleOpenSymptoms"/>
+                                </VBox>
+                            </HBox>
+                        </VBox>
+                    </VBox>
+
+                    <Separator styleClass="section-divider"/>
+
                     <VBox fx:id="blogSection" spacing="18" styleClass="home-section home-blog-section">
                         <VBox spacing="14" alignment="CENTER" styleClass="section-shell">
-                            <Label text="Community" styleClass="home-section-title"/>
-                            <Label text="Extraits recents des contenus publies par la communaute SANTEA" styleClass="home-section-subtitle"/>
+                            <Label text="Blog" styleClass="home-section-title"/>
+                            <Label text="Extraits recents des contenus publies sur le blog SANTEA" styleClass="home-section-subtitle"/>
                             <HBox spacing="14" alignment="CENTER" styleClass="home-blog-grid">
                                 <VBox spacing="8" styleClass="home-blog-card">
                                     <Label fx:id="communityCard1KickerLabel" text="ARTICLE" styleClass="home-card-kicker"/>
@@ -275,7 +338,7 @@
                                 </VBox>
                                 <VBox spacing="8" styleClass="home-blog-card">
                                     <Label fx:id="communityCard2KickerLabel" text="PUBLICATION" styleClass="home-card-kicker"/>
-                                    <Label fx:id="communityCard2TitleLabel" text="Retours de la communaute" styleClass="home-card-title"/>
+                                    <Label fx:id="communityCard2TitleLabel" text="Retours du blog" styleClass="home-card-title"/>
                                     <Label fx:id="communityCard2ExcerptLabel" text="Echangez avec les autres utilisateurs et decouvrez les experiences partagees." wrapText="true" styleClass="home-card-text"/>
                                     <Hyperlink text="Lire la suite" styleClass="home-read-link" onAction="#handleOpenCommunity"/>
                                 </VBox>
