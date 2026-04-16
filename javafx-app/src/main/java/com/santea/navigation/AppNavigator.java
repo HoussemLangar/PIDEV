@@ -6,6 +6,7 @@ import com.santea.controller.AuthBaseViewController;
 import com.santea.controller.BannedViewController;
 import com.santea.controller.FeaturePageController;
 import com.santea.model.User;
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -169,6 +170,18 @@ public final class AppNavigator {
         showAppPage("/com/santea/fxml/accompaniment_plan_create.fxml");
     }
 
+    public static void showAppointmentsPage() {
+        showAppPage("/com/santea/fxml/appointments.fxml");
+    }
+
+    public static void showPharmacyPage() {
+        showAppPage("/com/santea/fxml/pharmacy.fxml");
+    }
+
+    public static void showContentCommunityPage() {
+        showAppPage("/com/santea/fxml/content_community.fxml");
+    }
+
     private static void showAppPage(String contentFxmlPath) {
         Parent contentRoot = loadFxml(contentFxmlPath);
         showInAppBase(contentRoot);
@@ -274,6 +287,8 @@ public final class AppNavigator {
         double previousHeight = primaryStage.getHeight();
         double previousX = primaryStage.getX();
         double previousY = primaryStage.getY();
+        double minWidth = primaryStage.getMinWidth();
+        double minHeight = primaryStage.getMinHeight();
 
         mainScene = scene;
         primaryStage.setScene(mainScene);
@@ -284,14 +299,20 @@ public final class AppNavigator {
             return;
         }
 
-        if (wasMaximized) {
+        boolean invalidPreviousSize = (minWidth > 0 && previousWidth > 0 && previousWidth < minWidth)
+                || (minHeight > 0 && previousHeight > 0 && previousHeight < minHeight);
+
+        if (wasMaximized || invalidPreviousSize) {
             primaryStage.setMaximized(true);
+            Platform.runLater(() -> primaryStage.setMaximized(true));
             return;
         }
 
         if (previousWidth > 0 && previousHeight > 0) {
-            primaryStage.setWidth(previousWidth);
-            primaryStage.setHeight(previousHeight);
+            double targetWidth = minWidth > 0 ? Math.max(previousWidth, minWidth) : previousWidth;
+            double targetHeight = minHeight > 0 ? Math.max(previousHeight, minHeight) : previousHeight;
+            primaryStage.setWidth(targetWidth);
+            primaryStage.setHeight(targetHeight);
             primaryStage.setX(previousX);
             primaryStage.setY(previousY);
         }

@@ -26,7 +26,7 @@
             <VBox spacing="10" HBox.hgrow="ALWAYS">
                 <Button fx:id="startCameraButton" text="Demarrer la camera" styleClass="face-btn-primary" onAction="#handleStartCamera"/>
                 <Button fx:id="stopCameraButton" text="Arreter la camera" styleClass="face-btn-outline" onAction="#handleStopCamera"/>
-                <Button fx:id="registerFaceButton" text="Enregistrer mon visage" styleClass="face-btn-success" onAction="#handleRegisterFace"/>
+                <Button fx:id="registerFaceButton" text="Enregistrer / Re-enregistrer mon visage" styleClass="face-btn-success" onAction="#handleRegisterFace"/>
                 <Button fx:id="verifyFaceButton" text="Verifier mon visage" styleClass="face-btn-success" onAction="#handleVerifyFace"/>
                 <Button text="Se deconnecter" styleClass="face-btn-outline" onAction="#handleLogout"/>
             </VBox>

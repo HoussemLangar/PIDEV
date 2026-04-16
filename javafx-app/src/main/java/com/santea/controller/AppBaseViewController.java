@@ -2,6 +2,7 @@ package com.santea.controller;
 
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
@@ -24,6 +25,7 @@ public class AppBaseViewController implements Initializable {
                 if (content instanceof Region region) {
                     region.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
                 }
+                StackPane.setAlignment(content, Pos.TOP_LEFT);
                 contentContainer.getChildren().add(content);
             }
             contentContainer.requestLayout();

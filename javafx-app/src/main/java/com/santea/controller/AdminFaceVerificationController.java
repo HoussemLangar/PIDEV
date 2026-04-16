@@ -229,15 +229,14 @@ public class AdminFaceVerificationController {
         }
 
         boolean hasFace = faceService.hasRegisteredFace(user.getId());
+        registerFaceButton.setText("Enregistrer / Re-enregistrer mon visage");
+        registerFaceButton.setDisable(false);
+
         if (hasFace) {
-            infoBannerLabel.setText("Visage deja enregistre. Verifiez votre identite pour acceder au dashboard admin.");
-            registerFaceButton.setText("Face ID deja enregistre");
-            registerFaceButton.setDisable(true);
+            infoBannerLabel.setText("Visage deja enregistre. Vous pouvez verifier votre identite ou re-enregistrer votre visage si necessaire.");
             verifyFaceButton.setDisable(false);
         } else {
-            infoBannerLabel.setText("Vous devez d'abord enregistrer votre visage pour activer la reconnaissance faciale.");
-            registerFaceButton.setText("Enregistrer mon visage");
-            registerFaceButton.setDisable(false);
+            infoBannerLabel.setText("Aucun visage enregistre. Commencez par enregistrer votre visage, puis vous pourrez le re-enregistrer a tout moment.");
             verifyFaceButton.setDisable(true);
         }
 

@@ -29,16 +29,29 @@ public class EmailService {
     public boolean sendEmailVerification(String toEmail, String fullName, String verificationToken) {
         String verifyUrl = normalizeBaseUrl(mailConfig.appBaseUrl()) + "/verify-email/" + verificationToken;
         String subject = "Confirmation de votre email - SANTEA";
+        String displayName = safe(fullName).isBlank() ? "Utilisateur" : safe(fullName);
 
-        String html = "<h2>Bienvenue " + escapeHtml(fullName) + "</h2>"
-                + "<p>Merci d'avoir cree votre compte SANTEA.</p>"
-                + "<p>Confirmez votre email en cliquant ici :</p>"
-                + "<p><a href=\"" + verifyUrl + "\">Verifier mon email</a></p>"
-                + "<p>Si le bouton ne fonctionne pas, copiez ce lien :<br>" + verifyUrl + "</p>";
+        String html = buildActionEmailHtml(
+            "Activation du compte",
+            "Bienvenue sur SANTEA",
+            displayName,
+            "Merci d'avoir cree votre compte. Activez votre adresse email pour finaliser l'inscription.",
+            "Verifier mon email",
+            verifyUrl,
+            "Ce lien expire dans 48 heures.",
+            "Token de verification",
+            verificationToken
+        );
 
-        String text = "Bienvenue " + fullName + "\n"
-                + "Merci d'avoir cree votre compte SANTEA.\n"
-                + "Verifiez votre email via ce lien: " + verifyUrl;
+        String text = buildActionEmailText(
+            "Bienvenue sur SANTEA",
+            displayName,
+            "Merci d'avoir cree votre compte. Activez votre adresse email pour finaliser l'inscription.",
+            verifyUrl,
+            "Ce lien expire dans 48 heures.",
+            "Token de verification",
+            verificationToken
+        );
 
         return sendEmail(toEmail, subject, html, text);
     }
@@ -46,19 +59,29 @@ public class EmailService {
     public boolean sendPasswordReset(String toEmail, String fullName, String token) {
         String resetUrl = normalizeBaseUrl(mailConfig.appBaseUrl()) + "/reset-password/" + token;
         String subject = "Reinitialisation de votre mot de passe - SANTEA";
+        String displayName = safe(fullName).isBlank() ? "Utilisateur" : safe(fullName);
 
-        String html = "<h2>Bonjour " + escapeHtml(fullName) + "</h2>"
-                + "<p>Nous avons recu une demande de reinitialisation de mot de passe.</p>"
-                + "<p>Lien de reinitialisation :</p>"
-                + "<p><a href=\"" + resetUrl + "\">Reinitialiser mon mot de passe</a></p>"
-                + "<p>Token (si necessaire dans JavaFX) : <strong>" + escapeHtml(token) + "</strong></p>"
-                + "<p>Ce lien expire dans 1 heure.</p>";
+        String html = buildActionEmailHtml(
+            "Securite compte",
+            "Reinitialisation de mot de passe",
+            displayName,
+            "Nous avons recu une demande de reinitialisation. Si vous etes a l'origine de cette action, continuez via le bouton ci-dessous.",
+            "Reinitialiser mon mot de passe",
+            resetUrl,
+            "Ce lien expire dans 1 heure.",
+            "Token de secours",
+            token
+        );
 
-        String text = "Bonjour " + fullName + "\n"
-                + "Demande de reinitialisation recue.\n"
-                + "Lien: " + resetUrl + "\n"
-                + "Token: " + token + "\n"
-                + "Le lien expire dans 1 heure.";
+        String text = buildActionEmailText(
+            "Reinitialisation de mot de passe",
+            displayName,
+            "Nous avons recu une demande de reinitialisation de votre mot de passe.",
+            resetUrl,
+            "Ce lien expire dans 1 heure.",
+            "Token de secours",
+            token
+        );
 
         return sendEmail(toEmail, subject, html, text);
     }
@@ -279,6 +302,61 @@ public class EmailService {
         }
         return url;
     }
+
+        private String buildActionEmailHtml(
+            String badge,
+            String title,
+            String recipientName,
+            String intro,
+            String actionLabel,
+            String actionUrl,
+            String expiryText,
+            String tokenLabel,
+            String tokenValue
+        ) {
+        return "<!DOCTYPE html>"
+            + "<html lang=\"fr\">"
+            + "<head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>" + escapeHtml(title) + "</title></head>"
+            + "<body style=\"margin:0; padding:0; background:#f3f8fc; font-family:Segoe UI, Arial, sans-serif; color:#0f172a;\">"
+            + "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#f3f8fc; padding:28px 0;\"><tr><td align=\"center\">"
+                + "<table role=\"presentation\" width=\"620\" cellpadding=\"0\" cellspacing=\"0\" style=\"max-inline-size:620px; background:#ffffff; border-radius:18px; overflow:hidden; box-shadow:0 14px 40px rgba(15,23,42,0.10);\">"
+            + "<tr><td style=\"padding:24px; background:linear-gradient(120deg,#0891b2,#2563eb);\">"
+            + "<p style=\"margin:0 0 8px; color:#dbeafe; font-size:12px; letter-spacing:1px; text-transform:uppercase; font-weight:700;\">" + escapeHtml(badge) + "</p>"
+            + "<h1 style=\"margin:0; color:#ffffff; font-size:25px; line-height:1.2;\">" + escapeHtml(title) + "</h1>"
+            + "</td></tr>"
+            + "<tr><td style=\"padding:26px;\">"
+            + "<p style=\"margin:0 0 12px; font-size:16px; font-weight:700; color:#0f172a;\">Bonjour " + escapeHtml(recipientName) + ",</p>"
+            + "<p style=\"margin:0 0 20px; color:#334155; line-height:1.6; font-size:14px;\">" + escapeHtml(intro) + "</p>"
+            + "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\"><tr><td>"
+            + "<a href=\"" + escapeHtml(actionUrl) + "\" style=\"display:inline-block; background:linear-gradient(120deg,#0891b2,#2563eb); color:#ffffff; text-decoration:none; font-weight:700; padding:12px 18px; border-radius:10px;\">" + escapeHtml(actionLabel) + "</a>"
+            + "</td></tr></table>"
+            + "<p style=\"margin:16px 0 6px; color:#64748b; font-size:12px;\">" + escapeHtml(expiryText) + "</p>"
+            + "<p style=\"margin:0; color:#64748b; font-size:12px;\">Si le bouton ne fonctionne pas, copiez ce lien:<br><span style=\"color:#0f172a;\">" + escapeHtml(actionUrl) + "</span></p>"
+                + "<div style=\"margin-block-start:14px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:10px 12px;\">"
+            + "<p style=\"margin:0; color:#334155; font-size:12px;\">" + escapeHtml(tokenLabel) + ": <strong>" + escapeHtml(tokenValue) + "</strong></p>"
+            + "</div>"
+            + "</td></tr>"
+            + "<tr><td style=\"padding:16px 26px; background:#f8fafc; color:#64748b; font-size:12px;\">Equipe SANTEA - Message automatique de securite</td></tr>"
+            + "</table></td></tr></table></body></html>";
+        }
+
+        private String buildActionEmailText(
+            String title,
+            String recipientName,
+            String intro,
+            String actionUrl,
+            String expiryText,
+            String tokenLabel,
+            String tokenValue
+        ) {
+        return title + "\n\n"
+            + "Bonjour " + recipientName + ",\n"
+            + intro + "\n\n"
+            + "Lien: " + actionUrl + "\n"
+            + expiryText + "\n"
+            + tokenLabel + ": " + tokenValue + "\n\n"
+            + "Equipe SANTEA";
+        }
 
     private String escapeHtml(String value) {
         if (value == null) {

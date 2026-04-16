@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.StackPane?>
 
@@ -11,14 +10,6 @@
         <fx:include source="components/navbar.fxml"/>
     </top>
     <center>
-        <ScrollPane fitToWidth="true"
-                    hbarPolicy="NEVER"
-                    vbarPolicy="AS_NEEDED"
-                    pannable="true"
-                    styleClass="app-content-scroll">
-            <content>
-                <StackPane fx:id="contentContainer" alignment="TOP_CENTER"/>
-            </content>
-        </ScrollPane>
+        <StackPane fx:id="contentContainer" styleClass="app-content-host"/>
     </center>
 </BorderPane>

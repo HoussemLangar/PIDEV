@@ -5,6 +5,7 @@ import com.santea.navigation.AppNavigator;
 import com.santea.service.AuthService;
 import com.santea.service.AuthSession;
 import com.santea.service.AuthorizationPolicyService;
+import com.santea.service.ContentCommunityService;
 import com.santea.service.HomeDashboardService;
 import com.santea.ui.ConfirmDialogs;
 import javafx.fxml.FXML;
@@ -29,7 +30,6 @@ import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -39,6 +39,7 @@ public class HomeViewController {
     private final AuthService authService = new AuthService();
     private final HomeDashboardService homeDashboardService = new HomeDashboardService();
     private final AuthorizationPolicyService authorizationPolicyService = new AuthorizationPolicyService();
+    private final ContentCommunityService contentCommunityService = new ContentCommunityService();
 
     private String selectedTheme = "light";
 
@@ -93,6 +94,33 @@ public class HomeViewController {
     @FXML
     private VBox contactSection;
 
+    @FXML
+    private Label communityCard1KickerLabel;
+
+    @FXML
+    private Label communityCard1TitleLabel;
+
+    @FXML
+    private Label communityCard1ExcerptLabel;
+
+    @FXML
+    private Label communityCard2KickerLabel;
+
+    @FXML
+    private Label communityCard2TitleLabel;
+
+    @FXML
+    private Label communityCard2ExcerptLabel;
+
+    @FXML
+    private Label communityCard3KickerLabel;
+
+    @FXML
+    private Label communityCard3TitleLabel;
+
+    @FXML
+    private Label communityCard3ExcerptLabel;
+
     private ContextMenu notificationsMenu;
     private ContextMenu messagesMenu;
     private ContextMenu accountMenu;
@@ -102,6 +130,7 @@ public class HomeViewController {
     @FXML
     private void initialize() {
         refreshAuthUi();
+        refreshCommunityHighlights();
     }
 
     @FXML
@@ -202,6 +231,7 @@ public class HomeViewController {
 
     @FXML
     private void handleOpenTeleconsultation() {
+        hideAllMenus();
         if (!guardPremiumAccess()) {
             return;
         }
@@ -210,6 +240,7 @@ public class HomeViewController {
 
     @FXML
     private void handleOpenDocuments() {
+        hideAllMenus();
         if (!guardPremiumAccess()) {
             return;
         }
@@ -218,10 +249,51 @@ public class HomeViewController {
 
     @FXML
     private void handleOpenMessaging() {
+        hideAllMenus();
         if (!guardPremiumAccess()) {
             return;
         }
         AppNavigator.showMessaging();
+    }
+
+    @FXML
+    private void handleOpenAppointments() {
+        hideAllMenus();
+        if (!AuthSession.isAuthenticated()) {
+            AppNavigator.showLogin();
+            return;
+        }
+        AppNavigator.showAppointmentsPage();
+    }
+
+    @FXML
+    private void handleOpenCommunity() {
+        hideAllMenus();
+        if (!AuthSession.isAuthenticated()) {
+            AppNavigator.showLogin();
+            return;
+        }
+
+        if (!guardPremiumAccess()) {
+            return;
+        }
+
+        AppNavigator.showContentCommunityPage();
+    }
+
+    @FXML
+    private void handleOpenPharmacy() {
+        hideAllMenus();
+        if (!AuthSession.isAuthenticated()) {
+            AppNavigator.showLogin();
+            return;
+        }
+
+        if (!guardPremiumAccess()) {
+            return;
+        }
+
+        AppNavigator.showPharmacyPage();
     }
 
     private void scrollTo(Node section) {
@@ -257,11 +329,13 @@ public class HomeViewController {
             hideAllMenus();
             setBadge(notifBadgeLabel, 0);
             setBadge(msgBadgeLabel, 0);
+            refreshCommunityHighlights();
             return;
         }
 
         User user = AuthSession.getCurrentUser();
         if (user == null) {
+            refreshCommunityHighlights();
             return;
         }
 
@@ -270,6 +344,79 @@ public class HomeViewController {
 
         accountAvatarButton.setText(computeInitials(user));
         refreshDashboardData();
+        refreshCommunityHighlights();
+    }
+
+    private void refreshCommunityHighlights() {
+        if (!hasCommunityHighlightsUi()) {
+            return;
+        }
+
+        List<ContentCommunityService.HomeHighlight> highlights = contentCommunityService.loadHomeHighlights(3);
+        if (highlights.isEmpty()) {
+            return;
+        }
+
+        for (int i = 0; i < highlights.size(); i++) {
+            ContentCommunityService.HomeHighlight highlight = highlights.get(i);
+            applyCommunityCard(i, highlight);
+        }
+    }
+
+    private void applyCommunityCard(int index, ContentCommunityService.HomeHighlight highlight) {
+        if (highlight == null || !hasCommunityHighlightsUi()) {
+            return;
+        }
+
+        String kicker = communityKicker(highlight);
+        String title = safe(highlight.title());
+        String excerpt = safe(highlight.excerpt());
+
+        switch (index) {
+            case 0 -> {
+                communityCard1KickerLabel.setText(kicker);
+                communityCard1TitleLabel.setText(title);
+                communityCard1ExcerptLabel.setText(excerpt);
+            }
+            case 1 -> {
+                communityCard2KickerLabel.setText(kicker);
+                communityCard2TitleLabel.setText(title);
+                communityCard2ExcerptLabel.setText(excerpt);
+            }
+            case 2 -> {
+                communityCard3KickerLabel.setText(kicker);
+                communityCard3TitleLabel.setText(title);
+                communityCard3ExcerptLabel.setText(excerpt);
+            }
+            default -> {
+            }
+        }
+    }
+
+    private boolean hasCommunityHighlightsUi() {
+        return communityCard1KickerLabel != null
+                && communityCard1TitleLabel != null
+                && communityCard1ExcerptLabel != null
+                && communityCard2KickerLabel != null
+                && communityCard2TitleLabel != null
+                && communityCard2ExcerptLabel != null
+                && communityCard3KickerLabel != null
+                && communityCard3TitleLabel != null
+                && communityCard3ExcerptLabel != null;
+    }
+
+    private String communityKicker(ContentCommunityService.HomeHighlight highlight) {
+        String category = safe(highlight.category());
+        if (!category.isBlank()) {
+            return category.toUpperCase();
+        }
+
+        String type = safe(highlight.type());
+        if (!type.isBlank()) {
+            return type.toUpperCase();
+        }
+
+        return "COMMUNITY";
     }
 
     private void refreshDashboardData() {
@@ -589,8 +736,11 @@ public class HomeViewController {
         if (isPatient || isMedecin) {
             body.getChildren().add(createAccountButton("Rendez-vous", "fas-calendar-check", this::openAppointmentsPage));
         }
-        if (isPharmacien) {
-            body.getChildren().add(createAccountButton("Ma pharmacie", "fas-clinic-medical", this::openPharmacyPage));
+        body.getChildren().add(createAccountButton("Communaute", "fas-newspaper", this::openContentCommunityPage));
+        boolean canOpenPharmacy = authorizationPolicyService.decisionForProtectedFeatures(user).allowed();
+        if (canOpenPharmacy) {
+            String pharmacyLabel = isPharmacien ? "Ma pharmacie" : "Pharmacies";
+            body.getChildren().add(createAccountButton(pharmacyLabel, "fas-clinic-medical", this::openPharmacyPage));
         }
         if (canAiTools) {
             body.getChildren().add(createAccountButton("Outils IA", "fas-robot", this::openAiToolsPage));
@@ -786,25 +936,25 @@ public class HomeViewController {
     }
 
     private void openAppointmentsPage() {
-        if (!guardPremiumAccess()) {
+        if (!AuthSession.isAuthenticated()) {
+            AppNavigator.showLogin();
             return;
         }
-        AppNavigator.showFeaturePage("Rendez-vous", "Gestion des consultations", List.of(
-                "Rendez-vous a venir",
-                "Historique",
-                "Prendre un nouveau rendez-vous"
-        ));
+        AppNavigator.showAppointmentsPage();
     }
 
     private void openPharmacyPage() {
         if (!guardPremiumAccess()) {
             return;
         }
-        AppNavigator.showFeaturePage("Ma pharmacie", "Espace pharmacie", List.of(
-                "Stock des medicaments",
-                "Ordonnances recues",
-                "Demandes clients"
-        ));
+        AppNavigator.showPharmacyPage();
+    }
+
+    private void openContentCommunityPage() {
+        if (!guardPremiumAccess()) {
+            return;
+        }
+        AppNavigator.showContentCommunityPage();
     }
 
     private void openNotificationPage(HomeDashboardService.NotificationPreview notification) {

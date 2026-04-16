@@ -21,7 +21,8 @@
         <Hyperlink text="Accueil" styleClass="home-nav-link" onAction="#handleScrollToTop"/>
         <Hyperlink text="À propos" styleClass="home-nav-link" onAction="#handleScrollToAbout"/>
         <Hyperlink text="Services" styleClass="home-nav-link" onAction="#handleScrollToServices"/>
-        <Hyperlink text="Blog" styleClass="home-nav-link" onAction="#handleScrollToBlog"/>
+        <Hyperlink text="Community" styleClass="home-nav-link" onAction="#handleOpenCommunity"/>
+        <Hyperlink text="Rendez-Vous" styleClass="home-nav-link" onAction="#handleOpenAppointments"/>
         <Hyperlink text="Contact" styleClass="home-nav-link" onAction="#handleScrollToContact"/>
     </HBox>
 
