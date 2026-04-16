@@ -2,6 +2,9 @@
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/Main.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/config/DatabaseConfig.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/config/MailConfig.java
+/home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/controller/AccompanimentPlanCreateController.java
+/home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/controller/AccompanimentPlanShowController.java
+/home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/controller/AccompanimentPlansController.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/controller/AdminDashboardController.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/controller/AdminFaceVerificationController.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/controller/AppBaseViewController.java
@@ -81,6 +84,7 @@
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/repository/DocumentRepository.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/repository/TeleconsultationRepository.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/repository/UserRepository.java
+/home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/service/AccompanimentPlanService.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/service/AdminDashboardService.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/service/AdminOperationsService.java
 /home/pi-dev/PIDEV/javafx-app/src/main/java/com/santea/service/AuthService.java

@@ -16,6 +16,7 @@ com/santea/service/GoogleOAuthService$GoogleProfile.class
 com/santea/model/DocumentAccess.class
 com/santea/service/TeleconsultationService.class
 com/santea/controller/RegisterViewController.class
+com/santea/controller/MessagingController$3.class
 com/santea/model/StockPharmacy.class
 com/santea/service/GoogleOAuthService$RedirectConfig.class
 com/santea/service/SubscriptionService$SubscriptionOverview.class
@@ -59,6 +60,7 @@ com/santea/service/ProfileService$ProfileResult.class
 com/santea/service/InvoiceService$InvoiceResult.class
 com/santea/navigation/ModuleContext.class
 com/santea/service/TwoFactorService.class
+com/santea/service/AccompanimentPlanService$AiSuggestions.class
 com/santea/service/AuthService$LoginFailureReason.class
 com/santea/model/SharedDocument.class
 com/santea/model/SuspiciousLogin.class
@@ -114,7 +116,9 @@ com/santea/model/RendezVous.class
 com/santea/model/Notification.class
 com/santea/model/UserSession.class
 com/santea/controller/MessagingController$2.class
+com/santea/controller/AccompanimentPlansController$StackPaneLike.class
 com/santea/controller/AdminFaceVerificationController$OpenCvSelection.class
+com/santea/controller/AccompanimentPlansController.class
 com/santea/model/AccompanimentPlan.class
 com/santea/controller/SubscriptionViewController$1.class
 com/santea/service/AuthService$ForgotPasswordResult.class
@@ -128,6 +132,7 @@ com/santea/service/AuthSession.class
 com/santea/model/Nutritionniste.class
 com/santea/controller/HomeViewController.class
 com/santea/service/SubscriptionService.class
+com/santea/controller/AccompanimentPlanCreateController.class
 com/santea/service/InvoiceService$InvoiceContext.class
 com/santea/model/Patient.class
 com/santea/controller/DocumentShareController$1.class
@@ -141,8 +146,10 @@ com/santea/controller/LoginViewController$1.class
 com/santea/service/AdminOperationsService.class
 com/santea/service/HomeDashboardService.class
 com/santea/controller/DocumentUploadController.class
+com/santea/service/AccompanimentPlanService.class
 com/santea/controller/SubscriptionViewController$2.class
 com/santea/service/AdminOperationsService$UserScoreSummary.class
+com/santea/controller/AccompanimentPlanShowController.class
 com/santea/model/Abonnement.class
 com/santea/Launcher.class
 com/santea/controller/FeaturePageController.class

@@ -50,7 +50,8 @@
             <HBox alignment="CENTER_LEFT">
                 <Label text="Accès actifs" styleClass="doc-panel-title"/>
                 <Region HBox.hgrow="ALWAYS"/>
-                <Button fx:id="revokeButton" text="Révoquer" styleClass="btn-danger"/>
+                <Button fx:id="updateButton" text="Mettre à jour" styleClass="btn-info"/>
+                <Button fx:id="deleteButton" text="Supprimer" styleClass="btn-danger"/>
             </HBox>
             <Separator/>
             <ListView fx:id="accessListView" VBox.vgrow="ALWAYS" styleClass="document-list"/>

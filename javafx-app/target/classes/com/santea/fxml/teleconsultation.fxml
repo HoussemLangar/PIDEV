@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import java.lang.String?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
@@ -27,27 +28,49 @@
                 </VBox>
             </HBox>
             <Region HBox.hgrow="ALWAYS"/>
-            <Button fx:id="scheduleConsultationButton" text="Planifier une consultation" styleClass="btn-primary tele-header-btn"/>
+            <Button fx:id="scheduleConsultationButton" text="Planifier une consultation">
+                <styleClass>
+                    <String fx:value="btn-primary"/>
+                    <String fx:value="tele-header-btn"/>
+                    <String fx:value="tele-schedule-btn"/>
+                </styleClass>
+            </Button>
         </HBox>
 
         <FlowPane hgap="16" vgap="16" styleClass="tele-stats-grid">
             <children>
-                <VBox spacing="6" styleClass="tele-stat-card tele-stat-completed">
+                <VBox spacing="6">
+                    <styleClass>
+                        <String fx:value="tele-stat-card"/>
+                        <String fx:value="tele-stat-completed"/>
+                    </styleClass>
                     <Label text="Complétées" styleClass="tele-stat-badge"/>
                     <Label fx:id="completedCountLabel" text="0" styleClass="tele-stat-value"/>
                     <Label text="Consultations réalisées" styleClass="tele-stat-caption"/>
                 </VBox>
-                <VBox spacing="6" styleClass="tele-stat-card tele-stat-pending">
+                <VBox spacing="6">
+                    <styleClass>
+                        <String fx:value="tele-stat-card"/>
+                        <String fx:value="tele-stat-pending"/>
+                    </styleClass>
                     <Label text="En attente" styleClass="tele-stat-badge"/>
                     <Label fx:id="pendingCountLabel" text="0" styleClass="tele-stat-value"/>
                     <Label text="Rendez-vous à venir" styleClass="tele-stat-caption"/>
                 </VBox>
-                <VBox spacing="6" styleClass="tele-stat-card tele-stat-duration">
+                <VBox spacing="6">
+                    <styleClass>
+                        <String fx:value="tele-stat-card"/>
+                        <String fx:value="tele-stat-duration"/>
+                    </styleClass>
                     <Label text="Durée" styleClass="tele-stat-badge"/>
                     <Label fx:id="hoursCountLabel" text="0" styleClass="tele-stat-value"/>
                     <Label text="Heures totales" styleClass="tele-stat-caption"/>
                 </VBox>
-                <VBox spacing="6" styleClass="tele-stat-card tele-stat-average">
+                <VBox spacing="6">
+                    <styleClass>
+                        <String fx:value="tele-stat-card"/>
+                        <String fx:value="tele-stat-average"/>
+                    </styleClass>
                     <Label text="Moyenne" styleClass="tele-stat-badge"/>
                     <Label fx:id="averageMinutesLabel" text="0" styleClass="tele-stat-value"/>
                     <Label text="Minutes par session" styleClass="tele-stat-caption"/>
