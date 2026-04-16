@@ -255,6 +255,21 @@ public class HomeViewController {
         AppNavigator.showContentCommunityPage();
     }
 
+    @FXML
+    private void handleOpenPharmacy() {
+        hideAllMenus();
+        if (!AuthSession.isAuthenticated()) {
+            AppNavigator.showLogin();
+            return;
+        }
+
+        if (!guardPremiumAccess()) {
+            return;
+        }
+
+        AppNavigator.showPharmacyPage();
+    }
+
     private void scrollTo(Node section) {
         if (homeScroll == null || section == null || homeScroll.getContent() == null) {
             AppNavigator.showHome();
@@ -696,8 +711,10 @@ public class HomeViewController {
             body.getChildren().add(createAccountButton("Rendez-vous", "fas-calendar-check", this::openAppointmentsPage));
         }
         body.getChildren().add(createAccountButton("Communaute", "fas-newspaper", this::openContentCommunityPage));
-        if (isPharmacien) {
-            body.getChildren().add(createAccountButton("Ma pharmacie", "fas-clinic-medical", this::openPharmacyPage));
+        boolean canOpenPharmacy = authorizationPolicyService.decisionForProtectedFeatures(user).allowed();
+        if (canOpenPharmacy) {
+            String pharmacyLabel = isPharmacien ? "Ma pharmacie" : "Pharmacies";
+            body.getChildren().add(createAccountButton(pharmacyLabel, "fas-clinic-medical", this::openPharmacyPage));
         }
         if (canAiTools) {
             body.getChildren().add(createAccountButton("Outils IA", "fas-robot", this::openAiToolsPage));
@@ -924,11 +941,7 @@ public class HomeViewController {
         if (!guardPremiumAccess()) {
             return;
         }
-        AppNavigator.showFeaturePage("Ma pharmacie", "Espace pharmacie", List.of(
-                "Stock des medicaments",
-                "Ordonnances recues",
-                "Demandes clients"
-        ));
+        AppNavigator.showPharmacyPage();
     }
 
     private void openContentCommunityPage() {

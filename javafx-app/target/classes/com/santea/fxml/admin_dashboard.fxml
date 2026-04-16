@@ -21,7 +21,7 @@
             styleClass="bo-root">
 
     <left>
-        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED"
+        <ScrollPane fitToWidth="true" pannable="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED"
                     prefWidth="236" minWidth="236" maxWidth="236" styleClass="bo-sidebar-scroll">
             <content>
                 <VBox styleClass="bo-sidebar" spacing="12">
@@ -55,6 +55,10 @@
 
                     <VBox styleClass="bo-nav-group" spacing="4">
                         <Label text="SERVICES MEDICAUX" styleClass="bo-nav-section"/>
+                        <Button fx:id="navPharmaciesAdminButton" text="Pharmacies" styleClass="bo-nav-btn" onAction="#handleNavPharmaciesAdmin"/>
+                        <Button fx:id="navMedicamentsAdminButton" text="Medicaments" styleClass="bo-nav-btn" onAction="#handleNavMedicamentsAdmin"/>
+                        <Button fx:id="navStocksAdminButton" text="Stocks" styleClass="bo-nav-btn" onAction="#handleNavStocksAdmin"/>
+                        <Button fx:id="navReservationsAdminButton" text="Reservations" styleClass="bo-nav-btn" onAction="#handleNavReservationsAdmin"/>
                         <Button text="Accompagnements" styleClass="bo-nav-btn bo-nav-btn-disabled" disable="true"/>
                     </VBox>
 
@@ -378,6 +382,92 @@
                                 <Label fx:id="revenuesPaginationInfoLabel" text="Affichage 0-0 sur 0" styleClass="bo-pagination-label"/>
                                 <Button fx:id="revenuesPrevPageButton" text="Prev" styleClass="bo-view-btn" onAction="#handleRevenuesPrevPage"/>
                                 <Button fx:id="revenuesNextPageButton" text="Next" styleClass="bo-view-btn" onAction="#handleRevenuesNextPage"/>
+                            </HBox>
+                        </VBox>
+
+                        <VBox fx:id="pagePharmaciesAdmin" spacing="12" visible="false" managed="false">
+                            <FlowPane hgap="10" vgap="10" prefWrapLength="1000">
+                                <Label fx:id="pharmaciesAdminTotalLabel" text="Total: 0" styleClass="bo-page-chip"/>
+                                <Label fx:id="pharmaciesAdminActiveLabel" text="Actives: 0" styleClass="bo-page-chip"/>
+                                <Label fx:id="pharmaciesAdminInactiveLabel" text="Inactives: 0" styleClass="bo-page-chip"/>
+                            </FlowPane>
+                            <HBox spacing="8" styleClass="bo-table-filters">
+                                <TextField fx:id="pharmaciesAdminSearchField" promptText="Rechercher nom, adresse, contact..." HBox.hgrow="ALWAYS"/>
+                                <ComboBox fx:id="pharmaciesAdminStatusFilterCombo" prefWidth="170"/>
+                                <Button text="Filtrer" styleClass="bo-view-btn" onAction="#handlePharmaciesAdminApplyFilters"/>
+                                <Button text="Ajouter" styleClass="bo-view-btn" onAction="#handlePharmaciesAdminCreate"/>
+                                <Button fx:id="pharmaciesAdminListModeButton" text="Liste" styleClass="bo-view-btn" onAction="#handlePharmaciesAdminListMode"/>
+                                <Button fx:id="pharmaciesAdminGridModeButton" text="Grille" styleClass="bo-view-btn" onAction="#handlePharmaciesAdminGridMode"/>
+                            </HBox>
+                            <FlowPane fx:id="pharmaciesAdminRowsBox" styleClass="bo-items-container bo-items-list" hgap="10" vgap="10" prefWrapLength="2200"/>
+                            <HBox spacing="8" alignment="CENTER_RIGHT" styleClass="bo-pagination-wrap">
+                                <Label fx:id="pharmaciesAdminPaginationInfoLabel" text="Affichage 0-0 sur 0" styleClass="bo-pagination-label"/>
+                                <Button fx:id="pharmaciesAdminPrevPageButton" text="Prev" styleClass="bo-view-btn" onAction="#handlePharmaciesAdminPrevPage"/>
+                                <Button fx:id="pharmaciesAdminNextPageButton" text="Next" styleClass="bo-view-btn" onAction="#handlePharmaciesAdminNextPage"/>
+                            </HBox>
+                        </VBox>
+
+                        <VBox fx:id="pageMedicamentsAdmin" spacing="12" visible="false" managed="false">
+                            <FlowPane hgap="10" vgap="10" prefWrapLength="1000">
+                                <Label fx:id="medicamentsAdminTotalLabel" text="Total: 0" styleClass="bo-page-chip"/>
+                                <Label fx:id="medicamentsAdminTypeCountLabel" text="Types: 0" styleClass="bo-page-chip"/>
+                            </FlowPane>
+                            <HBox spacing="8" styleClass="bo-table-filters">
+                                <TextField fx:id="medicamentsAdminSearchField" promptText="Rechercher nom, type, code barre..." HBox.hgrow="ALWAYS"/>
+                                <ComboBox fx:id="medicamentsAdminTypeFilterCombo" prefWidth="170"/>
+                                <Button text="Filtrer" styleClass="bo-view-btn" onAction="#handleMedicamentsAdminApplyFilters"/>
+                                <Button text="Ajouter" styleClass="bo-view-btn" onAction="#handleMedicamentsAdminCreate"/>
+                                <Button fx:id="medicamentsAdminListModeButton" text="Liste" styleClass="bo-view-btn" onAction="#handleMedicamentsAdminListMode"/>
+                                <Button fx:id="medicamentsAdminGridModeButton" text="Grille" styleClass="bo-view-btn" onAction="#handleMedicamentsAdminGridMode"/>
+                            </HBox>
+                            <FlowPane fx:id="medicamentsAdminRowsBox" styleClass="bo-items-container bo-items-list" hgap="10" vgap="10" prefWrapLength="2200"/>
+                            <HBox spacing="8" alignment="CENTER_RIGHT" styleClass="bo-pagination-wrap">
+                                <Label fx:id="medicamentsAdminPaginationInfoLabel" text="Affichage 0-0 sur 0" styleClass="bo-pagination-label"/>
+                                <Button fx:id="medicamentsAdminPrevPageButton" text="Prev" styleClass="bo-view-btn" onAction="#handleMedicamentsAdminPrevPage"/>
+                                <Button fx:id="medicamentsAdminNextPageButton" text="Next" styleClass="bo-view-btn" onAction="#handleMedicamentsAdminNextPage"/>
+                            </HBox>
+                        </VBox>
+
+                        <VBox fx:id="pageStocksAdmin" spacing="12" visible="false" managed="false">
+                            <FlowPane hgap="10" vgap="10" prefWrapLength="1000">
+                                <Label fx:id="stocksAdminTotalLabel" text="Total: 0" styleClass="bo-page-chip"/>
+                                <Label fx:id="stocksAdminCriticalLabel" text="Critiques: 0" styleClass="bo-page-chip"/>
+                            </FlowPane>
+                            <HBox spacing="8" styleClass="bo-table-filters">
+                                <TextField fx:id="stocksAdminSearchField" promptText="Rechercher pharmacie ou medicament..." HBox.hgrow="ALWAYS"/>
+                                <ComboBox fx:id="stocksAdminLevelFilterCombo" prefWidth="180"/>
+                                <Button text="Filtrer" styleClass="bo-view-btn" onAction="#handleStocksAdminApplyFilters"/>
+                                <Button text="Ajouter" styleClass="bo-view-btn" onAction="#handleStocksAdminCreate"/>
+                                <Button fx:id="stocksAdminListModeButton" text="Liste" styleClass="bo-view-btn" onAction="#handleStocksAdminListMode"/>
+                                <Button fx:id="stocksAdminGridModeButton" text="Grille" styleClass="bo-view-btn" onAction="#handleStocksAdminGridMode"/>
+                            </HBox>
+                            <FlowPane fx:id="stocksAdminRowsBox" styleClass="bo-items-container bo-items-list" hgap="10" vgap="10" prefWrapLength="2200"/>
+                            <HBox spacing="8" alignment="CENTER_RIGHT" styleClass="bo-pagination-wrap">
+                                <Label fx:id="stocksAdminPaginationInfoLabel" text="Affichage 0-0 sur 0" styleClass="bo-pagination-label"/>
+                                <Button fx:id="stocksAdminPrevPageButton" text="Prev" styleClass="bo-view-btn" onAction="#handleStocksAdminPrevPage"/>
+                                <Button fx:id="stocksAdminNextPageButton" text="Next" styleClass="bo-view-btn" onAction="#handleStocksAdminNextPage"/>
+                            </HBox>
+                        </VBox>
+
+                        <VBox fx:id="pageReservationsAdmin" spacing="12" visible="false" managed="false">
+                            <FlowPane hgap="10" vgap="10" prefWrapLength="1000">
+                                <Label fx:id="reservationsAdminTotalLabel" text="Total: 0" styleClass="bo-page-chip"/>
+                                <Label fx:id="reservationsAdminPendingLabel" text="En attente: 0" styleClass="bo-page-chip"/>
+                                <Label fx:id="reservationsAdminConfirmedLabel" text="Confirmees: 0" styleClass="bo-page-chip"/>
+                                <Label fx:id="reservationsAdminClosedLabel" text="Cloturees: 0" styleClass="bo-page-chip"/>
+                            </FlowPane>
+                            <HBox spacing="8" styleClass="bo-table-filters">
+                                <TextField fx:id="reservationsAdminSearchField" promptText="Rechercher patient, pharmacie, medicament..." HBox.hgrow="ALWAYS"/>
+                                <ComboBox fx:id="reservationsAdminStatusFilterCombo" prefWidth="190"/>
+                                <Button text="Filtrer" styleClass="bo-view-btn" onAction="#handleReservationsAdminApplyFilters"/>
+                                <Button fx:id="reservationsAdminListModeButton" text="Liste" styleClass="bo-view-btn" onAction="#handleReservationsAdminListMode"/>
+                                <Button fx:id="reservationsAdminGridModeButton" text="Grille" styleClass="bo-view-btn" onAction="#handleReservationsAdminGridMode"/>
+                            </HBox>
+                            <FlowPane fx:id="reservationsAdminRowsBox" styleClass="bo-items-container bo-items-list" hgap="10" vgap="10" prefWrapLength="2200"/>
+                            <HBox spacing="8" alignment="CENTER_RIGHT" styleClass="bo-pagination-wrap">
+                                <Label fx:id="reservationsAdminPaginationInfoLabel" text="Affichage 0-0 sur 0" styleClass="bo-pagination-label"/>
+                                <Button fx:id="reservationsAdminPrevPageButton" text="Prev" styleClass="bo-view-btn" onAction="#handleReservationsAdminPrevPage"/>
+                                <Button fx:id="reservationsAdminNextPageButton" text="Next" styleClass="bo-view-btn" onAction="#handleReservationsAdminNextPage"/>
                             </HBox>
                         </VBox>
 

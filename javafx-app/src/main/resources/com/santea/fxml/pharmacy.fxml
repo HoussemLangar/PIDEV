@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.String?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Pagination?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<StackPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+		   fx:controller="com.santea.controller.PharmacyViewController"
+		   styleClass="pharm-page-root">
+
+	<ScrollPane fx:id="pharmacyScrollPane" fitToWidth="true" pannable="true" vbarPolicy="AS_NEEDED" hbarPolicy="NEVER" styleClass="pharm-scroll">
+		<content>
+			<StackPane alignment="TOP_CENTER" styleClass="pharm-center-wrap">
+				<VBox fx:id="root" spacing="16" alignment="TOP_CENTER" maxWidth="1400">
+					<styleClass>
+						<String fx:value="pharm-shell"/>
+						<String fx:value="profile-content-shell"/>
+					</styleClass>
+					<padding>
+						<Insets top="24" right="20" bottom="28" left="20"/>
+					</padding>
+
+					<VBox spacing="12" maxWidth="1280" styleClass="pharm-hero-card">
+						<HBox alignment="CENTER_LEFT" spacing="12">
+							<Label fx:id="heroChipLabel" text="Module Pharmacie" styleClass="pharm-chip"/>
+							<Label fx:id="heroStatusLabel" text="Temps reel" styleClass="pharm-chip-status"/>
+							<HBox alignment="CENTER_RIGHT" spacing="8" HBox.hgrow="ALWAYS">
+								<Button text="Mes reservations" styleClass="pharm-hero-btn-ghost" onAction="#handleFocusReservations"/>
+								<Button text="Assistant IA" styleClass="pharm-hero-btn" onAction="#handleOpenAiAssistant"/>
+							</HBox>
+						</HBox>
+
+						<Label fx:id="heroTitleLabel" text="Recherche et comparaison" styleClass="pharm-hero-title"/>
+						<Label fx:id="heroSubtitleLabel" text="Trouvez une pharmacie, comparez les prix et gerez vos reservations." styleClass="pharm-hero-subtitle" wrapText="true"/>
+					</VBox>
+
+					<VBox fx:id="blockedCard" spacing="8" maxWidth="1280" styleClass="pharm-restricted-card" visible="false" managed="false">
+						<Label text="Acces restreint" styleClass="pharm-restricted-title"/>
+						<Label fx:id="blockedMessageLabel" text="Abonnement actif requis." styleClass="pharm-restricted-text" wrapText="true"/>
+						<Button text="Choisir un abonnement" onAction="#handleOpenSubscription">
+							<styleClass>
+								<String fx:value="pharm-btn"/>
+								<String fx:value="pharm-btn-primary"/>
+							</styleClass>
+						</Button>
+					</VBox>
+
+					<VBox fx:id="moduleContent" spacing="12" maxWidth="1280">
+						<HBox alignment="CENTER_LEFT" spacing="10" styleClass="pharm-switch-row">
+							<Button fx:id="pharmaciesSectionButton" text="Pharmacies" styleClass="pharm-switch-btn" onAction="#handleSectionPharmacies"/>
+							<Button fx:id="medicamentsSectionButton" text="Medicaments" styleClass="pharm-switch-btn" onAction="#handleSectionMedicaments"/>
+							<Button fx:id="reservationsSectionButton" text="Reservations" styleClass="pharm-switch-btn" onAction="#handleSectionReservations"/>
+						</HBox>
+
+						<Label fx:id="feedbackLabel" text="" styleClass="pharm-feedback"/>
+
+						<VBox fx:id="pharmaciesSection" spacing="12">
+							<VBox spacing="10" styleClass="pharm-panel">
+								<HBox alignment="CENTER_LEFT" spacing="10">
+									<Label text="Recherche pharmacies" styleClass="pharm-panel-title"/>
+									<TextField fx:id="pharmacySearchField" promptText="Nom pharmacie ou adresse" styleClass="pharm-input" HBox.hgrow="ALWAYS"/>
+									<TextField fx:id="pharmacyContactFilterField" promptText="Contact (email/tel)" styleClass="pharm-input" prefWidth="170"/>
+									<ComboBox fx:id="pharmacyActiveFilterCombo" promptText="Statut" styleClass="pharm-input" prefWidth="130"/>
+									<Button text="Rechercher" onAction="#handleSearchPharmacies">
+										<styleClass>
+											<String fx:value="pharm-btn"/>
+											<String fx:value="pharm-btn-primary"/>
+											<String fx:value="pharm-filter-btn"/>
+										</styleClass>
+									</Button>
+									<Button text="Reinitialiser" onAction="#handleResetPharmacyFilters">
+										<styleClass>
+											<String fx:value="pharm-btn"/>
+											<String fx:value="pharm-btn-secondary"/>
+											<String fx:value="pharm-filter-btn"/>
+										</styleClass>
+									</Button>
+								</HBox>
+								<FlowPane fx:id="publicPharmaciesPane" hgap="10" vgap="10" prefWrapLength="1180"/>
+								<Pagination fx:id="publicPharmaciesPagination" visible="false" managed="false"/>
+							</VBox>
+
+							<VBox fx:id="managedPharmacyToolsCard" spacing="10" styleClass="pharm-panel" visible="false" managed="false">
+								<HBox alignment="CENTER_LEFT" spacing="10">
+									<Label text="Gestion pharmacies" styleClass="pharm-panel-title"/>
+									<Region HBox.hgrow="ALWAYS"/>
+									<Button fx:id="openPharmacyFormButton" text="Ajouter pharmacie" onAction="#handleTogglePharmacyForm">
+										<styleClass>
+											<String fx:value="pharm-btn"/>
+											<String fx:value="pharm-btn-primary"/>
+											<String fx:value="pharm-add-btn"/>
+										</styleClass>
+									</Button>
+								</HBox>
+								<VBox fx:id="pharmacyFormBox" spacing="8" visible="false" managed="false">
+									<FlowPane hgap="10" vgap="10" prefWrapLength="1180">
+										<TextField fx:id="pharmacyNomInput" promptText="Nom" styleClass="pharm-input" prefWidth="210"/>
+										<TextField fx:id="pharmacyAdresseInput" promptText="Adresse" styleClass="pharm-input" prefWidth="320"/>
+										<TextField fx:id="pharmacyTelephoneInput" promptText="Telephone" styleClass="pharm-input" prefWidth="140"/>
+										<TextField fx:id="pharmacyEmailInput" promptText="Email" styleClass="pharm-input" prefWidth="220"/>
+										<TextField fx:id="pharmacyHorairesInput" promptText="Horaires" styleClass="pharm-input" prefWidth="180"/>
+										<Button fx:id="pharmacySubmitButton" text="Creer pharmacie" onAction="#handleCreatePharmacy">
+											<styleClass>
+												<String fx:value="pharm-btn"/>
+												<String fx:value="pharm-btn-primary"/>
+												<String fx:value="pharm-save-btn"/>
+											</styleClass>
+										</Button>
+										<Button text="Reinitialiser" onAction="#handleResetPharmacyForm">
+											<styleClass>
+												<String fx:value="pharm-btn"/>
+												<String fx:value="pharm-btn-secondary"/>
+											</styleClass>
+										</Button>
+									</FlowPane>
+								</VBox>
+								<FlowPane fx:id="managedPharmaciesBox" hgap="10" vgap="10" prefWrapLength="1180"/>
+								<Pagination fx:id="managedPharmaciesPagination" visible="false" managed="false"/>
+							</VBox>
+						</VBox>
+
+						<VBox fx:id="medicamentsSection" spacing="12" visible="false" managed="false">
+							<VBox spacing="10" styleClass="pharm-panel">
+								<HBox alignment="CENTER_LEFT" spacing="10">
+									<Label text="Catalogue medicaments" styleClass="pharm-panel-title"/>
+									<TextField fx:id="medicamentSearchField" promptText="Nom, type, code barre" styleClass="pharm-input" HBox.hgrow="ALWAYS"/>
+									<TextField fx:id="medicamentTypeFilterField" promptText="Filtre type" styleClass="pharm-input" prefWidth="140"/>
+									<Button text="Rechercher" onAction="#handleSearchMedicaments">
+										<styleClass>
+											<String fx:value="pharm-btn"/>
+											<String fx:value="pharm-btn-primary"/>
+											<String fx:value="pharm-filter-btn"/>
+										</styleClass>
+									</Button>
+									<Button text="Reinitialiser" onAction="#handleResetMedicamentFilters">
+										<styleClass>
+											<String fx:value="pharm-btn"/>
+											<String fx:value="pharm-btn-secondary"/>
+											<String fx:value="pharm-filter-btn"/>
+										</styleClass>
+									</Button>
+								</HBox>
+								<FlowPane fx:id="medicamentsPane" hgap="10" vgap="10" prefWrapLength="1180"/>
+								<Pagination fx:id="medicamentsPagination" visible="false" managed="false"/>
+							</VBox>
+
+							<VBox fx:id="managedMedicamentToolsCard" spacing="10" styleClass="pharm-panel" visible="false" managed="false">
+								<HBox alignment="CENTER_LEFT" spacing="10">
+									<Label text="Gestion medicaments &amp; stock" styleClass="pharm-panel-title"/>
+									<Region HBox.hgrow="ALWAYS"/>
+									<Button fx:id="openMedicamentFormButton" text="Ajouter medicament" onAction="#handleToggleMedicamentForm">
+										<styleClass>
+											<String fx:value="pharm-btn"/>
+											<String fx:value="pharm-btn-primary"/>
+											<String fx:value="pharm-add-btn"/>
+										</styleClass>
+									</Button>
+								</HBox>
+								<VBox fx:id="medicamentFormBox" spacing="8" visible="false" managed="false">
+									<FlowPane hgap="10" vgap="10" prefWrapLength="1180">
+										<TextField fx:id="medicamentNomInput" promptText="Nom medicament" styleClass="pharm-input" prefWidth="220"/>
+										<TextField fx:id="medicamentTypeInput" promptText="Type" styleClass="pharm-input" prefWidth="130"/>
+										<TextField fx:id="medicamentFormeInput" promptText="Forme" styleClass="pharm-input" prefWidth="130"/>
+										<TextField fx:id="medicamentDosageInput" promptText="Dosage" styleClass="pharm-input" prefWidth="130"/>
+										<TextField fx:id="medicamentPrixInput" promptText="Prix" styleClass="pharm-input" prefWidth="110"/>
+										<TextField fx:id="medicamentCodeBarreInput" promptText="Code barre" styleClass="pharm-input" prefWidth="150"/>
+										<Button fx:id="medicamentSubmitButton" text="Ajouter medicament" onAction="#handleCreateMedicament">
+											<styleClass>
+												<String fx:value="pharm-btn"/>
+												<String fx:value="pharm-btn-primary"/>
+												<String fx:value="pharm-save-btn"/>
+											</styleClass>
+										</Button>
+										<Button text="Reinitialiser" onAction="#handleResetMedicamentForm">
+											<styleClass>
+												<String fx:value="pharm-btn"/>
+												<String fx:value="pharm-btn-secondary"/>
+											</styleClass>
+										</Button>
+									</FlowPane>
+								</VBox>
+
+								<FlowPane fx:id="managedMedicamentsBox" hgap="10" vgap="10" prefWrapLength="1180"/>
+								<Pagination fx:id="managedMedicamentsPagination" visible="false" managed="false"/>
+
+								<FlowPane hgap="10" vgap="10" prefWrapLength="1180">
+									<ComboBox fx:id="stockPharmacyCombo" promptText="Pharmacie" styleClass="pharm-input" prefWidth="280"/>
+									<ComboBox fx:id="stockMedicamentCombo" promptText="Medicament" styleClass="pharm-input" prefWidth="280"/>
+									<TextField fx:id="stockQuantiteInput" promptText="Quantite" styleClass="pharm-input" prefWidth="120"/>
+									<TextField fx:id="stockPrixInput" promptText="Prix vente" styleClass="pharm-input" prefWidth="130"/>
+									<Button text="Ajouter stock" onAction="#handleCreateStock">
+										<styleClass>
+											<String fx:value="pharm-btn"/>
+											<String fx:value="pharm-btn-secondary"/>
+											<String fx:value="pharm-add-btn"/>
+										</styleClass>
+									</Button>
+								</FlowPane>
+
+								<FlowPane fx:id="managedStocksBox" hgap="10" vgap="10" prefWrapLength="1180"/>
+								<Pagination fx:id="managedStocksPagination" visible="false" managed="false"/>
+							</VBox>
+						</VBox>
+
+						<VBox fx:id="reservationsSection" spacing="12" visible="false" managed="false">
+							<Label fx:id="reservationsHintLabel" text="" styleClass="pharm-panel-subtitle"/>
+							<HBox alignment="CENTER_LEFT" spacing="10">
+								<Label text="Filtre reservations" styleClass="pharm-panel-subtitle"/>
+								<ComboBox fx:id="reservationStatusFilterCombo" promptText="Statut" styleClass="pharm-input" prefWidth="180"/>
+								<Button text="Appliquer" onAction="#handleApplyReservationFilters">
+									<styleClass>
+										<String fx:value="pharm-btn"/>
+										<String fx:value="pharm-btn-primary"/>
+										<String fx:value="pharm-filter-btn"/>
+									</styleClass>
+								</Button>
+								<Button text="Reinitialiser" onAction="#handleResetReservationFilters">
+									<styleClass>
+										<String fx:value="pharm-btn"/>
+										<String fx:value="pharm-btn-secondary"/>
+										<String fx:value="pharm-filter-btn"/>
+									</styleClass>
+								</Button>
+							</HBox>
+
+							<VBox fx:id="availableStocksCard" spacing="10" styleClass="pharm-panel" visible="false" managed="false">
+								<Label text="Stocks disponibles" styleClass="pharm-panel-title"/>
+								<FlowPane fx:id="availableStocksBox" hgap="10" vgap="10" prefWrapLength="1180"/>
+								<Pagination fx:id="availableStocksPagination" visible="false" managed="false"/>
+							</VBox>
+
+							<VBox fx:id="myReservationsCard" spacing="10" styleClass="pharm-panel" visible="false" managed="false">
+								<Label text="Mes reservations" styleClass="pharm-panel-title"/>
+								<FlowPane fx:id="myReservationsBox" hgap="10" vgap="10" prefWrapLength="1180"/>
+								<Pagination fx:id="myReservationsPagination" visible="false" managed="false"/>
+							</VBox>
+
+							<VBox fx:id="incomingReservationsCard" spacing="10" styleClass="pharm-panel" visible="false" managed="false">
+								<Label text="Reservations recues" styleClass="pharm-panel-title"/>
+								<FlowPane fx:id="incomingReservationsBox" hgap="10" vgap="10" prefWrapLength="1180"/>
+								<Pagination fx:id="incomingReservationsPagination" visible="false" managed="false"/>
+							</VBox>
+						</VBox>
+					</VBox>
+				</VBox>
+			</StackPane>
+		</content>
+	</ScrollPane>
+
+</StackPane>

@@ -1,10 +1,12 @@
 package com.santea.controller;
 
+import com.santea.model.User;
 import com.santea.navigation.AppNavigator;
 import com.santea.service.AdminDashboardService;
 import com.santea.service.AdminOperationsService;
 import com.santea.service.AuthService;
 import com.santea.service.AuthSession;
+import com.santea.service.PharmacyService;
 import com.santea.ui.ConfirmDialogs;
 import com.santea.ui.ModalDialogs;
 import javafx.collections.FXCollections;
@@ -22,6 +24,7 @@ import javafx.scene.control.ChoiceDialog;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.layout.FlowPane;
@@ -74,6 +77,7 @@ public class AdminDashboardController {
 
     private final AdminDashboardService adminDashboardService = new AdminDashboardService();
     private final AdminOperationsService adminOperationsService = new AdminOperationsService();
+    private final PharmacyService pharmacyService = new PharmacyService();
     private final AuthService authService = new AuthService();
 
     private List<AdminOperationsService.AdminUserRow> usersCache = List.of();
@@ -87,6 +91,10 @@ public class AdminDashboardController {
     private List<AdminOperationsService.PendingApprovalRow> pendingApprovalsCache = List.of();
     private List<AdminOperationsService.ModerationRow> moderationCache = List.of();
     private List<AdminOperationsService.UserScoreRow> scoresCache = List.of();
+    private List<PharmacyService.PharmacyRow> pharmaciesAdminCache = List.of();
+    private List<PharmacyService.MedicamentRow> medicamentsAdminCache = List.of();
+    private List<PharmacyService.StockRow> stocksAdminCache = List.of();
+    private List<PharmacyService.ReservationRow> reservationsAdminCache = List.of();
 
     private int usersPage;
     private int validationPage;
@@ -94,6 +102,10 @@ public class AdminDashboardController {
     private int suspiciousPage;
     private int subscriptionsPage;
     private int revenuesPage;
+    private int pharmaciesAdminPage;
+    private int medicamentsAdminPage;
+    private int stocksAdminPage;
+    private int reservationsAdminPage;
     private int communityPage;
     private int appointmentsAdminPage;
 
@@ -103,6 +115,10 @@ public class AdminDashboardController {
     private boolean suspiciousGridMode = true;
     private boolean subscriptionsGridMode = true;
     private boolean revenuesGridMode = true;
+    private boolean pharmaciesAdminGridMode = true;
+    private boolean medicamentsAdminGridMode = true;
+    private boolean stocksAdminGridMode = true;
+    private boolean reservationsAdminGridMode = true;
     private boolean communityGridMode = true;
     private boolean appointmentsAdminGridMode = true;
 
@@ -126,6 +142,14 @@ public class AdminDashboardController {
     @FXML
     private Button navRevenuesButton;
     @FXML
+    private Button navPharmaciesAdminButton;
+    @FXML
+    private Button navMedicamentsAdminButton;
+    @FXML
+    private Button navStocksAdminButton;
+    @FXML
+    private Button navReservationsAdminButton;
+    @FXML
     private Button navCommunityButton;
     @FXML
     private Button navAppointmentsAdminButton;
@@ -144,6 +168,14 @@ public class AdminDashboardController {
     private VBox pageSubscriptions;
     @FXML
     private VBox pageRevenues;
+    @FXML
+    private VBox pagePharmaciesAdmin;
+    @FXML
+    private VBox pageMedicamentsAdmin;
+    @FXML
+    private VBox pageStocksAdmin;
+    @FXML
+    private VBox pageReservationsAdmin;
     @FXML
     private VBox pageCommunity;
     @FXML
@@ -322,6 +354,96 @@ public class AdminDashboardController {
     private Button revenuesNextPageButton;
 
     @FXML
+    private Label pharmaciesAdminTotalLabel;
+    @FXML
+    private Label pharmaciesAdminActiveLabel;
+    @FXML
+    private Label pharmaciesAdminInactiveLabel;
+    @FXML
+    private TextField pharmaciesAdminSearchField;
+    @FXML
+    private ComboBox<String> pharmaciesAdminStatusFilterCombo;
+    @FXML
+    private Button pharmaciesAdminListModeButton;
+    @FXML
+    private Button pharmaciesAdminGridModeButton;
+    @FXML
+    private FlowPane pharmaciesAdminRowsBox;
+    @FXML
+    private Label pharmaciesAdminPaginationInfoLabel;
+    @FXML
+    private Button pharmaciesAdminPrevPageButton;
+    @FXML
+    private Button pharmaciesAdminNextPageButton;
+
+    @FXML
+    private Label medicamentsAdminTotalLabel;
+    @FXML
+    private Label medicamentsAdminTypeCountLabel;
+    @FXML
+    private TextField medicamentsAdminSearchField;
+    @FXML
+    private ComboBox<String> medicamentsAdminTypeFilterCombo;
+    @FXML
+    private Button medicamentsAdminListModeButton;
+    @FXML
+    private Button medicamentsAdminGridModeButton;
+    @FXML
+    private FlowPane medicamentsAdminRowsBox;
+    @FXML
+    private Label medicamentsAdminPaginationInfoLabel;
+    @FXML
+    private Button medicamentsAdminPrevPageButton;
+    @FXML
+    private Button medicamentsAdminNextPageButton;
+
+    @FXML
+    private Label stocksAdminTotalLabel;
+    @FXML
+    private Label stocksAdminCriticalLabel;
+    @FXML
+    private TextField stocksAdminSearchField;
+    @FXML
+    private ComboBox<String> stocksAdminLevelFilterCombo;
+    @FXML
+    private Button stocksAdminListModeButton;
+    @FXML
+    private Button stocksAdminGridModeButton;
+    @FXML
+    private FlowPane stocksAdminRowsBox;
+    @FXML
+    private Label stocksAdminPaginationInfoLabel;
+    @FXML
+    private Button stocksAdminPrevPageButton;
+    @FXML
+    private Button stocksAdminNextPageButton;
+
+    @FXML
+    private Label reservationsAdminTotalLabel;
+    @FXML
+    private Label reservationsAdminPendingLabel;
+    @FXML
+    private Label reservationsAdminConfirmedLabel;
+    @FXML
+    private Label reservationsAdminClosedLabel;
+    @FXML
+    private TextField reservationsAdminSearchField;
+    @FXML
+    private ComboBox<String> reservationsAdminStatusFilterCombo;
+    @FXML
+    private Button reservationsAdminListModeButton;
+    @FXML
+    private Button reservationsAdminGridModeButton;
+    @FXML
+    private FlowPane reservationsAdminRowsBox;
+    @FXML
+    private Label reservationsAdminPaginationInfoLabel;
+    @FXML
+    private Button reservationsAdminPrevPageButton;
+    @FXML
+    private Button reservationsAdminNextPageButton;
+
+    @FXML
     private Label communityTotalLabel;
     @FXML
     private Label communityPendingLabel;
@@ -458,12 +580,36 @@ public class AdminDashboardController {
         ));
         appointmentsAdminDateFilterCombo.getSelectionModel().selectFirst();
 
+        pharmaciesAdminStatusFilterCombo.setItems(FXCollections.observableArrayList(
+            "Tous statuts", "Actives", "Inactives"
+        ));
+        pharmaciesAdminStatusFilterCombo.getSelectionModel().selectFirst();
+
+        medicamentsAdminTypeFilterCombo.setItems(FXCollections.observableArrayList(
+            "Tous types"
+        ));
+        medicamentsAdminTypeFilterCombo.getSelectionModel().selectFirst();
+
+        stocksAdminLevelFilterCombo.setItems(FXCollections.observableArrayList(
+            "Tous niveaux", "Disponible", "Critique (<=5)", "Rupture"
+        ));
+        stocksAdminLevelFilterCombo.getSelectionModel().selectFirst();
+
+        reservationsAdminStatusFilterCombo.setItems(FXCollections.observableArrayList(
+            "Tous statuts", "en_attente", "confirmee", "refusee", "annulee", "expiree"
+        ));
+        reservationsAdminStatusFilterCombo.getSelectionModel().selectFirst();
+
         updateModeButtons(usersListModeButton, usersGridModeButton, usersGridMode);
         updateModeButtons(validationListModeButton, validationGridModeButton, validationGridMode);
         updateModeButtons(sessionsListModeButton, sessionsGridModeButton, sessionsGridMode);
         updateModeButtons(suspiciousListModeButton, suspiciousGridModeButton, suspiciousGridMode);
         updateModeButtons(subscriptionsListModeButton, subscriptionsGridModeButton, subscriptionsGridMode);
         updateModeButtons(revenuesListModeButton, revenuesGridModeButton, revenuesGridMode);
+        updateModeButtons(pharmaciesAdminListModeButton, pharmaciesAdminGridModeButton, pharmaciesAdminGridMode);
+        updateModeButtons(medicamentsAdminListModeButton, medicamentsAdminGridModeButton, medicamentsAdminGridMode);
+        updateModeButtons(stocksAdminListModeButton, stocksAdminGridModeButton, stocksAdminGridMode);
+        updateModeButtons(reservationsAdminListModeButton, reservationsAdminGridModeButton, reservationsAdminGridMode);
         updateModeButtons(communityListModeButton, communityGridModeButton, communityGridMode);
         updateModeButtons(appointmentsAdminListModeButton, appointmentsAdminGridModeButton, appointmentsAdminGridMode);
     }
@@ -512,6 +658,26 @@ public class AdminDashboardController {
     @FXML
     private void handleNavRevenues() {
         showPage(pageRevenues, navRevenuesButton, "Revenus & facturation", "Factures, montants et export financier.");
+    }
+
+    @FXML
+    private void handleNavPharmaciesAdmin() {
+        showPage(pagePharmaciesAdmin, navPharmaciesAdminButton, "Pharmacies", "Administration des pharmacies, disponibilite et coordination.");
+    }
+
+    @FXML
+    private void handleNavMedicamentsAdmin() {
+        showPage(pageMedicamentsAdmin, navMedicamentsAdminButton, "Medicaments", "Catalogue, metadonnees et maintenance des references.");
+    }
+
+    @FXML
+    private void handleNavStocksAdmin() {
+        showPage(pageStocksAdmin, navStocksAdminButton, "Stocks", "Pilotage des stocks par pharmacie et alertes de criticite.");
+    }
+
+    @FXML
+    private void handleNavReservationsAdmin() {
+        showPage(pageReservationsAdmin, navReservationsAdminButton, "Reservations pharmacie", "Suivi des reservations patients et decisions pharmaciens.");
     }
 
     @FXML
@@ -621,6 +787,26 @@ public class AdminDashboardController {
         if (normalized.contains("revenu") || normalized.contains("factur")) {
             handleNavRevenues();
             showFeedback("Ouverture section revenus.", true);
+            return;
+        }
+        if (normalized.contains("pharmacie") && !normalized.contains("reservation")) {
+            handleNavPharmaciesAdmin();
+            showFeedback("Ouverture section pharmacies.", true);
+            return;
+        }
+        if (normalized.contains("medicament")) {
+            handleNavMedicamentsAdmin();
+            showFeedback("Ouverture section medicaments.", true);
+            return;
+        }
+        if (normalized.contains("stock")) {
+            handleNavStocksAdmin();
+            showFeedback("Ouverture section stocks.", true);
+            return;
+        }
+        if (normalized.contains("reservation") && normalized.contains("pharma")) {
+            handleNavReservationsAdmin();
+            showFeedback("Ouverture section reservations pharmacie.", true);
             return;
         }
         if (normalized.contains("community") || normalized.contains("communaute") || normalized.contains("contenu")) {
@@ -820,6 +1006,141 @@ public class AdminDashboardController {
     }
 
     @FXML
+    private void handlePharmaciesAdminApplyFilters() {
+        pharmaciesAdminPage = 0;
+        renderPharmaciesAdminPage();
+    }
+
+    @FXML
+    private void handlePharmaciesAdminPrevPage() {
+        pharmaciesAdminPage = Math.max(0, pharmaciesAdminPage - 1);
+        renderPharmaciesAdminPage();
+    }
+
+    @FXML
+    private void handlePharmaciesAdminNextPage() {
+        pharmaciesAdminPage++;
+        renderPharmaciesAdminPage();
+    }
+
+    @FXML
+    private void handlePharmaciesAdminListMode() {
+        pharmaciesAdminGridMode = false;
+        renderPharmaciesAdminPage();
+    }
+
+    @FXML
+    private void handlePharmaciesAdminGridMode() {
+        pharmaciesAdminGridMode = true;
+        renderPharmaciesAdminPage();
+    }
+
+    @FXML
+    private void handlePharmaciesAdminCreate() {
+        openPharmacyEditorDialog(null);
+    }
+
+    @FXML
+    private void handleMedicamentsAdminApplyFilters() {
+        medicamentsAdminPage = 0;
+        renderMedicamentsAdminPage();
+    }
+
+    @FXML
+    private void handleMedicamentsAdminPrevPage() {
+        medicamentsAdminPage = Math.max(0, medicamentsAdminPage - 1);
+        renderMedicamentsAdminPage();
+    }
+
+    @FXML
+    private void handleMedicamentsAdminNextPage() {
+        medicamentsAdminPage++;
+        renderMedicamentsAdminPage();
+    }
+
+    @FXML
+    private void handleMedicamentsAdminListMode() {
+        medicamentsAdminGridMode = false;
+        renderMedicamentsAdminPage();
+    }
+
+    @FXML
+    private void handleMedicamentsAdminGridMode() {
+        medicamentsAdminGridMode = true;
+        renderMedicamentsAdminPage();
+    }
+
+    @FXML
+    private void handleMedicamentsAdminCreate() {
+        openMedicamentEditorDialog(null);
+    }
+
+    @FXML
+    private void handleStocksAdminApplyFilters() {
+        stocksAdminPage = 0;
+        renderStocksAdminPage();
+    }
+
+    @FXML
+    private void handleStocksAdminPrevPage() {
+        stocksAdminPage = Math.max(0, stocksAdminPage - 1);
+        renderStocksAdminPage();
+    }
+
+    @FXML
+    private void handleStocksAdminNextPage() {
+        stocksAdminPage++;
+        renderStocksAdminPage();
+    }
+
+    @FXML
+    private void handleStocksAdminListMode() {
+        stocksAdminGridMode = false;
+        renderStocksAdminPage();
+    }
+
+    @FXML
+    private void handleStocksAdminGridMode() {
+        stocksAdminGridMode = true;
+        renderStocksAdminPage();
+    }
+
+    @FXML
+    private void handleStocksAdminCreate() {
+        openCreateStockDialog();
+    }
+
+    @FXML
+    private void handleReservationsAdminApplyFilters() {
+        reservationsAdminPage = 0;
+        renderReservationsAdminPage();
+    }
+
+    @FXML
+    private void handleReservationsAdminPrevPage() {
+        reservationsAdminPage = Math.max(0, reservationsAdminPage - 1);
+        renderReservationsAdminPage();
+    }
+
+    @FXML
+    private void handleReservationsAdminNextPage() {
+        reservationsAdminPage++;
+        renderReservationsAdminPage();
+    }
+
+    @FXML
+    private void handleReservationsAdminListMode() {
+        reservationsAdminGridMode = false;
+        renderReservationsAdminPage();
+    }
+
+    @FXML
+    private void handleReservationsAdminGridMode() {
+        reservationsAdminGridMode = true;
+        renderReservationsAdminPage();
+    }
+
+    @FXML
     private void handleCommunityApplyFilters() {
         communityPage = 0;
         renderCommunityPage();
@@ -888,6 +1209,10 @@ public class AdminDashboardController {
                 pageSuspicious,
                 pageSubscriptions,
                 pageRevenues,
+            pagePharmaciesAdmin,
+            pageMedicamentsAdmin,
+            pageStocksAdmin,
+            pageReservationsAdmin,
                 pageCommunity,
                 pageAppointmentsAdmin
         );
@@ -905,6 +1230,10 @@ public class AdminDashboardController {
                 navSuspiciousButton,
                 navSubscriptionsButton,
                 navRevenuesButton,
+            navPharmaciesAdminButton,
+            navMedicamentsAdminButton,
+            navStocksAdminButton,
+            navReservationsAdminButton,
                 navCommunityButton,
                 navAppointmentsAdminButton
         );
@@ -964,6 +1293,45 @@ public class AdminDashboardController {
         appointmentsAdminRefusedLabel.setText("Refuses: " + appointmentStats.refused());
         appointmentsAdminCancelledLabel.setText("Annules: " + appointmentStats.cancelled());
 
+        User currentUser = AuthSession.getCurrentUser();
+        if (currentUser != null && currentUser.getId() != null) {
+            PharmacyService.ModuleData moduleData = pharmacyService.loadModuleData(currentUser, "", "");
+            pharmaciesAdminCache = moduleData.managedPharmacies();
+            medicamentsAdminCache = moduleData.medicaments();
+            stocksAdminCache = moduleData.managedStocks();
+            reservationsAdminCache = moduleData.incomingReservations();
+        } else {
+            pharmaciesAdminCache = List.of();
+            medicamentsAdminCache = List.of();
+            stocksAdminCache = List.of();
+            reservationsAdminCache = List.of();
+        }
+
+        long activePharmacies = pharmaciesAdminCache.stream().filter(PharmacyService.PharmacyRow::active).count();
+        long criticalStocks = stocksAdminCache.stream().filter(stock -> stock.quantite() <= 5).count();
+        long reservationsPending = reservationsAdminCache.stream().filter(r -> "en_attente".equalsIgnoreCase(safe(r.statut()))).count();
+        long reservationsConfirmed = reservationsAdminCache.stream().filter(r -> "confirmee".equalsIgnoreCase(safe(r.statut()))).count();
+        long reservationsClosed = reservationsAdminCache.size() - reservationsPending - reservationsConfirmed;
+
+        pharmaciesAdminTotalLabel.setText("Total: " + pharmaciesAdminCache.size());
+        pharmaciesAdminActiveLabel.setText("Actives: " + activePharmacies);
+        pharmaciesAdminInactiveLabel.setText("Inactives: " + Math.max(0, pharmaciesAdminCache.size() - activePharmacies));
+
+        medicamentsAdminTotalLabel.setText("Total: " + medicamentsAdminCache.size());
+        medicamentsAdminTypeCountLabel.setText("Types: " + medicamentsAdminCache.stream()
+                .map(row -> safe(row.type()).toLowerCase(Locale.ROOT))
+                .filter(type -> !type.isBlank())
+                .distinct()
+                .count());
+
+        stocksAdminTotalLabel.setText("Total: " + stocksAdminCache.size());
+        stocksAdminCriticalLabel.setText("Critiques: " + criticalStocks);
+
+        reservationsAdminTotalLabel.setText("Total: " + reservationsAdminCache.size());
+        reservationsAdminPendingLabel.setText("En attente: " + reservationsPending);
+        reservationsAdminConfirmedLabel.setText("Confirmees: " + reservationsConfirmed);
+        reservationsAdminClosedLabel.setText("Cloturees: " + Math.max(0, reservationsClosed));
+
         usersCache = adminOperationsService.listUsersForAdmin(300);
         validationCache = adminOperationsService.listValidationUsers(300);
         sessionsCache = adminOperationsService.listActiveSessions();
@@ -988,6 +1356,10 @@ public class AdminDashboardController {
         renderSuspiciousPage();
         renderSubscriptionsPage();
         renderRevenuesPage();
+        renderPharmaciesAdminPage();
+        renderMedicamentsAdminPage();
+        renderStocksAdminPage();
+        renderReservationsAdminPage();
         renderCommunityPage();
         renderAppointmentsAdminPage();
 
@@ -1008,6 +1380,21 @@ public class AdminDashboardController {
             revenuesPlanFilterCombo.setValue(selectedPlan);
         } else {
             revenuesPlanFilterCombo.getSelectionModel().selectFirst();
+        }
+
+        String selectedType = medicamentsAdminTypeFilterCombo.getValue();
+        List<String> types = medicamentsAdminCache.stream()
+                .map(row -> safe(row.type()))
+                .filter(type -> !type.isBlank())
+                .distinct()
+                .sorted()
+                .collect(Collectors.toCollection(ArrayList::new));
+        types.add(0, "Tous types");
+        medicamentsAdminTypeFilterCombo.setItems(FXCollections.observableArrayList(types));
+        if (selectedType != null && types.contains(selectedType)) {
+            medicamentsAdminTypeFilterCombo.setValue(selectedType);
+        } else {
+            medicamentsAdminTypeFilterCombo.getSelectionModel().selectFirst();
         }
     }
 
@@ -1412,6 +1799,629 @@ public class AdminDashboardController {
 
         updateModeButtons(revenuesListModeButton, revenuesGridModeButton, revenuesGridMode);
         updatePagination(page, revenuesPaginationInfoLabel, revenuesPrevPageButton, revenuesNextPageButton);
+    }
+
+    private void renderPharmaciesAdminPage() {
+        String keyword = normalize(pharmaciesAdminSearchField.getText());
+        String statusFilter = safe(pharmaciesAdminStatusFilterCombo.getValue());
+
+        List<PharmacyService.PharmacyRow> filtered = pharmaciesAdminCache.stream()
+                .filter(row -> keyword.isBlank() || normalize(
+                        row.nom() + " " + row.adresse() + " " + row.telephone() + " " + row.email()
+                ).contains(keyword))
+                .filter(row -> matchPharmacyStatus(row.active(), statusFilter))
+                .sorted(Comparator
+                        .comparing(PharmacyService.PharmacyRow::active)
+                        .reversed()
+                        .thenComparing(PharmacyService.PharmacyRow::nom, String.CASE_INSENSITIVE_ORDER))
+                .toList();
+
+        PageSlice<PharmacyService.PharmacyRow> page = page(filtered, pharmaciesAdminPage);
+        pharmaciesAdminPage = page.pageIndex();
+
+        applyContainerMode(pharmaciesAdminRowsBox, pharmaciesAdminGridMode);
+        pharmaciesAdminRowsBox.getChildren().clear();
+
+        if (page.items().isEmpty()) {
+            pharmaciesAdminRowsBox.getChildren().add(createEmptyCard("Aucune pharmacie trouvee."));
+        } else {
+            for (PharmacyService.PharmacyRow row : page.items()) {
+                String details = "Adresse: " + safe(row.adresse())
+                        + " | Tel: " + (safe(row.telephone()).isBlank() ? "-" : safe(row.telephone()))
+                        + " | Email: " + (safe(row.email()).isBlank() ? "-" : safe(row.email()))
+                        + " | Horaires: " + (safe(row.horaires()).isBlank() ? "-" : safe(row.horaires()));
+                String badge = row.active() ? "ACTIVE" : "INACTIVE";
+
+                Button editButton = buildRowButton("Editer", "admin-btn-xs-secondary", () -> openPharmacyEditorDialog(row));
+                Button toggleButton = buildRowButton(
+                        row.active() ? "Desactiver" : "Activer",
+                        row.active() ? "admin-btn-xs-warning" : "admin-btn-xs-primary",
+                        () -> togglePharmacyActive(row)
+                );
+                Button deleteButton = buildRowButton("Supprimer", "admin-btn-xs-danger", () -> confirmDeletePharmacy(row));
+
+                String title = "#" + row.id() + " - " + safe(row.nom());
+                Node node = pharmaciesAdminGridMode
+                        ? createGridCard(title, details, badge, editButton, toggleButton, deleteButton)
+                        : createListRow(title, details, editButton, toggleButton, deleteButton);
+                pharmaciesAdminRowsBox.getChildren().add(node);
+            }
+        }
+
+        updateModeButtons(pharmaciesAdminListModeButton, pharmaciesAdminGridModeButton, pharmaciesAdminGridMode);
+        updatePagination(page, pharmaciesAdminPaginationInfoLabel, pharmaciesAdminPrevPageButton, pharmaciesAdminNextPageButton);
+    }
+
+    private void renderMedicamentsAdminPage() {
+        String keyword = normalize(medicamentsAdminSearchField.getText());
+        String typeFilter = safe(medicamentsAdminTypeFilterCombo.getValue());
+
+        List<PharmacyService.MedicamentRow> filtered = medicamentsAdminCache.stream()
+                .filter(row -> keyword.isBlank() || normalize(
+                        row.nom() + " " + row.type() + " " + row.codeBarre() + " " + row.laboratoire() + " " + row.description()
+                ).contains(keyword))
+                .filter(row -> "Tous types".equals(typeFilter) || safe(row.type()).equalsIgnoreCase(typeFilter))
+                .sorted(Comparator.comparing(PharmacyService.MedicamentRow::nom, String.CASE_INSENSITIVE_ORDER))
+                .toList();
+
+        PageSlice<PharmacyService.MedicamentRow> page = page(filtered, medicamentsAdminPage);
+        medicamentsAdminPage = page.pageIndex();
+
+        applyContainerMode(medicamentsAdminRowsBox, medicamentsAdminGridMode);
+        medicamentsAdminRowsBox.getChildren().clear();
+
+        if (page.items().isEmpty()) {
+            medicamentsAdminRowsBox.getChildren().add(createEmptyCard("Aucun medicament trouve."));
+        } else {
+            for (PharmacyService.MedicamentRow row : page.items()) {
+                String details = "Type: " + (safe(row.type()).isBlank() ? "-" : safe(row.type()))
+                        + " | Forme: " + (safe(row.forme()).isBlank() ? "-" : safe(row.forme()))
+                        + " | Dosage: " + (safe(row.dosage()).isBlank() ? "-" : safe(row.dosage()))
+                        + " | Prix: " + (safe(row.prix()).isBlank() ? "-" : safe(row.prix()))
+                        + " | Labo: " + (safe(row.laboratoire()).isBlank() ? "-" : safe(row.laboratoire()))
+                        + " | Code barre: " + (safe(row.codeBarre()).isBlank() ? "-" : safe(row.codeBarre()));
+
+                Button editButton = buildRowButton("Editer", "admin-btn-xs-secondary", () -> openMedicamentEditorDialog(row));
+                Button deleteButton = buildRowButton("Supprimer", "admin-btn-xs-danger", () -> confirmDeleteMedicament(row));
+
+                String badge = safe(row.type()).isBlank() ? "MEDICAMENT" : safe(row.type()).toUpperCase(Locale.ROOT);
+                String title = "#" + row.id() + " - " + safe(row.nom());
+                Node node = medicamentsAdminGridMode
+                        ? createGridCard(title, details, badge, editButton, deleteButton)
+                        : createListRow(title, details, editButton, deleteButton);
+                medicamentsAdminRowsBox.getChildren().add(node);
+            }
+        }
+
+        updateModeButtons(medicamentsAdminListModeButton, medicamentsAdminGridModeButton, medicamentsAdminGridMode);
+        updatePagination(page, medicamentsAdminPaginationInfoLabel, medicamentsAdminPrevPageButton, medicamentsAdminNextPageButton);
+    }
+
+    private void renderStocksAdminPage() {
+        String keyword = normalize(stocksAdminSearchField.getText());
+        String levelFilter = safe(stocksAdminLevelFilterCombo.getValue());
+
+        List<PharmacyService.StockRow> filtered = stocksAdminCache.stream()
+                .filter(row -> keyword.isBlank() || normalize(
+                        row.pharmacyNom() + " " + row.pharmacyAdresse() + " " + row.medicamentNom() + " " + row.medicamentType()
+                ).contains(keyword))
+                .filter(row -> matchStockLevel(row.quantite(), levelFilter))
+                .sorted(Comparator
+                        .comparingInt(PharmacyService.StockRow::quantite)
+                        .thenComparing(PharmacyService.StockRow::pharmacyNom, String.CASE_INSENSITIVE_ORDER)
+                        .thenComparing(PharmacyService.StockRow::medicamentNom, String.CASE_INSENSITIVE_ORDER))
+                .toList();
+
+        PageSlice<PharmacyService.StockRow> page = page(filtered, stocksAdminPage);
+        stocksAdminPage = page.pageIndex();
+
+        applyContainerMode(stocksAdminRowsBox, stocksAdminGridMode);
+        stocksAdminRowsBox.getChildren().clear();
+
+        if (page.items().isEmpty()) {
+            stocksAdminRowsBox.getChildren().add(createEmptyCard("Aucune ligne de stock."));
+        } else {
+            for (PharmacyService.StockRow row : page.items()) {
+                String details = "Pharmacie: " + safe(row.pharmacyNom())
+                        + " | Adresse: " + safe(row.pharmacyAdresse())
+                        + " | Medicament: " + safe(row.medicamentNom())
+                        + " | Type: " + (safe(row.medicamentType()).isBlank() ? "-" : safe(row.medicamentType()))
+                        + " | Dosage: " + (safe(row.medicamentDosage()).isBlank() ? "-" : safe(row.medicamentDosage()))
+                        + " | Qte: " + row.quantite()
+                        + " | Prix vente: " + (safe(row.prixVente()).isBlank() ? "-" : safe(row.prixVente()));
+
+                String badge = row.quantite() == 0 ? "RUPTURE" : (row.quantite() <= 5 ? "CRITIQUE" : "DISPONIBLE");
+
+                Button editButton = buildRowButton("Editer", "admin-btn-xs-secondary", () -> openEditStockDialog(row));
+                Button deleteButton = buildRowButton("Supprimer", "admin-btn-xs-danger", () -> confirmDeleteStock(row));
+
+                String title = "Stock #" + row.id() + " - " + safe(row.medicamentNom());
+                Node node = stocksAdminGridMode
+                        ? createGridCard(title, details, badge, editButton, deleteButton)
+                        : createListRow(title, details, editButton, deleteButton);
+                stocksAdminRowsBox.getChildren().add(node);
+            }
+        }
+
+        updateModeButtons(stocksAdminListModeButton, stocksAdminGridModeButton, stocksAdminGridMode);
+        updatePagination(page, stocksAdminPaginationInfoLabel, stocksAdminPrevPageButton, stocksAdminNextPageButton);
+    }
+
+    private void renderReservationsAdminPage() {
+        String keyword = normalize(reservationsAdminSearchField.getText());
+        String statusFilter = normalize(reservationsAdminStatusFilterCombo.getValue());
+
+        List<PharmacyService.ReservationRow> filtered = reservationsAdminCache.stream()
+                .filter(row -> keyword.isBlank() || normalize(
+                        "#" + row.id() + " " + row.patientDisplay() + " " + row.pharmacyNom() + " " + row.medicamentNom()
+                ).contains(keyword))
+                .filter(row -> statusFilter.isBlank() || "tous statuts".equals(statusFilter) || normalize(row.statut()).equals(statusFilter))
+                .sorted(Comparator.comparing(PharmacyService.ReservationRow::createdAt, Comparator.nullsLast(Comparator.reverseOrder())))
+                .toList();
+
+        PageSlice<PharmacyService.ReservationRow> page = page(filtered, reservationsAdminPage);
+        reservationsAdminPage = page.pageIndex();
+
+        applyContainerMode(reservationsAdminRowsBox, reservationsAdminGridMode);
+        reservationsAdminRowsBox.getChildren().clear();
+
+        if (page.items().isEmpty()) {
+            reservationsAdminRowsBox.getChildren().add(createEmptyCard("Aucune reservation medicament."));
+        } else {
+            for (PharmacyService.ReservationRow row : page.items()) {
+                String status = safe(row.statut()).toLowerCase(Locale.ROOT);
+                String details = "Patient: " + safe(row.patientDisplay())
+                        + " | Pharmacie: " + safe(row.pharmacyNom())
+                        + " | Medicament: " + safe(row.medicamentNom())
+                        + " | Qte: " + row.quantite()
+                        + " | Total: " + (safe(row.prixTotal()).isBlank() ? "-" : safe(row.prixTotal()))
+                        + " | Creee le: " + formatDateTime(row.createdAt())
+                        + " | Expire le: " + formatDateTime(row.expiresAt());
+
+                List<Button> actions = new ArrayList<>();
+                if ("en_attente".equals(status)) {
+                    actions.add(buildRowButton("Confirmer", "admin-btn-xs-primary", () -> applyReservationDecision(row.id(), "confirm")));
+                    actions.add(buildRowButton("Refuser", "admin-btn-xs-danger", () -> applyReservationDecision(row.id(), "reject")));
+                }
+                if ("en_attente".equals(status) || "confirmee".equals(status)) {
+                    actions.add(buildRowButton("Annuler", "admin-btn-xs-warning", () -> applyReservationDecision(row.id(), "cancel")));
+                }
+
+                String title = "Reservation #" + row.id() + " - " + safe(row.medicamentNom());
+                String badge = row.statusLabel().toUpperCase(Locale.ROOT);
+                Node node = reservationsAdminGridMode
+                        ? createGridCard(title, details, badge, actions.toArray(new Button[0]))
+                        : createListRow(title, details, actions.toArray(new Button[0]));
+                reservationsAdminRowsBox.getChildren().add(node);
+            }
+        }
+
+        updateModeButtons(reservationsAdminListModeButton, reservationsAdminGridModeButton, reservationsAdminGridMode);
+        updatePagination(page, reservationsAdminPaginationInfoLabel, reservationsAdminPrevPageButton, reservationsAdminNextPageButton);
+    }
+
+    private void openPharmacyEditorDialog(PharmacyService.PharmacyRow existing) {
+        User currentUser = currentAdminUser();
+        if (currentUser == null) {
+            return;
+        }
+
+        boolean editing = existing != null;
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle(editing ? "Editer pharmacie" : "Ajouter pharmacie");
+        dialog.setHeaderText(editing
+                ? "Modifier la pharmacie #" + existing.id()
+                : "Creation d'une pharmacie");
+
+        ButtonType saveButtonType = new ButtonType(editing ? "Mettre a jour" : "Creer", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.CANCEL, saveButtonType);
+
+        GridPane grid = new GridPane();
+        grid.getStyleClass().add("bo-edit-grid");
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(8, 4, 4, 4));
+
+        TextField nomField = new TextField(editing ? safe(existing.nom()) : "");
+        TextField adresseField = new TextField(editing ? safe(existing.adresse()) : "");
+        TextField telephoneField = new TextField(editing ? safe(existing.telephone()) : "");
+        TextField emailField = new TextField(editing ? safe(existing.email()) : "");
+        TextField horairesField = new TextField(editing ? safe(existing.horaires()) : "");
+        TextField latitudeField = new TextField(editing ? safe(existing.latitude()) : "");
+        TextField longitudeField = new TextField(editing ? safe(existing.longitude()) : "");
+        CheckBox activeCheck = new CheckBox("Pharmacie active");
+        activeCheck.setSelected(!editing || existing.active());
+
+        int row = 0;
+        grid.add(new Label("Nom"), 0, row);
+        grid.add(nomField, 1, row++);
+        grid.add(new Label("Adresse"), 0, row);
+        grid.add(adresseField, 1, row++);
+        grid.add(new Label("Telephone"), 0, row);
+        grid.add(telephoneField, 1, row++);
+        grid.add(new Label("Email"), 0, row);
+        grid.add(emailField, 1, row++);
+        grid.add(new Label("Horaires"), 0, row);
+        grid.add(horairesField, 1, row++);
+        grid.add(new Label("Latitude"), 0, row);
+        grid.add(latitudeField, 1, row++);
+        grid.add(new Label("Longitude"), 0, row);
+        grid.add(longitudeField, 1, row++);
+        grid.add(activeCheck, 1, row);
+
+        dialog.getDialogPane().setContent(grid);
+
+        Optional<ButtonType> result = ModalDialogs.showDialog(dialog, resolveOwnerWindow(), "bo-modal-pane", "bo-edit-user-pane");
+        if (result.isEmpty() || result.get() != saveButtonType) {
+            return;
+        }
+
+        PharmacyService.PharmacyDraft draft = new PharmacyService.PharmacyDraft(
+                nomField.getText(),
+                adresseField.getText(),
+                telephoneField.getText(),
+                emailField.getText(),
+                horairesField.getText(),
+                latitudeField.getText(),
+                longitudeField.getText(),
+                activeCheck.isSelected()
+        );
+
+        PharmacyService.ActionResult actionResult = editing
+                ? pharmacyService.updatePharmacy(currentUser, existing.id(), draft)
+                : pharmacyService.createPharmacy(currentUser, draft);
+        showFeedback(actionResult.message(), actionResult.success());
+        if (actionResult.success()) {
+            refresh();
+        }
+    }
+
+    private void togglePharmacyActive(PharmacyService.PharmacyRow row) {
+        User currentUser = currentAdminUser();
+        if (currentUser == null) {
+            return;
+        }
+
+        PharmacyService.PharmacyDraft draft = new PharmacyService.PharmacyDraft(
+                row.nom(),
+                row.adresse(),
+                row.telephone(),
+                row.email(),
+                row.horaires(),
+                row.latitude(),
+                row.longitude(),
+                !row.active()
+        );
+        PharmacyService.ActionResult result = pharmacyService.updatePharmacy(currentUser, row.id(), draft);
+        showFeedback(result.message(), result.success());
+        if (result.success()) {
+            refresh();
+        }
+    }
+
+    private void confirmDeletePharmacy(PharmacyService.PharmacyRow row) {
+        User currentUser = currentAdminUser();
+        if (currentUser == null) {
+            return;
+        }
+
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Supprimer pharmacie");
+        dialog.setHeaderText("Supprimer la pharmacie #" + row.id() + " - " + safe(row.nom()) + " ?");
+        dialog.getDialogPane().setContent(new Label("Cette action supprime definitivement la pharmacie et ses liaisons."));
+        ButtonType confirmType = new ButtonType("Supprimer", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.CANCEL, confirmType);
+
+        Optional<ButtonType> result = ModalDialogs.showDialog(dialog, resolveOwnerWindow(), "bo-modal-pane", "bo-delete-pane");
+        if (result.isEmpty() || result.get() != confirmType) {
+            return;
+        }
+
+        PharmacyService.ActionResult actionResult = pharmacyService.deletePharmacy(currentUser, row.id());
+        showFeedback(actionResult.message(), actionResult.success());
+        if (actionResult.success()) {
+            refresh();
+        }
+    }
+
+    private void openMedicamentEditorDialog(PharmacyService.MedicamentRow existing) {
+        User currentUser = currentAdminUser();
+        if (currentUser == null) {
+            return;
+        }
+
+        boolean editing = existing != null;
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle(editing ? "Editer medicament" : "Ajouter medicament");
+        dialog.setHeaderText(editing
+                ? "Modifier le medicament #" + existing.id()
+                : "Creation d'un medicament");
+
+        ButtonType saveButtonType = new ButtonType(editing ? "Mettre a jour" : "Creer", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.CANCEL, saveButtonType);
+
+        GridPane grid = new GridPane();
+        grid.getStyleClass().add("bo-edit-grid");
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(8, 4, 4, 4));
+
+        TextField nomField = new TextField(editing ? safe(existing.nom()) : "");
+        TextField typeField = new TextField(editing ? safe(existing.type()) : "");
+        TextField formeField = new TextField(editing ? safe(existing.forme()) : "");
+        TextField dosageField = new TextField(editing ? safe(existing.dosage()) : "");
+        TextField prixField = new TextField(editing ? safe(existing.prix()) : "");
+        TextField laboratoireField = new TextField(editing ? safe(existing.laboratoire()) : "");
+        TextField codeBarreField = new TextField(editing ? safe(existing.codeBarre()) : "");
+        TextField descriptionField = new TextField(editing ? safe(existing.description()) : "");
+
+        int row = 0;
+        grid.add(new Label("Nom"), 0, row);
+        grid.add(nomField, 1, row++);
+        grid.add(new Label("Type"), 0, row);
+        grid.add(typeField, 1, row++);
+        grid.add(new Label("Forme"), 0, row);
+        grid.add(formeField, 1, row++);
+        grid.add(new Label("Dosage"), 0, row);
+        grid.add(dosageField, 1, row++);
+        grid.add(new Label("Prix"), 0, row);
+        grid.add(prixField, 1, row++);
+        grid.add(new Label("Laboratoire"), 0, row);
+        grid.add(laboratoireField, 1, row++);
+        grid.add(new Label("Code barre"), 0, row);
+        grid.add(codeBarreField, 1, row++);
+        grid.add(new Label("Description"), 0, row);
+        grid.add(descriptionField, 1, row);
+
+        dialog.getDialogPane().setContent(grid);
+
+        Optional<ButtonType> result = ModalDialogs.showDialog(dialog, resolveOwnerWindow(), "bo-modal-pane", "bo-edit-user-pane");
+        if (result.isEmpty() || result.get() != saveButtonType) {
+            return;
+        }
+
+        PharmacyService.MedicamentDraft draft = new PharmacyService.MedicamentDraft(
+                nomField.getText(),
+                typeField.getText(),
+                descriptionField.getText(),
+                formeField.getText(),
+                dosageField.getText(),
+                prixField.getText(),
+                0,
+                laboratoireField.getText(),
+                codeBarreField.getText()
+        );
+
+        PharmacyService.ActionResult actionResult = editing
+                ? pharmacyService.updateMedicament(currentUser, existing.id(), draft)
+                : pharmacyService.createMedicament(currentUser, draft);
+        showFeedback(actionResult.message(), actionResult.success());
+        if (actionResult.success()) {
+            refresh();
+        }
+    }
+
+    private void confirmDeleteMedicament(PharmacyService.MedicamentRow row) {
+        User currentUser = currentAdminUser();
+        if (currentUser == null) {
+            return;
+        }
+
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Supprimer medicament");
+        dialog.setHeaderText("Supprimer le medicament #" + row.id() + " - " + safe(row.nom()) + " ?");
+        dialog.getDialogPane().setContent(new Label("Cette action supprime definitivement le medicament selectionne."));
+        ButtonType confirmType = new ButtonType("Supprimer", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.CANCEL, confirmType);
+
+        Optional<ButtonType> result = ModalDialogs.showDialog(dialog, resolveOwnerWindow(), "bo-modal-pane", "bo-delete-pane");
+        if (result.isEmpty() || result.get() != confirmType) {
+            return;
+        }
+
+        PharmacyService.ActionResult actionResult = pharmacyService.deleteMedicament(currentUser, row.id());
+        showFeedback(actionResult.message(), actionResult.success());
+        if (actionResult.success()) {
+            refresh();
+        }
+    }
+
+    private void openCreateStockDialog() {
+        User currentUser = currentAdminUser();
+        if (currentUser == null) {
+            return;
+        }
+
+        if (pharmaciesAdminCache.isEmpty() || medicamentsAdminCache.isEmpty()) {
+            showFeedback("Ajout de stock impossible: pharmacies ou medicaments indisponibles.", false);
+            return;
+        }
+
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Ajouter stock");
+        dialog.setHeaderText("Creer une ligne de stock pharmacie");
+
+        ButtonType saveButtonType = new ButtonType("Creer", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.CANCEL, saveButtonType);
+
+        GridPane grid = new GridPane();
+        grid.getStyleClass().add("bo-edit-grid");
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(8, 4, 4, 4));
+
+        ComboBox<PharmacyService.PharmacyRow> pharmacyCombo = new ComboBox<>(FXCollections.observableArrayList(pharmaciesAdminCache));
+        pharmacyCombo.setPrefWidth(300);
+        pharmacyCombo.setCellFactory(list -> new ListCell<>() {
+            @Override
+            protected void updateItem(PharmacyService.PharmacyRow item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? "" : item.nom() + " - " + item.adresse());
+            }
+        });
+        pharmacyCombo.setButtonCell(new ListCell<>() {
+            @Override
+            protected void updateItem(PharmacyService.PharmacyRow item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? "" : item.nom());
+            }
+        });
+        pharmacyCombo.getSelectionModel().selectFirst();
+
+        ComboBox<PharmacyService.MedicamentRow> medicamentCombo = new ComboBox<>(FXCollections.observableArrayList(medicamentsAdminCache));
+        medicamentCombo.setPrefWidth(300);
+        medicamentCombo.setCellFactory(list -> new ListCell<>() {
+            @Override
+            protected void updateItem(PharmacyService.MedicamentRow item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? "" : item.nom() + (safe(item.type()).isBlank() ? "" : " [" + item.type() + "]"));
+            }
+        });
+        medicamentCombo.setButtonCell(new ListCell<>() {
+            @Override
+            protected void updateItem(PharmacyService.MedicamentRow item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? "" : item.nom());
+            }
+        });
+        medicamentCombo.getSelectionModel().selectFirst();
+
+        TextField quantiteField = new TextField("1");
+        TextField prixField = new TextField();
+
+        int row = 0;
+        grid.add(new Label("Pharmacie"), 0, row);
+        grid.add(pharmacyCombo, 1, row++);
+        grid.add(new Label("Medicament"), 0, row);
+        grid.add(medicamentCombo, 1, row++);
+        grid.add(new Label("Quantite"), 0, row);
+        grid.add(quantiteField, 1, row++);
+        grid.add(new Label("Prix vente"), 0, row);
+        grid.add(prixField, 1, row);
+
+        dialog.getDialogPane().setContent(grid);
+
+        Optional<ButtonType> result = ModalDialogs.showDialog(dialog, resolveOwnerWindow(), "bo-modal-pane", "bo-edit-user-pane");
+        if (result.isEmpty() || result.get() != saveButtonType) {
+            return;
+        }
+
+        PharmacyService.PharmacyRow selectedPharmacy = pharmacyCombo.getValue();
+        PharmacyService.MedicamentRow selectedMedicament = medicamentCombo.getValue();
+        int quantite = parsePositiveInt(quantiteField.getText(), 0);
+
+        if (selectedPharmacy == null || selectedMedicament == null || quantite <= 0) {
+            showFeedback("Selection pharmacie/medicament et quantite valide requises.", false);
+            return;
+        }
+
+        PharmacyService.StockDraft draft = new PharmacyService.StockDraft(
+                selectedPharmacy.id(),
+                selectedMedicament.id(),
+                quantite,
+                prixField.getText()
+        );
+        PharmacyService.ActionResult actionResult = pharmacyService.createStock(currentUser, draft);
+        showFeedback(actionResult.message(), actionResult.success());
+        if (actionResult.success()) {
+            refresh();
+        }
+    }
+
+    private void openEditStockDialog(PharmacyService.StockRow row) {
+        User currentUser = currentAdminUser();
+        if (currentUser == null) {
+            return;
+        }
+
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Editer stock");
+        dialog.setHeaderText("Mise a jour du stock #" + row.id() + " - " + safe(row.medicamentNom()));
+
+        ButtonType saveButtonType = new ButtonType("Mettre a jour", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.CANCEL, saveButtonType);
+
+        GridPane grid = new GridPane();
+        grid.getStyleClass().add("bo-edit-grid");
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(8, 4, 4, 4));
+
+        TextField quantiteField = new TextField(String.valueOf(row.quantite()));
+        TextField prixField = new TextField(safe(row.prixVente()));
+
+        int currentRow = 0;
+        grid.add(new Label("Quantite"), 0, currentRow);
+        grid.add(quantiteField, 1, currentRow++);
+        grid.add(new Label("Prix vente"), 0, currentRow);
+        grid.add(prixField, 1, currentRow);
+
+        dialog.getDialogPane().setContent(grid);
+
+        Optional<ButtonType> result = ModalDialogs.showDialog(dialog, resolveOwnerWindow(), "bo-modal-pane", "bo-edit-user-pane");
+        if (result.isEmpty() || result.get() != saveButtonType) {
+            return;
+        }
+
+        int quantite = parsePositiveInt(quantiteField.getText(), -1);
+        if (quantite < 0) {
+            showFeedback("Quantite invalide.", false);
+            return;
+        }
+
+        PharmacyService.ActionResult actionResult = pharmacyService.updateStock(currentUser, row.id(), quantite, prixField.getText());
+        showFeedback(actionResult.message(), actionResult.success());
+        if (actionResult.success()) {
+            refresh();
+        }
+    }
+
+    private void confirmDeleteStock(PharmacyService.StockRow row) {
+        User currentUser = currentAdminUser();
+        if (currentUser == null) {
+            return;
+        }
+
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Supprimer stock");
+        dialog.setHeaderText("Supprimer le stock #" + row.id() + " - " + safe(row.medicamentNom()) + " ?");
+        dialog.getDialogPane().setContent(new Label("La ligne de stock sera supprimee definitivement."));
+        ButtonType confirmType = new ButtonType("Supprimer", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.CANCEL, confirmType);
+
+        Optional<ButtonType> result = ModalDialogs.showDialog(dialog, resolveOwnerWindow(), "bo-modal-pane", "bo-delete-pane");
+        if (result.isEmpty() || result.get() != confirmType) {
+            return;
+        }
+
+        PharmacyService.ActionResult actionResult = pharmacyService.deleteStock(currentUser, row.id());
+        showFeedback(actionResult.message(), actionResult.success());
+        if (actionResult.success()) {
+            refresh();
+        }
+    }
+
+    private void applyReservationDecision(int reservationId, String decision) {
+        User currentUser = currentAdminUser();
+        if (currentUser == null) {
+            return;
+        }
+
+        PharmacyService.ActionResult result;
+        switch (decision) {
+            case "confirm" -> result = pharmacyService.confirmReservation(currentUser, reservationId);
+            case "reject" -> result = pharmacyService.rejectReservation(currentUser, reservationId);
+            case "cancel" -> result = pharmacyService.cancelReservation(currentUser, reservationId);
+            default -> {
+                showFeedback("Action reservation inconnue.", false);
+                return;
+            }
+        }
+
+        showFeedback(result.message(), result.success());
+        if (result.success()) {
+            refresh();
+        }
     }
 
     private void renderCommunityPage() {
@@ -1984,6 +2994,29 @@ public class AdminDashboardController {
         return true;
     }
 
+    private boolean matchPharmacyStatus(boolean active, String filter) {
+        if ("Actives".equals(filter)) {
+            return active;
+        }
+        if ("Inactives".equals(filter)) {
+            return !active;
+        }
+        return true;
+    }
+
+    private boolean matchStockLevel(int quantity, String filter) {
+        if ("Disponible".equals(filter)) {
+            return quantity > 5;
+        }
+        if ("Critique (<=5)".equals(filter)) {
+            return quantity > 0 && quantity <= 5;
+        }
+        if ("Rupture".equals(filter)) {
+            return quantity <= 0;
+        }
+        return true;
+    }
+
     private boolean matchAppointmentDateFilter(LocalDate date, String filter) {
         if (date == null) {
             return "Toutes dates".equals(filter);
@@ -2060,6 +3093,23 @@ public class AdminDashboardController {
             return rows;
         }
         return rows.subList(0, max);
+    }
+
+    private User currentAdminUser() {
+        User user = AuthSession.getCurrentUser();
+        if (user == null || user.getId() == null) {
+            showFeedback("Session admin invalide. Reconnectez-vous.", false);
+            return null;
+        }
+        return user;
+    }
+
+    private int parsePositiveInt(String raw, int fallback) {
+        try {
+            return Math.max(0, Integer.parseInt(raw == null ? "" : raw.trim()));
+        } catch (NumberFormatException exception) {
+            return fallback;
+        }
     }
 
     private String normalize(String value) {

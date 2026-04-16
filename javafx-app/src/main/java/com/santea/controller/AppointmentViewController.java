@@ -4,6 +4,7 @@ import com.santea.model.User;
 import com.santea.navigation.AppNavigator;
 import com.santea.service.AppointmentService;
 import com.santea.service.AuthSession;
+import javafx.animation.PauseTransition;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -29,6 +30,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.Modality;
+import javafx.util.Duration;
 
 import java.net.URL;
 import java.time.LocalDate;
@@ -50,6 +52,7 @@ public class AppointmentViewController implements Initializable {
 	private List<AppointmentService.DoctorRow> doctors = List.of();
 	private List<AppointmentService.PatientAppointmentRow> patientAppointments = List.of();
 	private List<AppointmentService.DoctorAppointmentRow> doctorAppointments = List.of();
+	private PauseTransition bookingFeedbackHideTimer;
 
 	@FXML
 	private VBox root;
@@ -161,6 +164,7 @@ public class AppointmentViewController implements Initializable {
 		setupDoctorCombo();
 		setupDefaultDates();
 		setupListeners();
+		hideBookingFeedback();
 		configurePageByAccess();
 	}
 
@@ -840,6 +844,9 @@ public class AppointmentViewController implements Initializable {
 		if (!bookingFeedback.getStyleClass().contains("appt-feedback-success")) {
 			bookingFeedback.getStyleClass().add("appt-feedback-success");
 		}
+		bookingFeedback.setVisible(true);
+		bookingFeedback.setManaged(true);
+		scheduleBookingFeedbackAutoHide();
 	}
 
 	private void showError(String title, String message) {
@@ -848,12 +855,36 @@ public class AppointmentViewController implements Initializable {
 		if (!bookingFeedback.getStyleClass().contains("appt-feedback-error")) {
 			bookingFeedback.getStyleClass().add("appt-feedback-error");
 		}
+		bookingFeedback.setVisible(true);
+		bookingFeedback.setManaged(true);
+		scheduleBookingFeedbackAutoHide();
 		Alert alert = new Alert(Alert.AlertType.ERROR);
 		alert.setTitle(title);
 		alert.setHeaderText(null);
 		alert.setContentText(message);
 		styleDialog(alert, true);
 		alert.showAndWait();
+	}
+
+	private void scheduleBookingFeedbackAutoHide() {
+		if (bookingFeedbackHideTimer == null) {
+			bookingFeedbackHideTimer = new PauseTransition(Duration.seconds(10));
+			bookingFeedbackHideTimer.setOnFinished(event -> hideBookingFeedback());
+		}
+		bookingFeedbackHideTimer.stop();
+		bookingFeedbackHideTimer.playFromStart();
+	}
+
+	private void hideBookingFeedback() {
+		if (bookingFeedbackHideTimer != null) {
+			bookingFeedbackHideTimer.stop();
+		}
+		if (bookingFeedback == null) {
+			return;
+		}
+		bookingFeedback.setText("");
+		bookingFeedback.setVisible(false);
+		bookingFeedback.setManaged(false);
 	}
 
 	private void showInfo(String title, String message) {

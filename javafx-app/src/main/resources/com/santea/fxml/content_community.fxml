@@ -19,7 +19,7 @@
             styleClass="blog-root">
 
     <center>
-    <ScrollPane fitToWidth="true" hbarPolicy="NEVER" styleClass="blog-scroll"
+    <ScrollPane fitToWidth="true" pannable="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" styleClass="blog-scroll"
                 maxWidth="1.7976931348623157E308" maxHeight="1.7976931348623157E308">
         <content>
             <VBox spacing="16" alignment="TOP_CENTER" styleClass="blog-shell">

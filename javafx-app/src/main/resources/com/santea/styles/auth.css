@@ -1463,27 +1463,47 @@
 }
 
 .feature-page-root {
-    -fx-background-color: #f5f9ff;
+    -fx-background-color: #f0f6f9;
 }
 
 .feature-top-bar {
     -fx-background-color: #ffffff;
-    -fx-border-color: transparent transparent #e2e8f0 transparent;
+    -fx-border-color: transparent transparent #d7e4ef transparent;
     -fx-border-width: 0 0 1 0;
+    -fx-effect: dropshadow(gaussian, rgba(13, 36, 68, 0.12), 14, 0.14, 0, 2);
 }
 
 .feature-brand {
     -fx-font-size: 22;
     -fx-font-weight: 800;
-    -fx-text-fill: #0ea5b7;
+    -fx-text-fill: #1787b7;
 }
 
 .feature-back-btn {
-    -fx-background-color: #0ea5b7;
+    -fx-background-color: #f4fbff;
+    -fx-text-fill: #0f7fbd;
+    -fx-background-radius: 10;
+    -fx-font-size: 12;
+    -fx-font-weight: 800;
+    -fx-padding: 8 13 8 13;
+}
+
+.feature-nav-btn {
+    -fx-background-color: #f4fbff;
+    -fx-text-fill: #0f7fbd;
+    -fx-background-radius: 10;
+    -fx-border-color: #d2dee8;
+    -fx-border-width: 1;
+    -fx-border-radius: 10;
+    -fx-padding: 8 13 8 13;
+    -fx-font-size: 12;
+    -fx-font-weight: 800;
+}
+
+.feature-nav-btn-accent {
+    -fx-background-color: linear-gradient(to right, #35bdf6, #0d8abc);
     -fx-text-fill: #ffffff;
-    -fx-background-radius: 20;
-    -fx-padding: 8 14 8 14;
-    -fx-font-weight: 700;
+    -fx-border-color: transparent;
 }
 
 .feature-scroll,
@@ -1491,32 +1511,187 @@
     -fx-background-color: transparent;
 }
 
+.feature-center-wrap {
+    -fx-alignment: top-center;
+    -fx-padding: 0 8 0 8;
+}
+
 .feature-shell {
-    -fx-background-color: #ffffff;
+    -fx-background-color: transparent;
+    -fx-max-width: 1280;
+    -fx-min-width: 320;
+}
+
+.feature-hero-card,
+.feature-section-card {
+    -fx-background-color: #f7fafc;
+    -fx-background-radius: 14;
+    -fx-border-color: #d7e4ef;
+    -fx-border-width: 1;
+    -fx-border-radius: 14;
+    -fx-padding: 14;
+    -fx-effect: none;
+}
+
+.feature-hero-card {
+    -fx-background-color: linear-gradient(to bottom right, #1787b7 0%, #1e4ba8 100%);
     -fx-background-radius: 18;
-    -fx-border-color: #dbe7f3;
+    -fx-border-color: transparent;
     -fx-border-radius: 18;
+    -fx-padding: 22 24 20 24;
+    -fx-effect: dropshadow(gaussian, rgba(13, 36, 68, 0.22), 20, 0.18, 0, 4);
+}
+
+.feature-chip,
+.feature-chip-secondary {
+    -fx-background-radius: 999;
+    -fx-padding: 4 10 4 10;
+    -fx-font-size: 11;
+    -fx-font-weight: 800;
+}
+
+.feature-chip {
+    -fx-background-color: rgba(255,255,255,0.24);
+    -fx-text-fill: #eaf5ff;
+}
+
+.feature-chip-secondary {
+    -fx-background-color: rgba(255,255,255,0.16);
+    -fx-text-fill: #eaf5ff;
 }
 
 .feature-title {
-    -fx-font-size: 30;
-    -fx-font-weight: 800;
-    -fx-text-fill: #0f172a;
+    -fx-font-size: 46;
+    -fx-font-weight: 900;
+    -fx-text-fill: #ffffff;
 }
 
 .feature-subtitle {
-    -fx-font-size: 14;
-    -fx-text-fill: #64748b;
+    -fx-font-size: 16;
+    -fx-text-fill: rgba(240, 248, 255, 0.92);
+}
+
+.feature-summary {
+    -fx-font-size: 13;
+    -fx-text-fill: rgba(240, 248, 255, 0.92);
+    -fx-font-weight: 700;
+}
+
+.feature-section-title {
+    -fx-font-size: 28;
+    -fx-font-weight: 900;
+    -fx-text-fill: #1f2b3a;
+}
+
+.feature-highlight-card {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 12;
+    -fx-border-color: #dce7f1;
+    -fx-border-width: 1;
+    -fx-border-radius: 12;
+    -fx-padding: 10 12 10 12;
+    -fx-pref-width: 290;
+    -fx-max-width: 310;
+}
+
+.feature-highlight-label {
+    -fx-font-size: 11;
+    -fx-font-weight: 900;
+    -fx-text-fill: #229ac8;
+}
+
+.feature-highlight-text {
+    -fx-font-size: 13;
+    -fx-text-fill: #5d7087;
+    -fx-font-weight: 700;
+}
+
+.feature-detail-card {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 12;
+    -fx-border-color: #dce7f1;
+    -fx-border-width: 1;
+    -fx-border-radius: 12;
+    -fx-padding: 10 12 10 12;
+}
+
+.feature-step-index {
+    -fx-background-color: #dff3fc;
+    -fx-text-fill: #ffffff;
+    -fx-font-weight: 900;
+    -fx-background-radius: 50;
+    -fx-padding: 2 8 2 8;
+    -fx-font-size: 11;
+}
+
+.feature-step-tag {
+    -fx-background-color: #d7eff9;
+    -fx-text-fill: #2495c2;
+    -fx-background-radius: 50;
+    -fx-padding: 2 8 2 8;
+    -fx-font-size: 11;
+    -fx-font-weight: 800;
 }
 
 .feature-line {
-    -fx-background-color: #f8fbff;
-    -fx-background-radius: 10;
-    -fx-border-color: #d9e7f5;
-    -fx-border-radius: 10;
-    -fx-padding: 10 12 10 12;
-    -fx-font-size: 14;
-    -fx-text-fill: #1e293b;
+    -fx-font-size: 13;
+    -fx-text-fill: #5d7087;
+    -fx-font-weight: 700;
+}
+
+.feature-empty-line {
+    -fx-font-size: 13;
+    -fx-text-fill: #8ea0b5;
+    -fx-font-weight: 700;
+    -fx-padding: 8 4 8 4;
+}
+
+.feature-back-btn:hover,
+.feature-nav-btn:hover {
+    -fx-cursor: hand;
+    -fx-opacity: 0.96;
+}
+
+.feature-back-btn:pressed,
+.feature-nav-btn:pressed,
+.feature-nav-btn-accent:pressed {
+    -fx-opacity: 0.88;
+}
+
+.feature-back-btn,
+.feature-nav-btn,
+.feature-nav-btn-accent {
+    -fx-min-height: 34;
+}
+
+.feature-back-btn:pressed,
+.feature-nav-btn:pressed,
+.feature-nav-btn-accent:pressed {
+    -fx-opacity: 0.9;
+}
+
+.feature-scroll .scroll-bar:vertical {
+    -fx-background-color: transparent;
+    -fx-padding: 0 2 0 2;
+}
+
+.feature-scroll .scroll-bar:vertical .track {
+    -fx-background-color: rgba(219, 231, 242, 0.8);
+    -fx-background-radius: 8;
+}
+
+.feature-scroll .scroll-bar:vertical .thumb {
+    -fx-background-color: #9fc4de;
+    -fx-background-radius: 8;
+}
+
+.feature-scroll .increment-button,
+.feature-scroll .decrement-button,
+.feature-scroll .increment-arrow,
+.feature-scroll .decrement-arrow {
+    -fx-padding: 0;
+    -fx-shape: "";
+    -fx-background-color: transparent;
 }
 
 .banned-container {
@@ -3801,6 +3976,49 @@
     -fx-text-fill: #b91c1c;
 }
 
+.appt-hero-btn-primary:hover,
+.appt-btn-primary:hover,
+.appt-btn-secondary:hover,
+.appt-btn-danger:hover,
+.appt-btn-soft:hover,
+.appt-hero-btn-ghost:hover,
+.appt-hero-btn-voice:hover,
+.blog-add-btn:hover,
+.blog-back-btn:hover,
+.blog-filter-btn:hover,
+.blog-view-btn:hover,
+.blog-ghost-btn:hover,
+.blog-danger-btn:hover,
+.blog-meta-btn:hover,
+.sub-primary-button:hover,
+.sub-outline-button:hover,
+.sub-danger-button:hover,
+.profile-nav-btn:hover {
+    -fx-cursor: hand;
+    -fx-opacity: 0.95;
+}
+
+.appt-hero-btn-primary:pressed,
+.appt-btn-primary:pressed,
+.appt-btn-secondary:pressed,
+.appt-btn-danger:pressed,
+.appt-btn-soft:pressed,
+.appt-hero-btn-ghost:pressed,
+.appt-hero-btn-voice:pressed,
+.blog-add-btn:pressed,
+.blog-back-btn:pressed,
+.blog-filter-btn:pressed,
+.blog-view-btn:pressed,
+.blog-ghost-btn:pressed,
+.blog-danger-btn:pressed,
+.blog-meta-btn:pressed,
+.sub-primary-button:pressed,
+.sub-outline-button:pressed,
+.sub-danger-button:pressed,
+.profile-nav-btn:pressed {
+    -fx-opacity: 0.86;
+}
+
 .blog-empty-text {
     -fx-font-size: 13;
     -fx-text-fill: #8ea0b5;
@@ -4038,4 +4256,485 @@
 .content-blocked-text {
     -fx-font-size: 13;
     -fx-text-fill: #7f1d1d;
+}
+
+/* ===== PHARMACY MODULE ===== */
+.pharm-page-root {
+    -fx-background-color: linear-gradient(to bottom right, #e9f2f9 0%, #eef5fa 55%, #f4f8fb 100%);
+}
+
+.pharm-shell {
+    -fx-background-color: transparent;
+    -fx-max-width: 1400;
+    -fx-min-width: 320;
+}
+
+.pharm-center-wrap {
+    -fx-alignment: top-center;
+    -fx-padding: 0 8 0 8;
+}
+
+.pharm-hero-card {
+    -fx-background-color: linear-gradient(to right, #0d8abc 0%, #0a6d96 55%, #1e40af 100%);
+    -fx-background-radius: 20;
+    -fx-padding: 24 22 24 22;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.24), 30, 0.18, 0, 8);
+}
+
+.pharm-chip,
+.pharm-chip-status {
+    -fx-background-color: rgba(255,255,255,0.2);
+    -fx-background-radius: 999;
+    -fx-padding: 6 14 6 14;
+    -fx-font-size: 12;
+    -fx-font-weight: 800;
+    -fx-text-fill: #ffffff;
+}
+
+.pharm-chip-status {
+    -fx-background-color: rgba(255,255,255,0.16);
+}
+
+.pharm-hero-title {
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 52;
+    -fx-font-weight: 900;
+}
+
+.pharm-hero-subtitle {
+    -fx-text-fill: rgba(255,255,255,0.9);
+    -fx-font-size: 16;
+}
+
+.pharm-hero-btn,
+.pharm-hero-btn-ghost,
+.pharm-btn,
+.pharm-switch-btn {
+    -fx-background-radius: 10;
+    -fx-font-size: 13;
+    -fx-font-weight: 800;
+    -fx-padding: 9 14 9 14;
+}
+
+.pharm-hero-btn,
+.pharm-btn-primary {
+    -fx-background-color: linear-gradient(to right, #35bdf6, #0d8abc);
+    -fx-text-fill: #ffffff;
+}
+
+.pharm-hero-btn-ghost,
+.pharm-switch-btn {
+    -fx-background-color: rgba(255,255,255,0.16);
+    -fx-text-fill: #ffffff;
+    -fx-border-color: rgba(255,255,255,0.34);
+    -fx-border-width: 1.4;
+    -fx-border-radius: 10;
+}
+
+.pharm-switch-row {
+    -fx-padding: 4 0 0 0;
+}
+
+.pharm-switch-btn {
+    -fx-padding: 9 14 9 14;
+}
+
+.pharm-switch-active {
+    -fx-background-color: linear-gradient(to right, #35bdf6, #0d8abc);
+    -fx-border-color: transparent;
+    -fx-text-fill: #ffffff;
+    -fx-effect: none;
+}
+
+.pharm-restricted-card {
+    -fx-background-color: #fef2f2;
+    -fx-border-color: #fecaca;
+    -fx-border-width: 1;
+    -fx-border-radius: 14;
+    -fx-background-radius: 14;
+    -fx-padding: 12;
+}
+
+.pharm-restricted-title {
+    -fx-font-size: 16;
+    -fx-font-weight: 900;
+    -fx-text-fill: #991b1b;
+}
+
+.pharm-restricted-text {
+    -fx-font-size: 13;
+    -fx-text-fill: #7f1d1d;
+}
+
+.pharm-panel {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #dce6f1;
+    -fx-border-width: 1;
+    -fx-border-radius: 16;
+    -fx-background-radius: 16;
+    -fx-padding: 14;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.08), 20, 0.14, 0, 3);
+}
+
+.pharm-panel-title {
+    -fx-font-size: 28;
+    -fx-font-weight: 900;
+    -fx-text-fill: #14213d;
+}
+
+.pharm-panel-subtitle {
+    -fx-font-size: 13;
+    -fx-text-fill: #64748b;
+    -fx-font-weight: 700;
+}
+
+.pharm-input {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #d8e5f0;
+    -fx-border-width: 1.2;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+    -fx-font-size: 13;
+    -fx-font-weight: 700;
+    -fx-padding: 10 12 10 12;
+    -fx-text-fill: #14213d;
+    -fx-prompt-text-fill: #64748b;
+}
+
+.pharm-input:focused {
+    -fx-border-color: #35bdf6;
+    -fx-border-width: 1.6;
+    -fx-background-color: #ffffff;
+    -fx-effect: dropshadow(gaussian, rgba(53, 189, 246, 0.25), 10, 0.2, 0, 0);
+}
+
+.pharm-page-root .combo-box-base.pharm-input > .arrow-button {
+    -fx-background-color: transparent;
+}
+
+.pharm-page-root .combo-box-base.pharm-input > .arrow-button > .arrow {
+    -fx-background-color: #0d8abc;
+}
+
+.pharm-page-root .combo-box-popup .list-view {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #d8e5f0;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+}
+
+.pharm-page-root .combo-box-popup .list-cell {
+    -fx-font-size: 12;
+    -fx-font-weight: 600;
+    -fx-text-fill: #1e293b;
+    -fx-background-color: #ffffff;
+}
+
+.pharm-page-root .combo-box-popup .list-cell:filled:selected,
+.pharm-page-root .combo-box-popup .list-cell:filled:hover {
+    -fx-background-color: #e6f3fb;
+    -fx-text-fill: #0f172a;
+}
+
+.pharm-inline-actions {
+    -fx-alignment: center-right;
+}
+
+.pharm-btn-secondary {
+    -fx-background-color: linear-gradient(to right, #edf5fb, #e6f0f8);
+    -fx-text-fill: #2f546f;
+    -fx-border-color: #bfd3e2;
+    -fx-border-width: 1;
+    -fx-border-radius: 10;
+    -fx-effect: dropshadow(gaussian, rgba(13, 67, 107, 0.08), 8, 0.12, 0, 1);
+}
+
+.pharm-btn-danger {
+    -fx-background-color: linear-gradient(to right, #ef4444, #dc2626);
+    -fx-border-color: #b91c1c;
+    -fx-border-width: 1;
+    -fx-border-radius: 10;
+    -fx-text-fill: #ffffff;
+}
+
+.pharm-btn,
+.pharm-switch-btn,
+.pharm-hero-btn,
+.pharm-hero-btn-ghost {
+    -fx-font-weight: 800;
+    -fx-min-height: 36;
+}
+
+.pharm-btn {
+    -fx-border-color: transparent;
+    -fx-effect: dropshadow(gaussian, rgba(13, 67, 107, 0.12), 10, 0.14, 0, 2);
+}
+
+.pharm-btn-primary {
+    -fx-background-color: linear-gradient(to right, #0ea5e9, #0284c7);
+    -fx-text-fill: #ffffff;
+    -fx-border-color: #0b7fb0;
+    -fx-border-width: 1;
+    -fx-border-radius: 10;
+}
+
+.pharm-filter-btn {
+    -fx-border-radius: 12;
+    -fx-background-radius: 12;
+    -fx-padding: 9 16 9 16;
+}
+
+.pharm-add-btn {
+    -fx-background-color: linear-gradient(to right, #10b981, #059669);
+    -fx-text-fill: #ffffff;
+    -fx-border-color: #047857;
+    -fx-border-width: 1;
+    -fx-border-radius: 12;
+    -fx-background-radius: 12;
+    -fx-padding: 10 16 10 16;
+}
+
+.pharm-save-btn {
+    -fx-background-color: linear-gradient(to right, #0891b2, #0e7490);
+    -fx-text-fill: #ffffff;
+    -fx-border-color: #0f5f75;
+    -fx-border-width: 1;
+    -fx-border-radius: 12;
+    -fx-background-radius: 12;
+    -fx-padding: 10 16 10 16;
+}
+
+
+.pharm-btn-primary:hover {
+    -fx-background-color: linear-gradient(to right, #22b5f0, #0b90cf);
+}
+
+.pharm-btn-secondary:hover {
+    -fx-background-color: linear-gradient(to right, #e7f1f9, #ddeaf4);
+}
+
+.pharm-btn-danger:hover {
+    -fx-background-color: linear-gradient(to right, #f25858, #e03131);
+}
+
+.pharm-add-btn:hover {
+    -fx-background-color: linear-gradient(to right, #1ecb8c, #0baa79);
+}
+
+.pharm-save-btn:hover {
+    -fx-background-color: linear-gradient(to right, #0da3c7, #16839f);
+}
+
+.pharm-card,
+.pharm-row {
+    -fx-background-color: #f8fbff;
+    -fx-border-color: #e2e8f0;
+    -fx-border-width: 1;
+    -fx-border-radius: 12;
+    -fx-background-radius: 12;
+    -fx-padding: 12;
+    -fx-effect: none;
+}
+
+.pharm-card {
+    -fx-pref-width: 360;
+    -fx-max-width: 380;
+}
+
+.pharm-row {
+    -fx-pref-width: 372;
+    -fx-max-width: 390;
+    -fx-min-height: 92;
+}
+
+.pharm-clickable {
+    -fx-cursor: hand;
+}
+
+.pharm-clickable:hover {
+    -fx-border-color: #c5d9ea;
+    -fx-background-color: #f2f8fd;
+}
+
+.pharm-selected-pharmacy {
+    -fx-border-color: #35bdf6;
+    -fx-border-width: 1.5;
+    -fx-background-color: #e6f3fb;
+}
+
+.pharm-scroll,
+.pharm-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+
+.pharm-scroll .scroll-bar:vertical {
+    -fx-background-color: transparent;
+    -fx-padding: 0 2 0 2;
+}
+
+.pharm-scroll .scroll-bar:vertical .track {
+    -fx-background-color: rgba(219, 231, 242, 0.8);
+    -fx-background-radius: 8;
+}
+
+.pharm-scroll .scroll-bar:vertical .thumb {
+    -fx-background-color: #9fc4de;
+    -fx-background-radius: 8;
+}
+
+.pharm-scroll .increment-button,
+.pharm-scroll .decrement-button,
+.pharm-scroll .increment-arrow,
+.pharm-scroll .decrement-arrow {
+    -fx-padding: 0;
+    -fx-shape: "";
+    -fx-background-color: transparent;
+}
+
+.pharm-page-root .scroll-pane,
+.pharm-page-root .scroll-pane > .viewport {
+    -fx-background-color: transparent;
+}
+
+.pagination {
+    -fx-page-information-visible: false;
+}
+
+.pharm-card-title,
+.pharm-row-title {
+    -fx-font-size: 14;
+    -fx-font-weight: 800;
+    -fx-text-fill: #0f172a;
+}
+
+.pharm-card-text,
+.pharm-row-text,
+.pharm-card-meta {
+    -fx-font-size: 12;
+    -fx-text-fill: #4b5563;
+}
+
+.pharm-pill {
+    -fx-background-radius: 999;
+    -fx-padding: 3 9 3 9;
+    -fx-font-size: 11;
+    -fx-font-weight: 800;
+}
+
+.pharm-pill-active {
+    -fx-background-color: #dcfce7;
+    -fx-text-fill: #166534;
+}
+
+.pharm-pill-muted {
+    -fx-background-color: #f1f5f9;
+    -fx-text-fill: #475569;
+}
+
+.pharm-pill-info {
+    -fx-background-color: #e0f2fe;
+    -fx-text-fill: #0369a1;
+}
+
+.pharm-pill-pending {
+    -fx-background-color: #fef3c7;
+    -fx-text-fill: #92400e;
+}
+
+.pharm-pill-confirmed {
+    -fx-background-color: #dcfce7;
+    -fx-text-fill: #166534;
+}
+
+.pharm-pill-danger {
+    -fx-background-color: #fee2e2;
+    -fx-text-fill: #b91c1c;
+}
+
+.pharm-empty-card {
+    -fx-alignment: center-left;
+}
+
+.pharm-empty-text {
+    -fx-font-size: 12;
+    -fx-text-fill: #64748b;
+}
+
+.pharm-feedback {
+    -fx-font-size: 12;
+    -fx-font-weight: 800;
+}
+
+.pharm-feedback-success {
+    -fx-text-fill: #0f766e;
+}
+
+.pharm-feedback-error {
+    -fx-text-fill: #b91c1c;
+}
+
+.pharm-btn:hover,
+.pharm-switch-btn:hover,
+.pharm-hero-btn:hover,
+.pharm-hero-btn-ghost:hover {
+    -fx-cursor: hand;
+    -fx-opacity: 0.96;
+}
+
+.pharm-btn:pressed,
+.pharm-switch-btn:pressed,
+.pharm-hero-btn:pressed,
+.pharm-hero-btn-ghost:pressed {
+    -fx-opacity: 0.9;
+}
+
+.pagination {
+    -fx-page-information-visible: false;
+}
+
+.pagination > .pagination-control {
+    -fx-background-color: transparent;
+}
+
+.pagination > .pagination-control > .control-box {
+    -fx-spacing: 6;
+    -fx-padding: 4 2 4 2;
+}
+
+.pagination .button,
+.pagination .toggle-button {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #d8e5f0;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-min-width: 30;
+    -fx-min-height: 30;
+    -fx-pref-width: 30;
+    -fx-pref-height: 30;
+    -fx-font-size: 11;
+    -fx-font-weight: 800;
+    -fx-text-fill: #33516b;
+    -fx-padding: 0;
+}
+
+.pagination .toggle-button:selected {
+    -fx-background-color: linear-gradient(to right, #35bdf6, #0d8abc);
+    -fx-border-color: transparent;
+    -fx-text-fill: #ffffff;
+}
+
+.pagination .button:hover,
+.pagination .toggle-button:hover {
+    -fx-cursor: hand;
+    -fx-background-color: #eef7fe;
+}
+
+.pagination .left-arrow,
+.pagination .right-arrow {
+    -fx-background-color: #0d8abc;
+}
+
+.pagination .button:disabled {
+    -fx-opacity: 0.5;
 }

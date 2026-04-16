@@ -18,7 +18,7 @@
 		   fx:controller="com.santea.controller.AppointmentViewController"
 		   styleClass="appt-page-root">
 
-	<ScrollPane fitToWidth="true" styleClass="home-scroll">
+	<ScrollPane fitToWidth="true" pannable="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" styleClass="home-scroll">
 		<content>
 			<StackPane alignment="TOP_CENTER">
 				<VBox fx:id="root" spacing="18" alignment="TOP_CENTER" maxWidth="1400" styleClass="appt-shell profile-content-shell">

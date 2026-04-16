@@ -5,6 +5,7 @@ import com.santea.navigation.AppNavigator;
 import com.santea.service.AuthSession;
 import com.santea.service.AuthorizationPolicyService;
 import com.santea.service.ContentCommunityService;
+import javafx.animation.PauseTransition;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -20,6 +21,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.util.Duration;
 
 import java.net.URL;
 import java.util.List;
@@ -176,6 +178,8 @@ public class ContentCommunityController implements Initializable {
     @FXML
     private Label feedbackLabel;
 
+    private PauseTransition feedbackHideTimer;
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         currentUser = AuthSession.getCurrentUser();
@@ -209,6 +213,7 @@ public class ContentCommunityController implements Initializable {
         setupFilters();
         setupCreateForm();
         setupAdminWidgets();
+        hideFeedback();
         refreshAll();
         setMode(Mode.LIST);
     }
@@ -866,9 +871,39 @@ public class ContentCommunityController implements Initializable {
     }
 
     private void showFeedback(String message, boolean success) {
-        feedbackLabel.setText(safe(message));
+        String normalizedMessage = safe(message);
+        if (normalizedMessage.isEmpty()) {
+            hideFeedback();
+            return;
+        }
+
+        feedbackLabel.setText(normalizedMessage);
         feedbackLabel.getStyleClass().removeAll("blog-feedback-success", "blog-feedback-error");
         feedbackLabel.getStyleClass().add(success ? "blog-feedback-success" : "blog-feedback-error");
+        feedbackLabel.setVisible(true);
+        feedbackLabel.setManaged(true);
+        scheduleFeedbackAutoHide();
+    }
+
+    private void scheduleFeedbackAutoHide() {
+        if (feedbackHideTimer == null) {
+            feedbackHideTimer = new PauseTransition(Duration.seconds(10));
+            feedbackHideTimer.setOnFinished(event -> hideFeedback());
+        }
+        feedbackHideTimer.stop();
+        feedbackHideTimer.playFromStart();
+    }
+
+    private void hideFeedback() {
+        if (feedbackHideTimer != null) {
+            feedbackHideTimer.stop();
+        }
+        if (feedbackLabel == null) {
+            return;
+        }
+        feedbackLabel.setText("");
+        feedbackLabel.setVisible(false);
+        feedbackLabel.setManaged(false);
     }
 
     private void setVisibleManaged(Node node, boolean visible) {
