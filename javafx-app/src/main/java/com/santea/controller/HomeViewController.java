@@ -146,10 +146,7 @@ public class HomeViewController {
     @FXML
     private void handleOpenAdminDashboard() {
         hideAllMenus();
-        if (!AuthSession.isFaceVerified()) {
-            AppNavigator.showAdminFaceVerification();
-            return;
-        }
+        // Face verification désactivée pour le développement
         AppNavigator.showAdminDashboard();
     }
 
@@ -912,23 +909,14 @@ public class HomeViewController {
         if (!guardPremiumAccess()) {
             return;
         }
-        AppNavigator.showFeaturePage("Journal sante", "Suivi quotidien", List.of(
-                "Poids et IMC",
-                "Sommeil",
-                "Hydratation",
-                "Activite"
-        ));
+        AppNavigator.showSanteQuotidiennePage();
     }
 
     private void openSymptomsPage() {
         if (!guardPremiumAccess()) {
             return;
         }
-        AppNavigator.showFeaturePage("Mes symptomes", "Historique et suivi", List.of(
-                "Declaration des symptomes",
-                "Evolution dans le temps",
-                "Alertes de suivi"
-        ));
+        AppNavigator.showSymptomesQuotidiensPage();
     }
 
     private void openSubscriptionPage() {

@@ -1,0 +1,3 @@
+id,username,email,role,subscription_status,subscription_type,email_verified,admin_approved,is_banned
+2,"mahdi","mahdi@gmail.com","ROLE_PATIENT","ACTIVE","",true,true,false
+1,"yessmine","yessminechouchane@gmail.com","ROLE_ADMIN","PENDING","",false,false,false

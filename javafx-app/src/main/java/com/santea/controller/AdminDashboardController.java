@@ -620,6 +620,26 @@ public class AdminDashboardController {
     }
 
     @FXML
+    private void handleSanteQuotidienneAdmin() {
+        try {
+            AppNavigator.showSanteQuotidienneAdmin();
+        } catch (Exception exception) {
+            exception.printStackTrace();
+            showFeedback("Erreur ouverture Santé Quotidienne admin : " + exception.getMessage(), false);
+        }
+    }
+
+    @FXML
+    private void handleSymptomesAdmin() {
+        try {
+            AppNavigator.showSymptomesListeAdmin();
+        } catch (Exception exception) {
+            exception.printStackTrace();
+            showFeedback("Erreur ouverture Symptomes admin : " + exception.getMessage(), false);
+        }
+    }
+
+    @FXML
     private void handleRefresh() {
         refresh();
         showFeedback("Dashboard rafraichi.", true);
@@ -743,6 +763,18 @@ public class AdminDashboardController {
 
         AdminOperationsService.ActionResult result = adminOperationsService.exportCsvReports(selectedDirectory.toPath());
         showFeedback(result.message(), result.success());
+    }
+
+    @FXML
+    private void handleRevokeLatestSession() {
+        handleNavSessions();
+        showFeedback("Section sessions ouverte. Selectionnez une session a revoquer.", true);
+    }
+
+    @FXML
+    private void handleReviewSuspicious() {
+        handleNavSuspicious();
+        showFeedback("Section connexions suspectes ouverte.", true);
     }
 
     @FXML

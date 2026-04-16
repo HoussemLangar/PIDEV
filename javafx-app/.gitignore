@@ -5,4 +5,5 @@ javafx-app/.jdks/
 .jdks/
 target/
 *.class
+generated-exports/
 # Ignore JDK

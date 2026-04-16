@@ -9,103 +9,106 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="com.santea.controller.AccompanimentPlanShowController"
-      spacing="20" styleClass="plan-show-root">
+<StackPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="com.santea.controller.AccompanimentPlanShowController"
+           styleClass="appt-page-root">
     <children>
-        <HBox alignment="CENTER_LEFT" styleClass="plan-header">
-            <HBox alignment="CENTER_LEFT" spacing="16">
-                <StackPane styleClass="plan-index-icon">
-                    <Label text="PLAN" styleClass="plan-index-icon-text"/>
-                </StackPane>
-                <VBox spacing="4">
-                    <Label fx:id="titleLabel" text="Plan personnalisé" styleClass="page-title"/>
-                    <Label text="Plan d'accompagnement personnalisé" styleClass="section-subtitle"/>
-                </VBox>
-            </HBox>
-            <Region HBox.hgrow="ALWAYS"/>
-            <Label fx:id="statusLabel" text="ACTIF" styleClass="plan-status-pill"/>
-        </HBox>
-
-        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" VBox.vgrow="ALWAYS" styleClass="doc-scroll">
+        <ScrollPane fitToWidth="true" pannable="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" styleClass="home-scroll">
             <content>
-                <VBox spacing="20">
-                    <children>
-                        <VBox spacing="14" styleClass="plan-detail-card">
-                            <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
-                            <children>
-                                <Label text="Patient" styleClass="panel-title"/>
-                                <Label fx:id="patientNameLabel" text="Patient" styleClass="plan-card-title"/>
-                                <Label fx:id="patientEmailLabel" text="" styleClass="plan-card-subtitle"/>
-                            </children>
-                        </VBox>
+                <StackPane alignment="TOP_CENTER">
+                    <VBox spacing="18" alignment="TOP_CENTER" maxWidth="1320" styleClass="plan-show-root appt-shell profile-content-shell">
+                        <padding><Insets top="24" right="20" bottom="28" left="20"/></padding>
 
-                        <HBox spacing="16">
-                            <children>
-                                <VBox spacing="10" styleClass="plan-detail-card" HBox.hgrow="ALWAYS">
-                                    <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
-                                    <children>
-                                        <Label text="Progression" styleClass="panel-title"/>
-                                        <Label fx:id="progressLabel" text="0%" styleClass="tele-stat-value"/>
-                                        <Label fx:id="durationLabel" text="8 semaines" styleClass="plan-card-subtitle"/>
-                                        <Label fx:id="startDateLabel" text="--" styleClass="plan-card-subtitle"/>
-                                        <Label fx:id="endDateLabel" text="--" styleClass="plan-card-subtitle"/>
-                                    </children>
-                                </VBox>
-                                <VBox spacing="10" styleClass="plan-detail-card" HBox.hgrow="ALWAYS">
-                                    <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
-                                    <children>
-                                        <Label text="Professionnels" styleClass="panel-title"/>
-                                        <Label fx:id="coachLabel" text="Non assigné" styleClass="plan-card-subtitle"/>
-                                        <Label fx:id="nutritionistLabel" text="Non assigné" styleClass="plan-card-subtitle"/>
-                                        <Label fx:id="aiSummaryLabel" text="" styleClass="plan-card-description" wrapText="true"/>
-                                    </children>
-                                </VBox>
-                            </children>
-                        </HBox>
+                        <children>
+                            <VBox spacing="10" maxWidth="1240" styleClass="appt-hero-card">
+                                <HBox alignment="CENTER_LEFT" spacing="10">
+                                    <Label text="Accompagnement" styleClass="appt-hero-badge"/>
+                                    <Region HBox.hgrow="ALWAYS"/>
+                                    <Label fx:id="statusLabel" text="ACTIF" styleClass="plan-status-pill"/>
+                                </HBox>
+                                <Label fx:id="titleLabel" text="Plan personnalisé" styleClass="appt-hero-title"/>
+                                <Label text="Plan d'accompagnement personnalisé" styleClass="appt-hero-subtitle" wrapText="true"/>
+                            </VBox>
 
-                        <VBox spacing="10" styleClass="plan-detail-card">
-                            <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
-                            <children>
-                                <Label text="Objectifs" styleClass="panel-title"/>
-                                <Label fx:id="objectivesLabel" text="" styleClass="plan-card-description" wrapText="true"/>
-                            </children>
-                        </VBox>
+                            <VBox spacing="14" maxWidth="1240">
+                                <children>
+                                    <VBox spacing="14" styleClass="plan-detail-card appt-card">
+                                        <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+                                        <children>
+                                            <Label text="Patient" styleClass="panel-title"/>
+                                            <Label fx:id="patientNameLabel" text="Patient" styleClass="plan-card-title"/>
+                                            <Label fx:id="patientEmailLabel" text="" styleClass="plan-card-subtitle"/>
+                                        </children>
+                                    </VBox>
 
-                        <VBox spacing="10" styleClass="plan-detail-card">
-                            <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
-                            <children>
-                                <Label text="Description" styleClass="panel-title"/>
-                                <Label fx:id="descriptionLabel" text="" styleClass="plan-card-description" wrapText="true"/>
-                            </children>
-                        </VBox>
+                                    <HBox spacing="16">
+                                        <children>
+                                            <VBox spacing="10" styleClass="plan-detail-card appt-card" HBox.hgrow="ALWAYS">
+                                                <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+                                                <children>
+                                                    <Label text="Progression" styleClass="panel-title"/>
+                                                    <Label fx:id="progressLabel" text="0%" styleClass="tele-stat-value"/>
+                                                    <Label fx:id="durationLabel" text="8 semaines" styleClass="plan-card-subtitle"/>
+                                                    <Label fx:id="startDateLabel" text="--" styleClass="plan-card-subtitle"/>
+                                                    <Label fx:id="endDateLabel" text="--" styleClass="plan-card-subtitle"/>
+                                                </children>
+                                            </VBox>
+                                            <VBox spacing="10" styleClass="plan-detail-card appt-card" HBox.hgrow="ALWAYS">
+                                                <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+                                                <children>
+                                                    <Label text="Professionnels" styleClass="panel-title"/>
+                                                    <Label fx:id="coachLabel" text="Non assigné" styleClass="plan-card-subtitle"/>
+                                                    <Label fx:id="nutritionistLabel" text="Non assigné" styleClass="plan-card-subtitle"/>
+                                                    <Label fx:id="aiSummaryLabel" text="" styleClass="plan-card-description" wrapText="true"/>
+                                                </children>
+                                            </VBox>
+                                        </children>
+                                    </HBox>
 
-                        <VBox spacing="10" styleClass="plan-detail-card">
-                            <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
-                            <children>
-                                <Label text="Plans d'exercice" styleClass="panel-title"/>
-                                <VBox fx:id="exerciseContainer" spacing="10"/>
-                            </children>
-                        </VBox>
+                                    <VBox spacing="10" styleClass="plan-detail-card appt-card">
+                                        <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+                                        <children>
+                                            <Label text="Objectifs" styleClass="panel-title"/>
+                                            <Label fx:id="objectivesLabel" text="" styleClass="plan-card-description" wrapText="true"/>
+                                        </children>
+                                    </VBox>
 
-                        <VBox spacing="10" styleClass="plan-detail-card">
-                            <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
-                            <children>
-                                <Label text="Plans nutritionnels" styleClass="panel-title"/>
-                                <VBox fx:id="dietContainer" spacing="10"/>
-                            </children>
-                        </VBox>
+                                    <VBox spacing="10" styleClass="plan-detail-card appt-card">
+                                        <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+                                        <children>
+                                            <Label text="Description" styleClass="panel-title"/>
+                                            <Label fx:id="descriptionLabel" text="" styleClass="plan-card-description" wrapText="true"/>
+                                        </children>
+                                    </VBox>
 
-                        <HBox spacing="12">
-                            <children>
-                                <Button fx:id="backButton" text="Retour" styleClass="btn-secondary"/>
-                                <Button fx:id="deleteButton" text="Supprimer" styleClass="btn-danger"/>
-                            </children>
-                        </HBox>
-                    </children>
-                    <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
-                </VBox>
+                                    <VBox spacing="10" styleClass="plan-detail-card appt-card">
+                                        <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+                                        <children>
+                                            <Label text="Plans d'exercice" styleClass="panel-title"/>
+                                            <VBox fx:id="exerciseContainer" spacing="10"/>
+                                        </children>
+                                    </VBox>
+
+                                    <VBox spacing="10" styleClass="plan-detail-card appt-card">
+                                        <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+                                        <children>
+                                            <Label text="Plans nutritionnels" styleClass="panel-title"/>
+                                            <VBox fx:id="dietContainer" spacing="10"/>
+                                        </children>
+                                    </VBox>
+
+                                    <HBox spacing="12">
+                                        <children>
+                                            <Button fx:id="backButton" text="Retour" styleClass="btn-secondary"/>
+                                            <Button fx:id="deleteButton" text="Supprimer" styleClass="btn-danger"/>
+                                        </children>
+                                    </HBox>
+                                </children>
+                            </VBox>
+                        </children>
+                    </VBox>
+                </StackPane>
             </content>
         </ScrollPane>
     </children>
-</VBox>
+</StackPane>

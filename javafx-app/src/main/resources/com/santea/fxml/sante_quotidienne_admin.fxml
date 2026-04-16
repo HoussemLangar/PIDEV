@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.PieChart?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.santea.controller.SanteQuotidienneAdminViewController"
+      styleClass="admin-root" spacing="18">
+
+    <HBox alignment="CENTER_LEFT" spacing="10" styleClass="admin-topbar">
+        <padding><Insets top="14" right="20" bottom="14" left="20"/></padding>
+        <Button text="Retour" styleClass="admin-btn-secondary" onAction="#handleGoBack"/>
+        <Button fx:id="refreshButton" text="Rafraichir" styleClass="admin-btn-secondary"/>
+        <Label text="Santé Quotidienne - Administration" styleClass="admin-title"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Label fx:id="autoRefreshStatusLabel" text="Actualisation auto inactive" styleClass="admin-line"/>
+    </HBox>
+
+    <ScrollPane fitToWidth="true" hbarPolicy="NEVER" styleClass="admin-scroll" VBox.vgrow="ALWAYS">
+        <content>
+            <VBox spacing="16" styleClass="admin-shell">
+                <padding><Insets top="18" right="18" bottom="20" left="18"/></padding>
+                
+                <Label text="Vue globale" styleClass="admin-section-title"/>
+                <FlowPane hgap="12" vgap="12" prefWrapLength="1200">
+                    <VBox spacing="4" styleClass="admin-card stat-blue">
+                        <Label text="Total des entrées" styleClass="admin-card-label"/>
+                        <Label fx:id="totalEntriesLabel" text="0" styleClass="admin-card-value"/>
+                    </VBox>
+                    <VBox spacing="4" styleClass="admin-card stat-green">
+                        <Label text="Patients actifs" styleClass="admin-card-label"/>
+                        <Label fx:id="activeUsersLabel" text="0" styleClass="admin-card-value"/>
+                    </VBox>
+                    <VBox spacing="4" styleClass="admin-card stat-orange">
+                        <Label text="Total patients" styleClass="admin-card-label"/>
+                        <Label fx:id="totalPatientsLabel" text="0" styleClass="admin-card-value"/>
+                    </VBox>
+                    <VBox spacing="4" styleClass="admin-card stat-red">
+                        <Label text="Sans entrée" styleClass="admin-card-label"/>
+                        <Label fx:id="patientsWithoutEntriesLabel" text="0" styleClass="admin-card-value"/>
+                    </VBox>
+                    <VBox spacing="4" styleClass="admin-card stat-purple">
+                        <Label text="Taux d'utilisation (%)" styleClass="admin-card-label"/>
+                        <Label fx:id="usagePercentLabel" text="0%" styleClass="admin-card-value"/>
+                    </VBox>
+                    <VBox spacing="4" styleClass="admin-card stat-cyan">
+                        <Label text="Aujourd'hui (%)" styleClass="admin-card-label"/>
+                        <Label fx:id="entriesPercentLabel" text="0%" styleClass="admin-card-value"/>
+                    </VBox>
+                    <VBox spacing="4" styleClass="admin-card stat-indigo">
+                        <Label text="Cette semaine (%)" styleClass="admin-card-label"/>
+                        <Label fx:id="weekPercentLabel" text="0%" styleClass="admin-card-value"/>
+                    </VBox>
+                </FlowPane>
+
+                <Label text="Recherche" styleClass="admin-subsection-title"/>
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <TextField fx:id="searchField" promptText="Rechercher par email..." HBox.hgrow="ALWAYS"/>
+                    <Button fx:id="searchButton" text="Rechercher" styleClass="admin-btn-primary"/>
+                </HBox>
+
+                <Label text="Répartition" styleClass="admin-subsection-title"/>
+                <PieChart fx:id="usagePieChart" prefHeight="300" labelsVisible="true"/>
+
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <Label text="Utilisateurs" styleClass="admin-subsection-title"/>
+                    <Button fx:id="exportSummaryButton" text="Exporter CSV" styleClass="admin-btn-secondary"/>
+                </HBox>
+                <TableView fx:id="dataTable" prefHeight="200">
+                    <columns>
+                        <TableColumn fx:id="emailColumn" text="Email" prefWidth="400"/>
+                        <TableColumn fx:id="entryCountColumn" text="Entrées" prefWidth="100"/>
+                    </columns>
+                </TableView>
+                <Label fx:id="pageInfoLabel" text="0 utilisateur(s)"/>
+
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <Label text="Détails" styleClass="admin-subsection-title"/>
+                    <Button fx:id="exportDetailsButton" text="Exporter CSV" styleClass="admin-btn-secondary"/>
+                </HBox>
+                <TableView fx:id="entriesTable" prefHeight="250">
+                    <columns>
+                        <TableColumn fx:id="detailNomColumn" text="Nom" prefWidth="120"/>
+                        <TableColumn fx:id="detailPrenomColumn" text="Prénom" prefWidth="120"/>
+                        <TableColumn fx:id="detailEmailColumn" text="Email" prefWidth="250"/>
+                        <TableColumn fx:id="detailDateColumn" text="Date" prefWidth="150"/>
+                    </columns>
+                </TableView>
+                <Label fx:id="entriesInfoLabel" text="0 entrée(s)"/>
+            </VBox>
+        </content>
+    </ScrollPane>
+</VBox>

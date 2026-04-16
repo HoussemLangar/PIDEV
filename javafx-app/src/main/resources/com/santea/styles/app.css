@@ -1222,8 +1222,8 @@
 .plan-root,
 .plan-show-root,
 .plan-create-root {
-    -fx-padding: 30 40 30 40;
-    -fx-background-color: linear-gradient(to bottom, #f8fafc, #eff6ff);
+    -fx-padding: 0;
+    -fx-background-color: transparent;
 }
 
 .plan-index-icon {
@@ -1244,16 +1244,38 @@
     -fx-background-radius: 14;
 }
 
+.plan-root .appt-hero-card,
+.plan-show-root .appt-hero-card,
+.plan-create-root .appt-hero-card {
+    -fx-background-radius: 18;
+    -fx-padding: 22 22 20 22;
+}
+
+.plan-root .appt-hero-title,
+.plan-show-root .appt-hero-title,
+.plan-create-root .appt-hero-title {
+    -fx-font-size: 40px;
+}
+
+.plan-root .appt-hero-subtitle,
+.plan-show-root .appt-hero-subtitle,
+.plan-create-root .appt-hero-subtitle {
+    -fx-font-size: 15px;
+}
+
 .plan-stats-grid {
     -fx-hgap: 16;
     -fx-vgap: 16;
 }
 
 .plan-stat-card {
-    -fx-min-width: 240;
-    -fx-padding: 20;
+    -fx-min-width: 255;
+    -fx-padding: 20 22 20 22;
     -fx-background-radius: 16;
-    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.12), 18, 0.2, 0, 4);
+    -fx-border-color: rgba(255,255,255,0.28);
+    -fx-border-width: 1;
+    -fx-border-radius: 16;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.24), 22, 0.2, 0, 6);
 }
 
 .plan-stat-active {
@@ -1273,25 +1295,27 @@
 .plan-detail-card {
     -fx-background-color: white;
     -fx-background-radius: 16;
-    -fx-border-color: #e2e8f0;
+    -fx-border-color: #dce6f1;
+    -fx-border-width: 1;
     -fx-border-radius: 16;
-    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.08), 18, 0.2, 0, 3);
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.08), 20, 0.14, 0, 3);
 }
 
 .plan-patient-row,
 .plan-list-card {
-    -fx-background-color: #ffffff;
-    -fx-background-radius: 14;
-    -fx-border-color: #e2e8f0;
-    -fx-border-radius: 14;
-    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.05), 12, 0.15, 0, 2);
+    -fx-background-color: #f8fbff;
+    -fx-background-radius: 12;
+    -fx-border-color: #dce7f1;
+    -fx-border-width: 1;
+    -fx-border-radius: 12;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.06), 14, 0.16, 0, 2);
 }
 
 .plan-patient-row:hover,
 .plan-list-card:hover {
     -fx-cursor: hand;
-    -fx-translate-y: -2;
-    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.12), 20, 0.2, 0, 5);
+    -fx-translate-y: -1;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.12), 20, 0.2, 0, 4);
 }
 
 .plan-avatar-chip {
@@ -1370,9 +1394,10 @@
 
 .plan-empty-state,
 .plan-empty-mini {
-    -fx-background-color: linear-gradient(to bottom right, #e0f2fe, #f0f9ff);
+    -fx-background-color: linear-gradient(to bottom right, #f8fafc, #eef4fa);
     -fx-background-radius: 16;
-    -fx-border-color: #7dd3fc;
+    -fx-border-color: #d6e4f2;
+    -fx-border-width: 1;
     -fx-border-radius: 16;
     -fx-border-style: segments(4, 4);
 }
@@ -1821,7 +1846,7 @@
 .plan-root,
 .plan-show-root,
 .plan-create-root {
-    -fx-background-color: linear-gradient(to bottom, #f8fafc, #eff6ff);
+    -fx-background-color: transparent;
 }
 
 /* Ensure plan section containers also style form controls */

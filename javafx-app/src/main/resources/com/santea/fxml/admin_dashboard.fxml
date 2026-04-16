@@ -48,6 +48,16 @@
                     </VBox>
 
                     <VBox styleClass="bo-nav-group" spacing="4">
+                        <Label text="RACCOURCIS" styleClass="bo-nav-section"/>
+                        <Button text="Sante Quotidienne" styleClass="bo-nav-btn" onAction="#handleSanteQuotidienneAdmin"/>
+                        <Button text="Symptomes" styleClass="bo-nav-btn" onAction="#handleSymptomesAdmin"/>
+                        <Button text="Exporter CSV" styleClass="bo-nav-btn" onAction="#handleExportCsv"/>
+                        <Button text="Revoquer session" styleClass="bo-nav-btn" onAction="#handleRevokeLatestSession"/>
+                        <Button text="Connexions suspectes" styleClass="bo-nav-btn" onAction="#handleReviewSuspicious"/>
+                        <Button text="Assistant vocal" styleClass="bo-nav-btn" onAction="#handleVoiceAssistant"/>
+                    </VBox>
+
+                    <VBox styleClass="bo-nav-group" spacing="4">
                         <Label text="ABONNEMENTS" styleClass="bo-nav-section"/>
                         <Button fx:id="navSubscriptionsButton" text="Abonnements" styleClass="bo-nav-btn" onAction="#handleNavSubscriptions"/>
                         <Button fx:id="navRevenuesButton" text="Revenus &amp; facturation" styleClass="bo-nav-btn" onAction="#handleNavRevenues"/>

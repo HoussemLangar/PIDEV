@@ -182,6 +182,22 @@ public final class AppNavigator {
         showAppPage("/com/santea/fxml/content_community.fxml");
     }
 
+    public static void showSanteQuotidiennePage() {
+        showAppPage("/com/santea/fxml/sante_quotidienne.fxml");
+    }
+
+    public static void showSanteQuotidienneAdmin() {
+        showAppPage("/com/santea/fxml/sante_quotidienne_admin.fxml");
+    }
+
+    public static void showSymptomesListeAdmin() {
+        showAppPage("/com/santea/fxml/symptomes_liste_admin.fxml");
+    }
+
+    public static void showSymptomesQuotidiensPage() {
+        showAppPage("/com/santea/fxml/symptomes_quotidiens.fxml");
+    }
+
     private static void showAppPage(String contentFxmlPath) {
         Parent contentRoot = loadFxml(contentFxmlPath);
         showInAppBase(contentRoot);
@@ -237,17 +253,30 @@ public final class AppNavigator {
     private static Parent loadFxml(String resourcePath) {
         FXMLLoader loader = getLoader(resourcePath);
         try {
-            return loader.load();
+            System.out.println("📂 Chargement FXML: " + resourcePath);
+            Parent root = loader.load();
+            System.out.println("✅ FXML chargé: " + resourcePath);
+            return root;
         } catch (IOException exception) {
+            System.err.println("❌ IOException lors du chargement FXML " + resourcePath);
+            exception.printStackTrace();
             throw new RuntimeException("Impossible de charger la vue: " + resourcePath, exception);
+        } catch (Exception exception) {
+            System.err.println("❌ Exception lors du chargement FXML " + resourcePath);
+            exception.printStackTrace();
+            throw new RuntimeException("Erreur lors du chargement de la vue: " + resourcePath, exception);
         }
     }
 
     private static FXMLLoader getLoader(String resourcePath) {
+        System.out.println("🔍 Recherche ressource: " + resourcePath);
         URL url = Main.class.getResource(resourcePath);
         if (url == null) {
+            System.err.println("❌ Ressource NOT FOUND: " + resourcePath);
+            System.err.println("   Classpath location: " + Main.class.getProtectionDomain().getCodeSource().getLocation());
             throw new RuntimeException("Ressource FXML introuvable: " + resourcePath);
         }
+        System.out.println("✓ Ressource trouvée: " + url);
         return new FXMLLoader(url);
     }
 

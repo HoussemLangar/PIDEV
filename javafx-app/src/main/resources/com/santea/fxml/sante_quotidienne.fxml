@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<StackPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="com.santea.controller.SanteQuotidienneViewController"
+           styleClass="profile-page-root">
+    <ScrollPane fitToWidth="true" styleClass="home-scroll">
+        <content>
+            <VBox spacing="16" alignment="TOP_CENTER" styleClass="profile-content-shell">
+                <padding>
+                    <Insets top="26" right="18" bottom="30" left="18"/>
+                </padding>
+
+                <HBox alignment="CENTER_LEFT" spacing="10" maxWidth="1100">
+                    <Label text="Journal sante quotidien" styleClass="profile-chip"/>
+                </HBox>
+
+                <VBox spacing="8" styleClass="profile-hero-shell" maxWidth="1100">
+                    <Label text="Suivi Sante Quotidienne" styleClass="profile-title"/>
+                    <Label text="Renseigne tes donnees du jour puis enregistre-les dans ton journal." styleClass="profile-subtitle" wrapText="true"/>
+                </VBox>
+
+                <Label fx:id="feedbackLabel" text="" visible="false" managed="false" wrapText="true" styleClass="alert" maxWidth="1100"/>
+
+                <HBox spacing="16" maxWidth="1320" alignment="TOP_CENTER" style="-fx-padding: 0 0 0 170;">
+                    <VBox spacing="12" styleClass="profile-card" prefWidth="980" minWidth="980" maxWidth="980">
+                        <Label text="Entrez vos donnees de sante.." styleClass="profile-section-title"/>
+
+                        <HBox spacing="12">
+                            <VBox spacing="6" HBox.hgrow="ALWAYS">
+                                <Label text="Poids (kg) *" styleClass="field-label"/>
+                                <TextField fx:id="poidsField" styleClass="form-control" promptText="Ex: 72.5"/>
+                            </VBox>
+                            <VBox spacing="6" HBox.hgrow="ALWAYS">
+                                <Label text="Taille (m ou cm) *" styleClass="field-label"/>
+                                <TextField fx:id="tailleField" styleClass="form-control" promptText="Ex: 1.75 ou 175"/>
+                            </VBox>
+                            <VBox spacing="6" HBox.hgrow="ALWAYS">
+                                <Label text="Tension arterielle" styleClass="field-label"/>
+                                <TextField fx:id="tensionField" styleClass="form-control" promptText="Ex: 12.5"/>
+                            </VBox>
+                        </HBox>
+
+                        <HBox spacing="12">
+                            <VBox spacing="6" HBox.hgrow="ALWAYS">
+                                <Label text="Sommeil (heures)" styleClass="field-label"/>
+                                <TextField fx:id="sommeilField" styleClass="form-control" promptText="Ex: 7.5"/>
+                            </VBox>
+                            <VBox spacing="6" HBox.hgrow="ALWAYS">
+                                <Label text="Eau bue (L)" styleClass="field-label"/>
+                                <TextField fx:id="eauBueField" styleClass="form-control" promptText="Ex: 2.0"/>
+                            </VBox>
+                            <VBox spacing="6" HBox.hgrow="ALWAYS">
+                                <Label text="Pas" styleClass="field-label"/>
+                                <TextField fx:id="pasField" styleClass="form-control" promptText="Ex: 8500"/>
+                            </VBox>
+                        </HBox>
+
+                        <HBox spacing="12">
+                            <VBox spacing="6" HBox.hgrow="ALWAYS">
+                                <Label text="Calories brulées" styleClass="field-label"/>
+                                <TextField fx:id="caloriesField" styleClass="form-control" promptText="Ex: 2200"/>
+                            </VBox>
+                            <VBox spacing="6" HBox.hgrow="ALWAYS">
+                                <Label text="Duree activite (min)" styleClass="field-label"/>
+                                <TextField fx:id="dureeActiviteField" styleClass="form-control" promptText="Ex: 45"/>
+                            </VBox>
+                            <VBox spacing="6" HBox.hgrow="ALWAYS">
+                                <Label text="Date de l'entree" styleClass="field-label"/>
+                                <DatePicker fx:id="datePicker"/>
+                            </VBox>
+                        </HBox>
+
+                        <HBox spacing="12">
+                            <VBox spacing="6" HBox.hgrow="ALWAYS">
+                                <Label text="Activite physique" styleClass="field-label"/>
+                                <TextField fx:id="activiteField" styleClass="form-control" promptText="Ex: Course"/>
+                            </VBox>
+                            <VBox spacing="6" HBox.hgrow="ALWAYS">
+                                <Label text="Humeur (virgules)" styleClass="field-label"/>
+                                <TextField fx:id="humeurField" styleClass="form-control" promptText="Ex: Motive, Calme"/>
+                            </VBox>
+                        </HBox>
+
+                        <HBox spacing="12">
+                            <VBox spacing="6" HBox.hgrow="ALWAYS">
+                                <Label text="Alimentation" styleClass="field-label"/>
+                                <TextField fx:id="alimentationField" styleClass="form-control" promptText="Ex: Equilibree"/>
+                            </VBox>
+                        </HBox>
+
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <Button text="Enregistrer les donnees" styleClass="sub-primary-button" onAction="#handleSaveEntry"/>
+                            <Button text="Importer depuis Google Fit" styleClass="sub-primary-button" onAction="#handleImportGoogleFit"/>
+                        </HBox>
+
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <Button text="Vider le formulaire" styleClass="sub-outline-button" onAction="#handleClearForm"/>
+                            <Button text="Supprimer l'entree selectionnee" styleClass="sub-danger-button" onAction="#handleDeleteSelected"/>
+                        </HBox>
+
+                        <Label fx:id="imcPreviewLabel" text="IMC calcule: -" styleClass="sub-checkout-help"/>
+                    </VBox>
+
+                    <VBox spacing="10" styleClass="profile-card" prefWidth="430" minWidth="430" maxWidth="430">
+                        <Label text="Historique des entrees" styleClass="profile-section-title"/>
+                        <Label text="Selectionne une date precise:" styleClass="sub-checkout-help"/>
+                        <DatePicker fx:id="historiqueDatePicker"/>
+                        <Label fx:id="statsLabel" text="Aucune entree enregistree pour le moment." styleClass="sub-checkout-help"/>
+                        <ListView fx:id="historiqueListView" prefHeight="300"/>
+                        <Label text="Details de l'entree selectionnee" styleClass="field-label"/>
+                        <Label fx:id="selectedDetailsLabel" text="Aucune entree selectionnee." wrapText="true" styleClass="sub-checkout-help"/>
+                    </VBox>
+                </HBox>
+
+                <HBox alignment="CENTER_RIGHT" spacing="10" maxWidth="980">
+                    <Button text="Retour accueil" styleClass="sub-outline-button" onAction="#handleBackHome"/>
+                </HBox>
+            </VBox>
+        </content>
+    </ScrollPane>
+</StackPane>
