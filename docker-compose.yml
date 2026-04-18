@@ -113,6 +113,158 @@ services:
     tty: true
     stdin_open: true
 
+  # =========================
+  # Monitoring - Prometheus/Grafana
+  # =========================
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: pidev-prometheus
+    profiles:
+      - observability
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    depends_on:
+      - node-exporter
+      - cadvisor
+      - apache-exporter
+    networks:
+      - pidev-network
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:11.1.4
+    container_name: pidev-grafana
+    profiles:
+      - observability
+    ports:
+      - "3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /etc/grafana/provisioning/dashboards/pidev-observability.json
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus
+      - elasticsearch
+    networks:
+      - pidev-network
+    restart: unless-stopped
+
+  node-exporter:
+    image: prom/node-exporter:v1.8.2
+    container_name: pidev-node-exporter
+    profiles:
+      - observability
+    command:
+      - '--path.rootfs=/host'
+    volumes:
+      - /:/host:ro,rslave
+    networks:
+      - pidev-network
+    restart: unless-stopped
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    container_name: pidev-cadvisor
+    profiles:
+      - observability
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    networks:
+      - pidev-network
+    restart: unless-stopped
+
+  apache-exporter:
+    image: lusotycoon/apache-exporter:v0.11.0
+    container_name: pidev-apache-exporter
+    profiles:
+      - observability
+    command:
+      - --scrape_uri=http://web/server-status?auto
+    depends_on:
+      - web
+    networks:
+      - pidev-network
+    restart: unless-stopped
+
+  # =========================
+  # Logs - ELK
+  # =========================
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.2
+    container_name: pidev-elasticsearch
+    profiles:
+      - observability
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: -Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    networks:
+      - pidev-network
+    restart: unless-stopped
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.15.2
+    container_name: pidev-logstash
+    profiles:
+      - observability
+    ports:
+      - "5044:5044"
+    volumes:
+      - ./observability/logstash/pipeline/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
+    depends_on:
+      - elasticsearch
+    networks:
+      - pidev-network
+    restart: unless-stopped
+
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:8.15.2
+    container_name: pidev-filebeat
+    profiles:
+      - observability
+    user: root
+    command: ["--strict.perms=false"]
+    volumes:
+      - ./observability/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - ./symfony-app/var/log:/workspace/symfony-logs:ro
+      - ./javafx-app/logs:/workspace/javafx-logs:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - filebeat-data:/usr/share/filebeat/data
+    depends_on:
+      - logstash
+    networks:
+      - pidev-network
+    restart: unless-stopped
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.15.2
+    container_name: pidev-kibana
+    profiles:
+      - observability
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    networks:
+      - pidev-network
+    restart: unless-stopped
+
   # javafx-xpra:
   #   build:
   #     context: ./docker/javafx-xpra
@@ -151,3 +303,7 @@ networks:
 # =========================
 volumes:
   db-data:
+  prometheus-data:
+  grafana-data:
+  elasticsearch-data:
+  filebeat-data:

@@ -1,0 +1,47 @@
+filebeat.inputs:
+  - type: filestream
+    id: symfony-logs
+    enabled: true
+    paths:
+      - /workspace/symfony-logs/*.log
+    fields:
+      app: symfony
+    fields_under_root: true
+
+  - type: filestream
+    id: javafx-logs
+    enabled: true
+    paths:
+      - /workspace/javafx-logs/*.log
+    fields:
+      app: javafx
+    fields_under_root: true
+
+  - type: container
+    id: database-logs
+    enabled: true
+    paths:
+      - /var/lib/docker/containers/*/*.log
+    processors:
+      - add_docker_metadata:
+          host: "unix:///var/run/docker.sock"
+      - drop_event:
+          when:
+            not:
+              or:
+                - contains:
+                    container.name: "pidev-db"
+                - contains:
+                    container.name: "db"
+      - add_fields:
+          target: ''
+          fields:
+            app: database
+
+processors:
+  - add_host_metadata: ~
+
+output.logstash:
+  hosts: ["logstash:5044"]
+
+setup.template.enabled: false

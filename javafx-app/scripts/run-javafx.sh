@@ -17,5 +17,13 @@ export PATH="$JAVA_HOME/bin:$PATH"
 export GDK_BACKEND="${GDK_BACKEND:-x11}"
 export NO_AT_BRIDGE="${NO_AT_BRIDGE:-1}"
 
+LOG_DIR="$PROJECT_DIR/logs"
+LOG_FILE="$LOG_DIR/javafx-app.log"
+mkdir -p "$LOG_DIR"
+
 cd "$PROJECT_DIR"
-exec mvn -q javafx:run
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting JavaFX app" | tee -a "$LOG_FILE"
+mvn -q javafx:run 2>&1 | tee -a "$LOG_FILE"
+exit_code=${PIPESTATUS[0]}
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] JavaFX app exited with code $exit_code" | tee -a "$LOG_FILE"
+exit "$exit_code"

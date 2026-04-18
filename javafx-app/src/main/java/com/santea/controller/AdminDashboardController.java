@@ -88,6 +88,7 @@ public class AdminDashboardController {
     private List<AdminOperationsService.RevenueRow> revenuesCache = List.of();
     private List<AdminOperationsService.CommunityRow> communityCache = List.of();
     private List<AdminOperationsService.AppointmentAdminRow> appointmentsAdminCache = List.of();
+    private List<AdminOperationsService.AccompanimentAdminRow> accompanimentsCache = List.of();
     private List<AdminOperationsService.PendingApprovalRow> pendingApprovalsCache = List.of();
     private List<AdminOperationsService.ModerationRow> moderationCache = List.of();
     private List<AdminOperationsService.UserScoreRow> scoresCache = List.of();
@@ -108,6 +109,7 @@ public class AdminDashboardController {
     private int reservationsAdminPage;
     private int communityPage;
     private int appointmentsAdminPage;
+    private int accompanimentsPage;
 
     private boolean usersGridMode = true;
     private boolean validationGridMode = true;
@@ -121,6 +123,7 @@ public class AdminDashboardController {
     private boolean reservationsAdminGridMode = true;
     private boolean communityGridMode = true;
     private boolean appointmentsAdminGridMode = true;
+    private boolean accompanimentsGridMode = true;
 
     @FXML
     private Label headerTitleLabel;
@@ -150,6 +153,8 @@ public class AdminDashboardController {
     @FXML
     private Button navReservationsAdminButton;
     @FXML
+    private Button navAccompanimentsButton;
+    @FXML
     private Button navCommunityButton;
     @FXML
     private Button navAppointmentsAdminButton;
@@ -176,6 +181,8 @@ public class AdminDashboardController {
     private VBox pageStocksAdmin;
     @FXML
     private VBox pageReservationsAdmin;
+    @FXML
+    private VBox pageAccompaniments;
     @FXML
     private VBox pageCommunity;
     @FXML
@@ -444,6 +451,33 @@ public class AdminDashboardController {
     private Button reservationsAdminNextPageButton;
 
     @FXML
+    private Label accompanimentsTotalLabel;
+    @FXML
+    private Label accompanimentsActiveLabel;
+    @FXML
+    private Label accompanimentsCompletedLabel;
+    @FXML
+    private Label accompanimentsCancelledLabel;
+    @FXML
+    private TextField accompanimentsSearchField;
+    @FXML
+    private ComboBox<String> accompanimentsStatusFilterCombo;
+    @FXML
+    private ComboBox<String> accompanimentsAssignedFilterCombo;
+    @FXML
+    private Button accompanimentsListModeButton;
+    @FXML
+    private Button accompanimentsGridModeButton;
+    @FXML
+    private FlowPane accompanimentsRowsBox;
+    @FXML
+    private Label accompanimentsPaginationInfoLabel;
+    @FXML
+    private Button accompanimentsPrevPageButton;
+    @FXML
+    private Button accompanimentsNextPageButton;
+
+    @FXML
     private Label communityTotalLabel;
     @FXML
     private Label communityPendingLabel;
@@ -600,6 +634,16 @@ public class AdminDashboardController {
         ));
         reservationsAdminStatusFilterCombo.getSelectionModel().selectFirst();
 
+        accompanimentsStatusFilterCombo.setItems(FXCollections.observableArrayList(
+            "Tous statuts", "active", "paused", "completed", "cancelled"
+        ));
+        accompanimentsStatusFilterCombo.getSelectionModel().selectFirst();
+
+        accompanimentsAssignedFilterCombo.setItems(FXCollections.observableArrayList(
+            "Tous suivis", "Avec coach", "Avec nutritionniste", "Complet (coach + nutritionniste)"
+        ));
+        accompanimentsAssignedFilterCombo.getSelectionModel().selectFirst();
+
         updateModeButtons(usersListModeButton, usersGridModeButton, usersGridMode);
         updateModeButtons(validationListModeButton, validationGridModeButton, validationGridMode);
         updateModeButtons(sessionsListModeButton, sessionsGridModeButton, sessionsGridMode);
@@ -610,6 +654,7 @@ public class AdminDashboardController {
         updateModeButtons(medicamentsAdminListModeButton, medicamentsAdminGridModeButton, medicamentsAdminGridMode);
         updateModeButtons(stocksAdminListModeButton, stocksAdminGridModeButton, stocksAdminGridMode);
         updateModeButtons(reservationsAdminListModeButton, reservationsAdminGridModeButton, reservationsAdminGridMode);
+        updateModeButtons(accompanimentsListModeButton, accompanimentsGridModeButton, accompanimentsGridMode);
         updateModeButtons(communityListModeButton, communityGridModeButton, communityGridMode);
         updateModeButtons(appointmentsAdminListModeButton, appointmentsAdminGridModeButton, appointmentsAdminGridMode);
     }
@@ -698,6 +743,11 @@ public class AdminDashboardController {
     @FXML
     private void handleNavReservationsAdmin() {
         showPage(pageReservationsAdmin, navReservationsAdminButton, "Reservations pharmacie", "Suivi des reservations patients et decisions pharmaciens.");
+    }
+
+    @FXML
+    private void handleNavAccompaniments() {
+        showPage(pageAccompaniments, navAccompanimentsButton, "Accompagnements", "Gestion des plans d'accompagnement, statuts et suivi des patients.");
     }
 
     @FXML
@@ -839,6 +889,11 @@ public class AdminDashboardController {
         if (normalized.contains("reservation") && normalized.contains("pharma")) {
             handleNavReservationsAdmin();
             showFeedback("Ouverture section reservations pharmacie.", true);
+            return;
+        }
+        if (normalized.contains("accompagnement") || normalized.contains("plan accompagnement") || normalized.contains("plan patient")) {
+            handleNavAccompaniments();
+            showFeedback("Ouverture section accompagnements.", true);
             return;
         }
         if (normalized.contains("community") || normalized.contains("communaute") || normalized.contains("blog") || normalized.contains("contenu")) {
@@ -1173,6 +1228,36 @@ public class AdminDashboardController {
     }
 
     @FXML
+    private void handleAccompanimentsApplyFilters() {
+        accompanimentsPage = 0;
+        renderAccompanimentsPage();
+    }
+
+    @FXML
+    private void handleAccompanimentsPrevPage() {
+        accompanimentsPage = Math.max(0, accompanimentsPage - 1);
+        renderAccompanimentsPage();
+    }
+
+    @FXML
+    private void handleAccompanimentsNextPage() {
+        accompanimentsPage++;
+        renderAccompanimentsPage();
+    }
+
+    @FXML
+    private void handleAccompanimentsListMode() {
+        accompanimentsGridMode = false;
+        renderAccompanimentsPage();
+    }
+
+    @FXML
+    private void handleAccompanimentsGridMode() {
+        accompanimentsGridMode = true;
+        renderAccompanimentsPage();
+    }
+
+    @FXML
     private void handleCommunityApplyFilters() {
         communityPage = 0;
         renderCommunityPage();
@@ -1245,6 +1330,7 @@ public class AdminDashboardController {
             pageMedicamentsAdmin,
             pageStocksAdmin,
             pageReservationsAdmin,
+                pageAccompaniments,
                 pageCommunity,
                 pageAppointmentsAdmin
         );
@@ -1266,6 +1352,7 @@ public class AdminDashboardController {
             navMedicamentsAdminButton,
             navStocksAdminButton,
             navReservationsAdminButton,
+                navAccompanimentsButton,
                 navCommunityButton,
                 navAppointmentsAdminButton
         );
@@ -1284,6 +1371,7 @@ public class AdminDashboardController {
         AdminOperationsService.RevenueStats revenueStats = adminOperationsService.loadRevenueStats();
         AdminOperationsService.CommunityStats communityStats = adminOperationsService.loadCommunityStats();
         AdminOperationsService.AppointmentAdminStats appointmentStats = adminOperationsService.loadAppointmentAdminStats();
+        AdminOperationsService.AccompanimentAdminStats accompanimentStats = adminOperationsService.loadAccompanimentAdminStats();
 
         usersTotalLabel.setText(String.valueOf(data.totalUsers()));
         usersBannedLabel.setText(String.valueOf(data.bannedUsers()));
@@ -1324,6 +1412,11 @@ public class AdminDashboardController {
         appointmentsAdminConfirmedLabel.setText("Confirmes: " + appointmentStats.confirmed());
         appointmentsAdminRefusedLabel.setText("Refuses: " + appointmentStats.refused());
         appointmentsAdminCancelledLabel.setText("Annules: " + appointmentStats.cancelled());
+
+        accompanimentsTotalLabel.setText("Total: " + accompanimentStats.total());
+        accompanimentsActiveLabel.setText("Actifs: " + accompanimentStats.active());
+        accompanimentsCompletedLabel.setText("Termines: " + accompanimentStats.completed());
+        accompanimentsCancelledLabel.setText("Annules: " + accompanimentStats.cancelled());
 
         User currentUser = AuthSession.getCurrentUser();
         if (currentUser != null && currentUser.getId() != null) {
@@ -1372,6 +1465,7 @@ public class AdminDashboardController {
         revenuesCache = adminOperationsService.listRevenuesForAdmin(300);
         communityCache = adminOperationsService.listCommunityForAdmin(300);
         appointmentsAdminCache = adminOperationsService.listAppointmentsForAdmin(300);
+        accompanimentsCache = adminOperationsService.listAccompanimentsForAdmin(300);
         pendingApprovalsCache = adminOperationsService.listPendingProfessionalApprovals();
         moderationCache = adminOperationsService.listModerationQueue();
         scoresCache = adminOperationsService.listTopUserScores(50);
@@ -1392,6 +1486,7 @@ public class AdminDashboardController {
         renderMedicamentsAdminPage();
         renderStocksAdminPage();
         renderReservationsAdminPage();
+        renderAccompanimentsPage();
         renderCommunityPage();
         renderAppointmentsAdminPage();
 
@@ -2456,6 +2551,75 @@ public class AdminDashboardController {
         }
     }
 
+    private void renderAccompanimentsPage() {
+        String keyword = normalize(accompanimentsSearchField.getText());
+        String statusFilter = normalize(accompanimentsStatusFilterCombo.getValue());
+        String assignedFilter = safe(accompanimentsAssignedFilterCombo.getValue());
+
+        List<AdminOperationsService.AccompanimentAdminRow> filtered = accompanimentsCache.stream()
+                .filter(row -> keyword.isBlank() || normalize(
+                        "#" + row.id() + " " + row.title() + " " + row.patientDisplay() + " " + row.coachDisplay() + " " + row.nutritionistDisplay()
+                ).contains(keyword))
+                .filter(row -> statusFilter.isBlank() || "tous statuts".equals(statusFilter) || normalize(row.status()).equals(statusFilter))
+                .filter(row -> matchAccompanimentAssignedFilter(row, assignedFilter))
+                .sorted(Comparator
+                        .comparing(AdminOperationsService.AccompanimentAdminRow::startDate, Comparator.nullsLast(Comparator.reverseOrder()))
+                        .thenComparing(AdminOperationsService.AccompanimentAdminRow::createdAt, Comparator.nullsLast(Comparator.reverseOrder())))
+                .toList();
+
+        PageSlice<AdminOperationsService.AccompanimentAdminRow> page = page(filtered, accompanimentsPage);
+        accompanimentsPage = page.pageIndex();
+
+        applyContainerMode(accompanimentsRowsBox, accompanimentsGridMode);
+        accompanimentsRowsBox.getChildren().clear();
+
+        if (page.items().isEmpty()) {
+            accompanimentsRowsBox.getChildren().add(createEmptyCard("Aucun plan d'accompagnement."));
+        } else {
+            for (AdminOperationsService.AccompanimentAdminRow row : page.items()) {
+                String status = normalizeStatusLabel(row.status());
+                String details = "Patient: " + safe(row.patientDisplay())
+                        + " | Coach: " + safe(row.coachDisplay())
+                        + " | Nutritionniste: " + safe(row.nutritionistDisplay())
+                        + " | Debut: " + formatDate(row.startDate())
+                        + " | Fin: " + formatDate(row.endDate())
+                        + " | Duree: " + row.durationWeeks() + " sem"
+                        + " | Exercices: " + row.exerciseCount()
+                        + " | Regimes: " + row.dietCount();
+
+                Button activeButton = buildRowButton("Activer", "admin-btn-xs-primary", () -> {
+                    AdminOperationsService.ActionResult result = adminOperationsService.updateAccompanimentStatusByAdmin(row.id(), "active");
+                    showFeedback(result.message(), result.success());
+                    refresh();
+                });
+                Button pauseButton = buildRowButton("Pause", "admin-btn-xs-warning", () -> {
+                    AdminOperationsService.ActionResult result = adminOperationsService.updateAccompanimentStatusByAdmin(row.id(), "paused");
+                    showFeedback(result.message(), result.success());
+                    refresh();
+                });
+                Button completeButton = buildRowButton("Terminer", "admin-btn-xs-secondary", () -> {
+                    AdminOperationsService.ActionResult result = adminOperationsService.updateAccompanimentStatusByAdmin(row.id(), "completed");
+                    showFeedback(result.message(), result.success());
+                    refresh();
+                });
+                Button cancelButton = buildRowButton("Annuler", "admin-btn-xs-danger", () -> {
+                    AdminOperationsService.ActionResult result = adminOperationsService.updateAccompanimentStatusByAdmin(row.id(), "cancelled");
+                    showFeedback(result.message(), result.success());
+                    refresh();
+                });
+
+                String title = "#" + row.id() + " - " + safe(row.title());
+                Node node = accompanimentsGridMode
+                        ? createGridCard(title, details, status, activeButton, pauseButton, completeButton, cancelButton)
+                        : createListRow(title, details, activeButton, pauseButton, completeButton, cancelButton);
+                accompanimentsRowsBox.getChildren().add(node);
+            }
+        }
+
+        updateModeButtons(accompanimentsListModeButton, accompanimentsGridModeButton, accompanimentsGridMode);
+        updatePagination(page, accompanimentsPaginationInfoLabel, accompanimentsPrevPageButton, accompanimentsNextPageButton);
+    }
+
     private void renderCommunityPage() {
         String keyword = normalize(communitySearchField.getText());
         String statusFilter = normalize(communityStatusFilterCombo.getValue());
@@ -3049,6 +3213,18 @@ public class AdminDashboardController {
         return true;
     }
 
+    private boolean matchAccompanimentAssignedFilter(AdminOperationsService.AccompanimentAdminRow row, String filter) {
+        boolean hasCoach = !safe(row.coachDisplay()).isBlank() && !"-".equals(safe(row.coachDisplay()));
+        boolean hasNutritionist = !safe(row.nutritionistDisplay()).isBlank() && !"-".equals(safe(row.nutritionistDisplay()));
+
+        return switch (filter) {
+            case "Avec coach" -> hasCoach;
+            case "Avec nutritionniste" -> hasNutritionist;
+            case "Complet (coach + nutritionniste)" -> hasCoach && hasNutritionist;
+            default -> true;
+        };
+    }
+
     private boolean matchAppointmentDateFilter(LocalDate date, String filter) {
         if (date == null) {
             return "Toutes dates".equals(filter);
@@ -3077,6 +3253,9 @@ public class AdminDashboardController {
             case "confirme", "confirmed" -> "CONFIRME";
             case "refuse", "refused" -> "REFUSE";
             case "annule", "cancelled", "canceled" -> "ANNULE";
+            case "active", "en_cours" -> "ACTIF";
+            case "paused", "pause", "suspendu", "suspended" -> "EN PAUSE";
+            case "completed", "termine", "terminé" -> "TERMINE";
             default -> safe(raw).toUpperCase(Locale.ROOT);
         };
     }

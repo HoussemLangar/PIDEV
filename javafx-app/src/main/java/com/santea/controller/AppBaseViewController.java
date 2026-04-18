@@ -15,6 +15,9 @@ public class AppBaseViewController implements Initializable {
     @FXML
     private StackPane contentContainer;
 
+    @FXML
+    private HomeViewController navbarIncludeController;
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         // Base initialization - override in subclasses
@@ -53,6 +56,12 @@ public class AppBaseViewController implements Initializable {
                 contentContainer.getChildren().add(nodeToDisplay);
             }
             contentContainer.requestLayout();
+        }
+    }
+
+    public void refreshNavbarAuthState() {
+        if (navbarIncludeController != null) {
+            navbarIncludeController.refreshNavbarAuthState();
         }
     }
 

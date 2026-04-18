@@ -6,6 +6,7 @@ import com.santea.controller.AuthBaseViewController;
 import com.santea.controller.BannedViewController;
 import com.santea.controller.FeaturePageController;
 import com.santea.model.User;
+import com.santea.service.AuthSession;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.input.KeyCode;
@@ -92,10 +93,18 @@ public final class AppNavigator {
     }
 
     public static void showAdminDashboard() {
+        if (!isAdminSession()) {
+            showLogin();
+            return;
+        }
         showAppPage("/com/santea/fxml/admin_dashboard.fxml");
     }
 
     public static void showAdminFaceVerification() {
+        if (!isAdminSession()) {
+            showLogin();
+            return;
+        }
         showAppPage("/com/santea/fxml/admin_face_verification.fxml");
     }
 
@@ -187,10 +196,18 @@ public final class AppNavigator {
     }
 
     public static void showSanteQuotidienneAdmin() {
+        if (!isAdminSession()) {
+            showLogin();
+            return;
+        }
         showAppPage("/com/santea/fxml/sante_quotidienne_admin.fxml");
     }
 
     public static void showSymptomesListeAdmin() {
+        if (!isAdminSession()) {
+            showLogin();
+            return;
+        }
         showAppPage("/com/santea/fxml/symptomes_liste_admin.fxml");
     }
 
@@ -203,9 +220,15 @@ public final class AppNavigator {
         showInAppBase(contentRoot);
     }
 
+    private static boolean isAdminSession() {
+        User user = AuthSession.getCurrentUser();
+        return user != null && "ROLE_ADMIN".equalsIgnoreCase(user.getRole());
+    }
+
     private static void showInAppBase(Parent contentRoot) {
         ensureAppBaseLoaded();
         appBaseController.setContent(contentRoot);
+        appBaseController.refreshNavbarAuthState();
 
         if (mainScene != null && mainScene.getRoot() == appBaseRoot) {
             return;

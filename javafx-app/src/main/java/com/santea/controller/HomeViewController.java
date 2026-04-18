@@ -165,6 +165,19 @@ public class HomeViewController {
     @FXML
     private void handleOpenAdminDashboard() {
         hideAllMenus();
+        User user = AuthSession.getCurrentUser();
+        if (user == null) {
+            AppNavigator.showLogin();
+            return;
+        }
+
+        if (!authorizationPolicyService.isAdmin(user)) {
+            AppNavigator.showFeaturePage("Acces restreint", "Role insuffisant", List.of(
+                    "Le dashboard admin est reserve aux administrateurs."
+            ));
+            return;
+        }
+
         // Face verification désactivée pour le développement
         AppNavigator.showAdminDashboard();
     }
@@ -213,11 +226,33 @@ public class HomeViewController {
     @FXML
     private void handleLogout() {
         hideAllMenus();
-        ConfirmDialogs.confirmLogout(rootPane, () -> {
+        ConfirmDialogs.confirmLogout(resolveLogoutOwnerNode(), () -> {
             authService.logout();
             refreshAuthUi();
             AppNavigator.showHome();
         });
+    }
+
+    private Node resolveLogoutOwnerNode() {
+        if (rootPane != null && rootPane.getScene() != null) {
+            return rootPane;
+        }
+        if (accountAvatarButton != null && accountAvatarButton.getScene() != null) {
+            return accountAvatarButton;
+        }
+        if (notifButton != null && notifButton.getScene() != null) {
+            return notifButton;
+        }
+        if (msgButton != null && msgButton.getScene() != null) {
+            return msgButton;
+        }
+        if (loginButton != null && loginButton.getScene() != null) {
+            return loginButton;
+        }
+        if (registerButton != null && registerButton.getScene() != null) {
+            return registerButton;
+        }
+        return rootPane;
     }
 
     @FXML
@@ -384,14 +419,17 @@ public class HomeViewController {
 
     private void refreshAuthUi() {
         boolean connected = AuthSession.isAuthenticated();
+        User user = connected ? AuthSession.getCurrentUser() : null;
+        boolean isAdmin = user != null && authorizationPolicyService.isAdmin(user);
 
         setVisibleManaged(loginButton, !connected);
         setVisibleManaged(registerButton, !connected);
         setVisibleManaged(notifWrap, connected);
         setVisibleManaged(msgWrap, connected);
         setVisibleManaged(accountAvatarButton, connected);
+        setVisibleManaged(adminDashboardButton, connected && isAdmin);
 
-        applyNavbarModuleVisibility(null);
+        applyNavbarModuleVisibility(user);
 
         if (!connected) {
             hideAllMenus();
@@ -401,20 +439,21 @@ public class HomeViewController {
             return;
         }
 
-        User user = AuthSession.getCurrentUser();
         if (user == null) {
+            hideAllMenus();
+            setBadge(notifBadgeLabel, 0);
+            setBadge(msgBadgeLabel, 0);
             refreshCommunityHighlights();
             return;
         }
 
-        applyNavbarModuleVisibility(user);
-
-        boolean isAdmin = "ROLE_ADMIN".equalsIgnoreCase(user.getRole());
-        setVisibleManaged(adminDashboardButton, connected && isAdmin);
-
         accountAvatarButton.setText(computeInitials(user));
         refreshDashboardData();
         refreshCommunityHighlights();
+    }
+
+    public void refreshNavbarAuthState() {
+        refreshAuthUi();
     }
 
     private void refreshCommunityHighlights() {
@@ -694,7 +733,7 @@ public class HomeViewController {
         titleRow.setAlignment(Pos.CENTER_LEFT);
         Label title = new Label(safe(notification.titre()));
         title.getStyleClass().add("home-dropdown-item-title");
-        Label when = new Label(formatRelativeDays(notification.sentAt()));
+        Label when = new Label(formatRelativeTime(notification.sentAt()));
         when.getStyleClass().add("home-dropdown-time-badge");
         HBox.setHgrow(title, Priority.ALWAYS);
         titleRow.getChildren().addAll(title, when);

@@ -7,7 +7,7 @@
             fx:controller="com.santea.controller.AppBaseViewController"
             styleClass="home-root">
     <top>
-        <fx:include source="components/navbar.fxml"/>
+        <fx:include fx:id="navbarInclude" source="components/navbar.fxml"/>
     </top>
     <center>
         <StackPane fx:id="contentContainer" styleClass="app-content-host"/>

@@ -570,6 +570,141 @@ public class AdminOperationsService {
         }
     }
 
+    public AccompanimentAdminStats loadAccompanimentAdminStats() {
+        int total = scalarWithFallback("SELECT COUNT(*) FROM accompaniment_plans", -1);
+        if (total < 0) {
+            total = scalarWithFallback("SELECT COUNT(*) FROM accompaniment_plan", -1);
+        }
+        if (total < 0) {
+            total = scalarWithFallback("SELECT COUNT(*) FROM accompagnements", 0);
+        }
+
+        int active = scalarWithFallback("SELECT COUNT(*) FROM accompaniment_plans WHERE LOWER(status) IN ('active', 'en_cours', 'ongoing')", -1);
+        if (active < 0) {
+            active = scalarWithFallback("SELECT COUNT(*) FROM accompaniment_plan WHERE LOWER(status) IN ('active', 'en_cours', 'ongoing')", -1);
+        }
+        if (active < 0) {
+            active = scalarWithFallback("SELECT COUNT(*) FROM accompagnements WHERE LOWER(statut) IN ('active', 'en_cours', 'ongoing')", 0);
+        }
+
+        int completed = scalarWithFallback("SELECT COUNT(*) FROM accompaniment_plans WHERE LOWER(status) IN ('completed', 'termine', 'terminee', 'valide')", -1);
+        if (completed < 0) {
+            completed = scalarWithFallback("SELECT COUNT(*) FROM accompaniment_plan WHERE LOWER(status) IN ('completed', 'termine', 'terminee', 'valide')", -1);
+        }
+        if (completed < 0) {
+            completed = scalarWithFallback("SELECT COUNT(*) FROM accompagnements WHERE LOWER(statut) IN ('completed', 'termine', 'terminee', 'valide')", 0);
+        }
+
+        int cancelled = scalarWithFallback("SELECT COUNT(*) FROM accompaniment_plans WHERE LOWER(status) IN ('cancelled', 'annule', 'annulee', 'rejete')", -1);
+        if (cancelled < 0) {
+            cancelled = scalarWithFallback("SELECT COUNT(*) FROM accompaniment_plan WHERE LOWER(status) IN ('cancelled', 'annule', 'annulee', 'rejete')", -1);
+        }
+        if (cancelled < 0) {
+            cancelled = scalarWithFallback("SELECT COUNT(*) FROM accompagnements WHERE LOWER(statut) IN ('cancelled', 'annule', 'annulee', 'rejete')", 0);
+        }
+
+        return new AccompanimentAdminStats(total, active, completed, cancelled);
+    }
+
+    public List<AccompanimentAdminRow> listAccompanimentsForAdmin(int limit) {
+        int safeLimit = Math.max(1, Math.min(limit, 300));
+        List<AccompanimentAdminRow> rows = new ArrayList<>();
+
+        String sqlSymfonyPlural = "SELECT ap.id, ap.title, ap.status, ap.start_date, ap.end_date, ap.duration_weeks, ap.created_at, ap.updated_at, "
+                + "pu.nom AS patient_nom, pu.prenom AS patient_prenom, pu.email AS patient_email, "
+                + "cu.nom AS coach_nom, cu.prenom AS coach_prenom, cu.email AS coach_email, "
+                + "nu.nom AS nutritionist_nom, nu.prenom AS nutritionist_prenom, nu.email AS nutritionist_email, "
+                + "(SELECT COUNT(*) FROM plans_exercices pe WHERE pe.accompaniment_plan_id = ap.id) AS exercise_count, "
+                + "(SELECT COUNT(*) FROM plans_regimes pr WHERE pr.accompaniment_plan_id = ap.id) AS diet_count "
+                + "FROM accompaniment_plans ap "
+                + "LEFT JOIN patients p ON p.id = ap.patient_id "
+                + "LEFT JOIN users pu ON pu.id = p.user_id "
+                + "LEFT JOIN coach_sportifs c ON c.id = ap.coach_id "
+                + "LEFT JOIN users cu ON cu.id = c.user_id "
+                + "LEFT JOIN nutritionnistes n ON n.id = ap.nutritionist_id "
+                + "LEFT JOIN users nu ON nu.id = n.user_id "
+                + "ORDER BY ap.created_at DESC LIMIT ?";
+
+        String sqlSymfonySingular = "SELECT ap.id, ap.title, ap.status, ap.start_date, ap.end_date, ap.duration_weeks, ap.created_at, ap.updated_at, "
+                + "pu.nom AS patient_nom, pu.prenom AS patient_prenom, pu.email AS patient_email, "
+                + "cu.nom AS coach_nom, cu.prenom AS coach_prenom, cu.email AS coach_email, "
+                + "nu.nom AS nutritionist_nom, nu.prenom AS nutritionist_prenom, nu.email AS nutritionist_email, "
+                + "(SELECT COUNT(*) FROM plans_exercices pe WHERE pe.accompaniment_plan_id = ap.id) AS exercise_count, "
+                + "(SELECT COUNT(*) FROM plans_regimes pr WHERE pr.accompaniment_plan_id = ap.id) AS diet_count "
+                + "FROM accompaniment_plan ap "
+                + "LEFT JOIN patients p ON p.id = ap.patient_id "
+                + "LEFT JOIN users pu ON pu.id = p.user_id "
+                + "LEFT JOIN coach_sportifs c ON c.id = ap.coach_id "
+                + "LEFT JOIN users cu ON cu.id = c.user_id "
+                + "LEFT JOIN nutritionnistes n ON n.id = ap.nutritionist_id "
+                + "LEFT JOIN users nu ON nu.id = n.user_id "
+                + "ORDER BY ap.created_at DESC LIMIT ?";
+
+        String sqlLegacy = "SELECT a.id, a.nom AS title, a.statut AS status, a.date_debut AS start_date, a.date_fin AS end_date, 0 AS duration_weeks, a.created_at, a.updated_at, "
+                + "u.nom AS patient_nom, u.prenom AS patient_prenom, u.email AS patient_email, "
+                + "'' AS coach_nom, '' AS coach_prenom, '' AS coach_email, "
+                + "'' AS nutritionist_nom, '' AS nutritionist_prenom, '' AS nutritionist_email, "
+                + "(SELECT COUNT(*) FROM plans_exercices pe WHERE pe.accompagnement_id = a.id) AS exercise_count, "
+                + "(SELECT COUNT(*) FROM plans_regimes pr WHERE pr.accompagnement_id = a.id) AS diet_count "
+                + "FROM accompagnements a "
+                + "LEFT JOIN abonnements ab ON ab.id = a.abonnement_id "
+                + "LEFT JOIN users u ON u.id = ab.user_id "
+                + "ORDER BY a.created_at DESC LIMIT ?";
+
+        if (fillAccompanimentRows(rows, sqlSymfonyPlural, safeLimit)
+                || fillAccompanimentRows(rows, sqlSymfonySingular, safeLimit)
+                || fillAccompanimentRows(rows, sqlLegacy, safeLimit)) {
+            return rows;
+        }
+
+        return List.of();
+    }
+
+    public ActionResult updateAccompanimentStatusByAdmin(int accompanimentId, String status) {
+        String normalized = normalizeAccompanimentStatus(status);
+        if (accompanimentId <= 0) {
+            return ActionResult.failure("Plan d'accompagnement invalide.");
+        }
+        if (normalized.isBlank()) {
+            return ActionResult.failure("Statut accompagnement invalide.");
+        }
+
+        String[] modernSql = new String[] {
+                "UPDATE accompaniment_plans SET status = ?, updated_at = ? WHERE id = ?",
+                "UPDATE accompaniment_plan SET status = ?, updated_at = ? WHERE id = ?"
+        };
+
+        for (String sql : modernSql) {
+            try (Connection connection = databaseService.getConnection();
+                 PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setString(1, normalized);
+                statement.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
+                statement.setInt(3, accompanimentId);
+                int changed = statement.executeUpdate();
+                if (changed == 1) {
+                    return ActionResult.success("Statut accompagnement mis a jour.");
+                }
+            } catch (SQLException ignored) {
+            }
+        }
+
+        String legacyStatus = normalizeAccompanimentStatusForLegacy(normalized);
+        String legacySql = "UPDATE accompagnements SET statut = ?, updated_at = ? WHERE id = ?";
+        try (Connection connection = databaseService.getConnection();
+             PreparedStatement statement = connection.prepareStatement(legacySql)) {
+            statement.setString(1, legacyStatus);
+            statement.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
+            statement.setInt(3, accompanimentId);
+            int changed = statement.executeUpdate();
+            if (changed == 1) {
+                return ActionResult.success("Statut accompagnement mis a jour.");
+            }
+            return ActionResult.failure("Plan d'accompagnement introuvable.");
+        } catch (SQLException exception) {
+            return ActionResult.failure("Mise a jour accompagnement impossible: " + exception.getMessage());
+        }
+    }
+
     public List<UserScoreRow> listTopUserScores(int limit) {
         int safeLimit = Math.max(1, Math.min(limit, 100));
         String sql = "SELECT id, nom, prenom, email, role, email_verified, admin_approved, is_banned, created_at "
@@ -1245,6 +1380,43 @@ public class AdminOperationsService {
         }
     }
 
+    private boolean fillAccompanimentRows(List<AccompanimentAdminRow> rows, String sql, int limit) {
+        try (Connection connection = databaseService.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, limit);
+
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    String patient = displayName(rs.getString("patient_nom"), rs.getString("patient_prenom"), rs.getString("patient_email"));
+                    String coach = displayName(rs.getString("coach_nom"), rs.getString("coach_prenom"), rs.getString("coach_email"));
+                    String nutritionist = displayName(rs.getString("nutritionist_nom"), rs.getString("nutritionist_prenom"), rs.getString("nutritionist_email"));
+
+                    String normalizedStatus = normalizeAccompanimentStatus(rs.getString("status"));
+                    String finalStatus = normalizedStatus.isBlank() ? safe(rs.getString("status")) : normalizedStatus;
+
+                    rows.add(new AccompanimentAdminRow(
+                            rs.getInt("id"),
+                            safe(rs.getString("title")),
+                            patient,
+                            (safe(coach).isBlank() || "Inconnu".equalsIgnoreCase(safe(coach))) ? "-" : coach,
+                            (safe(nutritionist).isBlank() || "Inconnu".equalsIgnoreCase(safe(nutritionist))) ? "-" : nutritionist,
+                            toLocalDate(rs.getDate("start_date")),
+                            toLocalDate(rs.getDate("end_date")),
+                            Math.max(0, rs.getInt("duration_weeks")),
+                            finalStatus,
+                            Math.max(0, rs.getInt("exercise_count")),
+                            Math.max(0, rs.getInt("diet_count")),
+                            toLocalDateTime(rs.getTimestamp("created_at")),
+                            toLocalDateTime(rs.getTimestamp("updated_at"))
+                    ));
+                }
+            }
+            return true;
+        } catch (SQLException ignored) {
+            return false;
+        }
+    }
+
     private boolean fillPaymentsFromStripe(StringBuilder out, String sql) {
         try (Connection connection = databaseService.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql);
@@ -1384,6 +1556,27 @@ public class AdminOperationsService {
             case "refuse", "rejected", "reject" -> "refuse";
             case "annule", "cancelled", "canceled", "cancel" -> "annule";
             default -> "";
+        };
+    }
+
+    private String normalizeAccompanimentStatus(String status) {
+        String normalized = safe(status).toLowerCase();
+        return switch (normalized) {
+            case "active", "en_cours", "ongoing", "in_progress" -> "active";
+            case "paused", "pause", "suspendu", "suspended" -> "paused";
+            case "completed", "termine", "terminee", "valide" -> "completed";
+            case "cancelled", "canceled", "annule", "annulee", "rejete", "refuse" -> "cancelled";
+            default -> "";
+        };
+    }
+
+    private String normalizeAccompanimentStatusForLegacy(String normalizedStatus) {
+        return switch (safe(normalizedStatus).toLowerCase()) {
+            case "active" -> "en_cours";
+            case "paused" -> "suspendu";
+            case "completed" -> "termine";
+            case "cancelled" -> "annule";
+            default -> "en_cours";
         };
     }
 
@@ -1634,6 +1827,31 @@ public class AdminOperationsService {
             String status,
             String motif,
             LocalDateTime createdAt
+        ) {
+        }
+
+        public record AccompanimentAdminStats(
+            int total,
+            int active,
+            int completed,
+            int cancelled
+        ) {
+        }
+
+        public record AccompanimentAdminRow(
+            int id,
+            String title,
+            String patientDisplay,
+            String coachDisplay,
+            String nutritionistDisplay,
+            LocalDate startDate,
+            LocalDate endDate,
+            int durationWeeks,
+            String status,
+            int exerciseCount,
+            int dietCount,
+            LocalDateTime createdAt,
+            LocalDateTime updatedAt
         ) {
         }
 

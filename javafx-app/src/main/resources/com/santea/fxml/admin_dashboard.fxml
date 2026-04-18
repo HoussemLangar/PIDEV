@@ -69,7 +69,7 @@
                         <Button fx:id="navMedicamentsAdminButton" text="Medicaments" styleClass="bo-nav-btn" onAction="#handleNavMedicamentsAdmin"/>
                         <Button fx:id="navStocksAdminButton" text="Stocks" styleClass="bo-nav-btn" onAction="#handleNavStocksAdmin"/>
                         <Button fx:id="navReservationsAdminButton" text="Reservations" styleClass="bo-nav-btn" onAction="#handleNavReservationsAdmin"/>
-                        <Button text="Accompagnements" styleClass="bo-nav-btn bo-nav-btn-disabled" disable="true"/>
+                        <Button fx:id="navAccompanimentsButton" text="Accompagnements" styleClass="bo-nav-btn" onAction="#handleNavAccompaniments"/>
                     </VBox>
 
                     <VBox styleClass="bo-nav-group" spacing="4">
@@ -478,6 +478,29 @@
                                 <Label fx:id="reservationsAdminPaginationInfoLabel" text="Affichage 0-0 sur 0" styleClass="bo-pagination-label"/>
                                 <Button fx:id="reservationsAdminPrevPageButton" text="Prev" styleClass="bo-view-btn" onAction="#handleReservationsAdminPrevPage"/>
                                 <Button fx:id="reservationsAdminNextPageButton" text="Next" styleClass="bo-view-btn" onAction="#handleReservationsAdminNextPage"/>
+                            </HBox>
+                        </VBox>
+
+                        <VBox fx:id="pageAccompaniments" spacing="12" visible="false" managed="false">
+                            <FlowPane hgap="10" vgap="10" prefWrapLength="1000">
+                                <Label fx:id="accompanimentsTotalLabel" text="Total: 0" styleClass="bo-page-chip"/>
+                                <Label fx:id="accompanimentsActiveLabel" text="Actifs: 0" styleClass="bo-page-chip"/>
+                                <Label fx:id="accompanimentsCompletedLabel" text="Termines: 0" styleClass="bo-page-chip"/>
+                                <Label fx:id="accompanimentsCancelledLabel" text="Annules: 0" styleClass="bo-page-chip"/>
+                            </FlowPane>
+                            <HBox spacing="8" styleClass="bo-table-filters">
+                                <TextField fx:id="accompanimentsSearchField" promptText="Rechercher plan, patient, coach..." HBox.hgrow="ALWAYS"/>
+                                <ComboBox fx:id="accompanimentsStatusFilterCombo" prefWidth="180"/>
+                                <ComboBox fx:id="accompanimentsAssignedFilterCombo" prefWidth="200"/>
+                                <Button text="Filtrer" styleClass="bo-view-btn" onAction="#handleAccompanimentsApplyFilters"/>
+                                <Button fx:id="accompanimentsListModeButton" text="Liste" styleClass="bo-view-btn" onAction="#handleAccompanimentsListMode"/>
+                                <Button fx:id="accompanimentsGridModeButton" text="Grille" styleClass="bo-view-btn" onAction="#handleAccompanimentsGridMode"/>
+                            </HBox>
+                            <FlowPane fx:id="accompanimentsRowsBox" styleClass="bo-items-container bo-items-list" hgap="10" vgap="10" prefWrapLength="2200"/>
+                            <HBox spacing="8" alignment="CENTER_RIGHT" styleClass="bo-pagination-wrap">
+                                <Label fx:id="accompanimentsPaginationInfoLabel" text="Affichage 0-0 sur 0" styleClass="bo-pagination-label"/>
+                                <Button fx:id="accompanimentsPrevPageButton" text="Prev" styleClass="bo-view-btn" onAction="#handleAccompanimentsPrevPage"/>
+                                <Button fx:id="accompanimentsNextPageButton" text="Next" styleClass="bo-view-btn" onAction="#handleAccompanimentsNextPage"/>
                             </HBox>
                         </VBox>
 

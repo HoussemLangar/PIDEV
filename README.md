@@ -29,6 +29,29 @@ docker-compose exec web composer require webapp
   - Utilisateur: root
   - Mot de passe: root
 
+### 3.bis Monitoring + Logs (Prometheus, Grafana, ELK)
+```bash
+# Démarrer la stack observabilité
+docker-compose --profile observability up -d
+
+# Provisionner le dashboard Kibana (logs Symfony + JavaFX)
+bash /home/pi-dev/PIDEV/observability/kibana/provision-kibana-dashboard.sh
+```
+
+- **Prometheus**: http://localhost:9090
+- **Grafana**: http://localhost:3001 (admin/admin)
+- **Kibana**: http://localhost:5601
+- **Elasticsearch API**: http://localhost:9200
+
+Dans Kibana, utilisez le dashboard **PIDEV Logs Overview**.
+Le dashboard contient 4 volets: All, Symfony, JavaFX et Database.
+
+Sources observées:
+- **Monitoring Symfony**: métriques Apache via `apache-exporter` (`/server-status`)
+- **Monitoring JavaFX**: métriques conteneur (CPU/RAM/restarts) via `cadvisor`
+- **Logs Symfony**: `symfony-app/var/log/*.log`
+- **Logs JavaFX**: `javafx-app/logs/javafx-app.log`
+
 ### 4. Base de données
 - Host: db (depuis les conteneurs) ou localhost:3306 (depuis l'hôte)
 - Database: pidev
@@ -67,6 +90,12 @@ docker-compose exec javafx mvn javafx:run
 
 # Compiler uniquement
 docker-compose exec javafx mvn -DskipTests compile
+```
+
+Pour centraliser les logs JavaFX dans ELK, utilisez de préférence le script:
+
+```bash
+bash /home/pi-dev/PIDEV/javafx-app/scripts/run-javafx.sh
 ```
 
 ```bash

@@ -35,7 +35,18 @@ RUN make-ssl-cert generate-default-snakeoil --force-overwrite
 
 # Activer modules Apache
 RUN a2enmod rewrite \
- && a2enmod ssl
+ && a2enmod ssl \
+ && a2enmod status
+
+# Expose /server-status uniquement pour localhost et réseau Docker interne.
+RUN printf '%s\n' \
+    'ExtendedStatus On' \
+    '<Location /server-status>' \
+    '    SetHandler server-status' \
+    '    Require all granted' \
+    '</Location>' \
+    > /etc/apache2/conf-available/server-status.conf \
+    && a2enconf server-status
 
 # Installation Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
