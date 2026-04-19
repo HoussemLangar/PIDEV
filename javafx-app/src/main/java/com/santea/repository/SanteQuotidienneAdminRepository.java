@@ -191,7 +191,7 @@ public class SanteQuotidienneAdminRepository {
         sql.append(" ORDER BY sq.date DESC, sq.id DESC");
 
         List<String> csvLines = new ArrayList<>();
-        csvLines.add("Email,Prenom,Nom,Date,Poids(kg),Sommeil(h),Humeur,Activite(min),Alimentation,Eau(L),Tension");
+    csvLines.add("Email,Prenom,Nom,Date,Poids(kg),Sommeil(h),Humeur,Activite,Alimentation,Eau(L),Tension");
 
         try (Connection connection = databaseService.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql.toString())) {
@@ -206,15 +206,15 @@ public class SanteQuotidienneAdminRepository {
 
             try (ResultSet resultSet = statement.executeQuery()) {
                 while (resultSet.next()) {
-                    String line = String.format("%s,%s,%s,%s,%.2f,%d,%s,%d,%s,%.2f,%s",
+                    String line = String.format("%s,%s,%s,%s,%.2f,%.2f,%s,%s,%s,%.2f,%s",
                         safeCsv(resultSet.getString("email")),
                         safeCsv(resultSet.getString("prenom")),
                         safeCsv(resultSet.getString("nom")),
                         resultSet.getDate("date"),
                         resultSet.getDouble("poids"),
-                        resultSet.getInt("sommeil"),
-                        safeCsv(resultSet.getString("humeur")),
-                        resultSet.getInt("activite_physique"),
+                        readDoubleValue(resultSet, "sommeil"),
+                        safeCsv(readStringValue(resultSet, "humeur")),
+                        safeCsv(readStringValue(resultSet, "activite_physique")),
                         safeCsv(resultSet.getString("alimentation")),
                         resultSet.getDouble("eau_bue"),
                         safeCsv(resultSet.getString("tension_arterielle"))
@@ -237,13 +237,44 @@ public class SanteQuotidienneAdminRepository {
             resultSet.getString("nom"),
             sqlDate != null ? sqlDate.toLocalDate() : null,
             resultSet.getDouble("poids"),
-            resultSet.getInt("sommeil"),
-            resultSet.getString("humeur"),
-            resultSet.getInt("activite_physique"),
+            readDoubleValue(resultSet, "sommeil"),
+            readStringValue(resultSet, "humeur"),
+            readStringValue(resultSet, "activite_physique"),
             resultSet.getString("alimentation"),
             resultSet.getDouble("eau_bue"),
             resultSet.getString("tension_arterielle")
         };
+    }
+
+    private double readDoubleValue(ResultSet resultSet, String columnLabel) throws SQLException {
+        Object value = resultSet.getObject(columnLabel);
+        if (value == null) {
+            return 0.0;
+        }
+        if (value instanceof Number number) {
+            return number.doubleValue();
+        }
+
+        String raw = value.toString();
+        if (raw == null) {
+            return 0.0;
+        }
+
+        String normalized = raw.trim().replace(',', '.');
+        if (normalized.isEmpty()) {
+            return 0.0;
+        }
+
+        try {
+            return Double.parseDouble(normalized);
+        } catch (NumberFormatException ignored) {
+            return 0.0;
+        }
+    }
+
+    private String readStringValue(ResultSet resultSet, String columnLabel) throws SQLException {
+        Object value = resultSet.getObject(columnLabel);
+        return value == null ? "" : value.toString();
     }
 
     private String safeCsv(String value) {
