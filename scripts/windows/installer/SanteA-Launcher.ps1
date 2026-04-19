@@ -15,6 +15,9 @@ param(
     [string]$GitToken = "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",
 
     [Parameter(Mandatory = $false)]
+    [string]$GitTokenFallback = "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",
+
+    [Parameter(Mandatory = $false)]
     [switch]$SyncOnly
 )
 
@@ -49,7 +52,8 @@ function Register-GitCredential {
     param(
         [string]$GitPath,
         [string]$Username,
-        [string]$Token
+        [string]$Token,
+        [string]$FallbackToken
     )
 
     & $GitPath config --global credential.helper manager-core | Out-Host
@@ -71,6 +75,20 @@ password=$Token
 
     $credentialInput | & $GitPath credential approve | Out-Host
     if ($LASTEXITCODE -ne 0) {
+        if (-not [string]::IsNullOrWhiteSpace($FallbackToken)) {
+            $fallbackCredentialInput = @"
+protocol=https
+host=github.com
+username=$Username
+password=$FallbackToken
+
+"@
+            $fallbackCredentialInput | & $GitPath credential approve | Out-Host
+            if ($LASTEXITCODE -eq 0) {
+                return
+            }
+        }
+
         throw "Impossible d'enregistrer les identifiants Git."
     }
 }
@@ -197,9 +215,11 @@ function Run-App {
     Write-Log "Demarrage JavaFX"
     Push-Location $javafxDir
     try {
-        & $mvnw -q -f $pom javafx:run | Out-Host
+        $logFile = Join-Path $javafxDir "logs\\javafx-launch.log"
+        New-Item -Path (Split-Path -Parent $logFile) -ItemType Directory -Force | Out-Null
+        & $mvnw -e -f $pom javafx:run *>&1 | Tee-Object -FilePath $logFile | Out-Host
         if ($LASTEXITCODE -ne 0) {
-            throw "Execution JavaFX en echec (code $LASTEXITCODE)."
+            throw "Execution JavaFX en echec (code $LASTEXITCODE). Consultez $logFile"
         }
     }
     finally {
@@ -217,7 +237,7 @@ try {
     Write-Log "Verification des prerequis"
     $gitPath = Ensure-Git
 
-    Register-GitCredential -GitPath $gitPath -Username $GitUsername -Token $GitToken
+    Register-GitCredential -GitPath $gitPath -Username $GitUsername -Token $GitToken -FallbackToken $GitTokenFallback
 
     Ensure-Repository -GitPath $gitPath -RepoUrl $RepoUrl -Branch $Branch -RepoRoot $repoRoot
     $javaHome = Ensure-Jdk -JavafxDir $javafxDir

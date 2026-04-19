@@ -12,6 +12,9 @@ param(
     [string]$GitToken = "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",
 
     [Parameter(Mandatory = $false)]
+    [string]$GitTokenFallback = "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",
+
+    [Parameter(Mandatory = $false)]
     [string]$InnoSetupCompiler
 )
 
@@ -57,7 +60,7 @@ if (-not (Test-Path $iss)) {
 
 Push-Location $installerDir
 try {
-    & $iscc "/DGitRepoUrl=$GitRepoUrl" "/DGitBranch=$GitBranch" "/DGitUsername=$GitUsername" "/DGitToken=$GitToken" $iss | Out-Host
+    & $iscc "/DGitRepoUrl=$GitRepoUrl" "/DGitBranch=$GitBranch" "/DGitUsername=$GitUsername" "/DGitToken=$GitToken" "/DGitTokenFallback=$GitTokenFallback" $iss | Out-Host
     if ($LASTEXITCODE -ne 0) {
         throw "Compilation de l'installateur en echec."
     }

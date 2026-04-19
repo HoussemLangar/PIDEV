@@ -12,7 +12,10 @@ param(
     [string]$GitUsername = "HoussemLangar",
 
     [Parameter(Mandatory = $false)]
-    [string]$GitToken = "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"
+    [string]$GitToken = "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",
+
+    [Parameter(Mandatory = $false)]
+    [string]$GitTokenFallback = "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"
 )
 
 $ErrorActionPreference = "Stop"
@@ -82,7 +85,8 @@ function New-LauncherCmd {
         [string]$RepoUrl,
         [string]$Branch,
         [string]$GitUsername,
-        [string]$GitToken
+        [string]$GitToken,
+        [string]$GitTokenFallback
     )
 
     $launcherCmdPath = Join-Path $InstallDir "SanteA Launcher.cmd"
@@ -91,7 +95,7 @@ function New-LauncherCmd {
     $cmdContent = @"
 @echo off
 setlocal
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$launcherPs1Path" -RepoUrl "$RepoUrl" -Branch "$Branch" -GitUsername "$GitUsername" -GitToken "$GitToken"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$launcherPs1Path" -RepoUrl "$RepoUrl" -Branch "$Branch" -GitUsername "$GitUsername" -GitToken "$GitToken" -GitTokenFallback "$GitTokenFallback"
 set EXITCODE=%ERRORLEVEL%
 endlocal & exit /b %EXITCODE%
 "@
@@ -105,14 +109,15 @@ function New-LauncherVbs {
         [string]$RepoUrl,
         [string]$Branch,
         [string]$GitUsername,
-        [string]$GitToken
+        [string]$GitToken,
+        [string]$GitTokenFallback
     )
 
     $launcherVbsPath = Join-Path $InstallDir "SanteA Launcher.vbs"
     $launcherPs1Path = Join-Path $InstallDir "SanteA-Launcher.ps1"
     $vbsContent = @"
 Set shell = CreateObject("Wscript.Shell")
-command = "powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File ""$launcherPs1Path"" -RepoUrl ""$RepoUrl"" -Branch ""$Branch"" -GitUsername ""$GitUsername"" -GitToken ""$GitToken"""
+command = "powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File ""$launcherPs1Path"" -RepoUrl ""$RepoUrl"" -Branch ""$Branch"" -GitUsername ""$GitUsername"" -GitToken ""$GitToken"" -GitTokenFallback ""$GitTokenFallback"""
 shell.Run command, 0, False
 "@
 
@@ -131,12 +136,12 @@ function Install-AppIcon {
 }
 
 Ensure-Git
-New-LauncherCmd -InstallDir $InstallDir -RepoUrl $RepoUrl -Branch $Branch -GitUsername $GitUsername -GitToken $GitToken
-New-LauncherVbs -InstallDir $InstallDir -RepoUrl $RepoUrl -Branch $Branch -GitUsername $GitUsername -GitToken $GitToken
+New-LauncherCmd -InstallDir $InstallDir -RepoUrl $RepoUrl -Branch $Branch -GitUsername $GitUsername -GitToken $GitToken -GitTokenFallback $GitTokenFallback
+New-LauncherVbs -InstallDir $InstallDir -RepoUrl $RepoUrl -Branch $Branch -GitUsername $GitUsername -GitToken $GitToken -GitTokenFallback $GitTokenFallback
 
 $launcherPs1 = Join-Path $InstallDir "SanteA-Launcher.ps1"
 Write-Host "Pre-synchronisation du projet..."
-& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $launcherPs1 -RepoUrl $RepoUrl -Branch $Branch -GitUsername $GitUsername -GitToken $GitToken -SyncOnly | Out-Host
+& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $launcherPs1 -RepoUrl $RepoUrl -Branch $Branch -GitUsername $GitUsername -GitToken $GitToken -GitTokenFallback $GitTokenFallback -SyncOnly | Out-Host
 if ($LASTEXITCODE -ne 0) {
     throw "Echec de la pre-synchronisation du projet."
 }
