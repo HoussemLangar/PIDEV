@@ -164,29 +164,43 @@ set -euo pipefail
 
 cd "$PROJECT_DIR"
 
-wait_tcp_from_web() {
-    local host="$1"
-    local port="$2"
-    local attempts="${3:-45}"
-    local sleep_seconds="${4:-2}"
+wait_http_from_web() {
+    local url="$1"
+    local attempts="${2:-45}"
+    local sleep_seconds="${3:-2}"
 
     for i in $(seq 1 "$attempts"); do
-        if ./scripts/ci/compose exec -T web sh -lc "php -r 'exit(@fsockopen(\"${host}\", ${port}) ? 0 : 1);'" >/dev/null 2>&1; then
+        if ./scripts/ci/compose exec -T web sh -lc "curl -fsS --connect-timeout 3 --max-time 10 '${url}' >/dev/null" >/dev/null 2>&1; then
             return 0
         fi
         sleep "$sleep_seconds"
     done
 
-    echo "Smoke check failed for endpoint: ${host}:${port}" >&2
+    echo "Smoke check failed for URL: ${url}" >&2
     return 1
 }
 
-wait_tcp_from_web "127.0.0.1" "80"
+wait_web_from_web() {
+    local attempts="${1:-45}"
+    local sleep_seconds="${2:-2}"
+
+    for i in $(seq 1 "$attempts"); do
+        if ./scripts/ci/compose exec -T web sh -lc "curl -ksS --connect-timeout 3 --max-time 10 https://127.0.0.1/ >/dev/null || curl -fsS --connect-timeout 3 --max-time 10 http://127.0.0.1/ >/dev/null" >/dev/null 2>&1; then
+            return 0
+        fi
+        sleep "$sleep_seconds"
+    done
+
+    echo "Smoke check failed for web endpoint: https://127.0.0.1/ or http://127.0.0.1/" >&2
+    return 1
+}
+
+wait_web_from_web
 
 if [ "${ENABLE_OBSERVABILITY}" = "true" ]; then
-    wait_tcp_from_web "prometheus" "9090"
-    wait_tcp_from_web "elasticsearch" "9200"
-    wait_tcp_from_web "kibana" "5601" "90"
+    wait_http_from_web "http://prometheus:9090/-/healthy"
+    wait_http_from_web "http://elasticsearch:9200"
+    wait_http_from_web "http://kibana:5601/api/status" "90"
 fi
 '''
             }
