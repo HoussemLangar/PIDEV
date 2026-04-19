@@ -53,7 +53,7 @@ function New-LauncherCmd {
     $cmdContent = @"
 @echo off
 setlocal
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$launcherPs1Path" -AppDir "$AppDir" -BuildOnly
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$launcherPs1Path" -AppDir "$AppDir"
 set EXITCODE=%ERRORLEVEL%
 endlocal & exit /b %EXITCODE%
 "@
@@ -71,7 +71,7 @@ function New-LauncherVbs {
     $launcherPs1Path = Join-Path $InstallDir "SanteA-Launcher.ps1"
     $vbsContent = @"
 Set shell = CreateObject("Wscript.Shell")
-command = "powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File ""$launcherPs1Path"" -AppDir ""$AppDir"" -BuildOnly"
+command = "powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File ""$launcherPs1Path"" -AppDir ""$AppDir"""
 shell.Run command, 0, False
 "@
 
