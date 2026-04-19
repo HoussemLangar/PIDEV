@@ -73,8 +73,13 @@ function New-LauncherCmd {
     $cmdContent = @"
 @echo off
 setlocal
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$launcherPs1Path" -AppDir "$AppDir" -RepoUrl "$RepoUrl" -Branch "$Branch" -GitUsername "$GitUsername" -GitToken "$GitToken" -GitTokenFallback "$GitTokenFallback"
+set "LOGDIR=%~dp0logs"
+if not exist "%LOGDIR%" mkdir "%LOGDIR%"
+set "LOGFILE=%LOGDIR%\launcher.log"
+echo [%DATE% %TIME%] Lancement SanteA >> "%LOGFILE%"
+powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "$launcherPs1Path" -AppDir "$AppDir" -RepoUrl "$RepoUrl" -Branch "$Branch" -GitUsername "$GitUsername" -GitToken "$GitToken" -GitTokenFallback "$GitTokenFallback" 1>>"%LOGFILE%" 2>>&1
 set EXITCODE=%ERRORLEVEL%
+echo [%DATE% %TIME%] Code retour: %EXITCODE% >> "%LOGFILE%"
 endlocal & exit /b %EXITCODE%
 "@
 
@@ -93,11 +98,15 @@ function New-LauncherVbs {
     )
 
     $launcherVbsPath = Join-Path $InstallDir "SanteA Launcher.vbs"
-    $launcherPs1Path = Join-Path $InstallDir "SanteA-Launcher.ps1"
+        $launcherCmdPath = Join-Path $InstallDir "SanteA Launcher.cmd"
+        $logPath = Join-Path $InstallDir "logs\launcher.log"
     $vbsContent = @"
 Set shell = CreateObject("Wscript.Shell")
-command = "powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File ""$launcherPs1Path"" -AppDir ""$AppDir"" -RepoUrl ""$RepoUrl"" -Branch ""$Branch"" -GitUsername ""$GitUsername"" -GitToken ""$GitToken"" -GitTokenFallback ""$GitTokenFallback"""
-shell.Run command, 0, False
+command = "cmd.exe /c """"$launcherCmdPath"""""
+exitCode = shell.Run(command, 0, True)
+If exitCode <> 0 Then
+    shell.Popup "Echec du lancement SanteA. Consultez le journal: $logPath", 0, "SanteA", 16
+End If
 "@
 
     Set-Content -Path $launcherVbsPath -Value $vbsContent -Encoding ASCII

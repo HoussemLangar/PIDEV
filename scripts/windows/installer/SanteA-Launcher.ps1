@@ -26,13 +26,25 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+$script:LauncherRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+$script:LauncherLogDir = Join-Path $script:LauncherRoot "logs"
+$script:LauncherLogFile = Join-Path $script:LauncherLogDir "launcher-runtime.log"
+New-Item -Path $script:LauncherLogDir -ItemType Directory -Force | Out-Null
+
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
 function Write-Log {
     param([string]$Message)
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    Write-Host "[$timestamp] $Message"
+    $line = "[$timestamp] $Message"
+    Write-Host $line
+    try {
+        Add-Content -Path $script:LauncherLogFile -Value $line -Encoding ASCII
+    }
+    catch {
+        # Ignore log write errors to avoid blocking app startup.
+    }
 }
 
 function Invoke-DownloadWithFallback {
@@ -361,7 +373,7 @@ try {
     Start-BuiltApp -RepoRoot $AppDir
 }
 catch {
-    $message = "Erreur: $($_.Exception.Message)"
+    $message = "Erreur: $($_.Exception.Message)`nJournal: $script:LauncherLogFile"
     [System.Windows.Forms.MessageBox]::Show($message, "SanteA", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Error) | Out-Null
     exit 1
 }
