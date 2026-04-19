@@ -114,15 +114,17 @@ function Install-AppIcon {
     New-AppIcon -SourcePng $sourceLogo -DestinationIco $targetIcon
 }
 
-New-LauncherCmd -InstallDir $InstallDir -AppDir $InstallDir -RepoUrl $RepoUrl -Branch $Branch -GitUsername $GitUsername -GitToken $GitToken -GitTokenFallback $GitTokenFallback
-New-LauncherVbs -InstallDir $InstallDir -AppDir $InstallDir -RepoUrl $RepoUrl -Branch $Branch -GitUsername $GitUsername -GitToken $GitToken -GitTokenFallback $GitTokenFallback
+$repoRoot = Join-Path $InstallDir "app-repo"
+
+New-LauncherCmd -InstallDir $InstallDir -AppDir $repoRoot -RepoUrl $RepoUrl -Branch $Branch -GitUsername $GitUsername -GitToken $GitToken -GitTokenFallback $GitTokenFallback
+New-LauncherVbs -InstallDir $InstallDir -AppDir $repoRoot -RepoUrl $RepoUrl -Branch $Branch -GitUsername $GitUsername -GitToken $GitToken -GitTokenFallback $GitTokenFallback
 
 # Build initial local image so the application starts immediately after installation.
-& powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $InstallDir "SanteA-Launcher.ps1") -AppDir $InstallDir -RepoUrl $RepoUrl -Branch $Branch -GitUsername $GitUsername -GitToken $GitToken -GitTokenFallback $GitTokenFallback -BuildOnly
+& powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $InstallDir "SanteA-Launcher.ps1") -AppDir $repoRoot -RepoUrl $RepoUrl -Branch $Branch -GitUsername $GitUsername -GitToken $GitToken -GitTokenFallback $GitTokenFallback -BuildOnly
 if ($LASTEXITCODE -ne 0) {
     throw "Echec de la construction initiale de l'application."
 }
 
-Install-AppIcon -AppDir $InstallDir -InstallDir $InstallDir
+Install-AppIcon -AppDir $repoRoot -InstallDir $InstallDir
 
 Write-Host "Installation SanteA terminee."
