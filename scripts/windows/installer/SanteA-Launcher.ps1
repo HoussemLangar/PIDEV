@@ -18,9 +18,9 @@ param(
     [string]$GitTokenFallback = "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",
 
     [Parameter(Mandatory = $false)]
-    [switch]$SyncOnly
+    [switch]$SyncOnly,
 
-,    [Parameter(Mandatory = $false)]
+    [Parameter(Mandatory = $false)]
     [switch]$BuildOnly
 )
 
