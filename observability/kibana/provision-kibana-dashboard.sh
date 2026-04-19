@@ -12,10 +12,20 @@ require_cmd() {
 }
 
 require_cmd curl
-require_cmd python3
+
+PYTHON_BIN=""
+if command -v python3 >/dev/null 2>&1; then
+  PYTHON_BIN="python3"
+elif command -v python >/dev/null 2>&1; then
+  PYTHON_BIN="python"
+else
+  echo "Aucun interpreteur Python detecte (python3/python)." >&2
+  echo "Provisioning Kibana ignore pour ne pas bloquer le pipeline." >&2
+  exit 0
+fi
 
 DV_JSON="$(curl -fsS -H 'kbn-xsrf: true' "$KIBANA_URL/api/data_views")"
-DV_ID="$(python3 -c 'import json,sys
+DV_ID="$("$PYTHON_BIN" -c 'import json,sys
 obj=json.loads(sys.stdin.read())
 for dv in obj.get("data_view",[]):
     if dv.get("title")=="pidev-logs-*":
@@ -27,7 +37,7 @@ if [[ -z "$DV_ID" ]]; then
   CREATE_DV_PAYLOAD='{"data_view":{"name":"PIDEV Logs","title":"'"$INDEX_PATTERN"'","timeFieldName":"@timestamp"}}'
   DV_ID="$(curl -fsS -X POST "$KIBANA_URL/api/data_views/data_view" \
     -H 'kbn-xsrf: true' -H 'Content-Type: application/json' \
-    -d "$CREATE_DV_PAYLOAD" | python3 -c 'import json,sys; print(json.load(sys.stdin)["data_view"]["id"])')"
+    -d "$CREATE_DV_PAYLOAD" | "$PYTHON_BIN" -c 'import json,sys; print(json.load(sys.stdin)["data_view"]["id"])')"
 fi
 
 curl -fsS -X POST "$KIBANA_URL/api/kibana/settings/defaultIndex" \
@@ -38,7 +48,7 @@ make_search() {
   local id="$1"
 
   local payload
-  payload="$(python3 - <<'PY'
+  payload="$("$PYTHON_BIN" - <<'PY'
 import json, os
 query = os.environ['KBN_QUERY']
 obj = {
@@ -77,7 +87,7 @@ KBN_DV_ID="$DV_ID" KBN_TITLE="PIDEV Logs - Symfony" KBN_QUERY="app : \"symfony\"
 KBN_DV_ID="$DV_ID" KBN_TITLE="PIDEV Logs - JavaFX" KBN_QUERY="app : \"javafx\"" make_search "pidev-search-javafx"
 KBN_DV_ID="$DV_ID" KBN_TITLE="PIDEV Logs - Database" KBN_QUERY="app : \"database\"" make_search "pidev-search-database"
 
-DASH_PAYLOAD="$(python3 - <<'PY'
+DASH_PAYLOAD="$("$PYTHON_BIN" - <<'PY'
 import json
 
 panels = [
