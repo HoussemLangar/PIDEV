@@ -61,6 +61,35 @@ Sources observées:
 
 ## Commandes utiles
 
+### Jenkins CI/CD
+Le projet inclut un pipeline Jenkins declaratif dans `Jenkinsfile`.
+
+Pre-requis Jenkins agent:
+- Docker
+- docker-compose (v1)
+- Acces au daemon Docker (`/var/run/docker.sock`)
+
+Creation job Jenkins:
+1. Nouveau job `Pipeline`.
+2. `Pipeline script from SCM`.
+3. SCM `Git` vers ce repository.
+4. Script path: `Jenkinsfile`.
+
+Parametres pipeline:
+- `RUN_TESTS`: execute les tests Symfony et JavaFX.
+- `ENABLE_OBSERVABILITY`: demarre Prometheus/Grafana/ELK et provisionne Kibana.
+- `CLEANUP_AFTER_BUILD`: stoppe les conteneurs en fin de run.
+
+Etapes pipeline:
+1. Verification outillage Docker/Compose.
+2. Build images `web` et `javafx`.
+3. Validation Symfony (`composer install`, lint yaml).
+4. Tests Symfony (si actives).
+5. Build JavaFX Maven.
+6. Tests JavaFX (si actives).
+7. Deploiement observabilite (si active).
+8. Smoke checks HTTP + endpoints observabilite.
+
 ### Symfony
 ```bash
 # Entrer dans le conteneur web
