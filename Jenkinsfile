@@ -162,12 +162,30 @@ fi
                 sh '''#!/usr/bin/env bash
 set -euo pipefail
 
-curl -fsS http://localhost:8000 >/dev/null || true
+cd "$PROJECT_DIR"
+
+wait_http_from_web() {
+    local url="$1"
+    local attempts="${2:-30}"
+    local sleep_seconds="${3:-2}"
+
+    for i in $(seq 1 "$attempts"); do
+        if ./scripts/ci/compose exec -T web sh -lc "php -r 'exit(@file_get_contents(\"$url\")===false?1:0);'" >/dev/null 2>&1; then
+            return 0
+        fi
+        sleep "$sleep_seconds"
+    done
+
+    echo "Smoke check failed for URL: $url" >&2
+    return 1
+}
+
+wait_http_from_web "http://127.0.0.1/"
 
 if [ "${ENABLE_OBSERVABILITY}" = "true" ]; then
-  curl -fsS http://localhost:9090/-/healthy >/dev/null
-  curl -fsS http://localhost:9200 >/dev/null
-  curl -fsS http://localhost:5601/api/status >/dev/null
+    wait_http_from_web "http://prometheus:9090/-/healthy"
+    wait_http_from_web "http://elasticsearch:9200"
+    wait_http_from_web "http://kibana:5601/api/status"
 fi
 '''
             }
