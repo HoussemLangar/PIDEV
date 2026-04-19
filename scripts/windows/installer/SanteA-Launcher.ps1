@@ -1,21 +1,6 @@
 param(
     [Parameter(Mandatory = $false)]
-    [string]$RepoUrl = "https://github.com/HoussemLangar/Esprit-PIDEV-3A41-2026-SANTEA.git",
-
-    [Parameter(Mandatory = $false)]
-    [string]$Branch = "main",
-
-    [Parameter(Mandatory = $false)]
-    [string]$SettingsDir = "$env:LOCALAPPDATA\SanteA",
-
-    [Parameter(Mandatory = $false)]
-    [string]$GitUsername = "HoussemLangar",
-
-    [Parameter(Mandatory = $false)]
-    [string]$GitToken = "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",
-
-    [Parameter(Mandatory = $false)]
-    [string]$GitTokenFallback = "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",
+    [string]$AppDir = (Join-Path (Split-Path -Parent $MyInvocation.MyCommand.Path) "javafx-app"),
 
     [Parameter(Mandatory = $false)]
     [switch]$SyncOnly
@@ -30,128 +15,6 @@ function Write-Log {
     param([string]$Message)
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
     Write-Host "[$timestamp] $Message"
-}
-
-function Get-GitPath {
-    $cmd = Get-Command git -ErrorAction SilentlyContinue
-    if ($cmd) {
-        return $cmd.Source
-    }
-    return $null
-}
-
-function Ensure-Git {
-    $git = Get-GitPath
-    if (-not $git) {
-        throw "Git est introuvable. Relancez l'installation SanteA pour installer les dependances."
-    }
-    return $git
-}
-
-function Register-GitCredential {
-    param(
-        [string]$GitPath,
-        [string]$Username,
-        [string]$Token,
-        [string]$FallbackToken
-    )
-
-    if ([string]::IsNullOrWhiteSpace($Token)) {
-        throw "Token GitHub manquant."
-    }
-
-    return
-}
-
-function Get-AuthenticatedRepoUrl {
-    param(
-        [string]$RepoUrl,
-        [string]$Username,
-        [string]$Token
-    )
-
-    if ([string]::IsNullOrWhiteSpace($RepoUrl) -or [string]::IsNullOrWhiteSpace($Token)) {
-        throw "URL de depot ou token manquant."
-    }
-
-    return $RepoUrl -replace '^https://', "https://$Username`:$Token@"
-}
-
-function Ensure-SafeDirectory {
-    param(
-        [string]$GitPath,
-        [string]$RepoPath
-    )
-
-    $normalizedPath = ($RepoPath -replace '\\', '/')
-    $existing = & $GitPath config --global --get-all safe.directory 2>$null
-    if ($existing -notcontains $normalizedPath) {
-        & $GitPath config --global --add safe.directory $normalizedPath | Out-Host
-        if ($LASTEXITCODE -ne 0) {
-            throw "Impossible de declarer le depot comme safe.directory: $normalizedPath"
-        }
-    }
-}
-
-function Invoke-Git {
-    param(
-        [string]$GitPath,
-        [string]$RepoPath,
-        [string[]]$Arguments
-    )
-
-    $output = & $GitPath -C $RepoPath @Arguments 2>&1
-    $output | Out-Host
-    if ($LASTEXITCODE -ne 0) {
-        throw "Commande git en echec.`n$($output -join [Environment]::NewLine)"
-    }
-}
-
-function Ensure-Repository {
-    param(
-        [string]$GitPath,
-        [string]$RepoUrl,
-        [string]$Branch,
-        [string]$RepoRoot
-    )
-
-    $repoGitDir = Join-Path $RepoRoot ".git"
-    Ensure-SafeDirectory -GitPath $GitPath -RepoPath $RepoRoot
-    if (-not (Test-Path $repoGitDir)) {
-        if (Test-Path $RepoRoot) {
-            Remove-Item -Path $RepoRoot -Recurse -Force
-        }
-        New-Item -Path (Split-Path -Parent $RepoRoot) -ItemType Directory -Force | Out-Null
-        Write-Log "Clonage du depot ($Branch)"
-        & $GitPath clone --branch $Branch --single-branch $RepoUrl $RepoRoot | Out-Host
-        if ($LASTEXITCODE -ne 0) {
-            throw "Impossible de cloner le depot: $RepoUrl"
-        }
-        return
-    }
-
-    $primaryRepoUrl = Get-AuthenticatedRepoUrl -RepoUrl $RepoUrl -Username $GitUsername -Token $GitToken
-    $fallbackRepoUrl = Get-AuthenticatedRepoUrl -RepoUrl $RepoUrl -Username $GitUsername -Token $GitTokenFallback
-
-    Write-Log "Mise a jour depuis la branche $Branch"
-    try {
-        Invoke-Git -GitPath $GitPath -RepoPath $RepoRoot -Arguments @("remote", "set-url", "origin", $primaryRepoUrl)
-        Invoke-Git -GitPath $GitPath -RepoPath $RepoRoot -Arguments @("fetch", "origin", $Branch)
-    }
-    catch {
-        if (-not [string]::IsNullOrWhiteSpace($GitTokenFallback)) {
-            Write-Log "Echec du jeton principal, tentative avec le jeton de secours"
-            Invoke-Git -GitPath $GitPath -RepoPath $RepoRoot -Arguments @("remote", "set-url", "origin", $fallbackRepoUrl)
-            Invoke-Git -GitPath $GitPath -RepoPath $RepoRoot -Arguments @("fetch", "origin", $Branch)
-        }
-        else {
-            throw
-        }
-    }
-
-    Invoke-Git -GitPath $GitPath -RepoPath $RepoRoot -Arguments @("checkout", $Branch)
-    Invoke-Git -GitPath $GitPath -RepoPath $RepoRoot -Arguments @("reset", "--hard", "origin/$Branch")
-    Invoke-Git -GitPath $GitPath -RepoPath $RepoRoot -Arguments @("clean", "-fd")
 }
 
 function Ensure-Jdk {
@@ -251,13 +114,13 @@ function Ensure-Maven {
 
 function Run-App {
     param(
-        [string]$RepoRoot,
+        [string]$AppDir,
         [string]$JavaHome
     )
 
-    $javafxDir = Join-Path $RepoRoot "javafx-app"
+    $javafxDir = $AppDir
     $pom = Join-Path $javafxDir "pom.xml"
-    $buildTool = Ensure-Maven -RepoRoot $RepoRoot
+    $buildTool = Ensure-Maven -RepoRoot $AppDir
 
     $env:JAVA_HOME = $JavaHome
     $env:PATH = "$JavaHome\\bin;$env:PATH"
@@ -278,25 +141,18 @@ function Run-App {
     }
 }
 
-$baseDir = Join-Path $env:LOCALAPPDATA "SanteA"
-$repoRoot = Join-Path $baseDir "PIDEV"
-$javafxDir = Join-Path $repoRoot "javafx-app"
-
-New-Item -Path $baseDir -ItemType Directory -Force | Out-Null
-
 try {
     Write-Log "Verification des prerequis"
     $gitPath = Ensure-Git
 
-    Ensure-Repository -GitPath $gitPath -RepoUrl $RepoUrl -Branch $Branch -RepoRoot $repoRoot
-    $javaHome = Ensure-Jdk -JavafxDir $javafxDir
+    $javaHome = Ensure-Jdk -JavafxDir $AppDir
 
     if ($SyncOnly) {
         Write-Log "Synchronisation terminee"
         exit 0
     }
 
-    Run-App -RepoRoot $repoRoot -JavaHome $javaHome
+    Run-App -AppDir $AppDir -JavaHome $javaHome
 }
 catch {
     $message = "Erreur: $($_.Exception.Message)"

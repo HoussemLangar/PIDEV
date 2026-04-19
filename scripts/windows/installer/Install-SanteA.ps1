@@ -1,21 +1,6 @@
 param(
     [Parameter(Mandatory = $true)]
     [string]$InstallDir,
-
-    [Parameter(Mandatory = $false)]
-    [string]$RepoUrl = "https://github.com/HoussemLangar/Esprit-PIDEV-3A41-2026-SANTEA.git",
-
-    [Parameter(Mandatory = $false)]
-    [string]$Branch = "main",
-
-    [Parameter(Mandatory = $false)]
-    [string]$GitUsername = "HoussemLangar",
-
-    [Parameter(Mandatory = $false)]
-    [string]$GitToken = "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",
-
-    [Parameter(Mandatory = $false)]
-    [string]$GitTokenFallback = "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"
 )
 
 $ErrorActionPreference = "Stop"
@@ -56,37 +41,10 @@ public static extern bool DestroyIcon(System.IntPtr hIcon);
     }
 }
 
-function Ensure-Git {
-    $cmd = Get-Command git -ErrorAction SilentlyContinue
-    if ($cmd) {
-        return
-    }
-
-    $winget = Get-Command winget -ErrorAction SilentlyContinue
-    if (-not $winget) {
-        throw "Git n'est pas installe et winget est introuvable. Installez Git manuellement puis relancez."
-    }
-
-    Write-Host "Installation de Git via winget..."
-    & $winget.Source install --id Git.Git -e --source winget --silent --accept-package-agreements --accept-source-agreements | Out-Host
-    if ($LASTEXITCODE -ne 0) {
-        throw "Echec installation Git via winget."
-    }
-
-    $env:PATH = "$env:ProgramFiles\\Git\\cmd;${env:ProgramFiles(x86)}\\Git\\cmd;$env:PATH"
-    if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
-        throw "Git reste introuvable apres installation."
-    }
-}
-
 function New-LauncherCmd {
     param(
         [string]$InstallDir,
-        [string]$RepoUrl,
-        [string]$Branch,
-        [string]$GitUsername,
-        [string]$GitToken,
-        [string]$GitTokenFallback
+        [string]$AppDir
     )
 
     $launcherCmdPath = Join-Path $InstallDir "SanteA Launcher.cmd"
@@ -95,7 +53,7 @@ function New-LauncherCmd {
     $cmdContent = @"
 @echo off
 setlocal
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$launcherPs1Path" -RepoUrl "$RepoUrl" -Branch "$Branch" -GitUsername "$GitUsername" -GitToken "$GitToken" -GitTokenFallback "$GitTokenFallback"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$launcherPs1Path" -AppDir "$AppDir"
 set EXITCODE=%ERRORLEVEL%
 endlocal & exit /b %EXITCODE%
 "@
@@ -106,18 +64,14 @@ endlocal & exit /b %EXITCODE%
 function New-LauncherVbs {
     param(
         [string]$InstallDir,
-        [string]$RepoUrl,
-        [string]$Branch,
-        [string]$GitUsername,
-        [string]$GitToken,
-        [string]$GitTokenFallback
+        [string]$AppDir
     )
 
     $launcherVbsPath = Join-Path $InstallDir "SanteA Launcher.vbs"
     $launcherPs1Path = Join-Path $InstallDir "SanteA-Launcher.ps1"
     $vbsContent = @"
 Set shell = CreateObject("Wscript.Shell")
-command = "powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File ""$launcherPs1Path"" -RepoUrl ""$RepoUrl"" -Branch ""$Branch"" -GitUsername ""$GitUsername"" -GitToken ""$GitToken"" -GitTokenFallback ""$GitTokenFallback"""
+command = "powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File ""$launcherPs1Path"" -AppDir ""$AppDir"""
 shell.Run command, 0, False
 "@
 
@@ -126,26 +80,18 @@ shell.Run command, 0, False
 
 function Install-AppIcon {
     param(
-        [string]$RepoRoot,
+        [string]$AppDir,
         [string]$InstallDir
     )
 
-    $sourceLogo = Join-Path $RepoRoot "symfony-app\public\logo.png"
+    $sourceLogo = Join-Path $AppDir "src\main\resources\com\santea\images\heart.png"
     $targetIcon = Join-Path $InstallDir "SanteA.ico"
     New-AppIcon -SourcePng $sourceLogo -DestinationIco $targetIcon
 }
 
-Ensure-Git
-New-LauncherCmd -InstallDir $InstallDir -RepoUrl $RepoUrl -Branch $Branch -GitUsername $GitUsername -GitToken $GitToken -GitTokenFallback $GitTokenFallback
-New-LauncherVbs -InstallDir $InstallDir -RepoUrl $RepoUrl -Branch $Branch -GitUsername $GitUsername -GitToken $GitToken -GitTokenFallback $GitTokenFallback
+New-LauncherCmd -InstallDir $InstallDir -AppDir (Join-Path $InstallDir "javafx-app")
+New-LauncherVbs -InstallDir $InstallDir -AppDir (Join-Path $InstallDir "javafx-app")
 
-$launcherPs1 = Join-Path $InstallDir "SanteA-Launcher.ps1"
-Write-Host "Pre-synchronisation du projet..."
-& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $launcherPs1 -RepoUrl $RepoUrl -Branch $Branch -GitUsername $GitUsername -GitToken $GitToken -GitTokenFallback $GitTokenFallback -SyncOnly | Out-Host
-if ($LASTEXITCODE -ne 0) {
-    throw "Echec de la pre-synchronisation du projet."
-}
-
-Install-AppIcon -RepoRoot (Join-Path $env:LOCALAPPDATA "SanteA\PIDEV") -InstallDir $InstallDir
+Install-AppIcon -AppDir (Join-Path $InstallDir "javafx-app") -InstallDir $InstallDir
 
 Write-Host "Installation SanteA terminee."
