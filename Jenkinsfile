@@ -1,7 +1,12 @@
 pipeline {
-    agent any
+    agent {
+        node {
+            customWorkspace '/workspace/PIDEV'
+        }
+    }
 
     options {
+        skipDefaultCheckout(true)
         timestamps()
         disableConcurrentBuilds()
     }
@@ -29,13 +34,14 @@ pipeline {
                 sh '''#!/usr/bin/env bash
 set -euo pipefail
 
-command -v docker >/dev/null
-command -v docker-compose >/dev/null
+chmod +x ./scripts/ci/compose
 
-docker-compose version
+command -v docker >/dev/null
+
+./scripts/ci/compose version
 docker version
 
-docker-compose config >/dev/null
+./scripts/ci/compose config >/dev/null
 
 # Evite le bug docker-compose v1 "ContainerConfig" sur des conteneurs stale.
 docker ps -a --format '{{.Names}}' | grep -E '^[0-9a-f]{12}_pidev-' | xargs -r docker rm -f || true
@@ -48,8 +54,8 @@ docker ps -a --format '{{.Names}}' | grep -E '^[0-9a-f]{12}_pidev-' | xargs -r d
                 sh '''#!/usr/bin/env bash
 set -euo pipefail
 
-docker-compose build web javafx
-docker-compose up -d db web
+./scripts/ci/compose build web javafx
+./scripts/ci/compose up -d db web
 '''
             }
         }
@@ -59,11 +65,11 @@ docker-compose up -d db web
                 sh '''#!/usr/bin/env bash
 set -euo pipefail
 
-docker-compose exec -T web composer install --no-interaction --prefer-dist
+./scripts/ci/compose exec -T web composer install --no-interaction --prefer-dist
 
-docker-compose exec -T web php -v
+./scripts/ci/compose exec -T web php -v
 
-docker-compose exec -T web sh -lc 'if [ -x bin/console ]; then php bin/console lint:yaml config --parse-tags; fi'
+./scripts/ci/compose exec -T web sh -lc 'if [ -x bin/console ]; then php bin/console lint:yaml config --parse-tags; fi'
 '''
             }
         }
@@ -76,7 +82,7 @@ docker-compose exec -T web sh -lc 'if [ -x bin/console ]; then php bin/console l
                 sh '''#!/usr/bin/env bash
 set -euo pipefail
 
-docker-compose exec -T web sh -lc '
+./scripts/ci/compose exec -T web sh -lc '
 if [ -x bin/phpunit ]; then
   bin/phpunit
 elif [ -x vendor/bin/phpunit ]; then
@@ -94,7 +100,7 @@ fi
                 sh '''#!/usr/bin/env bash
 set -euo pipefail
 
-docker-compose run --rm javafx bash -lc 'cd /workspace/javafx-app && mvn -B -DskipTests clean package'
+./scripts/ci/compose run --rm javafx bash -lc 'cd /workspace/javafx-app && mvn -B -DskipTests clean package'
 '''
             }
         }
@@ -107,7 +113,7 @@ docker-compose run --rm javafx bash -lc 'cd /workspace/javafx-app && mvn -B -Dsk
                 sh '''#!/usr/bin/env bash
 set -euo pipefail
 
-docker-compose run --rm javafx bash -lc 'cd /workspace/javafx-app && mvn -B test'
+./scripts/ci/compose run --rm javafx bash -lc 'cd /workspace/javafx-app && mvn -B test'
 '''
             }
         }
@@ -120,7 +126,7 @@ docker-compose run --rm javafx bash -lc 'cd /workspace/javafx-app && mvn -B test
                 sh '''#!/usr/bin/env bash
 set -euo pipefail
 
-docker-compose --profile observability up -d
+./scripts/ci/compose --profile observability up -d
 
 if [ -x observability/kibana/provision-kibana-dashboard.sh ]; then
   ./observability/kibana/provision-kibana-dashboard.sh
@@ -151,9 +157,9 @@ fi
             sh '''#!/usr/bin/env bash
 set +e
 
-docker-compose ps
+./scripts/ci/compose ps || true
 
-docker-compose logs --no-color > compose.log
+./scripts/ci/compose logs --no-color > compose.log || true
 '''
             archiveArtifacts artifacts: 'compose.log', fingerprint: true, allowEmptyArchive: true
         }
@@ -164,7 +170,7 @@ docker-compose logs --no-color > compose.log
                     sh '''#!/usr/bin/env bash
 set +e
 
-docker-compose down --remove-orphans
+./scripts/ci/compose down --remove-orphans || true
 '''
                 }
             }

@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if command -v docker-compose >/dev/null 2>&1 && docker-compose version >/dev/null 2>&1; then
+  exec docker-compose "$@"
+fi
+
+if docker compose version >/dev/null 2>&1; then
+  exec docker compose "$@"
+fi
+
+# Fallback for Jenkins agents that only have Docker CLI + socket.
+exec docker run --rm \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v "$PWD":"$PWD" \
+  -w "$PWD" \
+  docker/compose:1.29.2 "$@"
