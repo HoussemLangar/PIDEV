@@ -56,41 +56,25 @@ function Register-GitCredential {
         [string]$FallbackToken
     )
 
-    & $GitPath config --global credential.helper manager-core | Out-Host
-    if ($LASTEXITCODE -ne 0) {
-        throw "Impossible de configurer le gestionnaire d'identifiants Git."
-    }
-
     if ([string]::IsNullOrWhiteSpace($Token)) {
         throw "Token GitHub manquant."
     }
 
-    $credentialInput = @"
-protocol=https
-host=github.com
-username=$Username
-password=$Token
+    return
+}
 
-"@
+function Get-AuthenticatedRepoUrl {
+    param(
+        [string]$RepoUrl,
+        [string]$Username,
+        [string]$Token
+    )
 
-    $credentialInput | & $GitPath credential approve | Out-Host
-    if ($LASTEXITCODE -ne 0) {
-        if (-not [string]::IsNullOrWhiteSpace($FallbackToken)) {
-            $fallbackCredentialInput = @"
-protocol=https
-host=github.com
-username=$Username
-password=$FallbackToken
-
-"@
-            $fallbackCredentialInput | & $GitPath credential approve | Out-Host
-            if ($LASTEXITCODE -eq 0) {
-                return
-            }
-        }
-
-        throw "Impossible d'enregistrer les identifiants Git."
+    if ([string]::IsNullOrWhiteSpace($RepoUrl) -or [string]::IsNullOrWhiteSpace($Token)) {
+        throw "URL de depot ou token manquant."
     }
+
+    return $RepoUrl -replace '^https://', "https://$Username`:$Token@"
 }
 
 function Ensure-SafeDirectory {
@@ -116,9 +100,10 @@ function Invoke-Git {
         [string[]]$Arguments
     )
 
-    & $GitPath -C $RepoPath @Arguments | Out-Host
+    $output = & $GitPath -C $RepoPath @Arguments 2>&1
+    $output | Out-Host
     if ($LASTEXITCODE -ne 0) {
-        throw "Commande git en echec: git -C $RepoPath $($Arguments -join ' ')"
+        throw "Commande git en echec.`n$($output -join [Environment]::NewLine)"
     }
 }
 
@@ -145,9 +130,25 @@ function Ensure-Repository {
         return
     }
 
+    $primaryRepoUrl = Get-AuthenticatedRepoUrl -RepoUrl $RepoUrl -Username $GitUsername -Token $GitToken
+    $fallbackRepoUrl = Get-AuthenticatedRepoUrl -RepoUrl $RepoUrl -Username $GitUsername -Token $GitTokenFallback
+
     Write-Log "Mise a jour depuis la branche $Branch"
-    Invoke-Git -GitPath $GitPath -RepoPath $RepoRoot -Arguments @("remote", "set-url", "origin", $RepoUrl)
-    Invoke-Git -GitPath $GitPath -RepoPath $RepoRoot -Arguments @("fetch", "origin", $Branch)
+    try {
+        Invoke-Git -GitPath $GitPath -RepoPath $RepoRoot -Arguments @("remote", "set-url", "origin", $primaryRepoUrl)
+        Invoke-Git -GitPath $GitPath -RepoPath $RepoRoot -Arguments @("fetch", "origin", $Branch)
+    }
+    catch {
+        if (-not [string]::IsNullOrWhiteSpace($GitTokenFallback)) {
+            Write-Log "Echec du jeton principal, tentative avec le jeton de secours"
+            Invoke-Git -GitPath $GitPath -RepoPath $RepoRoot -Arguments @("remote", "set-url", "origin", $fallbackRepoUrl)
+            Invoke-Git -GitPath $GitPath -RepoPath $RepoRoot -Arguments @("fetch", "origin", $Branch)
+        }
+        else {
+            throw
+        }
+    }
+
     Invoke-Git -GitPath $GitPath -RepoPath $RepoRoot -Arguments @("checkout", $Branch)
     Invoke-Git -GitPath $GitPath -RepoPath $RepoRoot -Arguments @("reset", "--hard", "origin/$Branch")
     Invoke-Git -GitPath $GitPath -RepoPath $RepoRoot -Arguments @("clean", "-fd")
@@ -211,23 +212,41 @@ function Ensure-Maven {
         return @{ Command = $mvn.Source; IsWrapper = $false }
     }
 
-    $winget = Get-Command winget -ErrorAction SilentlyContinue
-    if (-not $winget) {
-        throw "Maven est introuvable et winget est indisponible pour l'installer."
+    $mavenHome = Join-Path $env:LOCALAPPDATA "SanteA\tools\apache-maven-3.9.9"
+    $mvnCmd = Join-Path $mavenHome "bin\mvn.cmd"
+    if (Test-Path $mvnCmd) {
+        return @{ Command = $mvnCmd; IsWrapper = $false }
     }
 
-    Write-Log "Installation locale de Maven"
-    & $winget.Source install --id Apache.Maven -e --source winget --silent --accept-package-agreements --accept-source-agreements | Out-Host
-    if ($LASTEXITCODE -ne 0) {
-        throw "Echec installation Maven via winget."
+    Write-Log "Telechargement local de Maven 3.9.9"
+    New-Item -Path $mavenHome -ItemType Directory -Force | Out-Null
+
+    $tmpZip = Join-Path $env:TEMP "apache-maven-3.9.9-bin.zip"
+    $tmpExtract = Join-Path $env:TEMP "apache-maven-3.9.9"
+
+    if (Test-Path $tmpZip) { Remove-Item $tmpZip -Force }
+    if (Test-Path $tmpExtract) { Remove-Item $tmpExtract -Recurse -Force }
+
+    $mavenUrl = "https://dlcdn.apache.org/maven/maven-3/3.9.9/binaries/apache-maven-3.9.9-bin.zip"
+    Invoke-WebRequest -Uri $mavenUrl -OutFile $tmpZip
+    Expand-Archive -Path $tmpZip -DestinationPath $tmpExtract -Force
+
+    $extractedDir = Get-ChildItem -Path $tmpExtract -Directory | Select-Object -First 1
+    if (-not $extractedDir) {
+        throw "Archive Maven invalide."
     }
 
-    $mvn = Get-Command mvn -ErrorAction SilentlyContinue
-    if (-not $mvn) {
-        throw "Maven reste introuvable apres installation."
+    if (Test-Path $mavenHome) {
+        Remove-Item -Path $mavenHome -Recurse -Force
     }
 
-    return @{ Command = $mvn.Source; IsWrapper = $false }
+    Move-Item -Path $extractedDir.FullName -Destination $mavenHome
+
+    if (-not (Test-Path $mvnCmd)) {
+        throw "Maven local introuvable apres extraction."
+    }
+
+    return @{ Command = $mvnCmd; IsWrapper = $false }
 }
 
 function Run-App {
@@ -249,12 +268,7 @@ function Run-App {
     try {
         $logFile = Join-Path $javafxDir "logs\\javafx-launch.log"
         New-Item -Path (Split-Path -Parent $logFile) -ItemType Directory -Force | Out-Null
-        if ($buildTool.IsWrapper) {
-            & $buildTool.Command -e -f $pom javafx:run *>&1 | Tee-Object -FilePath $logFile | Out-Host
-        }
-        else {
-            & $buildTool.Command -e -f $pom javafx:run *>&1 | Tee-Object -FilePath $logFile | Out-Host
-        }
+        & $buildTool.Command -e -f $pom javafx:run *>&1 | Tee-Object -FilePath $logFile | Out-Host
         if ($LASTEXITCODE -ne 0) {
             throw "Execution JavaFX en echec (code $LASTEXITCODE). Consultez $logFile"
         }
@@ -273,8 +287,6 @@ New-Item -Path $baseDir -ItemType Directory -Force | Out-Null
 try {
     Write-Log "Verification des prerequis"
     $gitPath = Ensure-Git
-
-    Register-GitCredential -GitPath $gitPath -Username $GitUsername -Token $GitToken -FallbackToken $GitTokenFallback
 
     Ensure-Repository -GitPath $gitPath -RepoUrl $RepoUrl -Branch $Branch -RepoRoot $repoRoot
     $javaHome = Ensure-Jdk -JavafxDir $javafxDir
