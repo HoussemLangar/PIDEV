@@ -10,7 +10,7 @@ pipeline {
     parameters {
         booleanParam(name: 'RUN_TESTS', defaultValue: true, description: 'Executer les tests Symfony et JavaFX')
         booleanParam(name: 'ENABLE_OBSERVABILITY', defaultValue: true, description: 'Demarrer Prometheus/Grafana/ELK')
-        booleanParam(name: 'CLEANUP_AFTER_BUILD', defaultValue: false, description: 'Arreter les conteneurs en fin de pipeline')
+        booleanParam(name: 'CLEANUP_AFTER_BUILD', defaultValue: true, description: 'Arreter les conteneurs en fin de pipeline')
     }
 
     environment {
@@ -52,7 +52,9 @@ docker version
 ./scripts/ci/compose config >/dev/null
 
 # Evite le bug docker-compose v1 "ContainerConfig" sur des conteneurs stale.
-docker ps -a --format '{{.Names}}' | grep -E '^[0-9a-f]{12}_pidev-' | xargs -r docker rm -f || true
+# On purge les conteneurs du projet (noms fixes + anciens noms prefixed)
+# pour forcer un create propre et eviter le chemin "recreate" de compose v1.
+docker ps -a --format '{{.Names}}' | grep -E '^(pidev-|[0-9a-f]{12}_pidev-)' | xargs -r docker rm -f || true
 '''
             }
         }
