@@ -6,6 +6,12 @@ param(
     [string]$GitBranch = "main",
 
     [Parameter(Mandatory = $false)]
+    [string]$GitUsername = "HoussemLangar",
+
+    [Parameter(Mandatory = $false)]
+    [string]$GitToken = "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",
+
+    [Parameter(Mandatory = $false)]
     [string]$InnoSetupCompiler
 )
 
@@ -51,7 +57,7 @@ if (-not (Test-Path $iss)) {
 
 Push-Location $installerDir
 try {
-    & $iscc "/DGitRepoUrl=$GitRepoUrl" "/DGitBranch=$GitBranch" $iss | Out-Host
+    & $iscc "/DGitRepoUrl=$GitRepoUrl" "/DGitBranch=$GitBranch" "/DGitUsername=$GitUsername" "/DGitToken=$GitToken" $iss | Out-Host
     if ($LASTEXITCODE -ne 0) {
         throw "Compilation de l'installateur en echec."
     }

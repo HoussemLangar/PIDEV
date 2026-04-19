@@ -226,8 +226,7 @@ A chaque lancement depuis l'icone Desktop/Menu:
 - Mise a jour automatique avant demarrage JavaFX.
 - L'icone Windows du raccourci utilise le logo de l'application.
 - L'application se lance sans ouvrir de terminal.
-- Au premier lancement sur Windows, une petite fenetre demande le username GitHub et le token pour le depot prive.
-- Le token est stocke localement de maniere chiffree pour les mises a jour futures.
+- Les identifiants GitHub du depot prive sont integres a l'installateur pour les mises a jour automatiques sans saisie.
 
 > Important: pour cette copie geree automatiquement, les modifications locales sont ecrasees a chaque lancement (reset sur la branche distante).
 

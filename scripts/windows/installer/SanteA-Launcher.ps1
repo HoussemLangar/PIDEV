@@ -9,6 +9,12 @@ param(
     [string]$SettingsDir = "$env:LOCALAPPDATA\SanteA",
 
     [Parameter(Mandatory = $false)]
+    [string]$GitUsername = "HoussemLangar",
+
+    [Parameter(Mandatory = $false)]
+    [string]$GitToken = "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",
+
+    [Parameter(Mandatory = $false)]
     [switch]$SyncOnly
 )
 
@@ -39,147 +45,6 @@ function Ensure-Git {
     return $git
 }
 
-function Convert-SecureStringToPlainText {
-    param([Security.SecureString]$SecureString)
-
-    $bstr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($SecureString)
-    try {
-        return [Runtime.InteropServices.Marshal]::PtrToStringBSTR($bstr)
-    }
-    finally {
-        if ($bstr -ne [IntPtr]::Zero) {
-            [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr)
-        }
-    }
-}
-
-function Get-StoredGitCredential {
-    param([string]$SettingsDir)
-
-    $credentialFile = Join-Path $SettingsDir "git-credential.json"
-    if (-not (Test-Path $credentialFile)) {
-        return $null
-    }
-
-    try {
-        $payload = Get-Content -Path $credentialFile -Raw | ConvertFrom-Json
-        if (-not $payload.Username -or -not $payload.TokenEncrypted) {
-            return $null
-        }
-
-        $secureToken = ConvertTo-SecureString $payload.TokenEncrypted
-        $plainToken = Convert-SecureStringToPlainText -SecureString $secureToken
-        return [pscustomobject]@{
-            Username = $payload.Username
-            Token = $plainToken
-        }
-    }
-    catch {
-        return $null
-    }
-}
-
-function Save-GitCredential {
-    param(
-        [string]$SettingsDir,
-        [string]$Username,
-        [string]$Token
-    )
-
-    New-Item -Path $SettingsDir -ItemType Directory -Force | Out-Null
-    $secureToken = ConvertTo-SecureString $Token -AsPlainText -Force
-    $credentialFile = Join-Path $SettingsDir "git-credential.json"
-    $payload = [pscustomobject]@{
-        Username = $Username
-        TokenEncrypted = ($secureToken | ConvertFrom-SecureString)
-    }
-
-    $payload | ConvertTo-Json -Depth 3 | Set-Content -Path $credentialFile -Encoding UTF8
-}
-
-function Prompt-GitCredential {
-    param([string]$RepoUrl)
-
-    $form = New-Object System.Windows.Forms.Form
-    $form.Text = "SanteA - Acces Git prive"
-    $form.StartPosition = "CenterScreen"
-    $form.Size = New-Object System.Drawing.Size(520, 240)
-    $form.FormBorderStyle = "FixedDialog"
-    $form.MaximizeBox = $false
-    $form.MinimizeBox = $false
-    $form.TopMost = $true
-
-    $title = New-Object System.Windows.Forms.Label
-    $title.Text = "Cette application doit se connecter au depot prive Git."
-    $title.Location = New-Object System.Drawing.Point(16, 16)
-    $title.Size = New-Object System.Drawing.Size(470, 20)
-    $form.Controls.Add($title)
-
-    $repoLabel = New-Object System.Windows.Forms.Label
-    $repoLabel.Text = $RepoUrl
-    $repoLabel.Location = New-Object System.Drawing.Point(16, 38)
-    $repoLabel.Size = New-Object System.Drawing.Size(470, 20)
-    $form.Controls.Add($repoLabel)
-
-    $usernameLabel = New-Object System.Windows.Forms.Label
-    $usernameLabel.Text = "Username GitHub"
-    $usernameLabel.Location = New-Object System.Drawing.Point(16, 72)
-    $usernameLabel.Size = New-Object System.Drawing.Size(140, 20)
-    $form.Controls.Add($usernameLabel)
-
-    $usernameBox = New-Object System.Windows.Forms.TextBox
-    $usernameBox.Location = New-Object System.Drawing.Point(160, 68)
-    $usernameBox.Size = New-Object System.Drawing.Size(320, 24)
-    $form.Controls.Add($usernameBox)
-
-    $tokenLabel = New-Object System.Windows.Forms.Label
-    $tokenLabel.Text = "Token GitHub"
-    $tokenLabel.Location = New-Object System.Drawing.Point(16, 108)
-    $tokenLabel.Size = New-Object System.Drawing.Size(140, 20)
-    $form.Controls.Add($tokenLabel)
-
-    $tokenBox = New-Object System.Windows.Forms.TextBox
-    $tokenBox.Location = New-Object System.Drawing.Point(160, 104)
-    $tokenBox.Size = New-Object System.Drawing.Size(320, 24)
-    $tokenBox.UseSystemPasswordChar = $true
-    $form.Controls.Add($tokenBox)
-
-    $hint = New-Object System.Windows.Forms.Label
-    $hint.Text = "Les credentials seront stockes localement sous forme chiffree pour les mises a jour."
-    $hint.Location = New-Object System.Drawing.Point(16, 140)
-    $hint.Size = New-Object System.Drawing.Size(470, 30)
-    $form.Controls.Add($hint)
-
-    $okButton = New-Object System.Windows.Forms.Button
-    $okButton.Text = "OK"
-    $okButton.Location = New-Object System.Drawing.Point(304, 176)
-    $okButton.DialogResult = [System.Windows.Forms.DialogResult]::OK
-    $form.Controls.Add($okButton)
-
-    $cancelButton = New-Object System.Windows.Forms.Button
-    $cancelButton.Text = "Annuler"
-    $cancelButton.Location = New-Object System.Drawing.Point(388, 176)
-    $cancelButton.DialogResult = [System.Windows.Forms.DialogResult]::Cancel
-    $form.Controls.Add($cancelButton)
-
-    $form.AcceptButton = $okButton
-    $form.CancelButton = $cancelButton
-
-    $dialogResult = $form.ShowDialog()
-    if ($dialogResult -ne [System.Windows.Forms.DialogResult]::OK) {
-        throw "Configuration Git annulee par l'utilisateur."
-    }
-
-    if ([string]::IsNullOrWhiteSpace($usernameBox.Text) -or [string]::IsNullOrWhiteSpace($tokenBox.Text)) {
-        throw "Username et token GitHub sont obligatoires."
-    }
-
-    return [pscustomobject]@{
-        Username = $usernameBox.Text.Trim()
-        Token = $tokenBox.Text.Trim()
-    }
-}
-
 function Register-GitCredential {
     param(
         [string]$GitPath,
@@ -190,6 +55,10 @@ function Register-GitCredential {
     & $GitPath config --global credential.helper manager-core | Out-Host
     if ($LASTEXITCODE -ne 0) {
         throw "Impossible de configurer le gestionnaire d'identifiants Git."
+    }
+
+    if ([string]::IsNullOrWhiteSpace($Token)) {
+        throw "Token GitHub manquant."
     }
 
     $credentialInput = @"
@@ -348,13 +217,7 @@ try {
     Write-Log "Verification des prerequis"
     $gitPath = Ensure-Git
 
-    $gitCredential = Get-StoredGitCredential -SettingsDir $SettingsDir
-    if (-not $gitCredential) {
-        $gitCredential = Prompt-GitCredential -RepoUrl $RepoUrl
-        Save-GitCredential -SettingsDir $SettingsDir -Username $gitCredential.Username -Token $gitCredential.Token
-    }
-
-    Register-GitCredential -GitPath $gitPath -Username $gitCredential.Username -Token $gitCredential.Token
+    Register-GitCredential -GitPath $gitPath -Username $GitUsername -Token $GitToken
 
     Ensure-Repository -GitPath $gitPath -RepoUrl $RepoUrl -Branch $Branch -RepoRoot $repoRoot
     $javaHome = Ensure-Jdk -JavafxDir $javafxDir

@@ -6,7 +6,13 @@ param(
     [string]$RepoUrl = "https://github.com/HoussemLangar/Esprit-PIDEV-3A41-2026-SANTEA.git",
 
     [Parameter(Mandatory = $false)]
-    [string]$Branch = "main"
+    [string]$Branch = "main",
+
+    [Parameter(Mandatory = $false)]
+    [string]$GitUsername = "HoussemLangar",
+
+    [Parameter(Mandatory = $false)]
+    [string]$GitToken = "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"
 )
 
 $ErrorActionPreference = "Stop"
@@ -74,7 +80,9 @@ function New-LauncherCmd {
     param(
         [string]$InstallDir,
         [string]$RepoUrl,
-        [string]$Branch
+        [string]$Branch,
+        [string]$GitUsername,
+        [string]$GitToken
     )
 
     $launcherCmdPath = Join-Path $InstallDir "SanteA Launcher.cmd"
@@ -83,7 +91,7 @@ function New-LauncherCmd {
     $cmdContent = @"
 @echo off
 setlocal
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$launcherPs1Path" -RepoUrl "$RepoUrl" -Branch "$Branch"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$launcherPs1Path" -RepoUrl "$RepoUrl" -Branch "$Branch" -GitUsername "$GitUsername" -GitToken "$GitToken"
 set EXITCODE=%ERRORLEVEL%
 endlocal & exit /b %EXITCODE%
 "@
@@ -95,14 +103,16 @@ function New-LauncherVbs {
     param(
         [string]$InstallDir,
         [string]$RepoUrl,
-        [string]$Branch
+        [string]$Branch,
+        [string]$GitUsername,
+        [string]$GitToken
     )
 
     $launcherVbsPath = Join-Path $InstallDir "SanteA Launcher.vbs"
     $launcherPs1Path = Join-Path $InstallDir "SanteA-Launcher.ps1"
     $vbsContent = @"
 Set shell = CreateObject("Wscript.Shell")
-command = "powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File ""$launcherPs1Path"" -RepoUrl ""$RepoUrl"" -Branch ""$Branch"""
+command = "powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File ""$launcherPs1Path"" -RepoUrl ""$RepoUrl"" -Branch ""$Branch"" -GitUsername ""$GitUsername"" -GitToken ""$GitToken"""
 shell.Run command, 0, False
 "@
 
@@ -121,12 +131,12 @@ function Install-AppIcon {
 }
 
 Ensure-Git
-New-LauncherCmd -InstallDir $InstallDir -RepoUrl $RepoUrl -Branch $Branch
-New-LauncherVbs -InstallDir $InstallDir -RepoUrl $RepoUrl -Branch $Branch
+New-LauncherCmd -InstallDir $InstallDir -RepoUrl $RepoUrl -Branch $Branch -GitUsername $GitUsername -GitToken $GitToken
+New-LauncherVbs -InstallDir $InstallDir -RepoUrl $RepoUrl -Branch $Branch -GitUsername $GitUsername -GitToken $GitToken
 
 $launcherPs1 = Join-Path $InstallDir "SanteA-Launcher.ps1"
 Write-Host "Pre-synchronisation du projet..."
-& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $launcherPs1 -RepoUrl $RepoUrl -Branch $Branch -SyncOnly | Out-Host
+& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $launcherPs1 -RepoUrl $RepoUrl -Branch $Branch -GitUsername $GitUsername -GitToken $GitToken -SyncOnly | Out-Host
 if ($LASTEXITCODE -ne 0) {
     throw "Echec de la pre-synchronisation du projet."
 }

@@ -11,6 +11,14 @@
   #define GitBranch "main"
 #endif
 
+#ifndef GitUsername
+  #define GitUsername "HoussemLangar"
+#endif
+
+#ifndef GitToken
+  #define GitToken "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"
+#endif
+
 [Setup]
 AppId={{2B23385E-7FBF-4957-BA90-CF43F95F74B8}
 AppName={#MyAppName}
@@ -37,7 +45,7 @@ Source: "SanteA-Launcher.ps1"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Install-SanteA.ps1"; DestDir: "{app}"; Flags: ignoreversion
 
 [Run]
-Filename: "powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{app}\Install-SanteA.ps1"" -InstallDir ""{app}"" -RepoUrl ""{#GitRepoUrl}"" -Branch ""{#GitBranch}"""; Flags: waituntilterminated runhidden; StatusMsg: "Installation des prerequis et synchronisation du projet..."
+Filename: "powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{app}\Install-SanteA.ps1"" -InstallDir ""{app}"" -RepoUrl ""{#GitRepoUrl}"" -Branch ""{#GitBranch}"" -GitUsername ""{#GitUsername}"" -GitToken ""{#GitToken}"""; Flags: waituntilterminated runhidden; StatusMsg: "Installation des prerequis et synchronisation du projet..."
 
 [Icons]
 Name: "{autodesktop}\SanteA Desktop"; Filename: "{app}\SanteA Launcher.vbs"; WorkingDir: "{app}"; IconFilename: "{app}\SanteA.ico"
