@@ -224,6 +224,7 @@ Au moment de l'installation:
 A chaque lancement depuis l'icone Desktop/Menu:
 - `git fetch` + `reset --hard` sur la branche configuree.
 - Mise a jour automatique avant demarrage JavaFX.
+- L'icone Windows du raccourci utilise le logo de l'application.
 
 > Important: pour cette copie geree automatiquement, les modifications locales sont ecrasees a chaque lancement (reset sur la branche distante).
 

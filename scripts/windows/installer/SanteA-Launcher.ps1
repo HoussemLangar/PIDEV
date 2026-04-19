@@ -33,6 +33,22 @@ function Ensure-Git {
     return $git
 }
 
+function Ensure-SafeDirectory {
+    param(
+        [string]$GitPath,
+        [string]$RepoPath
+    )
+
+    $normalizedPath = ($RepoPath -replace '\\', '/')
+    $existing = & $GitPath config --global --get-all safe.directory 2>$null
+    if ($existing -notcontains $normalizedPath) {
+        & $GitPath config --global --add safe.directory $normalizedPath | Out-Host
+        if ($LASTEXITCODE -ne 0) {
+            throw "Impossible de declarer le depot comme safe.directory: $normalizedPath"
+        }
+    }
+}
+
 function Invoke-Git {
     param(
         [string]$GitPath,
@@ -55,6 +71,7 @@ function Ensure-Repository {
     )
 
     $repoGitDir = Join-Path $RepoRoot ".git"
+    Ensure-SafeDirectory -GitPath $GitPath -RepoPath $RepoRoot
     if (-not (Test-Path $repoGitDir)) {
         if (Test-Path $RepoRoot) {
             Remove-Item -Path $RepoRoot -Recurse -Force
