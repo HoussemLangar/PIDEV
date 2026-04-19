@@ -91,6 +91,24 @@ endlocal & exit /b %EXITCODE%
     Set-Content -Path $launcherCmdPath -Value $cmdContent -Encoding ASCII
 }
 
+function New-LauncherVbs {
+    param(
+        [string]$InstallDir,
+        [string]$RepoUrl,
+        [string]$Branch
+    )
+
+    $launcherVbsPath = Join-Path $InstallDir "SanteA Launcher.vbs"
+    $launcherPs1Path = Join-Path $InstallDir "SanteA-Launcher.ps1"
+    $vbsContent = @"
+Set shell = CreateObject("Wscript.Shell")
+command = "powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File ""$launcherPs1Path"" -RepoUrl ""$RepoUrl"" -Branch ""$Branch"""
+shell.Run command, 0, False
+"@
+
+    Set-Content -Path $launcherVbsPath -Value $vbsContent -Encoding ASCII
+}
+
 function Install-AppIcon {
     param(
         [string]$RepoRoot,
@@ -104,6 +122,7 @@ function Install-AppIcon {
 
 Ensure-Git
 New-LauncherCmd -InstallDir $InstallDir -RepoUrl $RepoUrl -Branch $Branch
+New-LauncherVbs -InstallDir $InstallDir -RepoUrl $RepoUrl -Branch $Branch
 
 $launcherPs1 = Join-Path $InstallDir "SanteA-Launcher.ps1"
 Write-Host "Pre-synchronisation du projet..."

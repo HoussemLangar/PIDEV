@@ -40,5 +40,5 @@ Source: "Install-SanteA.ps1"; DestDir: "{app}"; Flags: ignoreversion
 Filename: "powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{app}\Install-SanteA.ps1"" -InstallDir ""{app}"" -RepoUrl ""{#GitRepoUrl}"" -Branch ""{#GitBranch}"""; Flags: waituntilterminated runhidden; StatusMsg: "Installation des prerequis et synchronisation du projet..."
 
 [Icons]
-Name: "{autodesktop}\SanteA Desktop"; Filename: "{app}\SanteA Launcher.cmd"; WorkingDir: "{app}"; IconFilename: "{app}\SanteA.ico"
-Name: "{autoprograms}\SanteA Desktop"; Filename: "{app}\SanteA Launcher.cmd"; WorkingDir: "{app}"; IconFilename: "{app}\SanteA.ico"
+Name: "{autodesktop}\SanteA Desktop"; Filename: "{app}\SanteA Launcher.vbs"; WorkingDir: "{app}"; IconFilename: "{app}\SanteA.ico"
+Name: "{autoprograms}\SanteA Desktop"; Filename: "{app}\SanteA Launcher.vbs"; WorkingDir: "{app}"; IconFilename: "{app}\SanteA.ico"
