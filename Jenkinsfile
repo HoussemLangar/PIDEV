@@ -17,6 +17,9 @@ pipeline {
         COMPOSE_DOCKER_CLI_BUILD = '1'
         DOCKER_BUILDKIT = '1'
         PROJECT_DIR = '/workspace/PIDEV'
+        COMPOSE_PROJECT_ROOT = '/workspace/PIDEV'
+        COMPOSE_HOST_PROJECT_ROOT = '/home/pi-dev/PIDEV'
+        FORCE_DOCKER_COMPOSE_IMAGE = '1'
     }
 
     stages {

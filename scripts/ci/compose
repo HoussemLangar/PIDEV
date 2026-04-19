@@ -1,17 +1,30 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if command -v docker-compose >/dev/null 2>&1 && docker-compose version >/dev/null 2>&1; then
-  exec docker-compose "$@"
+if [[ "${FORCE_DOCKER_COMPOSE_IMAGE:-0}" != "1" ]]; then
+  if command -v docker-compose >/dev/null 2>&1 && docker-compose version >/dev/null 2>&1; then
+    exec docker-compose "$@"
+  fi
+
+  if docker compose version >/dev/null 2>&1; then
+    exec docker compose "$@"
+  fi
 fi
 
-if docker compose version >/dev/null 2>&1; then
-  exec docker compose "$@"
+# Jenkins-in-Docker + Docker socket mode:
+# map container workspace to host workspace used by Docker daemon.
+container_root="${COMPOSE_PROJECT_ROOT:-/workspace/PIDEV}"
+host_root="${COMPOSE_HOST_PROJECT_ROOT:-/home/pi-dev/PIDEV}"
+current_dir="$PWD"
+
+if [[ "$current_dir" == "$container_root"* ]]; then
+  host_dir="$host_root${current_dir#${container_root}}"
+else
+  host_dir="$host_root"
 fi
 
-# Fallback for Jenkins agents that only have Docker CLI + socket.
 exec docker run --rm \
   -v /var/run/docker.sock:/var/run/docker.sock \
-  -v "$PWD":"$PWD" \
-  -w "$PWD" \
+  -v "$host_root":"$host_root" \
+  -w "$host_dir" \
   docker/compose:1.29.2 "$@"
