@@ -1,9 +1,5 @@
 pipeline {
-    agent {
-        node {
-            customWorkspace '/workspace/PIDEV'
-        }
-    }
+    agent any
 
     options {
         skipDefaultCheckout(true)
@@ -20,12 +16,19 @@ pipeline {
     environment {
         COMPOSE_DOCKER_CLI_BUILD = '1'
         DOCKER_BUILDKIT = '1'
+        PROJECT_DIR = '/workspace/PIDEV'
     }
 
     stages {
         stage('Checkout') {
             steps {
                 checkout scm
+                sh '''#!/usr/bin/env bash
+set -euo pipefail
+
+mkdir -p "$PROJECT_DIR"
+tar -C "$WORKSPACE" -cf - . | tar -C "$PROJECT_DIR" -xf -
+'''
             }
         }
 
@@ -33,6 +36,8 @@ pipeline {
             steps {
                 sh '''#!/usr/bin/env bash
 set -euo pipefail
+
+cd "$PROJECT_DIR"
 
 chmod +x ./scripts/ci/compose
 
@@ -54,6 +59,8 @@ docker ps -a --format '{{.Names}}' | grep -E '^[0-9a-f]{12}_pidev-' | xargs -r d
                 sh '''#!/usr/bin/env bash
 set -euo pipefail
 
+cd "$PROJECT_DIR"
+
 ./scripts/ci/compose build web javafx
 ./scripts/ci/compose up -d db web
 '''
@@ -64,6 +71,8 @@ set -euo pipefail
             steps {
                 sh '''#!/usr/bin/env bash
 set -euo pipefail
+
+cd "$PROJECT_DIR"
 
 ./scripts/ci/compose exec -T web composer install --no-interaction --prefer-dist
 
@@ -81,6 +90,8 @@ set -euo pipefail
             steps {
                 sh '''#!/usr/bin/env bash
 set -euo pipefail
+
+cd "$PROJECT_DIR"
 
 ./scripts/ci/compose exec -T web sh -lc '
 if [ -x bin/phpunit ]; then
@@ -100,6 +111,8 @@ fi
                 sh '''#!/usr/bin/env bash
 set -euo pipefail
 
+cd "$PROJECT_DIR"
+
 ./scripts/ci/compose run --rm javafx bash -lc 'cd /workspace/javafx-app && mvn -B -DskipTests clean package'
 '''
             }
@@ -113,6 +126,8 @@ set -euo pipefail
                 sh '''#!/usr/bin/env bash
 set -euo pipefail
 
+cd "$PROJECT_DIR"
+
 ./scripts/ci/compose run --rm javafx bash -lc 'cd /workspace/javafx-app && mvn -B test'
 '''
             }
@@ -125,6 +140,8 @@ set -euo pipefail
             steps {
                 sh '''#!/usr/bin/env bash
 set -euo pipefail
+
+cd "$PROJECT_DIR"
 
 ./scripts/ci/compose --profile observability up -d
 
@@ -157,6 +174,8 @@ fi
             sh '''#!/usr/bin/env bash
 set +e
 
+cd "$PROJECT_DIR"
+
 ./scripts/ci/compose ps || true
 
 ./scripts/ci/compose logs --no-color > compose.log || true
@@ -169,6 +188,8 @@ set +e
                 if (params.CLEANUP_AFTER_BUILD) {
                     sh '''#!/usr/bin/env bash
 set +e
+
+cd "$PROJECT_DIR"
 
 ./scripts/ci/compose down --remove-orphans || true
 '''
