@@ -35,6 +35,29 @@ function Write-Log {
     Write-Host "[$timestamp] $Message"
 }
 
+function Invoke-DownloadWithFallback {
+    param(
+        [string[]]$Urls,
+        [string]$OutFile,
+        [string]$Label
+    )
+
+    $lastError = $null
+    foreach ($url in $Urls) {
+        try {
+            Write-Log "$Label: tentative de telechargement depuis $url"
+            Invoke-WebRequest -Uri $url -OutFile $OutFile
+            return
+        }
+        catch {
+            $lastError = $_
+            Write-Log "$Label: echec depuis $url"
+        }
+    }
+
+    throw "$Label: impossible de telecharger le fichier. Derniere erreur: $($lastError.Exception.Message)"
+}
+
 function Get-GitPath {
     $cmd = Get-Command git -ErrorAction SilentlyContinue
     if ($cmd) { return $cmd.Source }
@@ -170,8 +193,11 @@ function Ensure-Jdk {
     if (Test-Path $tmpZip) { Remove-Item $tmpZip -Force }
     if (Test-Path $tmpExtract) { Remove-Item $tmpExtract -Recurse -Force }
 
-    $jdkUrl = "https://api.adoptium.net/v3/binary/latest/21/ga/windows/x64/jdk/hotspot/normal/eclipse"
-    Invoke-WebRequest -Uri $jdkUrl -OutFile $tmpZip
+    $jdkUrls = @(
+        "https://api.adoptium.net/v3/binary/latest/21/ga/windows/x64/jdk/hotspot/normal/eclipse",
+        "https://api.adoptium.net/v3/binary/latest/21/ga/windows/x64/jdk/hotspot/normal/adoptium"
+    )
+    Invoke-DownloadWithFallback -Urls $jdkUrls -OutFile $tmpZip -Label "JDK 21"
     Expand-Archive -Path $tmpZip -DestinationPath $tmpExtract -Force
 
     $extractedDir = Get-ChildItem -Path $tmpExtract -Directory | Select-Object -First 1
@@ -210,8 +236,12 @@ function Ensure-Maven {
     if (Test-Path $tmpZip) { Remove-Item $tmpZip -Force }
     if (Test-Path $tmpExtract) { Remove-Item $tmpExtract -Recurse -Force }
 
-    $mavenUrl = "https://dlcdn.apache.org/maven/maven-3/3.9.9/binaries/apache-maven-3.9.9-bin.zip"
-    Invoke-WebRequest -Uri $mavenUrl -OutFile $tmpZip
+    $mavenUrls = @(
+        "https://dlcdn.apache.org/maven/maven-3/3.9.9/binaries/apache-maven-3.9.9-bin.zip",
+        "https://downloads.apache.org/maven/maven-3/3.9.9/binaries/apache-maven-3.9.9-bin.zip",
+        "https://archive.apache.org/dist/maven/maven-3/3.9.9/binaries/apache-maven-3.9.9-bin.zip"
+    )
+    Invoke-DownloadWithFallback -Urls $mavenUrls -OutFile $tmpZip -Label "Maven 3.9.9"
     Expand-Archive -Path $tmpZip -DestinationPath $tmpExtract -Force
 
     $extractedDir = Get-ChildItem -Path $tmpExtract -Directory | Select-Object -First 1
