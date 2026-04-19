@@ -1,0 +1,40 @@
+name: Build Windows Installer
+
+on:
+  workflow_dispatch:
+    inputs:
+      git_branch:
+        description: "Branche a integrer dans l'installateur"
+        required: true
+        default: "main"
+  push:
+    branches:
+      - main
+
+jobs:
+  build-installer:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Inno Setup
+        run: choco install innosetup --no-progress -y
+
+      - name: Build installer
+        shell: powershell
+        run: |
+          $branch = "${{ github.ref_name }}"
+          if ("${{ github.event_name }}" -eq "workflow_dispatch") {
+            $branch = "${{ inputs.git_branch }}"
+          }
+
+          $repoUrl = "https://github.com/${{ github.repository }}.git"
+          powershell -ExecutionPolicy Bypass -File .\scripts\windows\installer\build-installer.ps1 -GitRepoUrl $repoUrl -GitBranch $branch
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SanteA-Setup-${{ github.sha }}
+          path: scripts/windows/installer/SanteA-Setup.exe

@@ -184,6 +184,49 @@ bash /home/pi-dev/PIDEV/scripts/install-javafx-shortcut.sh
 
 Cette commande cree l'icone `~/Desktop/santea-javafx.desktop` dans la VM.
 
+### Installateur Windows `.exe` (prerequis + auto-update Git)
+
+Objectif:
+- Generer un vrai installateur Windows `.exe`.
+- Installer automatiquement les prerequis manquants (Git).
+- Synchroniser le code depuis une branche Git precise a chaque lancement.
+- Lancer JavaFX en local sur Windows.
+
+Fichiers utilises:
+- `scripts/windows/installer/SanteAInstaller.iss`
+- `scripts/windows/installer/Install-SanteA.ps1`
+- `scripts/windows/installer/SanteA-Launcher.ps1`
+- `scripts/windows/installer/build-installer.ps1`
+
+#### 1. Pre-requis machine de build Windows
+
+- Inno Setup 6 (ISCC.exe)
+- PowerShell 5+
+
+#### 2. Generer `SanteA-Setup.exe`
+
+Depuis Windows, dans le repo:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\windows\installer\build-installer.ps1 -GitRepoUrl "https://github.com/HoussemLangar/Esprit-PIDEV-3A41-2026-SANTEA.git" -GitBranch "main"
+```
+
+Le fichier genere est:
+- `scripts/windows/installer/SanteA-Setup.exe`
+
+#### 3. Comportement de l'application installee
+
+Au moment de l'installation:
+- Git est installe via `winget` s'il est absent.
+- Le projet est clone dans `%LOCALAPPDATA%\SanteA\PIDEV`.
+- Le JDK 21 est telecharge en local dans `javafx-app/.jdks`.
+
+A chaque lancement depuis l'icone Desktop/Menu:
+- `git fetch` + `reset --hard` sur la branche configuree.
+- Mise a jour automatique avant demarrage JavaFX.
+
+> Important: pour cette copie geree automatiquement, les modifications locales sont ecrasees a chaque lancement (reset sur la branche distante).
+
 ### Docker
 ```bash
 # Voir les logs

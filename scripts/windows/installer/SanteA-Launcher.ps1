@@ -1,0 +1,175 @@
+param(
+    [Parameter(Mandatory = $false)]
+    [string]$RepoUrl = "https://github.com/HoussemLangar/Esprit-PIDEV-3A41-2026-SANTEA.git",
+
+    [Parameter(Mandatory = $false)]
+    [string]$Branch = "main",
+
+    [Parameter(Mandatory = $false)]
+    [switch]$SyncOnly
+)
+
+$ErrorActionPreference = "Stop"
+
+function Write-Log {
+    param([string]$Message)
+    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    Write-Host "[$timestamp] $Message"
+}
+
+function Get-GitPath {
+    $cmd = Get-Command git -ErrorAction SilentlyContinue
+    if ($cmd) {
+        return $cmd.Source
+    }
+    return $null
+}
+
+function Ensure-Git {
+    $git = Get-GitPath
+    if (-not $git) {
+        throw "Git est introuvable. Relancez l'installation SanteA pour installer les dependances."
+    }
+    return $git
+}
+
+function Invoke-Git {
+    param(
+        [string]$GitPath,
+        [string]$RepoPath,
+        [string[]]$Arguments
+    )
+
+    & $GitPath -C $RepoPath @Arguments | Out-Host
+    if ($LASTEXITCODE -ne 0) {
+        throw "Commande git en echec: git -C $RepoPath $($Arguments -join ' ')"
+    }
+}
+
+function Ensure-Repository {
+    param(
+        [string]$GitPath,
+        [string]$RepoUrl,
+        [string]$Branch,
+        [string]$RepoRoot
+    )
+
+    $repoGitDir = Join-Path $RepoRoot ".git"
+    if (-not (Test-Path $repoGitDir)) {
+        if (Test-Path $RepoRoot) {
+            Remove-Item -Path $RepoRoot -Recurse -Force
+        }
+        New-Item -Path (Split-Path -Parent $RepoRoot) -ItemType Directory -Force | Out-Null
+        Write-Log "Clonage du depot ($Branch)"
+        & $GitPath clone --branch $Branch --single-branch $RepoUrl $RepoRoot | Out-Host
+        if ($LASTEXITCODE -ne 0) {
+            throw "Impossible de cloner le depot: $RepoUrl"
+        }
+        return
+    }
+
+    Write-Log "Mise a jour depuis la branche $Branch"
+    Invoke-Git -GitPath $GitPath -RepoPath $RepoRoot -Arguments @("remote", "set-url", "origin", $RepoUrl)
+    Invoke-Git -GitPath $GitPath -RepoPath $RepoRoot -Arguments @("fetch", "origin", $Branch)
+    Invoke-Git -GitPath $GitPath -RepoPath $RepoRoot -Arguments @("checkout", $Branch)
+    Invoke-Git -GitPath $GitPath -RepoPath $RepoRoot -Arguments @("reset", "--hard", "origin/$Branch")
+    Invoke-Git -GitPath $GitPath -RepoPath $RepoRoot -Arguments @("clean", "-fd")
+}
+
+function Ensure-Jdk {
+    param([string]$JavafxDir)
+
+    $jdkRoot = Join-Path $JavafxDir ".jdks"
+    $jdkCurrent = Join-Path $jdkRoot "jdk-21\\current"
+    $javaExe = Join-Path $jdkCurrent "bin\\java.exe"
+    if (Test-Path $javaExe) {
+        return $jdkCurrent
+    }
+
+    Write-Log "Installation locale du JDK 21"
+    New-Item -Path $jdkRoot -ItemType Directory -Force | Out-Null
+
+    $tmpZip = Join-Path $env:TEMP "santea-temurin21.zip"
+    $tmpExtract = Join-Path $env:TEMP "santea-temurin21"
+
+    if (Test-Path $tmpZip) { Remove-Item $tmpZip -Force }
+    if (Test-Path $tmpExtract) { Remove-Item $tmpExtract -Recurse -Force }
+
+    $jdkUrl = "https://api.adoptium.net/v3/binary/latest/21/ga/windows/x64/jdk/hotspot/normal/eclipse"
+    Invoke-WebRequest -Uri $jdkUrl -OutFile $tmpZip
+    Expand-Archive -Path $tmpZip -DestinationPath $tmpExtract -Force
+
+    $extractedDir = Get-ChildItem -Path $tmpExtract -Directory | Select-Object -First 1
+    if (-not $extractedDir) {
+        throw "Archive JDK invalide."
+    }
+
+    if (Test-Path $jdkCurrent) {
+        Remove-Item -Path $jdkCurrent -Recurse -Force
+    }
+
+    New-Item -Path (Join-Path $jdkRoot "jdk-21") -ItemType Directory -Force | Out-Null
+    Move-Item -Path $extractedDir.FullName -Destination $jdkCurrent
+
+    if (-not (Test-Path $javaExe)) {
+        throw "Installation JDK echouee. java.exe introuvable."
+    }
+
+    return $jdkCurrent
+}
+
+function Run-App {
+    param(
+        [string]$RepoRoot,
+        [string]$JavaHome
+    )
+
+    $javafxDir = Join-Path $RepoRoot "javafx-app"
+    $mvnw = Join-Path $javafxDir "mvnw.cmd"
+    $pom = Join-Path $javafxDir "pom.xml"
+
+    if (-not (Test-Path $mvnw)) {
+        throw "mvnw.cmd introuvable: $mvnw"
+    }
+
+    $env:JAVA_HOME = $JavaHome
+    $env:PATH = "$JavaHome\\bin;$env:PATH"
+
+    Write-Log "Demarrage JavaFX"
+    Push-Location $javafxDir
+    try {
+        & $mvnw -q -f $pom javafx:run | Out-Host
+        if ($LASTEXITCODE -ne 0) {
+            throw "Execution JavaFX en echec (code $LASTEXITCODE)."
+        }
+    }
+    finally {
+        Pop-Location
+    }
+}
+
+$baseDir = Join-Path $env:LOCALAPPDATA "SanteA"
+$repoRoot = Join-Path $baseDir "PIDEV"
+$javafxDir = Join-Path $repoRoot "javafx-app"
+
+New-Item -Path $baseDir -ItemType Directory -Force | Out-Null
+
+try {
+    Write-Log "Verification des prerequis"
+    $gitPath = Ensure-Git
+
+    Ensure-Repository -GitPath $gitPath -RepoUrl $RepoUrl -Branch $Branch -RepoRoot $repoRoot
+    $javaHome = Ensure-Jdk -JavafxDir $javafxDir
+
+    if ($SyncOnly) {
+        Write-Log "Synchronisation terminee"
+        exit 0
+    }
+
+    Run-App -RepoRoot $repoRoot -JavaHome $javaHome
+}
+catch {
+    Write-Host "Erreur: $($_.Exception.Message)" -ForegroundColor Red
+    Read-Host "Appuyez sur Entree pour fermer"
+    exit 1
+}
