@@ -53,7 +53,7 @@ function New-LauncherCmd {
     $cmdContent = @"
 @echo off
 setlocal
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$launcherPs1Path" -AppDir "$AppDir"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$launcherPs1Path" -AppDir "$AppDir" -BuildOnly
 set EXITCODE=%ERRORLEVEL%
 endlocal & exit /b %EXITCODE%
 "@
@@ -71,7 +71,7 @@ function New-LauncherVbs {
     $launcherPs1Path = Join-Path $InstallDir "SanteA-Launcher.ps1"
     $vbsContent = @"
 Set shell = CreateObject("Wscript.Shell")
-command = "powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File ""$launcherPs1Path"" -AppDir ""$AppDir"""
+command = "powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File ""$launcherPs1Path"" -AppDir ""$AppDir"" -BuildOnly"
 shell.Run command, 0, False
 "@
 
@@ -89,9 +89,15 @@ function Install-AppIcon {
     New-AppIcon -SourcePng $sourceLogo -DestinationIco $targetIcon
 }
 
-New-LauncherCmd -InstallDir $InstallDir -AppDir (Join-Path $InstallDir "javafx-app")
-New-LauncherVbs -InstallDir $InstallDir -AppDir (Join-Path $InstallDir "javafx-app")
+New-LauncherCmd -InstallDir $InstallDir -AppDir $InstallDir
+New-LauncherVbs -InstallDir $InstallDir -AppDir $InstallDir
 
-Install-AppIcon -AppDir (Join-Path $InstallDir "javafx-app") -InstallDir $InstallDir
+# Build initial local image so the application starts immediately after installation.
+& powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $InstallDir "SanteA-Launcher.ps1") -AppDir $InstallDir -BuildOnly
+if ($LASTEXITCODE -ne 0) {
+    throw "Echec de la construction initiale de l'application."
+}
+
+Install-AppIcon -AppDir $InstallDir -InstallDir $InstallDir
 
 Write-Host "Installation SanteA terminee."

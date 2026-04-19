@@ -228,6 +228,7 @@ A chaque lancement depuis l'icone Desktop/Menu:
 - L'application se lance sans ouvrir de terminal.
 - Les identifiants GitHub du depot prive sont integres a l'installateur pour les mises a jour automatiques sans saisie.
 - Maven est telecharge localement dans le profil utilisateur si aucun `mvn` n'est disponible.
+- La compilation JavaFX est effectuee pendant l'installation et apres une mise a jour Git; le lancement normal utilise directement `target/app/bin/app.exe`.
 
 > Important: pour cette copie geree automatiquement, les modifications locales sont ecrasees a chaque lancement (reset sur la branche distante).
 
