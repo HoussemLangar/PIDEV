@@ -171,7 +171,7 @@ wait_tcp_from_web() {
     local sleep_seconds="${4:-2}"
 
     for i in $(seq 1 "$attempts"); do
-        if SMOKE_HOST="$host" SMOKE_PORT="$port" ./scripts/ci/compose exec -T web sh -lc "php -r 'exit(@fsockopen(getenv(\"SMOKE_HOST\"), (int)getenv(\"SMOKE_PORT\")) ? 0 : 1);'" >/dev/null 2>&1; then
+        if ./scripts/ci/compose exec -T web sh -lc "php -r 'exit(@fsockopen(\"${host}\", ${port}) ? 0 : 1);'" >/dev/null 2>&1; then
             return 0
         fi
         sleep "$sleep_seconds"
