@@ -195,6 +195,41 @@ function Ensure-Jdk {
     return $jdkCurrent
 }
 
+function Ensure-Maven {
+    param([string]$RepoRoot)
+
+    $javafxDir = Join-Path $RepoRoot "javafx-app"
+    $mvnw = Join-Path $javafxDir "mvnw.cmd"
+    $wrapperProps = Join-Path $javafxDir ".mvn\wrapper\maven-wrapper.properties"
+
+    if ((Test-Path $mvnw) -and (Test-Path $wrapperProps)) {
+        return @{ Command = $mvnw; IsWrapper = $true }
+    }
+
+    $mvn = Get-Command mvn -ErrorAction SilentlyContinue
+    if ($mvn) {
+        return @{ Command = $mvn.Source; IsWrapper = $false }
+    }
+
+    $winget = Get-Command winget -ErrorAction SilentlyContinue
+    if (-not $winget) {
+        throw "Maven est introuvable et winget est indisponible pour l'installer."
+    }
+
+    Write-Log "Installation locale de Maven"
+    & $winget.Source install --id Apache.Maven -e --source winget --silent --accept-package-agreements --accept-source-agreements | Out-Host
+    if ($LASTEXITCODE -ne 0) {
+        throw "Echec installation Maven via winget."
+    }
+
+    $mvn = Get-Command mvn -ErrorAction SilentlyContinue
+    if (-not $mvn) {
+        throw "Maven reste introuvable apres installation."
+    }
+
+    return @{ Command = $mvn.Source; IsWrapper = $false }
+}
+
 function Run-App {
     param(
         [string]$RepoRoot,
@@ -202,22 +237,24 @@ function Run-App {
     )
 
     $javafxDir = Join-Path $RepoRoot "javafx-app"
-    $mvnw = Join-Path $javafxDir "mvnw.cmd"
     $pom = Join-Path $javafxDir "pom.xml"
-
-    if (-not (Test-Path $mvnw)) {
-        throw "mvnw.cmd introuvable: $mvnw"
-    }
+    $buildTool = Ensure-Maven -RepoRoot $RepoRoot
 
     $env:JAVA_HOME = $JavaHome
     $env:PATH = "$JavaHome\\bin;$env:PATH"
+    $env:MAVEN_SKIP_RC = "1"
 
     Write-Log "Demarrage JavaFX"
     Push-Location $javafxDir
     try {
         $logFile = Join-Path $javafxDir "logs\\javafx-launch.log"
         New-Item -Path (Split-Path -Parent $logFile) -ItemType Directory -Force | Out-Null
-        & $mvnw -e -f $pom javafx:run *>&1 | Tee-Object -FilePath $logFile | Out-Host
+        if ($buildTool.IsWrapper) {
+            & $buildTool.Command -e -f $pom javafx:run *>&1 | Tee-Object -FilePath $logFile | Out-Host
+        }
+        else {
+            & $buildTool.Command -e -f $pom javafx:run *>&1 | Tee-Object -FilePath $logFile | Out-Host
+        }
         if ($LASTEXITCODE -ne 0) {
             throw "Execution JavaFX en echec (code $LASTEXITCODE). Consultez $logFile"
         }
