@@ -1,0 +1,160 @@
+pipeline {
+    agent any
+
+    options {
+        skipDefaultCheckout(true)
+        timestamps()
+        disableConcurrentBuilds()
+    }
+
+    parameters {
+        booleanParam(name: 'RUN_DATA_MIGRATION', defaultValue: false, description: 'Migrer les donnees old MySQL vers Galera')
+        string(name: 'OLD_MYSQL_HOST', defaultValue: '127.0.0.1', description: 'Host de la base MySQL source')
+        string(name: 'OLD_MYSQL_PORT', defaultValue: '3306', description: 'Port de la base MySQL source')
+        string(name: 'OLD_MYSQL_USER', defaultValue: 'root', description: 'Utilisateur MySQL source')
+        password(name: 'OLD_MYSQL_PASSWORD', defaultValue: 'root', description: 'Mot de passe MySQL source')
+        string(name: 'OLD_MYSQL_DATABASE', defaultValue: 'pidev', description: 'Database source')
+        string(name: 'OLD_MYSQL_DOCKER_NETWORK', defaultValue: '', description: 'Reseau Docker optionnel pour joindre la source')
+        booleanParam(name: 'RESET_GALERA_VOLUMES', defaultValue: true, description: 'Reinitialiser les volumes Galera/ProxySQL avant bootstrap')
+        booleanParam(name: 'ENABLE_OBSERVABILITY', defaultValue: true, description: 'Demarrer Prometheus/Grafana/ELK + exporters Galera')
+        booleanParam(name: 'CLEANUP_AFTER_BUILD', defaultValue: false, description: 'Arreter les conteneurs a la fin')
+    }
+
+    environment {
+        PROJECT_DIR = '/workspace/PIDEV'
+        COMPOSE_PROJECT_ROOT = '/workspace/PIDEV'
+        COMPOSE_HOST_PROJECT_ROOT = '/home/pi-dev/PIDEV'
+        FORCE_DOCKER_COMPOSE_IMAGE = '1'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+                sh '''#!/usr/bin/env bash
+set -euo pipefail
+mkdir -p "$PROJECT_DIR"
+tar -C "$WORKSPACE" -cf - . | tar -C "$PROJECT_DIR" -xf -
+'''
+            }
+        }
+
+        stage('Preflight') {
+            steps {
+                sh '''#!/usr/bin/env bash
+set -euo pipefail
+
+cd "$PROJECT_DIR"
+chmod +x ./scripts/ci/compose
+./scripts/ci/compose version
+./scripts/ci/compose config >/dev/null
+
+docker ps -a --format '{{.Names}}' | grep -E '^(pidev-|[0-9a-f]{12}_pidev-)' | xargs -r docker rm -f || true
+'''
+            }
+        }
+
+        stage('Start Galera + ProxySQL') {
+            steps {
+                sh '''#!/usr/bin/env bash
+set -euo pipefail
+
+cd "$PROJECT_DIR"
+
+RESET_GALERA_VOLUMES="${RESET_GALERA_VOLUMES}" COMPOSE_CMD="./scripts/ci/compose" bash ./scripts/galera/start-cluster.sh 80 3
+'''
+            }
+        }
+
+        stage('Failover Smoke Test') {
+            steps {
+                sh '''#!/usr/bin/env bash
+set -euo pipefail
+
+cd "$PROJECT_DIR"
+
+        wait_sql_proxy() {
+            local attempts="${1:-40}"
+            local sleep_seconds="${2:-3}"
+            for i in $(seq 1 "$attempts"); do
+                if ./scripts/ci/compose exec -T db-node2 mariadb --ssl=0 -h db -P 3306 -uroot -proot -e "SELECT 1 AS proxy_ok;" >/dev/null 2>&1; then
+                    return 0
+                fi
+                sleep "$sleep_seconds"
+            done
+            return 1
+        }
+
+        wait_sql_proxy
+./scripts/ci/compose stop db-node1
+        wait_sql_proxy
+./scripts/ci/compose start db-node1
+COMPOSE_CMD="./scripts/ci/compose" bash ./scripts/galera/check-cluster.sh 60 3
+'''
+            }
+        }
+
+        stage('Migrate Old MySQL Data') {
+            when {
+                expression { return params.RUN_DATA_MIGRATION }
+            }
+            steps {
+                sh '''#!/usr/bin/env bash
+set -euo pipefail
+
+cd "$PROJECT_DIR"
+
+COMPOSE_CMD="./scripts/ci/compose" \
+OLD_MYSQL_HOST="${OLD_MYSQL_HOST}" \
+OLD_MYSQL_PORT="${OLD_MYSQL_PORT}" \
+OLD_MYSQL_USER="${OLD_MYSQL_USER}" \
+OLD_MYSQL_PASSWORD="${OLD_MYSQL_PASSWORD}" \
+OLD_MYSQL_DATABASE="${OLD_MYSQL_DATABASE}" \
+OLD_MYSQL_DOCKER_NETWORK="${OLD_MYSQL_DOCKER_NETWORK}" \
+TARGET_GALERA_SERVICE="db-node1" \
+TARGET_DATABASE="${OLD_MYSQL_DATABASE}" \
+bash ./scripts/migrate-old-mysql-to-galera.sh
+'''
+            }
+        }
+
+        stage('Deploy Observability') {
+            when {
+                expression { return params.ENABLE_OBSERVABILITY }
+            }
+            steps {
+                sh '''#!/usr/bin/env bash
+set -euo pipefail
+
+cd "$PROJECT_DIR"
+
+./scripts/ci/compose --profile observability up -d
+'''
+            }
+        }
+    }
+
+    post {
+        always {
+            sh '''#!/usr/bin/env bash
+set +e
+cd "$PROJECT_DIR"
+./scripts/ci/compose ps || true
+./scripts/ci/compose logs --no-color > compose.log || true
+'''
+            archiveArtifacts artifacts: 'compose.log', fingerprint: true, allowEmptyArchive: true
+        }
+
+        cleanup {
+            script {
+                if (params.CLEANUP_AFTER_BUILD) {
+                    sh '''#!/usr/bin/env bash
+set +e
+cd "$PROJECT_DIR"
+./scripts/ci/compose down --remove-orphans || true
+'''
+                }
+            }
+        }
+    }
+}

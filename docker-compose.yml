@@ -16,7 +16,7 @@ services:
       - ./symfony-app:/var/www/html
     environment:
       APP_ENV: dev
-      DATABASE_URL: "mysql://symfony:symfony@db:3306/pidev?serverVersion=8.0"
+      DATABASE_URL: "mysql://symfony:symfony@db:3306/pidev?serverVersion=mariadb-11.4&charset=utf8mb4"
       BLACKFIRE_SERVER_ID: ${BLACKFIRE_SERVER_ID:-}
       BLACKFIRE_SERVER_TOKEN: ${BLACKFIRE_SERVER_TOKEN:-}
       BLACKFIRE_AGENT_SOCKET: tcp://blackfire:8307
@@ -48,23 +48,101 @@ services:
     restart: unless-stopped
 
   # =========================
-  # Service MySQL 8.0
+  # Cluster Galera (MariaDB) - 3 noeuds
+  # Endpoint unique: service db (ProxySQL RW split)
   # =========================
+  db-node1:
+    image: bitnamilegacy/mariadb-galera:11.4
+    container_name: pidev-db-node1
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_DATABASE: pidev
+      MARIADB_USER: symfony
+      MARIADB_PASSWORD: symfony
+      MARIADB_GALERA_CLUSTER_NAME: pidev-galera
+      MARIADB_GALERA_CLUSTER_ADDRESS: gcomm://
+      MARIADB_GALERA_NODE_NAME: db-node1
+      MARIADB_GALERA_NODE_ADDRESS: db-node1
+      MARIADB_GALERA_CLUSTER_BOOTSTRAP: "yes"
+      MARIADB_GALERA_FORCE_SAFETOBOOTSTRAP: "yes"
+      MARIADB_GALERA_MARIABACKUP_USER: mariabackup
+      MARIADB_GALERA_MARIABACKUP_PASSWORD: mariabackup
+      MARIADB_REPLICATION_USER: replicator
+      MARIADB_REPLICATION_PASSWORD: replicator
+      ALLOW_EMPTY_PASSWORD: "no"
+    volumes:
+      - db-node1-data:/bitnami/mariadb
+    networks:
+      - pidev-network
+    restart: unless-stopped
+
+  db-node2:
+    image: bitnamilegacy/mariadb-galera:11.4
+    container_name: pidev-db-node2
+    depends_on:
+      - db-node1
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_DATABASE: pidev
+      MARIADB_USER: symfony
+      MARIADB_PASSWORD: symfony
+      MARIADB_GALERA_CLUSTER_NAME: pidev-galera
+      MARIADB_GALERA_CLUSTER_ADDRESS: gcomm://db-node1,db-node2,db-node3
+      MARIADB_GALERA_NODE_NAME: db-node2
+      MARIADB_GALERA_NODE_ADDRESS: db-node2
+      MARIADB_GALERA_CLUSTER_BOOTSTRAP: "no"
+      MARIADB_GALERA_MARIABACKUP_USER: mariabackup
+      MARIADB_GALERA_MARIABACKUP_PASSWORD: mariabackup
+      MARIADB_REPLICATION_USER: replicator
+      MARIADB_REPLICATION_PASSWORD: replicator
+      ALLOW_EMPTY_PASSWORD: "no"
+    volumes:
+      - db-node2-data:/bitnami/mariadb
+    networks:
+      - pidev-network
+    restart: unless-stopped
+
+  db-node3:
+    image: bitnamilegacy/mariadb-galera:11.4
+    container_name: pidev-db-node3
+    depends_on:
+      - db-node1
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_DATABASE: pidev
+      MARIADB_USER: symfony
+      MARIADB_PASSWORD: symfony
+      MARIADB_GALERA_CLUSTER_NAME: pidev-galera
+      MARIADB_GALERA_CLUSTER_ADDRESS: gcomm://db-node1,db-node2,db-node3
+      MARIADB_GALERA_NODE_NAME: db-node3
+      MARIADB_GALERA_NODE_ADDRESS: db-node3
+      MARIADB_GALERA_CLUSTER_BOOTSTRAP: "no"
+      MARIADB_GALERA_MARIABACKUP_USER: mariabackup
+      MARIADB_GALERA_MARIABACKUP_PASSWORD: mariabackup
+      MARIADB_REPLICATION_USER: replicator
+      MARIADB_REPLICATION_PASSWORD: replicator
+      ALLOW_EMPTY_PASSWORD: "no"
+    volumes:
+      - db-node3-data:/bitnami/mariadb
+    networks:
+      - pidev-network
+    restart: unless-stopped
+
   db:
-    image: mysql:8.0
+    image: proxysql/proxysql:2.6.5
     container_name: pidev-db
     ports:
       - "3306:3306"
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: pidev
-      MYSQL_USER: symfony
-      MYSQL_PASSWORD: symfony
+      - "127.0.0.1:6032:6032"
+    depends_on:
+      - db-node1
+      - db-node2
+      - db-node3
     volumes:
-      - db-data:/var/lib/mysql
+      - ./docker/proxysql/proxysql.cnf:/etc/proxysql.cnf:ro
+      - proxysql-data:/var/lib/proxysql
     networks:
       - pidev-network
-    command: --default-authentication-plugin=mysql_native_password
     restart: unless-stopped
 
   # =========================
@@ -130,6 +208,9 @@ services:
       - node-exporter
       - cadvisor
       - apache-exporter
+      - mysql-exporter-node1
+      - mysql-exporter-node2
+      - mysql-exporter-node3
     networks:
       - pidev-network
     restart: unless-stopped
@@ -191,6 +272,54 @@ services:
       - --scrape_uri=http://web/server-status?auto
     depends_on:
       - web
+    networks:
+      - pidev-network
+    restart: unless-stopped
+
+  mysql-exporter-node1:
+    image: prom/mysqld-exporter:v0.15.1
+    container_name: pidev-mysql-exporter-node1
+    profiles:
+      - observability
+    environment:
+      MYSQLD_EXPORTER_PASSWORD: exporter
+    command:
+      - --mysqld.address=db-node1:3306
+      - --mysqld.username=exporter
+    depends_on:
+      - db-node1
+    networks:
+      - pidev-network
+    restart: unless-stopped
+
+  mysql-exporter-node2:
+    image: prom/mysqld-exporter:v0.15.1
+    container_name: pidev-mysql-exporter-node2
+    profiles:
+      - observability
+    environment:
+      MYSQLD_EXPORTER_PASSWORD: exporter
+    command:
+      - --mysqld.address=db-node2:3306
+      - --mysqld.username=exporter
+    depends_on:
+      - db-node2
+    networks:
+      - pidev-network
+    restart: unless-stopped
+
+  mysql-exporter-node3:
+    image: prom/mysqld-exporter:v0.15.1
+    container_name: pidev-mysql-exporter-node3
+    profiles:
+      - observability
+    environment:
+      MYSQLD_EXPORTER_PASSWORD: exporter
+    command:
+      - --mysqld.address=db-node3:3306
+      - --mysqld.username=exporter
+    depends_on:
+      - db-node3
     networks:
       - pidev-network
     restart: unless-stopped
@@ -302,7 +431,10 @@ networks:
 # Volumes
 # =========================
 volumes:
-  db-data:
+  db-node1-data:
+  db-node2-data:
+  db-node3-data:
+  proxysql-data:
   prometheus-data:
   grafana-data:
   elasticsearch-data:

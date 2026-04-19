@@ -3,7 +3,7 @@
 ## Stack technique
 - Symfony 6.4
 - PHP 8.1
-- MySQL 8.0
+- Cluster MariaDB Galera 11.4 (compatible protocole MySQL)
 - phpMyAdmin
 - Apache
 - JavaFX (OpenJDK 17)
@@ -12,6 +12,12 @@
 
 ### 1. Démarrer les conteneurs Docker
 ```bash
+docker-compose up -d
+```
+
+Si vous migrez depuis l'ancienne version mono-instance MySQL, faites d'abord:
+```bash
+docker-compose down --remove-orphans
 docker-compose up -d
 ```
 
@@ -54,15 +60,88 @@ Sources observées:
 
 ### 4. Base de données
 - Host: db (depuis les conteneurs) ou localhost:3306 (depuis l'hôte)
+- Endpoint `db`: ProxySQL (rw split) vers le cluster Galera (db-node1, db-node2, db-node3)
 - Database: pidev
 - User: symfony
 - Password: symfony
 - Root password: root
 
+Ports utiles:
+- `3306`: endpoint SQL applicatif via ProxySQL (`db`)
+- `6032`: admin ProxySQL (local host uniquement)
+
+Comportement RW split ProxySQL:
+- `INSERT/UPDATE/DELETE/...` -> writer Galera
+- `SELECT` -> pool lecture sur noeuds backup-writer Galera (hostgroup 30)
+- Exceptions (ex: `SELECT LAST_INSERT_ID()`) forcees sur writer
+
+Vérification rapide du cluster:
+```bash
+# Demarrage fiable du cluster (bootstrap ordonne)
+COMPOSE_CMD=docker-compose bash /home/pi-dev/PIDEV/scripts/galera/start-cluster.sh
+
+# En cas d'etat Galera persistant corrompu/non-primary
+RESET_GALERA_VOLUMES=1 COMPOSE_CMD=docker-compose bash /home/pi-dev/PIDEV/scripts/galera/start-cluster.sh
+
+# Taille du cluster (attendu: 3)
+docker-compose exec db-node1 mysql -uroot -proot -e "SHOW STATUS LIKE 'wsrep_cluster_size';"
+
+# État du cluster (attendu: Primary)
+docker-compose exec db-node1 mysql -uroot -proot -e "SHOW STATUS LIKE 'wsrep_cluster_status';"
+
+# Validation du proxy SQL (attendu: ok=1)
+docker-compose exec db-node2 mariadb --ssl=0 -h db -P 3306 -uroot -proot -e "SELECT 1 AS ok;"
+```
+
+### 4.bis Migration complete old MySQL -> Galera
+
+Le script suivant automatise dump + import + verification:
+
+```bash
+bash /home/pi-dev/PIDEV/scripts/migrate-old-mysql-to-galera.sh
+```
+
+Variables supportees (optionnelles):
+
+```bash
+OLD_MYSQL_HOST=127.0.0.1
+OLD_MYSQL_PORT=3306
+OLD_MYSQL_USER=root
+OLD_MYSQL_PASSWORD=root
+OLD_MYSQL_DATABASE=pidev
+OLD_MYSQL_DOCKER_NETWORK=
+TARGET_GALERA_SERVICE=db-node1
+TARGET_DATABASE=pidev
+```
+
+Exemple complet:
+
+```bash
+OLD_MYSQL_HOST=10.10.0.15 \
+OLD_MYSQL_PORT=3306 \
+OLD_MYSQL_USER=root \
+OLD_MYSQL_PASSWORD='oldRootPass' \
+OLD_MYSQL_DATABASE=pidev \
+TARGET_GALERA_SERVICE=db-node1 \
+TARGET_DATABASE=pidev \
+bash /home/pi-dev/PIDEV/scripts/migrate-old-mysql-to-galera.sh
+```
+
+Le script:
+1. Genere un dump MySQL source
+2. Cree la base cible si necessaire
+3. Importe dans le writer Galera
+4. Verifie le nombre de tables source/cible
+5. Verifie l'etat wsrep du cluster
+
 ## Commandes utiles
 
 ### Jenkins CI/CD
 Le projet inclut un pipeline Jenkins declaratif dans `Jenkinsfile`.
+
+Pipelines disponibles:
+1. `Jenkinsfile` (pipeline principal): build/tests + verification cluster Galera + smoke ProxySQL.
+2. `Jenkinsfile.galera-ha` (pipeline dedie): failover test + migration old MySQL optionnelle + observabilite.
 
 Pre-requis Jenkins agent:
 - Docker
@@ -80,15 +159,46 @@ Parametres pipeline:
 - `ENABLE_OBSERVABILITY`: demarre Prometheus/Grafana/ELK et provisionne Kibana.
 - `CLEANUP_AFTER_BUILD`: stoppe les conteneurs en fin de run.
 
+Parametres pipeline dedie `Jenkinsfile.galera-ha`:
+- `RUN_DATA_MIGRATION`: active la migration old MySQL -> Galera.
+- `OLD_MYSQL_HOST`, `OLD_MYSQL_PORT`, `OLD_MYSQL_USER`, `OLD_MYSQL_PASSWORD`, `OLD_MYSQL_DATABASE`.
+- `OLD_MYSQL_DOCKER_NETWORK` (si la source est joignable seulement via un reseau Docker specifique).
+- `ENABLE_OBSERVABILITY`, `CLEANUP_AFTER_BUILD`.
+
 Etapes pipeline:
 1. Verification outillage Docker/Compose.
 2. Build images `web` et `javafx`.
-3. Validation Symfony (`composer install`, lint yaml).
-4. Tests Symfony (si actives).
-5. Build JavaFX Maven.
-6. Tests JavaFX (si actives).
-7. Deploiement observabilite (si active).
-8. Smoke checks HTTP + endpoints observabilite.
+3. Demarrage cluster Galera + ProxySQL.
+4. Bootstrap users monitoring (`monitor`/`exporter`) + check wsrep.
+5. Validation Symfony (`composer install`, lint yaml).
+6. Tests Symfony (si actives).
+7. Build JavaFX Maven.
+8. Tests JavaFX (si actives).
+9. Deploiement observabilite (si active).
+10. Smoke checks HTTP + endpoints observabilite + test SQL via ProxySQL.
+
+### Monitoring Galera wsrep (Prometheus/Grafana)
+
+Le profil `observability` inclut maintenant:
+- `mysql-exporter-node1`
+- `mysql-exporter-node2`
+- `mysql-exporter-node3`
+
+Si les exporters redemarrent en boucle, verifier que les users `monitor` et `exporter`
+existent bien avec:
+
+```bash
+COMPOSE_CMD=docker-compose bash /home/pi-dev/PIDEV/scripts/galera/ensure-galera-users.sh
+```
+
+Dashboard Grafana ajoute:
+- `PIDEV Galera wsrep`
+
+Commande de demarrage:
+
+```bash
+docker-compose --profile observability up -d
+```
 
 ### Symfony
 ```bash

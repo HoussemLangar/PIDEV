@@ -18,3 +18,10 @@ scrape_configs:
   - job_name: apache_exporter
     static_configs:
       - targets: ["apache-exporter:9117"]
+
+  - job_name: mysql_exporter_galera
+    static_configs:
+      - targets:
+          - "mysql-exporter-node1:9104"
+          - "mysql-exporter-node2:9104"
+          - "mysql-exporter-node3:9104"

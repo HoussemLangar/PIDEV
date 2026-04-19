@@ -1,0 +1,67 @@
+datadir="/var/lib/proxysql"
+errorlog="/var/lib/proxysql/proxysql.log"
+
+admin_variables=
+{
+  admin_credentials="admin:admin"
+  mysql_ifaces="0.0.0.0:6032"
+  refresh_interval=2000
+}
+
+mysql_variables=
+{
+  threads=4
+  max_connections=2048
+  interfaces="0.0.0.0:3306"
+  monitor_username="monitor"
+  monitor_password="monitor"
+  connect_timeout_server=3000
+  connect_retries_on_failure=3
+  default_query_timeout=36000000
+  default_transaction_isolation="READ-COMMITTED"
+}
+
+mysql_servers=
+(
+  { address="db-node1", port=3306, hostgroup=10, max_connections=300 },
+  { address="db-node2", port=3306, hostgroup=20, max_connections=300 },
+  { address="db-node3", port=3306, hostgroup=20, max_connections=300 }
+)
+
+mysql_galera_hostgroups=
+(
+  {
+    writer_hostgroup=10
+    backup_writer_hostgroup=30
+    reader_hostgroup=20
+    offline_hostgroup=40
+    active=1
+    max_writers=1
+    writer_is_also_reader=1
+    max_transactions_behind=100
+  }
+)
+
+mysql_users=
+(
+  { username="symfony", password="symfony", default_hostgroup=10, transaction_persistent=1, active=1 },
+  { username="root", password="root", default_hostgroup=10, transaction_persistent=1, active=1 }
+)
+
+mysql_query_rules=
+(
+  {
+    rule_id=90
+    active=1
+    match_pattern="^SELECT (LAST_INSERT_ID\\(\\)|FOUND_ROWS\\(\\)|CONNECTION_ID\\(\\)|@@)"
+    destination_hostgroup=10
+    apply=1
+  },
+  {
+    rule_id=100
+    active=1
+    match_pattern="^SELECT .*"
+    destination_hostgroup=30
+    apply=1
+  }
+)

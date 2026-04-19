@@ -7,6 +7,9 @@
 
 set -e  # Arrêter en cas d'erreur
 
+# Service utilise pour les commandes SQL d'administration (doit etre un noeud MariaDB/Galera)
+DB_ADMIN_SERVICE="${DB_ADMIN_SERVICE:-db-node1}"
+
 # Couleurs pour les messages
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -93,7 +96,7 @@ APP_ENV=dev
 APP_SECRET=ChangeMe123456789abcdefghijklmnop
 
 ###> doctrine/doctrine-bundle ###
-DATABASE_URL="mysql://symfony:symfony@db:3306/pidev?serverVersion=8.0&charset=utf8mb4"
+DATABASE_URL="mysql://symfony:symfony@db:3306/pidev?serverVersion=mariadb-11.4&charset=utf8mb4"
 ###< doctrine/doctrine-bundle ###
 EOF
     echo -e "${GREEN}✅ Fichier .env créé${NC}"
@@ -103,11 +106,11 @@ else
     
     # Vérifier si DATABASE_URL existe
     if grep -q "DATABASE_URL=" symfony-app/.env; then
-        sed -i 's|DATABASE_URL=.*|DATABASE_URL="mysql://symfony:symfony@db:3306/pidev?serverVersion=8.0\&charset=utf8mb4"|g' symfony-app/.env
+        sed -i 's|DATABASE_URL=.*|DATABASE_URL="mysql://symfony:symfony@db:3306/pidev?serverVersion=mariadb-11.4\&charset=utf8mb4"|g' symfony-app/.env
     else
         echo '' >> symfony-app/.env
         echo '###> doctrine/doctrine-bundle ###' >> symfony-app/.env
-        echo 'DATABASE_URL="mysql://symfony:symfony@db:3306/pidev?serverVersion=8.0&charset=utf8mb4"' >> symfony-app/.env
+        echo 'DATABASE_URL="mysql://symfony:symfony@db:3306/pidev?serverVersion=mariadb-11.4&charset=utf8mb4"' >> symfony-app/.env
         echo '###< doctrine/doctrine-bundle ###' >> symfony-app/.env
     fi
     
@@ -127,7 +130,7 @@ MAX_RETRIES=10
 RETRY_COUNT=0
 
 while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-    if docker-compose exec -T db mysql -usymfony -psymfony -e "SELECT 1;" > /dev/null 2>&1; then
+    if docker-compose exec -T "$DB_ADMIN_SERVICE" mysql -usymfony -psymfony -e "SELECT 1;" > /dev/null 2>&1; then
         echo -e "${GREEN}✅ Connexion MySQL réussie${NC}"
         break
     else
@@ -153,13 +156,13 @@ echo "============================================================="
 
 # Créer la base de données
 echo -e "${YELLOW}Création de la base 'pidev'...${NC}"
-docker-compose exec -T db mysql -uroot -proot -e "CREATE DATABASE IF NOT EXISTS pidev CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" 2>/dev/null || true
+docker-compose exec -T "$DB_ADMIN_SERVICE" mysql -uroot -proot -e "CREATE DATABASE IF NOT EXISTS pidev CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" 2>/dev/null || true
 echo -e "${GREEN}✅ Base de données 'pidev' créée${NC}"
 
 # Exécuter la migration SQL complète
 echo -e "${YELLOW}Exécution de la migration SQL...${NC}"
 
-docker-compose exec -T db mysql -uroot -proot pidev <<'EOFMIGRATION'
+docker-compose exec -T "$DB_ADMIN_SERVICE" mysql -uroot -proot pidev <<'EOFMIGRATION'
 SET FOREIGN_KEY_CHECKS=0;
 
 -- Table users
@@ -612,7 +615,7 @@ echo -e "${GREEN}✅ Migration SQL exécutée avec succès${NC}"
 echo ""
 
 # Vérifier le nombre de tables
-TABLE_COUNT=$(docker-compose exec -T db mysql -uroot -proot -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'pidev';" | tail -n 1)
+TABLE_COUNT=$(docker-compose exec -T "$DB_ADMIN_SERVICE" mysql -uroot -proot -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'pidev';" | tail -n 1)
 echo -e "${GREEN}✅ Nombre de tables créées: $TABLE_COUNT${NC}"
 
 echo ""
