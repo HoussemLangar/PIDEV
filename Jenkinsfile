@@ -55,6 +55,9 @@ docker version
 # On purge les conteneurs du projet (noms fixes + anciens noms prefixed)
 # pour forcer un create propre et eviter le chemin "recreate" de compose v1.
 docker ps -a --format '{{.Names}}' | grep -E '^(pidev-|[0-9a-f]{12}_pidev-)' | xargs -r docker rm -f || true
+
+# Purge des volumes DB HA pour garantir un bootstrap Galera deterministe en CI.
+docker volume ls --format '{{.Name}}' | grep -E '(^|_)pidev_db-node[123]-data$|(^|_)pidev_proxysql-data$' | xargs -r docker volume rm -f || true
 '''
             }
         }
@@ -67,10 +70,23 @@ set -euo pipefail
 cd "$PROJECT_DIR"
 
 ./scripts/ci/compose build web javafx
-./scripts/ci/compose up -d db web
+COMPOSE_CMD="./scripts/ci/compose" bash ./scripts/galera/start-cluster.sh 80 3
+./scripts/ci/compose up -d web
 '''
             }
         }
+
+                stage('Galera Cluster Ready') {
+                    steps {
+                        sh '''#!/usr/bin/env bash
+        set -euo pipefail
+
+        cd "$PROJECT_DIR"
+
+        COMPOSE_CMD="./scripts/ci/compose" bash ./scripts/galera/check-cluster.sh 80 3
+        '''
+                    }
+                }
 
         stage('Symfony Validate') {
             steps {
@@ -197,11 +213,29 @@ wait_web_from_web() {
 
 wait_web_from_web
 
+wait_sql_proxy() {
+    local attempts="${1:-40}"
+    local sleep_seconds="${2:-3}"
+
+    for i in $(seq 1 "$attempts"); do
+        if ./scripts/ci/compose exec -T db-node2 mariadb --ssl=0 -h db -P 3306 -uroot -proot -e "SELECT 1 AS proxy_ok;" >/dev/null 2>&1; then
+            return 0
+        fi
+        sleep "$sleep_seconds"
+    done
+
+    echo "Smoke check failed for SQL endpoint via ProxySQL" >&2
+    return 1
+}
+
 if [ "${ENABLE_OBSERVABILITY}" = "true" ]; then
     wait_http_from_web "http://prometheus:9090/-/healthy"
     wait_http_from_web "http://elasticsearch:9200"
     wait_http_from_web "http://kibana:5601/api/status" "90"
+    wait_http_from_web "http://prometheus:9090/api/v1/query?query=mysql_global_status_wsrep_cluster_size" "90"
 fi
+
+wait_sql_proxy
 '''
             }
         }

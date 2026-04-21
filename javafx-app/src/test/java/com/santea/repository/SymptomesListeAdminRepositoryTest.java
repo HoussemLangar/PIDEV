@@ -2,6 +2,7 @@ package com.santea.repository;
 
 import com.santea.config.DatabaseConfig;
 import com.santea.service.DatabaseService;
+import com.santea.testsupport.TestDatabaseBootstrap;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -17,6 +18,7 @@ class SymptomesListeAdminRepositoryTest {
     @BeforeEach
     void setUp() {
         try {
+            TestDatabaseBootstrap.ensureSchemaAndSeed();
             DatabaseService databaseService = new DatabaseService(DatabaseConfig.fromEnvironment());
             repository = new SymptomesListeAdminRepository(databaseService);
         } catch (Exception e) {

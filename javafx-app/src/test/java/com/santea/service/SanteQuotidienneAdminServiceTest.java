@@ -1,5 +1,6 @@
 package com.santea.service;
 
+import com.santea.testsupport.TestDatabaseBootstrap;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -13,6 +14,7 @@ class SanteQuotidienneAdminServiceTest {
 
     @BeforeEach
     void setUp() {
+        TestDatabaseBootstrap.ensureSchemaAndSeed();
         service = new SanteQuotidienneAdminService();
     }
 
