@@ -149,7 +149,7 @@ set -euo pipefail
 
 cd "$PROJECT_DIR"
 
-./scripts/ci/compose run --rm javafx bash -lc 'cd /workspace/javafx-app && mvn -B test'
+./scripts/ci/compose run --rm -e DB_HOST=db-node1 -e DB_PORT=3306 javafx bash -lc 'cd /workspace/javafx-app && mvn -B test'
 '''
             }
         }
