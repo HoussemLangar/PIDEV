@@ -114,6 +114,14 @@ set -euo pipefail
 
 cd "$PROJECT_DIR"
 
+echo "Ensuring Symfony test database and grants"
+./scripts/ci/compose exec -T db-node1 mariadb -uroot -proot -Nse "
+CREATE DATABASE IF NOT EXISTS pidev_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER IF NOT EXISTS 'symfony'@'%' IDENTIFIED BY 'symfony';
+GRANT ALL PRIVILEGES ON pidev_test.* TO 'symfony'@'%';
+FLUSH PRIVILEGES;
+"
+
 ./scripts/ci/compose exec -T web sh -lc '
 set -eu
 
@@ -124,7 +132,6 @@ php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migratio
 php bin/console doctrine:query:sql "SELECT DATABASE() AS current_database;"
 
 echo "Preparing Doctrine database for APP_ENV=test"
-php bin/console doctrine:database:create --if-not-exists --no-interaction --env=test
 php bin/console doctrine:migrations:sync-metadata-storage --no-interaction --env=test
 php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration --env=test
 php bin/console doctrine:query:sql "SELECT DATABASE() AS current_database;" --env=test
