@@ -9,6 +9,31 @@ use Doctrine\Migrations\AbstractMigration;
 
 final class Version20260301060000 extends AbstractMigration
 {
+    private function renameTableIfExists(string $from, string $to): void
+    {
+        $tables = $this->connection->createSchemaManager()->listTableNames();
+        $normalizedTables = array_map('strtolower', $tables);
+
+        $fromExists = in_array(strtolower($from), $normalizedTables, true);
+        $toExists = in_array(strtolower($to), $normalizedTables, true);
+
+        if (!$fromExists || $toExists) {
+            return;
+        }
+
+        $this->addSql(sprintf('RENAME TABLE `%s` TO `%s`', $from, $to));
+    }
+
+    /**
+     * @param array<string, string> $renames
+     */
+    private function renameTables(array $renames): void
+    {
+        foreach ($renames as $from => $to) {
+            $this->renameTableIfExists($from, $to);
+        }
+    }
+
     public function getDescription(): string
     {
         return 'Resync DB table names with current entity mappings (singular -> plural rollback)';
@@ -16,87 +41,89 @@ final class Version20260301060000 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
-        $this->addSql('RENAME TABLE patient TO patients');
-        $this->addSql('RENAME TABLE user_session TO user_sessions');
-        $this->addSql('RENAME TABLE teleconsultation TO teleconsultations');
-        $this->addSql('RENAME TABLE document_access TO document_accesses');
-        $this->addSql('RENAME TABLE shared_document TO shared_documents');
-        $this->addSql('RENAME TABLE google_fit_account TO google_fit_accounts');
-        $this->addSql('RENAME TABLE health_risk_prediction TO health_risk_predictions');
-        $this->addSql('RENAME TABLE password_reset_token TO password_reset_tokens');
-        $this->addSql('RENAME TABLE suspicious_login TO suspicious_logins');
-
-        $this->addSql('RENAME TABLE abonnement TO abonnements');
-        $this->addSql('RENAME TABLE accompagnement TO accompagnements');
-        $this->addSql('RENAME TABLE accompaniment_plan TO accompaniment_plans');
-        $this->addSql('RENAME TABLE article_score TO article_scores');
-        $this->addSql('RENAME TABLE clinique TO cliniques');
-        $this->addSql('RENAME TABLE coach_sportif TO coach_sportifs');
-        $this->addSql('RENAME TABLE commentaire TO commentaires');
-        $this->addSql('RENAME TABLE conversation TO conversations');
-        $this->addSql('RENAME TABLE disponibilite TO disponibilites');
-        $this->addSql('RENAME TABLE facture TO factures');
-        $this->addSql('RENAME TABLE journal_item TO journaux_items');
-        $this->addSql('RENAME TABLE medecin TO medecins');
-        $this->addSql('RENAME TABLE medicament TO medicaments');
-        $this->addSql('RENAME TABLE message TO messages');
-        $this->addSql('RENAME TABLE notification TO notifications');
-        $this->addSql('RENAME TABLE nutritionniste TO nutritionnistes');
-        $this->addSql('RENAME TABLE partage_analyse TO partage_analyses');
-        $this->addSql('RENAME TABLE pharmacien TO pharmaciens');
-        $this->addSql('RENAME TABLE pharmacy TO pharmacies');
-        $this->addSql('RENAME TABLE plan_exercice TO plans_exercices');
-        $this->addSql('RENAME TABLE plan_regime TO plans_regimes');
-        $this->addSql('RENAME TABLE rapport_analyse TO rapports_analyses');
-        $this->addSql('RENAME TABLE rapport_medical TO rapports_medicaux');
-        $this->addSql('RENAME TABLE reponse_medecin TO reponses_medecin');
-        $this->addSql('RENAME TABLE reponse_medicament TO reponses_medicaments');
-        $this->addSql('RENAME TABLE reservation_medicament TO reservations_medicaments');
-        $this->addSql('RENAME TABLE stock_pharmacy TO stock_pharmacies');
-        $this->addSql('RENAME TABLE symptome_liste TO symptomes_liste');
-        $this->addSql('RENAME TABLE symptome_quotidien TO symptomes_quotidiens');
+        $this->renameTables([
+            'patient' => 'patients',
+            'user_session' => 'user_sessions',
+            'teleconsultation' => 'teleconsultations',
+            'document_access' => 'document_accesses',
+            'shared_document' => 'shared_documents',
+            'google_fit_account' => 'google_fit_accounts',
+            'health_risk_prediction' => 'health_risk_predictions',
+            'password_reset_token' => 'password_reset_tokens',
+            'suspicious_login' => 'suspicious_logins',
+            'abonnement' => 'abonnements',
+            'accompagnement' => 'accompagnements',
+            'accompaniment_plan' => 'accompaniment_plans',
+            'article_score' => 'article_scores',
+            'clinique' => 'cliniques',
+            'coach_sportif' => 'coach_sportifs',
+            'commentaire' => 'commentaires',
+            'conversation' => 'conversations',
+            'disponibilite' => 'disponibilites',
+            'facture' => 'factures',
+            'journal_item' => 'journaux_items',
+            'medecin' => 'medecins',
+            'medicament' => 'medicaments',
+            'message' => 'messages',
+            'notification' => 'notifications',
+            'nutritionniste' => 'nutritionnistes',
+            'partage_analyse' => 'partage_analyses',
+            'pharmacien' => 'pharmaciens',
+            'pharmacy' => 'pharmacies',
+            'plan_exercice' => 'plans_exercices',
+            'plan_regime' => 'plans_regimes',
+            'rapport_analyse' => 'rapports_analyses',
+            'rapport_medical' => 'rapports_medicaux',
+            'reponse_medecin' => 'reponses_medecin',
+            'reponse_medicament' => 'reponses_medicaments',
+            'reservation_medicament' => 'reservations_medicaments',
+            'stock_pharmacy' => 'stock_pharmacies',
+            'symptome_liste' => 'symptomes_liste',
+            'symptome_quotidien' => 'symptomes_quotidiens',
+        ]);
     }
 
     public function down(Schema $schema): void
     {
-        $this->addSql('RENAME TABLE patients TO patient');
-        $this->addSql('RENAME TABLE user_sessions TO user_session');
-        $this->addSql('RENAME TABLE teleconsultations TO teleconsultation');
-        $this->addSql('RENAME TABLE document_accesses TO document_access');
-        $this->addSql('RENAME TABLE shared_documents TO shared_document');
-        $this->addSql('RENAME TABLE google_fit_accounts TO google_fit_account');
-        $this->addSql('RENAME TABLE health_risk_predictions TO health_risk_prediction');
-        $this->addSql('RENAME TABLE password_reset_tokens TO password_reset_token');
-        $this->addSql('RENAME TABLE suspicious_logins TO suspicious_login');
-
-        $this->addSql('RENAME TABLE abonnements TO abonnement');
-        $this->addSql('RENAME TABLE accompagnements TO accompagnement');
-        $this->addSql('RENAME TABLE accompaniment_plans TO accompaniment_plan');
-        $this->addSql('RENAME TABLE article_scores TO article_score');
-        $this->addSql('RENAME TABLE cliniques TO clinique');
-        $this->addSql('RENAME TABLE coach_sportifs TO coach_sportif');
-        $this->addSql('RENAME TABLE commentaires TO commentaire');
-        $this->addSql('RENAME TABLE conversations TO conversation');
-        $this->addSql('RENAME TABLE disponibilites TO disponibilite');
-        $this->addSql('RENAME TABLE factures TO facture');
-        $this->addSql('RENAME TABLE journaux_items TO journal_item');
-        $this->addSql('RENAME TABLE medecins TO medecin');
-        $this->addSql('RENAME TABLE medicaments TO medicament');
-        $this->addSql('RENAME TABLE messages TO message');
-        $this->addSql('RENAME TABLE notifications TO notification');
-        $this->addSql('RENAME TABLE nutritionnistes TO nutritionniste');
-        $this->addSql('RENAME TABLE partage_analyses TO partage_analyse');
-        $this->addSql('RENAME TABLE pharmaciens TO pharmacien');
-        $this->addSql('RENAME TABLE pharmacies TO pharmacy');
-        $this->addSql('RENAME TABLE plans_exercices TO plan_exercice');
-        $this->addSql('RENAME TABLE plans_regimes TO plan_regime');
-        $this->addSql('RENAME TABLE rapports_analyses TO rapport_analyse');
-        $this->addSql('RENAME TABLE rapports_medicaux TO rapport_medical');
-        $this->addSql('RENAME TABLE reponses_medecin TO reponse_medecin');
-        $this->addSql('RENAME TABLE reponses_medicaments TO reponse_medicament');
-        $this->addSql('RENAME TABLE reservations_medicaments TO reservation_medicament');
-        $this->addSql('RENAME TABLE stock_pharmacies TO stock_pharmacy');
-        $this->addSql('RENAME TABLE symptomes_liste TO symptome_liste');
-        $this->addSql('RENAME TABLE symptomes_quotidiens TO symptome_quotidien');
+        $this->renameTables([
+            'patients' => 'patient',
+            'user_sessions' => 'user_session',
+            'teleconsultations' => 'teleconsultation',
+            'document_accesses' => 'document_access',
+            'shared_documents' => 'shared_document',
+            'google_fit_accounts' => 'google_fit_account',
+            'health_risk_predictions' => 'health_risk_prediction',
+            'password_reset_tokens' => 'password_reset_token',
+            'suspicious_logins' => 'suspicious_login',
+            'abonnements' => 'abonnement',
+            'accompagnements' => 'accompagnement',
+            'accompaniment_plans' => 'accompaniment_plan',
+            'article_scores' => 'article_score',
+            'cliniques' => 'clinique',
+            'coach_sportifs' => 'coach_sportif',
+            'commentaires' => 'commentaire',
+            'conversations' => 'conversation',
+            'disponibilites' => 'disponibilite',
+            'factures' => 'facture',
+            'journaux_items' => 'journal_item',
+            'medecins' => 'medecin',
+            'medicaments' => 'medicament',
+            'messages' => 'message',
+            'notifications' => 'notification',
+            'nutritionnistes' => 'nutritionniste',
+            'partage_analyses' => 'partage_analyse',
+            'pharmaciens' => 'pharmacien',
+            'pharmacies' => 'pharmacy',
+            'plans_exercices' => 'plan_exercice',
+            'plans_regimes' => 'plan_regime',
+            'rapports_analyses' => 'rapport_analyse',
+            'rapports_medicaux' => 'rapport_medical',
+            'reponses_medecin' => 'reponse_medecin',
+            'reponses_medicaments' => 'reponse_medicament',
+            'reservations_medicaments' => 'reservation_medicament',
+            'stock_pharmacies' => 'stock_pharmacy',
+            'symptomes_liste' => 'symptome_liste',
+            'symptomes_quotidiens' => 'symptome_quotidien',
+        ]);
     }
 }

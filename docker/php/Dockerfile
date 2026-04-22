@@ -73,6 +73,10 @@ RUN echo "upload_max_filesize = 50M" > /usr/local/etc/php/conf.d/uploads.ini \
 # Configure Apache timeout for large file uploads
 RUN echo "TimeOut 300" >> /etc/apache2/apache2.conf
 
+# Startup entrypoint to fix bind-mount permissions for Symfony var/.
+COPY docker-entrypoint.sh /usr/local/bin/pidev-entrypoint.sh
+RUN chmod +x /usr/local/bin/pidev-entrypoint.sh
+
 # Permissions
 RUN chown -R www-data:www-data /var/www
 
@@ -81,4 +85,5 @@ WORKDIR /var/www/html
 EXPOSE 80
 EXPOSE 443
 
+ENTRYPOINT ["/usr/local/bin/pidev-entrypoint.sh"]
 CMD ["apache2-foreground"]

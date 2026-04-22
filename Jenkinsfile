@@ -42,6 +42,9 @@ set -euo pipefail
 
 cd "$PROJECT_DIR"
 
+# Defensive: Jenkins checkout may drop executable bit on this helper script.
+chmod +x ./scripts/ci/compose || true
+
 chmod +x ./scripts/ci/compose
 
 command -v docker >/dev/null
@@ -186,7 +189,7 @@ wait_http_from_web() {
     local sleep_seconds="${3:-2}"
 
     for i in $(seq 1 "$attempts"); do
-        if ./scripts/ci/compose exec -T web sh -lc "curl -fsS --connect-timeout 3 --max-time 10 '${url}' >/dev/null" >/dev/null 2>&1; then
+        if bash ./scripts/ci/compose exec -T web sh -lc "curl -fsS --connect-timeout 3 --max-time 10 '${url}' >/dev/null" >/dev/null 2>&1; then
             return 0
         fi
         sleep "$sleep_seconds"
@@ -201,7 +204,7 @@ wait_web_from_web() {
     local sleep_seconds="${2:-2}"
 
     for i in $(seq 1 "$attempts"); do
-        if ./scripts/ci/compose exec -T web sh -lc "curl -ksS --connect-timeout 3 --max-time 10 https://127.0.0.1/ >/dev/null || curl -fsS --connect-timeout 3 --max-time 10 http://127.0.0.1/ >/dev/null" >/dev/null 2>&1; then
+        if bash ./scripts/ci/compose exec -T web sh -lc "curl -ksS --connect-timeout 3 --max-time 10 https://127.0.0.1/ >/dev/null || curl -fsS --connect-timeout 3 --max-time 10 http://127.0.0.1/ >/dev/null" >/dev/null 2>&1; then
             return 0
         fi
         sleep "$sleep_seconds"
@@ -213,12 +216,29 @@ wait_web_from_web() {
 
 wait_web_from_web
 
+normalize_proxysql_rules() {
+    # Ensure runtime rules do not drift to deprecated HG30 from stale ProxySQL state.
+    bash ./scripts/ci/compose exec -T db sh -lc '
+        mariadb --connect-timeout=3 --ssl=0 -h127.0.0.1 -P6032 -uadmin -padmin -Nse "
+            UPDATE mysql_query_rules
+            SET destination_hostgroup=20
+            WHERE rule_id=100;
+            LOAD MYSQL QUERY RULES TO RUNTIME;
+            SAVE MYSQL QUERY RULES TO DISK;
+            SELECT rule_id, destination_hostgroup, active
+            FROM runtime_mysql_query_rules
+            WHERE rule_id IN (90,100)
+            ORDER BY rule_id;
+        "
+    '
+}
+
 wait_sql_proxy() {
     local attempts="${1:-60}"
     local sleep_seconds="${2:-3}"
 
     for i in $(seq 1 "$attempts"); do
-        if ./scripts/ci/compose exec -T db sh -lc '
+        if bash ./scripts/ci/compose exec -T db sh -lc '
             mariadb --connect-timeout=3 --ssl=0 -h127.0.0.1 -P3306 -usymfony -psymfony -D pidev -Nse "SELECT LAST_INSERT_ID() AS writer_ok;" >/dev/null 2>&1 &&
             mariadb --connect-timeout=3 --ssl=0 -h127.0.0.1 -P3306 -usymfony -psymfony -D pidev -Nse "SELECT 1 AS read_ok;" >/dev/null 2>&1
         '; then
@@ -229,7 +249,7 @@ wait_sql_proxy() {
 
     echo "Smoke check failed for SQL endpoint via ProxySQL" >&2
 
-    ./scripts/ci/compose exec -T db sh -lc '
+    bash ./scripts/ci/compose exec -T db sh -lc '
         echo "ProxySQL runtime_mysql_servers:"
         mariadb --connect-timeout=3 --ssl=0 -h127.0.0.1 -P6032 -uadmin -padmin -Nse "SELECT hostgroup_id, hostname, status, weight FROM runtime_mysql_servers ORDER BY hostgroup_id, hostname;" || true
 
@@ -237,7 +257,7 @@ wait_sql_proxy() {
         mariadb --connect-timeout=3 --ssl=0 -h127.0.0.1 -P6032 -uadmin -padmin -Nse "SELECT username, default_hostgroup, active FROM runtime_mysql_users ORDER BY username;" || true
 
         echo "Galera wsrep (db-node1):"
-        mariadb --connect-timeout=3 --ssl=0 -hdb-node1 -uroot -proot -Nse "SHOW STATUS LIKE \"wsrep_cluster_size\"; SHOW STATUS LIKE \"wsrep_cluster_status\"; SHOW STATUS LIKE \"wsrep_local_state_comment\";" || true
+        mariadb --connect-timeout=3 --ssl=0 -hdb-node1 -uroot -proot -Nse "SHOW STATUS LIKE 'wsrep_cluster_size'; SHOW STATUS LIKE 'wsrep_cluster_status'; SHOW STATUS LIKE 'wsrep_local_state_comment';" || true
     ' || true
 
     return 1
@@ -251,6 +271,8 @@ if [ "${ENABLE_OBSERVABILITY}" = "true" ]; then
 fi
 
 COMPOSE_CMD="./scripts/ci/compose" bash ./scripts/galera/check-cluster.sh 40 3
+
+normalize_proxysql_rules
 
 wait_sql_proxy
 '''

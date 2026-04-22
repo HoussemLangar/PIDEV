@@ -11,4 +11,5 @@ mkdir -p "$VAR_DIR/log" "$VAR_DIR/cache"
 chown -R www-data:www-data "$VAR_DIR" 2>/dev/null || true
 chmod -R ug+rwX "$VAR_DIR" 2>/dev/null || true
 
-exec apache2-foreground
+# Keep the official PHP entrypoint behavior, then run Apache foreground.
+exec docker-php-entrypoint "$@"

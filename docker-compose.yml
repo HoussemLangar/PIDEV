@@ -16,7 +16,7 @@ services:
       - ./symfony-app:/var/www/html
     environment:
       APP_ENV: dev
-      DATABASE_URL: "mysql://symfony:symfony@db:3306/pidev?serverVersion=mariadb-11.4&charset=utf8mb4"
+      DATABASE_URL: "mysql://symfony:symfony@db-node1:3306/pidev?serverVersion=mariadb-11.4.0&charset=utf8mb4"
       BLACKFIRE_SERVER_ID: ${BLACKFIRE_SERVER_ID:-}
       BLACKFIRE_SERVER_TOKEN: ${BLACKFIRE_SERVER_TOKEN:-}
       BLACKFIRE_AGENT_SOCKET: tcp://blackfire:8307
@@ -154,7 +154,7 @@ services:
     ports:
       - "8080:80"
     environment:
-      PMA_HOST: db
+      PMA_HOST: db-node1
       PMA_PORT: 3306
       PMA_USER: root
       PMA_PASSWORD: root

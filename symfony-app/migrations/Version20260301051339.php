@@ -12,6 +12,18 @@ use Doctrine\Migrations\AbstractMigration;
  */
 final class Version20260301051339 extends AbstractMigration
 {
+    private function renameIndexIfExists(string $table, string $from, string $to): void
+    {
+        $indexes = $this->connection->createSchemaManager()->listTableIndexes($table);
+        $normalizedIndexes = array_change_key_case($indexes, CASE_LOWER);
+
+        if (!isset($normalizedIndexes[strtolower($from)])) {
+            return;
+        }
+
+        $this->addSql(sprintf('ALTER TABLE `%s` RENAME INDEX `%s` TO `%s`', $table, $from, $to));
+    }
+
     public function getDescription(): string
     {
         return '';
@@ -49,10 +61,10 @@ final class Version20260301051339 extends AbstractMigration
         $this->addSql('ALTER TABLE sante_quotidienne DROP FOREIGN KEY FK_7D27C4F7A76ED395');
         $this->addSql('ALTER TABLE sante_quotidienne CHANGE poids poids DOUBLE PRECISION DEFAULT NULL, CHANGE taille taille DOUBLE PRECISION DEFAULT NULL, CHANGE humeur humeur JSON NOT NULL, CHANGE date date DATETIME DEFAULT NULL, CHANGE calories calories INT DEFAULT NULL');
         $this->addSql('ALTER TABLE sante_quotidienne ADD CONSTRAINT FK_7D27C4F7A76ED395 FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE');
-        $this->addSql('ALTER TABLE teleconsultation RENAME INDEX idx_b9a78c027db3b714 TO IDX_CE327B237DB3B714');
-        $this->addSql('ALTER TABLE teleconsultation RENAME INDEX idx_b9a78c02e92f8f78 TO IDX_CE327B23E92F8F78');
-        $this->addSql('ALTER TABLE user_session RENAME INDEX uniq_7aed7913613fecdf TO UNIQ_8849CBDE613FECDF');
-        $this->addSql('ALTER TABLE user_session RENAME INDEX idx_7aed7913a76ed395 TO IDX_8849CBDEA76ED395');
+        $this->renameIndexIfExists('teleconsultation', 'idx_b9a78c027db3b714', 'IDX_CE327B237DB3B714');
+        $this->renameIndexIfExists('teleconsultation', 'idx_b9a78c02e92f8f78', 'IDX_CE327B23E92F8F78');
+        $this->renameIndexIfExists('user_session', 'uniq_7aed7913613fecdf', 'UNIQ_8849CBDE613FECDF');
+        $this->renameIndexIfExists('user_session', 'idx_7aed7913a76ed395', 'IDX_8849CBDEA76ED395');
         $this->addSql('ALTER TABLE users CHANGE avatar_data avatar_data LONGTEXT DEFAULT NULL');
     }
 
@@ -88,10 +100,10 @@ final class Version20260301051339 extends AbstractMigration
         $this->addSql('ALTER TABLE sante_quotidienne DROP FOREIGN KEY FK_7D27C4F7A76ED395');
         $this->addSql('ALTER TABLE sante_quotidienne CHANGE poids poids DOUBLE PRECISION NOT NULL, CHANGE taille taille DOUBLE PRECISION NOT NULL, CHANGE humeur humeur LONGTEXT NOT NULL, CHANGE calories calories DOUBLE PRECISION DEFAULT NULL, CHANGE date date DATETIME NOT NULL');
         $this->addSql('ALTER TABLE sante_quotidienne ADD CONSTRAINT FK_7D27C4F7A76ED395 FOREIGN KEY (user_id) REFERENCES users (id) ON UPDATE NO ACTION ON DELETE NO ACTION');
-        $this->addSql('ALTER TABLE teleconsultation RENAME INDEX idx_ce327b237db3b714 TO IDX_B9A78C027DB3B714');
-        $this->addSql('ALTER TABLE teleconsultation RENAME INDEX idx_ce327b23e92f8f78 TO IDX_B9A78C02E92F8F78');
-        $this->addSql('ALTER TABLE user_session RENAME INDEX idx_8849cbdea76ed395 TO IDX_7AED7913A76ED395');
-        $this->addSql('ALTER TABLE user_session RENAME INDEX uniq_8849cbde613fecdf TO UNIQ_7AED7913613FECDF');
+        $this->renameIndexIfExists('teleconsultation', 'idx_ce327b237db3b714', 'IDX_B9A78C027DB3B714');
+        $this->renameIndexIfExists('teleconsultation', 'idx_ce327b23e92f8f78', 'IDX_B9A78C02E92F8F78');
+        $this->renameIndexIfExists('user_session', 'idx_8849cbdea76ed395', 'IDX_7AED7913A76ED395');
+        $this->renameIndexIfExists('user_session', 'uniq_8849cbde613fecdf', 'UNIQ_7AED7913613FECDF');
         $this->addSql('ALTER TABLE users CHANGE avatar_data avatar_data LONGBLOB DEFAULT NULL');
     }
 }
