@@ -107,6 +107,32 @@ cd "$PROJECT_DIR"
             }
         }
 
+        stage('Symfony Database Migrations') {
+            steps {
+                sh '''#!/usr/bin/env bash
+set -euo pipefail
+
+cd "$PROJECT_DIR"
+
+./scripts/ci/compose exec -T web sh -lc '
+set -eu
+
+echo "Preparing Doctrine database for APP_ENV=dev"
+php bin/console doctrine:database:create --if-not-exists --no-interaction
+php bin/console doctrine:migrations:sync-metadata-storage --no-interaction
+php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration
+php bin/console doctrine:query:sql "SELECT DATABASE() AS current_database;"
+
+echo "Preparing Doctrine database for APP_ENV=test"
+php bin/console doctrine:database:create --if-not-exists --no-interaction --env=test
+php bin/console doctrine:migrations:sync-metadata-storage --no-interaction --env=test
+php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration --env=test
+php bin/console doctrine:query:sql "SELECT DATABASE() AS current_database;" --env=test
+'
+'''
+            }
+        }
+
         stage('Symfony Tests') {
             when {
                 expression { return params.RUN_TESTS }
@@ -217,31 +243,74 @@ wait_web_from_web() {
 wait_web_from_web
 
 normalize_proxysql_rules() {
-    # Ensure runtime rules do not drift to deprecated HG30 from stale ProxySQL state.
-    bash ./scripts/ci/compose exec -T db sh -lc '
-        mariadb --connect-timeout=3 --ssl=0 -h127.0.0.1 -P6032 -uadmin -padmin -Nse "
-            UPDATE mysql_query_rules
-            SET destination_hostgroup=20
-            WHERE rule_id=100;
-            LOAD MYSQL QUERY RULES TO RUNTIME;
-            SAVE MYSQL QUERY RULES TO DISK;
-            SELECT rule_id, destination_hostgroup, active
-            FROM runtime_mysql_query_rules
-            WHERE rule_id IN (90,100)
-            ORDER BY rule_id;
-        "
-    '
+    # Ensure ProxySQL runtime state is aligned with expected Galera mapping.
+    bash ./scripts/ci/compose exec -T db mariadb --connect-timeout=3 --ssl=0 -h127.0.0.1 -P6032 -uadmin -padmin -Nse "
+        UPDATE mysql_query_rules
+        SET destination_hostgroup=20
+        WHERE rule_id=100;
+
+        UPDATE mysql_servers
+        SET hostgroup_id=10
+        WHERE hostname='db-node1';
+
+        UPDATE mysql_servers
+        SET hostgroup_id=20
+        WHERE hostname IN ('db-node2','db-node3');
+
+        LOAD MYSQL SERVERS TO RUNTIME;
+        SAVE MYSQL SERVERS TO DISK;
+        LOAD MYSQL QUERY RULES TO RUNTIME;
+        SAVE MYSQL QUERY RULES TO DISK;
+
+        SELECT hostgroup_id, hostname, status, weight
+        FROM runtime_mysql_servers
+        ORDER BY hostgroup_id, hostname;
+
+        SELECT rule_id, destination_hostgroup, active
+        FROM runtime_mysql_query_rules
+        WHERE rule_id IN (90,100)
+        ORDER BY rule_id;
+    "
+}
+
+wait_proxysql_hostgroups() {
+    local attempts="${1:-20}"
+    local sleep_seconds="${2:-2}"
+    local runtime_servers=""
+
+    for i in $(seq 1 "$attempts"); do
+        runtime_servers="$(bash ./scripts/ci/compose exec -T db mariadb --connect-timeout=2 --ssl=0 -h127.0.0.1 -P6032 -uadmin -padmin -Nse "SELECT hostgroup_id, hostname, status FROM runtime_mysql_servers ORDER BY hostgroup_id, hostname;" 2>/dev/null || true)"
+
+        if echo "$runtime_servers" | awk '$1==10 && $3=="ONLINE" { writer=1 } $1==20 && $3=="ONLINE" { reader=1 } END { exit !(writer && reader) }'; then
+            return 0
+        fi
+
+        sleep "$sleep_seconds"
+    done
+
+    echo "ProxySQL runtime hostgroups 10/20 are not ready (writer/reader)." >&2
+    echo "$runtime_servers" >&2
+    return 1
+}
+
+dump_sql_diagnostics() {
+    echo "ProxySQL runtime_mysql_servers:" >&2
+    bash ./scripts/ci/compose exec -T db mariadb --connect-timeout=3 --ssl=0 -h127.0.0.1 -P6032 -uadmin -padmin -Nse "SELECT hostgroup_id, hostname, status, weight FROM runtime_mysql_servers ORDER BY hostgroup_id, hostname;" || true
+
+    echo "ProxySQL mysql_users:" >&2
+    bash ./scripts/ci/compose exec -T db mariadb --connect-timeout=3 --ssl=0 -h127.0.0.1 -P6032 -uadmin -padmin -Nse "SELECT username, default_hostgroup, active FROM runtime_mysql_users ORDER BY username;" || true
+
+    echo "Galera wsrep (db-node1):" >&2
+    bash ./scripts/ci/compose exec -T db mariadb --connect-timeout=3 --ssl=0 -hdb-node1 -uroot -proot -Nse "SHOW STATUS WHERE Variable_name IN ('wsrep_cluster_size','wsrep_cluster_status','wsrep_local_state_comment');" || true
 }
 
 wait_sql_proxy() {
-    local attempts="${1:-60}"
-    local sleep_seconds="${2:-3}"
+    local attempts="${1:-20}"
+    local sleep_seconds="${2:-2}"
 
     for i in $(seq 1 "$attempts"); do
-        if bash ./scripts/ci/compose exec -T db sh -lc '
-            mariadb --connect-timeout=3 --ssl=0 -h127.0.0.1 -P3306 -usymfony -psymfony -D pidev -Nse "SELECT LAST_INSERT_ID() AS writer_ok;" >/dev/null 2>&1 &&
-            mariadb --connect-timeout=3 --ssl=0 -h127.0.0.1 -P3306 -usymfony -psymfony -D pidev -Nse "SELECT 1 AS read_ok;" >/dev/null 2>&1
-        '; then
+        if bash ./scripts/ci/compose exec -T db mariadb --connect-timeout=2 --ssl=0 -h127.0.0.1 -P3306 -usymfony -psymfony -D pidev -Nse "SELECT LAST_INSERT_ID() AS writer_ok;" >/dev/null 2>&1 &&
+           bash ./scripts/ci/compose exec -T db mariadb --connect-timeout=2 --ssl=0 -h127.0.0.1 -P3306 -usymfony -psymfony -D pidev -Nse "SELECT 1 AS read_ok;" >/dev/null 2>&1; then
             return 0
         fi
         sleep "$sleep_seconds"
@@ -249,16 +318,7 @@ wait_sql_proxy() {
 
     echo "Smoke check failed for SQL endpoint via ProxySQL" >&2
 
-    bash ./scripts/ci/compose exec -T db sh -lc '
-        echo "ProxySQL runtime_mysql_servers:"
-        mariadb --connect-timeout=3 --ssl=0 -h127.0.0.1 -P6032 -uadmin -padmin -Nse "SELECT hostgroup_id, hostname, status, weight FROM runtime_mysql_servers ORDER BY hostgroup_id, hostname;" || true
-
-        echo "ProxySQL mysql_users:"
-        mariadb --connect-timeout=3 --ssl=0 -h127.0.0.1 -P6032 -uadmin -padmin -Nse "SELECT username, default_hostgroup, active FROM runtime_mysql_users ORDER BY username;" || true
-
-        echo "Galera wsrep (db-node1):"
-        mariadb --connect-timeout=3 --ssl=0 -hdb-node1 -uroot -proot -Nse "SHOW STATUS LIKE 'wsrep_cluster_size'; SHOW STATUS LIKE 'wsrep_cluster_status'; SHOW STATUS LIKE 'wsrep_local_state_comment';" || true
-    ' || true
+    dump_sql_diagnostics
 
     return 1
 }
@@ -273,6 +333,11 @@ fi
 COMPOSE_CMD="./scripts/ci/compose" bash ./scripts/galera/check-cluster.sh 40 3
 
 normalize_proxysql_rules
+
+if ! wait_proxysql_hostgroups; then
+    dump_sql_diagnostics
+    exit 1
+fi
 
 wait_sql_proxy
 '''
