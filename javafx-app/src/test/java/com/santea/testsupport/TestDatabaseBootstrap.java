@@ -243,6 +243,27 @@ public final class TestDatabaseBootstrap {
         return columns;
     }
 
+    private static Map<String, String> loadTableTypeNames(Connection connection, String tableName) throws SQLException {
+        Map<String, String> typeNames = new LinkedHashMap<>();
+        DatabaseMetaData metaData = connection.getMetaData();
+        String catalog = connection.getCatalog();
+
+        try (ResultSet resultSet = metaData.getColumns(catalog, null, tableName, null)) {
+            while (resultSet.next()) {
+                String columnName = resultSet.getString("COLUMN_NAME");
+                String typeName = resultSet.getString("TYPE_NAME");
+                if (columnName != null) {
+                    typeNames.put(
+                            columnName.toLowerCase(Locale.ROOT),
+                            typeName == null ? "" : typeName.toUpperCase(Locale.ROOT)
+                    );
+                }
+            }
+        }
+
+        return typeNames;
+    }
+
     private static void putIfPresent(Set<String> availableColumns,
                                      Map<String, Object> values,
                                      String column,
@@ -252,47 +273,138 @@ public final class TestDatabaseBootstrap {
         }
     }
 
+    private static boolean tableExists(Connection connection, String tableName) throws SQLException {
+        DatabaseMetaData metaData = connection.getMetaData();
+        String catalog = connection.getCatalog();
+
+        try (ResultSet resultSet = metaData.getTables(catalog, null, tableName, null)) {
+            return resultSet.next();
+        }
+    }
+
     private static void upsertPatient(Connection connection) throws SQLException {
-        try (PreparedStatement statement = connection.prepareStatement("""
-            INSERT INTO patient (id, user_id)
-            VALUES (?, ?)
-            ON DUPLICATE KEY UPDATE
-                user_id = VALUES(user_id)
-            """)) {
-            statement.setInt(1, SEED_PATIENT_ID);
-            statement.setInt(2, SEED_USER_ID);
-            statement.executeUpdate();
+        if (tableExists(connection, "patient")) {
+            try (PreparedStatement statement = connection.prepareStatement("""
+                INSERT INTO patient (id, user_id)
+                VALUES (?, ?)
+                ON DUPLICATE KEY UPDATE
+                    user_id = VALUES(user_id)
+                """)) {
+                statement.setInt(1, SEED_PATIENT_ID);
+                statement.setInt(2, SEED_USER_ID);
+                statement.executeUpdate();
+            }
+        }
+
+        if (tableExists(connection, "patients")) {
+            Set<String> patientsColumns = loadTableColumns(connection, "patients");
+            LinkedHashMap<String, Object> values = new LinkedHashMap<>();
+            values.put("id", SEED_PATIENT_ID);
+            putIfPresent(patientsColumns, values, "user_id", SEED_USER_ID);
+            putIfPresent(patientsColumns, values, "created_at", java.sql.Timestamp.valueOf(LocalDateTime.now()));
+            putIfPresent(patientsColumns, values, "updated_at", java.sql.Timestamp.valueOf(LocalDateTime.now()));
+
+            if (!values.containsKey("user_id")) {
+                throw new SQLException("La colonne obligatoire patients.user_id est introuvable.");
+            }
+
+            StringJoiner columnsJoiner = new StringJoiner(", ");
+            StringJoiner placeholdersJoiner = new StringJoiner(", ");
+            List<String> updateAssignments = new ArrayList<>();
+
+            for (String column : values.keySet()) {
+                columnsJoiner.add(column);
+                placeholdersJoiner.add("?");
+                if (!"id".equals(column)) {
+                    updateAssignments.add(column + " = VALUES(" + column + ")");
+                }
+            }
+
+            // Include id in UPDATE so duplicate on user_id still converges to the seeded patient id.
+            updateAssignments.add(0, "id = VALUES(id)");
+
+            String sql = "INSERT INTO patients (" + columnsJoiner + ") VALUES (" + placeholdersJoiner + ")"
+                    + " ON DUPLICATE KEY UPDATE " + String.join(", ", updateAssignments);
+
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                int parameterIndex = 1;
+                for (Object value : values.values()) {
+                    statement.setObject(parameterIndex++, value);
+                }
+                statement.executeUpdate();
+            }
         }
     }
 
     private static void upsertSanteQuotidienne(Connection connection) throws SQLException {
-        try (PreparedStatement statement = connection.prepareStatement("""
-            INSERT INTO sante_quotidienne (
-                id, user_id, date, poids, sommeil, humeur,
-                activite_physique, alimentation, eau_bue, tension_arterielle
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON DUPLICATE KEY UPDATE
-                user_id = VALUES(user_id),
-                date = VALUES(date),
-                poids = VALUES(poids),
-                sommeil = VALUES(sommeil),
-                humeur = VALUES(humeur),
-                activite_physique = VALUES(activite_physique),
-                alimentation = VALUES(alimentation),
-                eau_bue = VALUES(eau_bue),
-                tension_arterielle = VALUES(tension_arterielle)
-            """)) {
-            statement.setInt(1, SEED_SANTE_ID);
-            statement.setInt(2, SEED_USER_ID);
-            statement.setDate(3, java.sql.Date.valueOf(LocalDate.now()));
-            statement.setDouble(4, 71.5);
-            statement.setDouble(5, 7.5);
-            statement.setString(6, "Bonne");
-            statement.setString(7, "Marche");
-            statement.setString(8, "Equilibree");
-            statement.setDouble(9, 1.8);
-            statement.setString(10, "120/80");
+        Set<String> santeColumns = loadTableColumns(connection, "sante_quotidienne");
+        Map<String, String> santeTypes = loadTableTypeNames(connection, "sante_quotidienne");
+        LocalDateTime now = LocalDateTime.now();
+
+        LinkedHashMap<String, Object> values = new LinkedHashMap<>();
+        values.put("id", SEED_SANTE_ID);
+        putIfPresent(santeColumns, values, "user_id", SEED_USER_ID);
+
+        if (santeColumns.contains("date")) {
+            String dateType = santeTypes.getOrDefault("date", "");
+            if (dateType.contains("TIME")) {
+                values.put("date", java.sql.Timestamp.valueOf(now));
+            } else {
+                values.put("date", java.sql.Date.valueOf(LocalDate.now()));
+            }
+        }
+
+        putIfPresent(santeColumns, values, "poids", 71.5d);
+        putIfPresent(santeColumns, values, "taille", 175.0d);
+        putIfPresent(santeColumns, values, "imc", 23.35d);
+        putIfPresent(santeColumns, values, "sommeil", 7.5d);
+        putIfPresent(santeColumns, values, "activite_physique", "moderee");
+        putIfPresent(santeColumns, values, "alimentation", "equilibree");
+        putIfPresent(santeColumns, values, "eau_bue", 1.8d);
+        putIfPresent(santeColumns, values, "pas", 6500);
+        putIfPresent(santeColumns, values, "calories", 450);
+        putIfPresent(santeColumns, values, "duree_activite_minutes", 40);
+        putIfPresent(santeColumns, values, "source_donnees", "manuel");
+
+        if (santeColumns.contains("humeur")) {
+            // MariaDB stores JSON as LONGTEXT with a CHECK(JSON_VALID(...)) constraint.
+            // Always seed humeur as valid JSON array with values expected by the Symfony enum.
+            values.put("humeur", "[\"heureuse\"]");
+        }
+
+        if (santeColumns.contains("tension_arterielle")) {
+            String tensionType = santeTypes.getOrDefault("tension_arterielle", "");
+            if (tensionType.contains("CHAR") || tensionType.contains("TEXT")) {
+                values.put("tension_arterielle", "120");
+            } else {
+                values.put("tension_arterielle", 120.0d);
+            }
+        }
+
+        if (!values.containsKey("user_id")) {
+            throw new SQLException("La colonne obligatoire sante_quotidienne.user_id est introuvable.");
+        }
+
+        StringJoiner columnsJoiner = new StringJoiner(", ");
+        StringJoiner placeholdersJoiner = new StringJoiner(", ");
+        List<String> updateAssignments = new ArrayList<>();
+
+        for (String column : values.keySet()) {
+            columnsJoiner.add(column);
+            placeholdersJoiner.add("?");
+            if (!"id".equals(column)) {
+                updateAssignments.add(column + " = VALUES(" + column + ")");
+            }
+        }
+
+        String sql = "INSERT INTO sante_quotidienne (" + columnsJoiner + ") VALUES (" + placeholdersJoiner + ")"
+                + " ON DUPLICATE KEY UPDATE " + String.join(", ", updateAssignments);
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            int parameterIndex = 1;
+            for (Object value : values.values()) {
+                statement.setObject(parameterIndex++, value);
+            }
             statement.executeUpdate();
         }
     }
@@ -315,18 +427,42 @@ public final class TestDatabaseBootstrap {
     }
 
     private static void upsertSymptomeQuotidien(Connection connection) throws SQLException {
-        try (PreparedStatement statement = connection.prepareStatement("""
-            INSERT INTO symptomes_quotidiens (id, patient_id, symptome_id, date_symptome)
-            VALUES (?, ?, ?, ?)
-            ON DUPLICATE KEY UPDATE
-                patient_id = VALUES(patient_id),
-                symptome_id = VALUES(symptome_id),
-                date_symptome = VALUES(date_symptome)
-            """)) {
-            statement.setInt(1, SEED_SYMPTOME_QUOTIDIEN_ID);
-            statement.setInt(2, SEED_PATIENT_ID);
-            statement.setInt(3, SEED_SYMPTOME_ID);
-            statement.setDate(4, java.sql.Date.valueOf(LocalDate.now()));
+        Set<String> symptomesQuotidiensColumns = loadTableColumns(connection, "symptomes_quotidiens");
+        LinkedHashMap<String, Object> values = new LinkedHashMap<>();
+
+        values.put("id", SEED_SYMPTOME_QUOTIDIEN_ID);
+        putIfPresent(symptomesQuotidiensColumns, values, "patient_id", SEED_PATIENT_ID);
+        putIfPresent(symptomesQuotidiensColumns, values, "symptome_id", SEED_SYMPTOME_ID);
+        putIfPresent(symptomesQuotidiensColumns, values, "date_symptome", java.sql.Date.valueOf(LocalDate.now()));
+        putIfPresent(symptomesQuotidiensColumns, values, "intensite", 5);
+        putIfPresent(symptomesQuotidiensColumns, values, "duree", "2h");
+        putIfPresent(symptomesQuotidiensColumns, values, "notes", "Seed test");
+        putIfPresent(symptomesQuotidiensColumns, values, "created_at", java.sql.Timestamp.valueOf(LocalDateTime.now()));
+
+        if (!values.containsKey("patient_id") || !values.containsKey("symptome_id")) {
+            throw new SQLException("Colonnes obligatoires manquantes dans symptomes_quotidiens (patient_id/symptome_id).");
+        }
+
+        StringJoiner columnsJoiner = new StringJoiner(", ");
+        StringJoiner placeholdersJoiner = new StringJoiner(", ");
+        List<String> updateAssignments = new ArrayList<>();
+
+        for (String column : values.keySet()) {
+            columnsJoiner.add(column);
+            placeholdersJoiner.add("?");
+            if (!"id".equals(column)) {
+                updateAssignments.add(column + " = VALUES(" + column + ")");
+            }
+        }
+
+        String sql = "INSERT INTO symptomes_quotidiens (" + columnsJoiner + ") VALUES (" + placeholdersJoiner + ")"
+                + " ON DUPLICATE KEY UPDATE " + String.join(", ", updateAssignments);
+
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            int parameterIndex = 1;
+            for (Object value : values.values()) {
+                statement.setObject(parameterIndex++, value);
+            }
             statement.executeUpdate();
         }
     }
