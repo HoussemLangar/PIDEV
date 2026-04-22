@@ -300,6 +300,18 @@ wait_proxysql_hostgroups() {
     return 1
 }
 
+has_proxysql_writer_reader() {
+    local runtime_servers=""
+
+    runtime_servers="$(bash ./scripts/ci/compose exec -T db mariadb --connect-timeout=2 --ssl=0 -h127.0.0.1 -P6032 -uadmin -padmin -Nse "SELECT hostgroup_id, hostname, status FROM runtime_mysql_servers ORDER BY hostgroup_id, hostname;" 2>/dev/null || true)"
+
+    if echo "$runtime_servers" | awk '$1==10 && $3=="ONLINE" { writer=1 } $1==20 && $3=="ONLINE" { reader=1 } END { exit !(writer && reader) }'; then
+        return 0
+    fi
+
+    return 1
+}
+
 dump_sql_diagnostics() {
     echo "ProxySQL runtime_mysql_servers:" >&2
     bash ./scripts/ci/compose exec -T db mariadb --connect-timeout=3 --ssl=0 -h127.0.0.1 -P6032 -uadmin -padmin -Nse "SELECT hostgroup_id, hostname, status, weight FROM runtime_mysql_servers ORDER BY hostgroup_id, hostname;" || true
@@ -316,6 +328,12 @@ wait_sql_proxy() {
     local sleep_seconds="${2:-2}"
 
     for i in $(seq 1 "$attempts"); do
+        if ! has_proxysql_writer_reader; then
+            echo "ProxySQL lost writer/reader hostgroups during SQL smoke check." >&2
+            dump_sql_diagnostics
+            return 1
+        fi
+
         if bash ./scripts/ci/compose exec -T db mariadb --connect-timeout=2 --ssl=0 -h127.0.0.1 -P3306 -usymfony -psymfony -D pidev -Nse "SELECT LAST_INSERT_ID() AS writer_ok;" >/dev/null 2>&1 &&
            bash ./scripts/ci/compose exec -T db mariadb --connect-timeout=2 --ssl=0 -h127.0.0.1 -P3306 -usymfony -psymfony -D pidev -Nse "SELECT 1 AS read_ok;" >/dev/null 2>&1; then
             return 0
@@ -338,6 +356,9 @@ if [ "${ENABLE_OBSERVABILITY}" = "true" ]; then
 fi
 
 COMPOSE_CMD="./scripts/ci/compose" bash ./scripts/galera/check-cluster.sh 40 3
+
+# Defensive: enforce monitor/exporter credentials right before ProxySQL checks.
+COMPOSE_CMD="./scripts/ci/compose" DB_ADMIN_SERVICE="db-node1" NODES="db-node1 db-node2 db-node3" bash ./scripts/galera/ensure-galera-users.sh 30 2
 
 normalize_proxysql_rules
 

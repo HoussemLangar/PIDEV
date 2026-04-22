@@ -44,10 +44,18 @@ admin_node="$(pick_admin_node)" || {
 
 "$COMPOSE_CMD" exec -T "$admin_node" mariadb -uroot -proot <<'SQL'
 CREATE USER IF NOT EXISTS 'monitor'@'%' IDENTIFIED BY 'monitor';
+ALTER USER 'monitor'@'%' IDENTIFIED BY 'monitor';
+CREATE USER IF NOT EXISTS 'monitor'@'172.18.%' IDENTIFIED BY 'monitor';
+ALTER USER 'monitor'@'172.18.%' IDENTIFIED BY 'monitor';
 GRANT USAGE, PROCESS, REPLICATION CLIENT ON *.* TO 'monitor'@'%';
+GRANT USAGE, PROCESS, REPLICATION CLIENT ON *.* TO 'monitor'@'172.18.%';
 
 CREATE USER IF NOT EXISTS 'exporter'@'%' IDENTIFIED BY 'exporter';
+ALTER USER 'exporter'@'%' IDENTIFIED BY 'exporter';
+CREATE USER IF NOT EXISTS 'exporter'@'172.18.%' IDENTIFIED BY 'exporter';
+ALTER USER 'exporter'@'172.18.%' IDENTIFIED BY 'exporter';
 GRANT PROCESS, REPLICATION CLIENT, SELECT ON *.* TO 'exporter'@'%';
+GRANT PROCESS, REPLICATION CLIENT, SELECT ON *.* TO 'exporter'@'172.18.%';
 
 FLUSH PRIVILEGES;
 SQL
