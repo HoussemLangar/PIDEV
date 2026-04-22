@@ -218,7 +218,10 @@ wait_sql_proxy() {
     local sleep_seconds="${2:-3}"
 
     for i in $(seq 1 "$attempts"); do
-        if ./scripts/ci/compose exec -T db sh -lc "mariadb --connect-timeout=3 --ssl=0 -h127.0.0.1 -P3306 -usymfony -psymfony -D pidev -Nse \"SELECT LAST_INSERT_ID() AS writer_ok;\" >/dev/null 2>&1 && mariadb --connect-timeout=3 --ssl=0 -h127.0.0.1 -P3306 -usymfony -psymfony -D pidev -Nse \"SELECT 1 AS read_ok;\" >/dev/null 2>&1"; then
+        if ./scripts/ci/compose exec -T db sh -lc '
+            mariadb --connect-timeout=3 --ssl=0 -h127.0.0.1 -P3306 -usymfony -psymfony -D pidev -Nse "SELECT LAST_INSERT_ID() AS writer_ok;" >/dev/null 2>&1 &&
+            mariadb --connect-timeout=3 --ssl=0 -h127.0.0.1 -P3306 -usymfony -psymfony -D pidev -Nse "SELECT 1 AS read_ok;" >/dev/null 2>&1
+        '; then
             return 0
         fi
         sleep "$sleep_seconds"
@@ -226,7 +229,16 @@ wait_sql_proxy() {
 
     echo "Smoke check failed for SQL endpoint via ProxySQL" >&2
 
-    ./scripts/ci/compose exec -T db sh -lc "echo 'ProxySQL runtime_mysql_servers:'; mariadb --connect-timeout=3 --ssl=0 -h127.0.0.1 -P6032 -uadmin -padmin -Nse \"SELECT hostgroup_id, hostname, status, weight FROM runtime_mysql_servers ORDER BY hostgroup_id, hostname;\" || true; echo 'ProxySQL mysql_users:'; mariadb --connect-timeout=3 --ssl=0 -h127.0.0.1 -P6032 -uadmin -padmin -Nse \"SELECT username, default_hostgroup, active FROM runtime_mysql_users ORDER BY username;\" || true; echo 'Galera wsrep (db-node1):'; mariadb --connect-timeout=3 --ssl=0 -h db-node1 -uroot -proot -Nse \"SHOW STATUS LIKE 'wsrep_cluster_size'; SHOW STATUS LIKE 'wsrep_cluster_status'; SHOW STATUS LIKE 'wsrep_local_state_comment';\" || true" || true
+    ./scripts/ci/compose exec -T db sh -lc '
+        echo "ProxySQL runtime_mysql_servers:"
+        mariadb --connect-timeout=3 --ssl=0 -h127.0.0.1 -P6032 -uadmin -padmin -Nse "SELECT hostgroup_id, hostname, status, weight FROM runtime_mysql_servers ORDER BY hostgroup_id, hostname;" || true
+
+        echo "ProxySQL mysql_users:"
+        mariadb --connect-timeout=3 --ssl=0 -h127.0.0.1 -P6032 -uadmin -padmin -Nse "SELECT username, default_hostgroup, active FROM runtime_mysql_users ORDER BY username;" || true
+
+        echo "Galera wsrep (db-node1):"
+        mariadb --connect-timeout=3 --ssl=0 -hdb-node1 -uroot -proot -Nse "SHOW STATUS LIKE \"wsrep_cluster_size\"; SHOW STATUS LIKE \"wsrep_cluster_status\"; SHOW STATUS LIKE \"wsrep_local_state_comment\";" || true
+    ' || true
 
     return 1
 }
