@@ -42,7 +42,41 @@ admin_node="$(pick_admin_node)" || {
 	exit 1
 }
 
-"$COMPOSE_CMD" exec -T "$admin_node" mariadb -uroot -proot <<'SQL'
+run_admin_sql() {
+	local sql="$1"
+
+	"$COMPOSE_CMD" exec -T "$admin_node" mariadb -uroot -proot -Nse "$sql" \
+		|| "$COMPOSE_CMD" exec -T "$admin_node" mariadb --ssl=0 --protocol=TCP -h127.0.0.1 -uroot -proot -Nse "$sql"
+}
+
+wait_monitor_credentials() {
+	local i node
+
+	for i in $(seq 1 "$ATTEMPTS"); do
+		local all_ok=1
+		for node in ${NODES}; do
+			if ! "$COMPOSE_CMD" exec -T "$admin_node" mariadb --connect-timeout=3 --ssl=0 -h"$node" -P3306 -umonitor -pmonitor -Nse "SELECT 1;" >/dev/null 2>&1; then
+				all_ok=0
+				break
+			fi
+		done
+
+		if [[ "$all_ok" -eq 1 ]]; then
+			return 0
+		fi
+
+		sleep "$SLEEP_SECONDS"
+	done
+
+	echo "monitor credentials are not accepted on all Galera nodes." >&2
+	for node in ${NODES}; do
+		echo "${node}:" >&2
+		"$COMPOSE_CMD" exec -T "$admin_node" mariadb --connect-timeout=3 --ssl=0 -h"$node" -P3306 -uroot -proot -Nse "SELECT User, Host FROM mysql.user WHERE User IN ('monitor','exporter') ORDER BY User, Host;" || true
+	done
+	return 1
+}
+
+run_admin_sql "
 CREATE USER IF NOT EXISTS 'monitor'@'%' IDENTIFIED BY 'monitor';
 ALTER USER 'monitor'@'%' IDENTIFIED BY 'monitor';
 CREATE USER IF NOT EXISTS 'monitor'@'172.18.%' IDENTIFIED BY 'monitor';
@@ -58,6 +92,8 @@ GRANT PROCESS, REPLICATION CLIENT, SELECT ON *.* TO 'exporter'@'%';
 GRANT PROCESS, REPLICATION CLIENT, SELECT ON *.* TO 'exporter'@'172.18.%';
 
 FLUSH PRIVILEGES;
-SQL
+"
+
+wait_monitor_credentials
 
 echo "Users monitor/exporter ensured on ${admin_node}."
