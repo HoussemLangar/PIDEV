@@ -191,6 +191,26 @@ public final class AppNavigator {
         showAppPage("/com/santea/fxml/content_community.fxml");
     }
 
+    public static void showAiToolsPage() {
+        showAppPage("/com/santea/fxml/ai_tools.fxml");
+    }
+
+    public static void showAiDocumentScannerPage() {
+        showAppPage("/com/santea/fxml/ai_document_scanner.fxml");
+    }
+
+    public static void showAiNutritionPlannerPage() {
+        showAppPage("/com/santea/fxml/ai_nutrition_planner.fxml");
+    }
+
+    public static void showAiWorkoutPlannerPage() {
+        showAppPage("/com/santea/fxml/ai_workout_planner.fxml");
+    }
+
+    public static void showAiResultExplainerPage() {
+        showAppPage("/com/santea/fxml/ai_result_explainer.fxml");
+    }
+
     public static void showSanteQuotidiennePage() {
         showAppPage("/com/santea/fxml/sante_quotidienne.fxml");
     }
@@ -213,6 +233,10 @@ public final class AppNavigator {
 
     public static void showSymptomesQuotidiensPage() {
         showAppPage("/com/santea/fxml/symptomes_quotidiens.fxml");
+    }
+
+    public static void showSymptomesMedecinDashboardPage() {
+        showAppPage("/com/santea/fxml/symptomes_medecin_dashboard.fxml");
     }
 
     private static void showAppPage(String contentFxmlPath) {

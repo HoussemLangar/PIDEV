@@ -155,6 +155,15 @@
             </div>
         </div>
         <div class="dashboard-header-actions">
+            <a href="{{ path('admin_sante_quotidienne_index') }}" class="btn-action-header" title="Dashboard Santé Quotidienne">
+                <i class="fas fa-heartbeat"></i>
+            </a>
+            <a href="{{ path('app_symptome_liste_index') }}" class="btn-action-header" title="Dashboard Symptômes">
+                <i class="fas fa-stethoscope"></i>
+            </a>
+            <a href="{{ path('app_medecin_symptomes_dashboard') }}" class="btn-action-header" title="Dashboard Santé des patients">
+                <i class="fas fa-chart-line"></i>
+            </a>
             <a href="{{ path('admin_validation') }}" class="btn-action-header" title="Validations en attente">
                 <i class="fas fa-user-check"></i>
                 {% if stats.adminPending > 0 %}

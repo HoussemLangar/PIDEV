@@ -4,6 +4,18 @@
     -fx-background-color: #f8fcff;
 }
 
+.med-heatmap-cell {
+    -fx-padding: 8;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-border-color: #d7e1ea;
+    -fx-border-width: 1;
+    -fx-text-fill: #12364a;
+    -fx-font-size: 11px;
+    -fx-font-weight: 700;
+    -fx-alignment: center;
+}
+
 /* ===== COMMON STYLES ===== */
 .page-title {
     -fx-font-size: 28px;

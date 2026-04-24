@@ -685,6 +685,16 @@ public class AdminDashboardController {
     }
 
     @FXML
+    private void handleSymptomesPatientsDashboard() {
+        try {
+            AppNavigator.showSymptomesMedecinDashboardPage();
+        } catch (Exception exception) {
+            exception.printStackTrace();
+            showFeedback("Erreur ouverture dashboard sante patients : " + exception.getMessage(), false);
+        }
+    }
+
+    @FXML
     private void handleRefresh() {
         refresh();
         showFeedback("Dashboard rafraichi.", true);

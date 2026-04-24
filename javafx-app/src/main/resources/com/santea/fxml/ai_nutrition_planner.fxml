@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Spinner?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.TilePane?>
+<?import javafx.scene.layout.VBox?>
+
+<ScrollPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.santea.controller.AiNutritionPlannerController"
+            fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED"
+            styleClass="ait-scroll">
+    <content>
+        <VBox spacing="18" styleClass="ait-page-root ait-tool-green">
+            <VBox spacing="8" styleClass="ait-tool-hero">
+                <padding>
+                    <Insets top="34" right="24" bottom="40" left="24"/>
+                </padding>
+                <Button text="← Outils IA" styleClass="ait-back-btn" onAction="#handleBack"/>
+                <Label text="Assistant Nutrition" styleClass="ait-tool-title"/>
+                <Label text="Obtenez un plan alimentaire personnalise selon votre objectif, votre regime et vos intolerances." wrapText="true" styleClass="ait-tool-sub" maxWidth="700"/>
+            </VBox>
+
+            <VBox spacing="12" styleClass="ait-form-card" maxWidth="860">
+                <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+                <Label text="Objectif nutritionnel" styleClass="ait-field-label"/>
+                <TextField fx:id="goalField" styleClass="ait-input" promptText="Ex: perte de poids, prise de masse"/>
+
+                <HBox spacing="10">
+                    <VBox spacing="6" HBox.hgrow="ALWAYS">
+                        <Label text="Style alimentaire" styleClass="ait-field-label"/>
+                        <ComboBox fx:id="dietStyleCombo" styleClass="ait-input" maxWidth="1.7976931348623157E308"/>
+                    </VBox>
+                    <VBox spacing="6" HBox.hgrow="ALWAYS">
+                        <Label text="Nombre de jours" styleClass="ait-field-label"/>
+                        <Spinner fx:id="daysSpinner" styleClass="ait-input" editable="true"/>
+                    </VBox>
+                </HBox>
+
+                <Label text="Allergies / intolerances" styleClass="ait-field-label"/>
+                <TextField fx:id="allergiesField" styleClass="ait-input" promptText="Ex: lactose, noix"/>
+
+                <Button text="Generer le plan" styleClass="ait-btn-primary" onAction="#handleGenerate"/>
+            </VBox>
+
+            <VBox fx:id="resultsBox" spacing="12" styleClass="ait-results-card" maxWidth="980">
+                <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+                <Label text="Plan alimentaire IA" styleClass="ait-section-title"/>
+                <Label fx:id="overviewLabel" text="" wrapText="true" styleClass="ait-item-text"/>
+
+                <TilePane fx:id="daysGrid" hgap="12" vgap="12" prefColumns="2"/>
+
+                <Label text="Conseils nutritionnels" styleClass="ait-block-title"/>
+                <VBox fx:id="tipsBox" spacing="6"/>
+            </VBox>
+        </VBox>
+    </content>
+</ScrollPane>

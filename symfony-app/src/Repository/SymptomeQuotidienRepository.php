@@ -395,4 +395,114 @@ class SymptomeQuotidienRepository extends ServiceEntityRepository
             'feverCoughCoOccurrenceDays' => $coOccurrence,
         ];
     }
+
+    /**
+     * @return array<int, array{patient_id:int,name:string,email:string}>
+     */
+    public function getDoctorDashboardPatients(): array
+    {
+        $conn = $this->getEntityManager()->getConnection();
+
+        $sql = "
+            SELECT p.id AS patient_id,
+                   u.email AS email,
+                   u.nom AS nom,
+                   u.prenom AS prenom
+            FROM patients p
+            INNER JOIN users u ON u.id = p.user_id
+            ORDER BY u.nom ASC, u.prenom ASC, u.email ASC
+        ";
+
+        $rows = $conn->executeQuery($sql)->fetchAllAssociative();
+
+        return array_map(static function (array $row): array {
+            $name = trim((string) ($row['nom'] ?? '') . ' ' . (string) ($row['prenom'] ?? ''));
+            if ($name === '') {
+                $name = 'Patient #' . (int) ($row['patient_id'] ?? 0);
+            }
+
+            return [
+                'patient_id' => (int) ($row['patient_id'] ?? 0),
+                'name' => $name,
+                'email' => (string) ($row['email'] ?? ''),
+            ];
+        }, $rows);
+    }
+
+    /**
+     * @return array<int, array{date:string,count:int,avgIntensity:float}>
+     */
+    public function getDoctorDailyEvolution(?int $patientId = null, int $days = 35): array
+    {
+        $days = max(7, min(90, $days));
+        $start = (new \DateTimeImmutable('today'))->modify(sprintf('-%d days', $days - 1));
+
+        $qb = $this->createQueryBuilder('sq')
+            ->select('sq.dateSymptome AS dateSymptome, COUNT(sq.id) AS dayCount, AVG(sq.intensite) AS avgIntensity')
+            ->where('sq.dateSymptome >= :start')
+            ->setParameter('start', $start)
+            ->groupBy('sq.dateSymptome')
+            ->orderBy('sq.dateSymptome', 'ASC');
+
+        if ($patientId !== null && $patientId > 0) {
+            $qb->andWhere('IDENTITY(sq.patient) = :patientId')
+                ->setParameter('patientId', $patientId);
+        }
+
+        $rows = $qb->getQuery()->getArrayResult();
+
+        return array_map(static function (array $row): array {
+            $rawDate = $row['dateSymptome'] ?? null;
+            $date = $rawDate instanceof \DateTimeInterface
+                ? $rawDate->format('Y-m-d')
+                : (new \DateTimeImmutable((string) $rawDate))->format('Y-m-d');
+
+            return [
+                'date' => $date,
+                'count' => (int) ($row['dayCount'] ?? 0),
+                'avgIntensity' => round((float) ($row['avgIntensity'] ?? 0), 2),
+            ];
+        }, $rows);
+    }
+
+    /**
+     * @return array<int, array{week:string,day:int,avgIntensity:float,count:int}>
+     */
+    public function getDoctorWeeklyHeatmap(?int $patientId = null, int $weeks = 8): array
+    {
+        $weeks = max(4, min(16, $weeks));
+        $start = (new \DateTimeImmutable('monday this week'))->modify(sprintf('-%d weeks', $weeks - 1));
+
+        $qb = $this->createQueryBuilder('sq')
+            ->select('sq.dateSymptome AS dateSymptome, AVG(sq.intensite) AS avgIntensity, COUNT(sq.id) AS dayCount')
+            ->where('sq.dateSymptome >= :start')
+            ->setParameter('start', $start)
+            ->groupBy('sq.dateSymptome')
+            ->orderBy('sq.dateSymptome', 'ASC');
+
+        if ($patientId !== null && $patientId > 0) {
+            $qb->andWhere('IDENTITY(sq.patient) = :patientId')
+                ->setParameter('patientId', $patientId);
+        }
+
+        $rows = $qb->getQuery()->getArrayResult();
+        $heatmap = [];
+
+        foreach ($rows as $row) {
+            $rawDate = $row['dateSymptome'] ?? null;
+            $date = $rawDate instanceof \DateTimeInterface
+                ? \DateTimeImmutable::createFromInterface($rawDate)
+                : new \DateTimeImmutable((string) $rawDate);
+
+            $week = $date->modify('monday this week')->format('Y-m-d');
+            $heatmap[] = [
+                'week' => $week,
+                'day' => (int) $date->format('N'),
+                'avgIntensity' => round((float) ($row['avgIntensity'] ?? 0), 2),
+                'count' => (int) ($row['dayCount'] ?? 0),
+            ];
+        }
+
+        return $heatmap;
+    }
 }

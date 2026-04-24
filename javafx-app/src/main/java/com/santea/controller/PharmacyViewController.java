@@ -389,12 +389,7 @@ public class PharmacyViewController implements Initializable {
 
 	@FXML
 	private void handleOpenAiAssistant() {
-		List<String> lines = List.of(
-				"Priorites pharmacie: surveiller le stock faible, traiter les reservations en attente.",
-				"Meme logique Symfony: en_attente -> confirmee/refusee, patient peut annuler.",
-				"Pensez a verifier les droits d'abonnement et le role effectif."
-		);
-		AppNavigator.showFeaturePage("Assistant IA Pharmacie", "Aide operationnelle", lines);
+		AppNavigator.showAiToolsPage();
 	}
 
 	@FXML

@@ -8,6 +8,132 @@
 - Apache
 - JavaFX (OpenJDK 17)
 
+## Architecture physique
+
+Image (vue physique):
+
+![Architecture physique](docs/architecture/architecture-physique.png)
+
+Si l'image ne s'affiche pas encore, ajoutez le fichier dans le projet a ce chemin:
+- docs/architecture/architecture-physique.png
+
+```mermaid
+flowchart TB
+  U[Utilisateurs finaux]
+
+  subgraph CLIENTS[Clients]
+    C1[PC Patient / Medecin\nJavaFX Desktop]
+    C2[Navigateur Web\nChrome / Firefox]
+    C3[Mobile / Tablet\nWeb responsive]
+  end
+
+  subgraph APP[Couche applicative]
+    W1[Serveur Web Symfony\nApache/Nginx + PHP-FPM + Symfony 7 + Mercure]
+    W2[Services externes APIs\nStripe, Jitsi, OpenAI, OAuth2, SMTP]
+  end
+
+  subgraph DATA[Couche donnees HA]
+    G1[Galera Node 1\nMariaDB writer]
+    G2[Galera Node 2\nMariaDB replica]
+    G3[Galera Node 3\nMariaDB replica]
+    P1[ProxySQL 2.6\nLoad balancing / RW split]
+    A1[phpMyAdmin\nAdmin UI]
+  end
+
+  subgraph OBS[Monitoring et observabilite]
+    O1[Prometheus]
+    O2[Grafana]
+    O3[Elasticsearch]
+    O4[Logstash]
+    O5[Kibana]
+    O6[Filebeat]
+    O7[Exporters\nNode, cAdvisor, Apache, MySQL]
+  end
+
+  subgraph DEVOPS[CI/CD et outillage]
+    D1[Docker]
+    D2[Docker Compose]
+    D3[Jenkins]
+    D4[Git]
+    D5[Blackfire]
+    D6[Maven / Gradle / Composer]
+  end
+
+  U --> C1
+  U --> C2
+  U --> C3
+
+  C2 --> W1
+  C3 --> W1
+  C1 --> P1
+
+  W1 --> P1
+  W1 --> W2
+  P1 --> G1
+  P1 --> G2
+  P1 --> G3
+  A1 --> P1
+
+  W1 --> O6
+  C1 --> O6
+  O6 --> O4
+  O4 --> O3
+  O3 --> O5
+  O1 --> O2
+  O7 --> O1
+
+  D1 -.run.-> W1
+  D1 -.run.-> C1
+  D2 -.orchestrate.-> W1
+  D2 -.orchestrate.-> P1
+  D2 -.orchestrate.-> G1
+  D2 -.orchestrate.-> G2
+  D2 -.orchestrate.-> G3
+  D3 -.pipeline.-> D2
+  D4 -.source.-> D3
+```
+
+## Architecture logique
+
+Image (vue logique):
+
+![Architecture logique](docs/architecture/architecture-logique.png)
+
+Si l'image ne s'affiche pas encore, ajoutez le fichier dans le projet a ce chemin:
+- docs/architecture/architecture-logique.png
+
+```mermaid
+flowchart TB
+  subgraph DESKTOP[Application Desktop - JavaFX]
+    J_UI[Presentation\nFXML + CSS + ControlsFX]
+    J_CTRL[Controleur\nControllers + Navigation + UI Helpers]
+    J_SERV[Service / Metier\nServices sante, PDF export, mail, webcam, crypto]
+    J_DATA[Donnees\nRepository + JDBC + Models]
+    J_UI --> J_CTRL --> J_SERV --> J_DATA
+  end
+
+  subgraph WEB[Application Web - Symfony]
+    S_UI[Presentation\nTwig + UX Turbo + Live Components + Mercure]
+    S_CTRL[Controleur\nControllers + Security + i18n]
+    S_SERV[Service / Metier\nAppointments, Pharmacie, IA, Paiement, Messaging, Notifications]
+    S_DATA[Donnees\nDoctrine ORM + Messenger + Cache]
+    S_UI --> S_CTRL --> S_SERV --> S_DATA
+  end
+
+  subgraph SHARED[Base de donnees partagee - MariaDB Galera]
+    B1[Utilisateurs]
+    B2[Dossiers medicaux]
+    B3[Rendez-vous]
+    B4[Medicaments]
+    B5[Plans sante]
+    B6[Messages]
+    B7[Paiements]
+  end
+
+  J_DATA <--> SHARED
+  S_DATA <--> SHARED
+```
+
 ## Démarrage rapide
 
 ### 1. Démarrer les conteneurs Docker
@@ -359,14 +485,45 @@ docker-compose build --no-cache
 
 ## Structure du projet
 ```
-pidev/
-├── docker/
-│   └── php/
-│       └── Dockerfile
-├── symfony-app/          # Application Symfony
-├── javafx-app/           # Application JavaFX
-│   └── src/
-│       └── Main.java
-├── docker-compose.yml
+PIDEV/
+├── docker/                          # Images et configurations des services
+│   ├── galera/                      # Init DB + scripts cluster Galera
+│   ├── mysql-ha/                    # ProxySQL / HA MySQL
+│   ├── php/                         # Image Symfony (Apache/PHP)
+│   ├── proxysql/
+│   ├── javafx/                      # Image JavaFX
+│   └── ssl/
+├── symfony-app/                     # Application Web Symfony
+│   ├── src/                         # Controllers, Services, Entites
+│   ├── templates/                   # Vues Twig
+│   ├── config/                      # Config Symfony
+│   ├── migrations/                  # Migrations Doctrine
+│   ├── public/                      # Assets publics
+│   └── tests/
+├── javafx-app/                      # Application Desktop JavaFX
+│   ├── src/main/                    # Code source Java
+│   ├── src/test/                    # Tests Java
+│   ├── scripts/                     # Scripts lancement JavaFX
+│   ├── logs/                        # Logs app desktop
+│   └── pom.xml                      # Build Maven
+├── observability/                   # Monitoring + logs centralises
+│   ├── prometheus/
+│   ├── grafana/
+│   ├── logstash/
+│   ├── kibana/
+│   └── filebeat/
+├── scripts/                         # Scripts infra, CI et execution locale
+│   ├── ci/
+│   ├── galera/
+│   └── windows/
+├── Jenkinsfile                      # Pipeline principal
+├── Jenkinsfile.galera-ha            # Pipeline HA/failover
+├── docker-compose.yml               # Orchestration locale complete
+├── Makefile
 └── README.md
 ```
+
+Notes de structure:
+- `symfony-app/` et `javafx-app/` partagent la meme base MariaDB (via ProxySQL) pour conserver une coherence fonctionnelle entre front web et desktop.
+- `observability/` et le profil Docker `observability` sont separes de la stack applicative pour activer le monitoring a la demande.
+- `scripts/` centralise l'automatisation (cluster Galera, migration old MySQL, raccourcis desktop, CI).

@@ -1,0 +1,178 @@
+{% extends 'front/base.html.twig' %}
+
+{% block title %}Dashboard Sante des Patients{% endblock %}
+
+{% block content %}
+<div class="med-sym-dashboard">
+    <div class="med-sym-header">
+        <div>
+            <h1>Dashboard "Sante des patients"</h1>
+            <p>Courbes quotidiennes, heatmap hebdomadaire et alertes de pics anormaux des symptomes.</p>
+        </div>
+        <form method="get" class="med-sym-filter">
+            <label for="patient">Patient</label>
+            <select id="patient" name="patient" onchange="this.form.submit()">
+                <option value="">Tous les patients</option>
+                {% for patient in patients %}
+                    <option value="{{ patient.patient_id }}" {{ selectedPatientId == patient.patient_id ? 'selected' : '' }}>
+                        {{ patient.name }}{% if patient.email %} - {{ patient.email }}{% endif %}
+                    </option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+
+    <div class="med-sym-grid">
+        <section class="card card-large">
+            <h2>Evolution quotidienne</h2>
+            <canvas id="dailySymptomsChart" height="110"></canvas>
+        </section>
+
+        <section class="card">
+            <h2>Alertes pics anormaux</h2>
+            {% if alerts is empty %}
+                <p class="muted">Aucun pic anormal detecte sur la periode.</p>
+            {% else %}
+                <ul class="alerts-list">
+                    {% for alert in alerts %}
+                        <li>
+                            <strong>{{ alert.date|date('d/m/Y') }}</strong>
+                            <span>{{ alert.count }} symptomes | intensite moyenne {{ alert.avgIntensity }}/10 (seuil {{ alert.threshold }})</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </section>
+
+        <section class="card card-full">
+            <h2>Heatmap intensite par semaine</h2>
+            <div id="heatmapGrid" class="heatmap-grid"></div>
+            <div class="heatmap-legend">
+                <span>Faible</span>
+                <span class="legend-box l1"></span>
+                <span class="legend-box l2"></span>
+                <span class="legend-box l3"></span>
+                <span class="legend-box l4"></span>
+                <span>Forte</span>
+            </div>
+        </section>
+    </div>
+</div>
+
+<style>
+.med-sym-dashboard { max-width: 1200px; margin: 18px auto; display: grid; gap: 16px; }
+.med-sym-header { background: #ffffff; border: 1px solid #dbe5ee; border-radius: 14px; padding: 16px; display: flex; justify-content: space-between; gap: 16px; align-items: end; }
+.med-sym-header h1 { margin: 0 0 4px 0; font-size: 1.5rem; color: #0f3e57; }
+.med-sym-header p { margin: 0; color: #4f6b7d; }
+.med-sym-filter { display: grid; gap: 6px; min-width: 260px; }
+.med-sym-filter select { border: 1px solid #c8d8e6; border-radius: 10px; padding: 8px 10px; }
+.med-sym-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
+.card { background: #ffffff; border: 1px solid #dbe5ee; border-radius: 14px; padding: 16px; }
+.card h2 { margin: 0 0 10px 0; font-size: 1.1rem; color: #0f3e57; }
+.card-large { min-height: 300px; }
+.card-full { grid-column: 1 / -1; }
+.alerts-list { margin: 0; padding-left: 18px; display: grid; gap: 10px; }
+.alerts-list li { color: #8f2a2a; }
+.alerts-list span { color: #5f2727; display: block; margin-top: 3px; }
+.muted { color: #6b7d8b; }
+.heatmap-grid { display: grid; grid-template-columns: repeat(8, minmax(84px, 1fr)); gap: 8px; }
+.heatmap-cell { border-radius: 8px; padding: 8px; border: 1px solid #d4e1eb; min-height: 72px; display: grid; gap: 4px; font-size: 0.8rem; }
+.heatmap-cell .wk { font-weight: 700; color: #23475f; font-size: 0.78rem; }
+.heatmap-cell .day { color: #425d70; }
+.heatmap-cell .val { font-weight: 700; color: #17394c; }
+.heatmap-legend { margin-top: 10px; display: flex; align-items: center; gap: 8px; color: #4d697c; font-size: 0.84rem; }
+.legend-box { width: 16px; height: 10px; border-radius: 5px; display: inline-block; }
+.l1 { background: #e7f4ea; }
+.l2 { background: #d7eecb; }
+.l3 { background: #f9d08c; }
+.l4 { background: #f3a67f; }
+@media (max-width: 920px) {
+  .med-sym-grid { grid-template-columns: 1fr; }
+  .heatmap-grid { grid-template-columns: repeat(4, minmax(80px, 1fr)); }
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+(function () {
+    const daily = {{ dailyEvolution|json_encode|raw }};
+    const heatmap = {{ heatmap|json_encode|raw }};
+
+    const labels = daily.map(item => item.date);
+    const intensity = daily.map(item => item.avgIntensity);
+    const count = daily.map(item => item.count);
+
+    const ctx = document.getElementById('dailySymptomsChart');
+    if (ctx) {
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [
+                    {
+                        label: 'Intensite moyenne',
+                        data: intensity,
+                        yAxisID: 'y1',
+                        borderColor: '#0d8abc',
+                        backgroundColor: 'rgba(13,138,188,.12)',
+                        tension: 0.35,
+                        fill: true
+                    },
+                    {
+                        label: 'Nombre de symptomes',
+                        data: count,
+                        yAxisID: 'y2',
+                        borderColor: '#d97706',
+                        backgroundColor: 'rgba(217,119,6,.1)',
+                        tension: 0.25
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y1: { type: 'linear', position: 'left', min: 0, max: 10 },
+                    y2: { type: 'linear', position: 'right', min: 0, grid: { drawOnChartArea: false } }
+                }
+            }
+        });
+    }
+
+    const grid = document.getElementById('heatmapGrid');
+    if (!grid) return;
+
+    const dayLabels = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+    const grouped = {};
+    for (const item of heatmap) {
+        if (!grouped[item.week]) grouped[item.week] = {};
+        grouped[item.week][item.day] = item;
+    }
+
+    const weeks = Object.keys(grouped).sort();
+    for (const week of weeks) {
+        for (let day = 1; day <= 7; day++) {
+            const point = grouped[week][day] || null;
+            const avg = point ? Number(point.avgIntensity) : 0;
+            const box = document.createElement('div');
+            box.className = 'heatmap-cell';
+            box.style.background = colorFor(avg, point ? Number(point.count) : 0);
+            box.innerHTML = `
+                <span class="wk">Semaine ${week.slice(5)}</span>
+                <span class="day">${dayLabels[day - 1]}</span>
+                <span class="val">${point ? avg.toFixed(1) + '/10' : '-'}</span>
+            `;
+            grid.appendChild(box);
+        }
+    }
+
+    function colorFor(avg, count) {
+        if (!count || avg <= 0) return '#f5f8fb';
+        if (avg < 3) return '#e7f4ea';
+        if (avg < 5) return '#d7eecb';
+        if (avg < 7) return '#f9d08c';
+        return '#f3a67f';
+    }
+})();
+</script>
+{% endblock %}

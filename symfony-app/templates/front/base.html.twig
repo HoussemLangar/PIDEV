@@ -738,6 +738,9 @@
                         <li><a href="{{ path('front_pharmacy_index') }}"><i class="fas fa-clinic-medical" style="margin-right:5px;color:#0D8ABC;"></i>Pharmacies</a></li>
                         <li><a href="{{ path('app_appointments') }}"><i class="fas fa-calendar-alt" style="margin-right:5px;color:#0D8ABC;"></i>Rendez-Vous</a></li>
                     {% endif %}
+                    {% if app.user and (app.user.subscriptionType ?? app.user.role) == 'ROLE_MEDECIN' %}
+                        <li><a href="{{ path('app_medecin_symptomes_dashboard') }}"><i class="fas fa-chart-line" style="margin-right:5px;color:#0D8ABC;"></i>Santé patients</a></li>
+                    {% endif %}
                     {% if app.user and app.user.subscriptionStatus == 'ACTIVE' and (app.user.subscriptionType ?? app.user.role) == 'ROLE_PHARMACIEN' %}
                         <li class="nav-has-sub">
                             <a href="{{ path('front_pharmacien_dashboard') }}"><i class="fas fa-clinic-medical" style="margin-right:4px;color:#0D8ABC;"></i>Ma pharmacie <i class="fas fa-chevron-down nav-caret"></i></a>
@@ -913,6 +916,9 @@
                                 </a>
                                 {% endif %}
                                 {% if app.user and (app.user.subscriptionType ?? app.user.role) == 'ROLE_MEDECIN' %}
+                                <a href="{{ path('app_medecin_symptomes_dashboard') }}" class="dropdown-item">
+                                    <i class="fas fa-chart-line"></i> Santé des patients
+                                </a>
                                 <a href="{{ path('app_appointments') }}" class="dropdown-item">
                                     <i class="fas fa-calendar-alt"></i> Rendez-vous
                                 </a>

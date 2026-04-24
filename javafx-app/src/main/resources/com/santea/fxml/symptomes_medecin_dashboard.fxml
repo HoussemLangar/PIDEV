@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.LineChart?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.santea.controller.SymptomesMedecinDashboardViewController"
+      spacing="14" styleClass="admin-root">
+
+    <HBox alignment="CENTER_LEFT" spacing="10" styleClass="admin-topbar">
+        <padding><Insets top="14" right="20" bottom="14" left="20"/></padding>
+        <Button text="Retour" styleClass="admin-btn-secondary" onAction="#handleBackHome"/>
+        <Button text="Rafraichir" styleClass="admin-btn-secondary" onAction="#handleRefresh"/>
+        <Label text="Sante des patients - Dashboard medecin" styleClass="admin-title"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Label fx:id="dashboardInfoLabel" text="0 jour(s) de donnees" styleClass="admin-line"/>
+    </HBox>
+
+    <ScrollPane fitToWidth="true" hbarPolicy="NEVER" styleClass="admin-scroll" VBox.vgrow="ALWAYS">
+        <content>
+            <VBox spacing="14" styleClass="admin-shell">
+                <padding><Insets top="16" right="18" bottom="18" left="18"/></padding>
+
+                <HBox spacing="8" alignment="CENTER_LEFT">
+                    <Label text="Patient" styleClass="admin-subsection-title"/>
+                    <ComboBox fx:id="patientFilterCombo" prefWidth="360"/>
+                </HBox>
+
+                <VBox spacing="6" styleClass="admin-card stat-blue">
+                    <Label text="Evolution quotidienne des symptomes" styleClass="admin-card-label"/>
+                    <LineChart fx:id="evolutionChart" createSymbols="false" animated="false" prefHeight="280">
+                        <xAxis>
+                            <CategoryAxis fx:id="xAxis"/>
+                        </xAxis>
+                        <yAxis>
+                            <NumberAxis fx:id="yAxis"/>
+                        </yAxis>
+                    </LineChart>
+                </VBox>
+
+                <HBox spacing="12" alignment="TOP_LEFT">
+                    <VBox spacing="8" HBox.hgrow="ALWAYS" styleClass="admin-card stat-green">
+                        <Label text="Heatmap intensite par semaine" styleClass="admin-card-label"/>
+                        <GridPane fx:id="heatmapGrid" hgap="6" vgap="6"/>
+                    </VBox>
+
+                    <VBox spacing="8" prefWidth="360" styleClass="admin-card stat-orange">
+                        <Label text="Alertes de pics anormaux" styleClass="admin-card-label"/>
+                        <ListView fx:id="alertsListView" prefHeight="280"/>
+                    </VBox>
+                </HBox>
+            </VBox>
+        </content>
+    </ScrollPane>
+</VBox>

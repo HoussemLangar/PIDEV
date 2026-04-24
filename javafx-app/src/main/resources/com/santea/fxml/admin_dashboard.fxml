@@ -51,6 +51,7 @@
                         <Label text="RACCOURCIS" styleClass="bo-nav-section"/>
                         <Button text="Sante Quotidienne" styleClass="bo-nav-btn" onAction="#handleSanteQuotidienneAdmin"/>
                         <Button text="Symptomes" styleClass="bo-nav-btn" onAction="#handleSymptomesAdmin"/>
+                        <Button text="Sante patients" styleClass="bo-nav-btn" onAction="#handleSymptomesPatientsDashboard"/>
                         <Button text="Exporter CSV" styleClass="bo-nav-btn" onAction="#handleExportCsv"/>
                         <Button text="Revoquer session" styleClass="bo-nav-btn" onAction="#handleRevokeLatestSession"/>
                         <Button text="Connexions suspectes" styleClass="bo-nav-btn" onAction="#handleReviewSuspicious"/>
@@ -123,6 +124,9 @@
                             <Label text="15/04/2026 16:28" styleClass="bo-header-pill"/>
                         </HBox>
                         <HBox spacing="8" alignment="CENTER_RIGHT">
+                            <Button text="Sante Quotidienne" styleClass="bo-header-export" onAction="#handleSanteQuotidienneAdmin"/>
+                            <Button text="Symptomes" styleClass="bo-header-export" onAction="#handleSymptomesAdmin"/>
+                            <Button text="Sante patients" styleClass="bo-header-export" onAction="#handleSymptomesPatientsDashboard"/>
                             <Button text="Validation" styleClass="bo-header-icon-btn" onAction="#handleNavValidation"/>
                             <Button text="Securite" styleClass="bo-header-icon-btn" onAction="#handleNavSuspicious"/>
                             <Button text="Exporter" styleClass="bo-header-export" onAction="#handleExportCsv"/>

@@ -32,7 +32,6 @@ import org.kordamp.ikonli.javafx.FontIcon;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Set;
 
 public class HomeViewController {
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd/MM HH:mm");
@@ -67,6 +66,9 @@ public class HomeViewController {
 
     @FXML
     private Hyperlink navSymptomsLink;
+
+    @FXML
+    private Hyperlink navPatientHealthLink;
 
     @FXML
     private Hyperlink navPharmaciesLink;
@@ -360,6 +362,16 @@ public class HomeViewController {
             return;
         }
         openSymptomsPage();
+    }
+
+    @FXML
+    private void handleOpenPatientHealthDashboard() {
+        hideAllMenus();
+        if (!AuthSession.isAuthenticated()) {
+            AppNavigator.showLogin();
+            return;
+        }
+        openPatientHealthDashboardPage();
     }
 
     @FXML
@@ -955,6 +967,10 @@ public class HomeViewController {
             body.getChildren().add(santeSubmenu);
         }
 
+        if (isMedecin) {
+            body.getChildren().add(createAccountButton("Santé des patients", "fas-chart-line", this::openPatientHealthDashboardPage));
+        }
+
         body.getChildren().add(createAccountButton("Abonnement", "fas-star", this::openSubscriptionPage));
 
         if (isPatient) {
@@ -1102,20 +1118,7 @@ public class HomeViewController {
             return;
         }
 
-        if (!canAccessAiTools(user)) {
-            AppNavigator.showFeaturePage("Acces restreint", "Droits d'abonnement", List.of(
-                    "Cette fonctionnalite est reservee aux profils eligibles.",
-                    "Statut actuel: " + safe(user.getSubscriptionStatus()),
-                    "Role effectif: " + humanizeRole(resolveRole(user))
-            ));
-            return;
-        }
-
-        AppNavigator.showFeaturePage("Outils IA", "Analyse et recommandations", List.of(
-                "Analyse des symptomes",
-                "Score de risque",
-                "Recommandation personnalisee"
-        ));
+            AppNavigator.showAiToolsPage();
     }
 
     private void openMessagesPage() {
@@ -1165,6 +1168,29 @@ public class HomeViewController {
             return;
         }
         AppNavigator.showSymptomesQuotidiensPage();
+    }
+
+    private void openPatientHealthDashboardPage() {
+        User currentUser = AuthSession.getCurrentUser();
+        if (currentUser == null) {
+            AppNavigator.showLogin();
+            return;
+        }
+
+        String role = resolveRole(currentUser);
+        if (!"ROLE_MEDECIN".equals(role)) {
+            AppNavigator.showFeaturePage("Acces restreint", "Role insuffisant", List.of(
+                    "Ce dashboard est reserve aux medecins.",
+                    "Role actuel: " + humanizeRole(role)
+            ));
+            return;
+        }
+
+        if (!guardPremiumAccess()) {
+            return;
+        }
+
+        AppNavigator.showSymptomesMedecinDashboardPage();
     }
 
     private void openSubscriptionPage() {
@@ -1240,6 +1266,7 @@ public class HomeViewController {
         String role = connected ? resolveRole(user) : "";
 
         boolean isPatient = "ROLE_PATIENT".equals(role);
+        boolean isMedecin = "ROLE_MEDECIN".equals(role);
         boolean isPharmacien = "ROLE_PHARMACIEN".equals(role);
         boolean pharmacienActive = isPharmacien
                 && AuthorizationPolicyService.STATUS_ACTIVE.equals(authorizationPolicyService.normalizedStatus(user));
@@ -1247,25 +1274,14 @@ public class HomeViewController {
         setVisibleManaged(navAiToolsLink, connected);
         setVisibleManaged(navJournalLink, connected && isPatient);
         setVisibleManaged(navSymptomsLink, connected && isPatient);
+        setVisibleManaged(navPatientHealthLink, connected && isMedecin);
         setVisibleManaged(navPharmaciesLink, connected && isPatient);
         setVisibleManaged(navAppointmentsLink, connected && isPatient);
         setVisibleManaged(navMaPharmacieLink, connected && pharmacienActive);
     }
 
     private boolean canAccessAiTools(User user) {
-        if (user == null) {
-            return false;
-        }
-
-        if (authorizationPolicyService.isAdmin(user)) {
-            return true;
-        }
-
-        String role = resolveRole(user);
-        boolean eligibleRole = Set.of("ROLE_PATIENT", "ROLE_MEDECIN", "ROLE_COACH", "ROLE_NUTRITIONNISTE").contains(role);
-        boolean activeSubscription = AuthorizationPolicyService.STATUS_ACTIVE.equals(authorizationPolicyService.normalizedStatus(user));
-
-        return activeSubscription && eligibleRole;
+        return authorizationPolicyService.hasAiToolsAccess(user);
     }
 
     private int computeProfileScore(User user) {
