@@ -26,6 +26,8 @@ public class AccompanimentPlanService {
     private static boolean seeded;
 
     private final UserRepository userRepository = new UserRepository(new DatabaseService(DatabaseConfig.fromEnvironment()));
+    private final UsdaFoodService usdaFoodService = new UsdaFoodService();
+    private final WgerExerciseService wgerExerciseService = new WgerExerciseService();
 
     public AccompanimentPlanService() {
         seedIfNeeded();
@@ -161,51 +163,123 @@ public class AccompanimentPlanService {
     public AiSuggestions buildAiSuggestions(String goal, String dietStyle, String allergies, int nutritionDays,
                                             String level, int daysPerWeek, int minutes, String constraints) {
         String cleanGoal = safe(goal);
-        String cleanDiet = safe(dietStyle).isBlank() ? "equilibre" : safe(dietStyle);
-        String cleanLevel = safe(level).isBlank() ? "intermediaire" : safe(level);
+        String cleanDiet = toEnglishDietStyle(safe(dietStyle));
+        String cleanLevel = toEnglishLevel(safe(level));
         String cleanConstraints = safe(constraints);
-        String summary = "Programme mixte axé sur " + (cleanGoal.isBlank() ? "le bien-être général" : cleanGoal.toLowerCase())
-            + ", avec " + Math.max(1, nutritionDays) + " jours de nutrition suivie et "
-            + Math.max(1, daysPerWeek) + " séances d'activité par semaine.";
+        String summary = "Combined program focused on " + (cleanGoal.isBlank() ? "overall well-being" : cleanGoal.toLowerCase())
+            + ", with " + Math.max(1, nutritionDays) + " days of nutrition support and "
+            + Math.max(1, daysPerWeek) + " workout sessions per week.";
 
         String suggestedTitle = cleanGoal.isBlank()
-            ? "Plan d'accompagnement personnalisé"
-            : "Plan " + trimTo(cleanGoal, 48);
-        String suggestedObjectives = "Objectif principal: " + (cleanGoal.isBlank() ? "améliorer l'équilibre de vie." : cleanGoal + ".")
-            + "\nRythme d'activité: " + Math.max(1, daysPerWeek) + " séance(s) de " + Math.max(10, minutes) + " minutes."
-            + "\nNutrition: approche " + cleanDiet + (safe(allergies).isBlank() ? "." : ", en tenant compte de: " + allergies + ".");
+            ? "Personalized Support Plan"
+            : "Plan: " + trimTo(cleanGoal, 48);
+        String suggestedObjectives = "Primary goal: " + (cleanGoal.isBlank() ? "improve lifestyle balance." : cleanGoal + ".")
+            + "\nTraining pace: " + Math.max(1, daysPerWeek) + " session(s) of " + Math.max(10, minutes) + " minutes."
+            + "\nNutrition: " + cleanDiet + " approach" + (safe(allergies).isBlank() ? "." : ", considering: " + allergies + ".");
         String suggestedDescription = summary
-            + (cleanConstraints.isBlank() ? "" : "\nContraintes patient: " + cleanConstraints)
-            + "\nNiveau conseillé: " + cleanLevel + ".";
+            + (cleanConstraints.isBlank() ? "" : "\nPatient constraints: " + cleanConstraints)
+            + "\nRecommended level: " + cleanLevel + ".";
 
         List<PlanExercice> exercisePlans = new ArrayList<>();
         for (int i = 1; i <= Math.max(1, daysPerWeek); i++) {
             PlanExercice exercise = new PlanExercice();
             exercise.setId(Math.abs(UUID.randomUUID().hashCode()));
-            exercise.setTitre("Séance " + i + " - " + (cleanGoal.isBlank() ? "Condition physique" : trimTo(cleanGoal, 26)));
-            exercise.setFrequence("Jour " + i + " / semaine");
+            exercise.setTitre("Session " + i + " - " + (cleanGoal.isBlank() ? "General Fitness" : trimTo(cleanGoal, 26)));
+            exercise.setFrequence("Day " + i + " / week");
             exercise.setDureMinutes(Math.max(10, minutes));
             exercise.setNiveau(cleanLevel);
             exercise.setObjectifs(cleanGoal);
-            exercise.setDescription("Échauffement, bloc principal adapté au niveau " + cleanLevel + ", puis retour au calme.");
+            exercise.setDescription("Warm-up, main block adapted to " + cleanLevel + " level, then cool-down.");
             exercisePlans.add(exercise);
         }
 
         List<PlanRegime> dietPlans = new ArrayList<>();
-        String[] meals = {"Petit-déjeuner", "Déjeuner", "Dîner"};
+        String[] meals = {"Breakfast", "Lunch", "Dinner"};
         for (int i = 0; i < Math.min(3, Math.max(1, nutritionDays)); i++) {
             PlanRegime diet = new PlanRegime();
             diet.setId(Math.abs(UUID.randomUUID().hashCode()));
-            diet.setTitre(meals[i] + " - " + (cleanGoal.isBlank() ? "Routine équilibrée" : trimTo(cleanGoal, 24)));
+            diet.setTitre(meals[i] + " - " + (cleanGoal.isBlank() ? "Balanced Routine" : trimTo(cleanGoal, 24)));
             diet.setTypeRegime(cleanDiet);
             diet.setCaloriesJour(1800 + (i * 120));
             diet.setObjectif(cleanGoal);
             diet.setRestrictions(safe(allergies));
-            diet.setDescription("Repas structuré, riche en protéines maigres, légumes et hydratation régulière.");
+            diet.setDescription("Structured meal with lean protein, vegetables, and regular hydration.");
             dietPlans.add(diet);
         }
 
+        List<PlanRegime> usdaPlans = usdaFoodService.suggestDietPlans(cleanGoal, cleanDiet, allergies, nutritionDays);
+        if (!usdaPlans.isEmpty()) {
+            dietPlans = mergeDietPlans(usdaPlans, dietPlans, Math.min(3, Math.max(1, nutritionDays)));
+        }
+
+        List<PlanExercice> wgerPlans = wgerExerciseService.suggestExercisePlans(cleanGoal, cleanLevel, daysPerWeek, minutes);
+        if (!wgerPlans.isEmpty()) {
+            exercisePlans = mergeExercisePlans(wgerPlans, exercisePlans, Math.max(1, daysPerWeek));
+        }
+
+        String sources = buildSourcesLine(!usdaPlans.isEmpty(), !wgerPlans.isEmpty(), usdaFoodService.isEnabled());
+        if (!sources.isBlank()) {
+            summary = summary + " " + sources;
+            suggestedDescription = suggestedDescription + "\n" + sources;
+        }
+
         return new AiSuggestions(summary, suggestedTitle, suggestedObjectives, suggestedDescription, exercisePlans, dietPlans);
+    }
+
+    private List<PlanRegime> mergeDietPlans(List<PlanRegime> primary, List<PlanRegime> fallback, int target) {
+        List<PlanRegime> merged = new ArrayList<>();
+        for (PlanRegime plan : primary) {
+            if (plan != null) {
+                merged.add(plan);
+            }
+            if (merged.size() >= target) {
+                break;
+            }
+        }
+        for (PlanRegime plan : fallback) {
+            if (merged.size() >= target) {
+                break;
+            }
+            merged.add(plan);
+        }
+        return merged;
+    }
+
+    private List<PlanExercice> mergeExercisePlans(List<PlanExercice> primary, List<PlanExercice> fallback, int target) {
+        List<PlanExercice> merged = new ArrayList<>();
+        for (PlanExercice plan : primary) {
+            if (plan != null) {
+                merged.add(plan);
+            }
+            if (merged.size() >= target) {
+                break;
+            }
+        }
+        for (PlanExercice plan : fallback) {
+            if (merged.size() >= target) {
+                break;
+            }
+            merged.add(plan);
+        }
+        return merged;
+    }
+
+    private String buildSourcesLine(boolean hasUsdaData, boolean hasWgerData, boolean usdaConfigured) {
+        List<String> sources = new ArrayList<>();
+        if (hasWgerData) {
+            sources.add("exercises from wger");
+        }
+        if (hasUsdaData) {
+            sources.add("foods from USDA FoodData Central");
+        } else if (usdaConfigured) {
+            sources.add("USDA unavailable for this query (local fallback used)");
+        } else {
+            sources.add("nutrition suggestions generated from local templates");
+        }
+        if (sources.isEmpty()) {
+            return "";
+        }
+        return "Sources: " + String.join("; ", sources) + ".";
     }
 
     private List<AccompanimentPlan> sortPlans(java.util.Collection<AccompanimentPlan> collection) {
@@ -341,6 +415,35 @@ public class AccompanimentPlanService {
 
     private String safe(String value) {
         return value == null ? "" : value.trim();
+    }
+
+    private String toEnglishDietStyle(String value) {
+        String normalized = safe(value).toLowerCase();
+        if (normalized.isBlank()) {
+            return "balanced";
+        }
+        return switch (normalized) {
+            case "equilibre", "équilibre", "balanced" -> "balanced";
+            case "mediterraneen", "méditerranéen", "mediterranean" -> "mediterranean";
+            case "vege", "végétarien", "vegetarian" -> "vegetarian";
+            case "vegan" -> "vegan";
+            case "keto", "ceto", "cétogène" -> "keto";
+            case "low-carb", "faible glucides" -> "low-carb";
+            default -> safe(value);
+        };
+    }
+
+    private String toEnglishLevel(String value) {
+        String normalized = safe(value).toLowerCase();
+        if (normalized.isBlank()) {
+            return "intermediate";
+        }
+        return switch (normalized) {
+            case "debutant", "débutant", "beginner" -> "beginner";
+            case "intermediaire", "intermédiaire", "intermediate" -> "intermediate";
+            case "avance", "avancé", "advanced" -> "advanced";
+            default -> safe(value);
+        };
     }
 
     private String trimTo(String value, int maxLength) {

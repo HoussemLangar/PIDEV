@@ -17,6 +17,19 @@ export PATH="$JAVA_HOME/bin:$PATH"
 export GDK_BACKEND="${GDK_BACKEND:-x11}"
 export NO_AT_BRIDGE="${NO_AT_BRIDGE:-1}"
 
+# Load local environment overrides (API keys, tokens, etc.)
+if [ -f "$PROJECT_DIR/.env.local" ]; then
+  set -a
+  # shellcheck disable=SC1091
+  source "$PROJECT_DIR/.env.local"
+  set +a
+elif [ -f "$PROJECT_DIR/.env" ]; then
+  set -a
+  # shellcheck disable=SC1091
+  source "$PROJECT_DIR/.env"
+  set +a
+fi
+
 LOG_DIR="$PROJECT_DIR/logs"
 LOG_FILE="$LOG_DIR/javafx-app.log"
 mkdir -p "$LOG_DIR"

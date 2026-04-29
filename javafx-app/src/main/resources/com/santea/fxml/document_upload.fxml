@@ -25,6 +25,7 @@
         <VBox spacing="12" styleClass="doc-detail-card" maxWidth="760">
             <Button fx:id="chooseFileButton" text="Choisir un fichier" styleClass="btn-info"/>
             <ComboBox fx:id="documentTypeCombo" promptText="Type de document"/>
+            <Label fx:id="classificationSummaryLabel" text="Aucune auto-détection pour le moment." wrapText="true" styleClass="section-subtitle"/>
             <TextArea fx:id="descriptionArea" wrapText="true" prefRowCount="6" styleClass="tele-readonly-area"/>
             <HBox spacing="10">
                 <Button fx:id="uploadButton" text="Uploader" styleClass="btn-success"/>
