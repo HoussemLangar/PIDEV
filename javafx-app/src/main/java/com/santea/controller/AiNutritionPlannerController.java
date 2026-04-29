@@ -9,6 +9,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.TilePane;
 import javafx.scene.layout.VBox;
 
 public class AiNutritionPlannerController extends AppBaseViewController {
@@ -33,7 +34,7 @@ public class AiNutritionPlannerController extends AppBaseViewController {
     private Label overviewLabel;
 
     @FXML
-    private VBox daysGrid;
+    private TilePane daysGrid;
 
     @FXML
     private VBox tipsBox;

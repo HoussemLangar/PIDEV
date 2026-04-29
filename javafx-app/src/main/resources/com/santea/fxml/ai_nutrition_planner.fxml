@@ -12,7 +12,7 @@
 
 <ScrollPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.santea.controller.AiNutritionPlannerController"
-            fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED"
+            fitToWidth="true" pannable="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED"
             styleClass="ait-scroll">
     <content>
         <VBox spacing="18" styleClass="ait-page-root ait-tool-green">
@@ -20,7 +20,10 @@
                 <padding>
                     <Insets top="34" right="24" bottom="40" left="24"/>
                 </padding>
-                <Button text="← Outils IA" styleClass="ait-back-btn" onAction="#handleBack"/>
+                <HBox alignment="CENTER" spacing="10" styleClass="ait-hero-top-row">
+                    <Button text="← Outils IA" styleClass="ait-back-btn" onAction="#handleBack"/>
+                    <Label text="NUT" styleClass="ait-tool-icon-badge"/>
+                </HBox>
                 <Label text="Assistant Nutrition" styleClass="ait-tool-title"/>
                 <Label text="Obtenez un plan alimentaire personnalise selon votre objectif, votre regime et vos intolerances." wrapText="true" styleClass="ait-tool-sub" maxWidth="700"/>
             </VBox>
@@ -44,7 +47,9 @@
                 <Label text="Allergies / intolerances" styleClass="ait-field-label"/>
                 <TextField fx:id="allergiesField" styleClass="ait-input" promptText="Ex: lactose, noix"/>
 
-                <Button text="Generer le plan" styleClass="ait-btn-primary" onAction="#handleGenerate"/>
+                <HBox alignment="CENTER_RIGHT">
+                    <Button text="Generer le plan" styleClass="ait-btn-primary" onAction="#handleGenerate"/>
+                </HBox>
             </VBox>
 
             <VBox fx:id="resultsBox" spacing="12" styleClass="ait-results-card" maxWidth="980">

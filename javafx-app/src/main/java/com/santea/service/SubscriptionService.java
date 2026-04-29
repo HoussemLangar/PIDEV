@@ -58,6 +58,39 @@ public class SubscriptionService {
         );
     }
 
+    public boolean hasActiveSubscriptionOfType(User user, String type) {
+        if (user == null || user.getId() == null || !databaseService.canConnect()) {
+            return false;
+        }
+
+        String normalizedType = safe(type).toUpperCase();
+        if (normalizedType.isBlank()) {
+            return false;
+        }
+
+        ensureAbonnementTable();
+
+        String sql = "SELECT 1 FROM abonnements "
+                + "WHERE user_id = ? "
+                + "AND UPPER(type_abonnement) = ? "
+                + "AND LOWER(statut) = 'actif' "
+                + "AND date_debut <= CURRENT_DATE "
+                + "AND date_fin >= CURRENT_DATE "
+                + "ORDER BY date_fin DESC LIMIT 1";
+
+        try (Connection connection = databaseService.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, user.getId());
+            statement.setString(2, normalizedType);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                return resultSet.next();
+            }
+        } catch (SQLException ignored) {
+            return false;
+        }
+    }
+
     public ActionResult activatePaidSubscription(User user, String type) {
         return activatePaidSubscription(user, type, null, resolvePrice(type), "EUR");
     }

@@ -18,6 +18,8 @@ public class AuthorizationPolicyService {
             "ROLE_NUTRITIONNISTE"
     );
 
+        private final SubscriptionService subscriptionService = new SubscriptionService();
+
     public String effectiveRole(User user) {
         if (user == null) {
             return "";
@@ -91,7 +93,12 @@ public class AuthorizationPolicyService {
             return true;
         }
 
-        return isActive(user) && "AI_TOOLS".equalsIgnoreCase(safe(user.getSubscriptionType()));
+        if (isActive(user) && "AI_TOOLS".equalsIgnoreCase(safe(user.getSubscriptionType()))) {
+            return true;
+        }
+
+        // Backward compatibility: trust active AI_TOOLS records persisted in abonnements.
+        return subscriptionService.hasActiveSubscriptionOfType(user, "AI_TOOLS");
     }
 
     public AccessDecision decisionForProtectedFeatures(User user) {

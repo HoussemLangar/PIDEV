@@ -5,7 +5,9 @@ import com.santea.navigation.AppNavigator;
 import com.santea.service.AuthSession;
 import com.santea.service.AuthorizationPolicyService;
 import javafx.fxml.FXML;
+import javafx.scene.Node;
 import javafx.scene.control.Label;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.VBox;
 
 public class AiToolsViewController extends AppBaseViewController {
@@ -18,7 +20,7 @@ public class AiToolsViewController extends AppBaseViewController {
     private VBox lockedHeroCard;
 
     @FXML
-    private VBox toolsGrid;
+    private FlowPane toolsGrid;
 
     @FXML
     private Label accessInfoLabel;
@@ -85,7 +87,7 @@ public class AiToolsViewController extends AppBaseViewController {
         ));
     }
 
-    private void setVisibleManaged(VBox node, boolean visible) {
+    private void setVisibleManaged(Node node, boolean visible) {
         if (node == null) {
             return;
         }
