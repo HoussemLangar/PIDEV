@@ -7,4 +7,5 @@ target/
 *.class
 generated-exports/
 logs/*.log
+.env.local
 # Ignore JDK

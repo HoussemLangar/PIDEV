@@ -1,6 +1,7 @@
 package com.santea.service;
 
 import com.santea.config.DatabaseConfig;
+import com.santea.config.SupabaseStorageConfig;
 import com.santea.model.SharedDocument;
 import com.santea.model.DocumentAccess;
 import com.santea.model.User;
@@ -63,6 +64,7 @@ public class DocumentStorageService {
 
     private final DatabaseService databaseService = new DatabaseService(DatabaseConfig.fromEnvironment());
     private final UserRepository userRepository = new UserRepository(databaseService);
+    private final SupabaseStorageClient supabaseStorageClient = new SupabaseStorageClient(SupabaseStorageConfig.fromEnvironment());
 
     private String getEffectiveRole(User user) {
         return user.getSubscriptionType() != null && !user.getSubscriptionType().isBlank()
@@ -153,18 +155,29 @@ public class DocumentStorageService {
         try {
             // Generate unique file path
             String uniqueFileName = generateUniqueFileName(fileName);
-            Path filePath = Paths.get(STORAGE_BASE_PATH, owner.getId().toString(), uniqueFileName);
-            
-            // Create user directory if needed
-            Files.createDirectories(filePath.getParent());
-            
-            // Save file
-            Files.write(filePath, fileContent);
+            String objectPath = owner.getId() + "/" + uniqueFileName;
+            Path localPath = Paths.get(STORAGE_BASE_PATH, owner.getId().toString(), uniqueFileName);
+
+            String persistedPath;
+            boolean supabaseEnabled = supabaseStorageClient.isEnabled();
+            if (supabaseEnabled && supabaseStorageClient.upload(objectPath, fileContent, mimeType)) {
+                persistedPath = buildSupabasePath(objectPath);
+            } else {
+                if (!supabaseEnabled) {
+                    System.err.println("Supabase storage disabled: missing SUPABASE_SERVICE_ROLE_KEY or invalid storage config. Using local filesystem fallback.");
+                } else {
+                    System.err.println("Supabase upload failed for object " + objectPath + ". Using local filesystem fallback.");
+                }
+                // Fallback local filesystem
+                Files.createDirectories(localPath.getParent());
+                Files.write(localPath, fileContent);
+                persistedPath = localPath.toString();
+            }
             
             // Create document metadata
             SharedDocument document = new SharedDocument();
             document.setFileName(fileName);
-            document.setFilePath(filePath.toString());
+            document.setFilePath(persistedPath);
             document.setMimeType(mimeType);
             document.setFileSize(fileContent.length);
             document.setOwner(owner);
@@ -180,7 +193,7 @@ public class DocumentStorageService {
                  PreparedStatement statement = connection.prepareStatement(insertSql, Statement.RETURN_GENERATED_KEYS)) {
                 statement.setInt(1, owner.getId());
                 statement.setString(2, fileName);
-                statement.setString(3, filePath.toString());
+                statement.setString(3, persistedPath);
                 statement.setString(4, mimeType);
                 statement.setInt(5, fileContent.length);
                 statement.setBytes(6, fileContent);
@@ -524,9 +537,16 @@ public class DocumentStorageService {
         }
         
         try {
-            Path path = Paths.get(document.getFilePath());
-            if (Files.exists(path)) {
-                return Files.readAllBytes(path);
+            if (isSupabasePath(document.getFilePath())) {
+                byte[] remote = supabaseStorageClient.download(extractSupabaseObjectPath(document.getFilePath()));
+                if (remote != null) {
+                    return remote;
+                }
+            } else {
+                Path path = Paths.get(document.getFilePath());
+                if (Files.exists(path)) {
+                    return Files.readAllBytes(path);
+                }
             }
             try (Connection connection = databaseService.getConnection();
                  PreparedStatement statement = connection.prepareStatement(
@@ -564,7 +584,11 @@ public class DocumentStorageService {
         
         try {
             // Delete file from storage
-            Files.deleteIfExists(Paths.get(document.getFilePath()));
+            if (isSupabasePath(document.getFilePath())) {
+                supabaseStorageClient.delete(extractSupabaseObjectPath(document.getFilePath()));
+            } else {
+                Files.deleteIfExists(Paths.get(document.getFilePath()));
+            }
             
             // Remove from collections
             documents.remove(documentId);
@@ -745,6 +769,21 @@ public class DocumentStorageService {
             ? originalFileName.substring(dotIndex)
             : "";
         return timestamp + extension;
+    }
+
+    private boolean isSupabasePath(String filePath) {
+        return filePath != null && filePath.startsWith("supabase://");
+    }
+
+    private String extractSupabaseObjectPath(String filePath) {
+        if (!isSupabasePath(filePath)) {
+            return "";
+        }
+        return filePath.substring("supabase://".length());
+    }
+
+    private String buildSupabasePath(String objectPath) {
+        return "supabase://" + objectPath;
     }
     
     /**

@@ -8,6 +8,7 @@ import com.santea.navigation.AppNavigator;
 import com.santea.navigation.ModuleContext;
 import com.santea.service.AccompanimentPlanService;
 import com.santea.service.AuthSession;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ComboBox;
@@ -45,6 +46,7 @@ public class AccompanimentPlanCreateController extends AppBaseViewController {
     private final AccompanimentPlanService service = new AccompanimentPlanService();
     private Patient patient;
     private AccompanimentPlanService.AiSuggestions latestSuggestions;
+    private Task<AccompanimentPlanService.AiSuggestions> suggestionsTask;
 
     @Override
     public void initialize(java.net.URL location, java.util.ResourceBundle resources) {
@@ -72,20 +74,74 @@ public class AccompanimentPlanCreateController extends AppBaseViewController {
 
     @FXML
     private void handleGenerateSuggestions() {
-        latestSuggestions = service.buildAiSuggestions(
-            safe(goalField.getText()),
-            safe(dietStyleField.getText()),
-            safe(allergiesField.getText()),
-            nutritionDaysSpinner.getValue(),
-            safe(levelField.getText()),
-            daysPerWeekSpinner.getValue(),
-            minutesSpinner.getValue(),
-            safe(constraintsArea.getText())
-        );
-        titleField.setText(latestSuggestions.suggestedTitle());
-        objectivesArea.setText(latestSuggestions.suggestedObjectives());
-        descriptionArea.setText(latestSuggestions.suggestedDescription());
-        aiSummaryLabel.setText(latestSuggestions.summary());
+        if (suggestionsTask != null && suggestionsTask.isRunning()) {
+            return;
+        }
+
+        final String goal = safe(goalField.getText());
+        final String dietStyle = safe(dietStyleField.getText());
+        final String allergies = safe(allergiesField.getText());
+        final int nutritionDays = nutritionDaysSpinner.getValue();
+        final String level = safe(levelField.getText());
+        final int daysPerWeek = daysPerWeekSpinner.getValue();
+        final int minutes = minutesSpinner.getValue();
+        final String constraints = safe(constraintsArea.getText());
+
+        setGenerationInProgress(true);
+        aiSummaryLabel.setText("Génération des suggestions en cours...");
+
+        suggestionsTask = new Task<>() {
+            @Override
+            protected AccompanimentPlanService.AiSuggestions call() {
+                return service.buildAiSuggestions(
+                    goal,
+                    dietStyle,
+                    allergies,
+                    nutritionDays,
+                    level,
+                    daysPerWeek,
+                    minutes,
+                    constraints
+                );
+            }
+        };
+
+        suggestionsTask.setOnSucceeded(event -> {
+            latestSuggestions = suggestionsTask.getValue();
+            if (latestSuggestions != null) {
+                titleField.setText(latestSuggestions.suggestedTitle());
+                objectivesArea.setText(latestSuggestions.suggestedObjectives());
+                descriptionArea.setText(latestSuggestions.suggestedDescription());
+                aiSummaryLabel.setText(latestSuggestions.summary());
+            } else {
+                aiSummaryLabel.setText("Aucune suggestion générée.");
+            }
+            setGenerationInProgress(false);
+            suggestionsTask = null;
+        });
+
+        suggestionsTask.setOnFailed(event -> {
+            Throwable error = suggestionsTask.getException();
+            aiSummaryLabel.setText("Échec de génération des suggestions.");
+            showAlert("Erreur", error == null ? "Erreur inattendue." : "Erreur lors de la génération: " + safe(error.getMessage()));
+            setGenerationInProgress(false);
+            suggestionsTask = null;
+        });
+
+        Thread thread = new Thread(suggestionsTask, "accompaniment-suggestions-task");
+        thread.setDaemon(true);
+        thread.start();
+    }
+
+    private void setGenerationInProgress(boolean inProgress) {
+        goalField.setDisable(inProgress);
+        dietStyleField.setDisable(inProgress);
+        allergiesField.setDisable(inProgress);
+        levelField.setDisable(inProgress);
+        constraintsArea.setDisable(inProgress);
+        nutritionDaysSpinner.setDisable(inProgress);
+        daysPerWeekSpinner.setDisable(inProgress);
+        minutesSpinner.setDisable(inProgress);
     }
 
     @FXML
