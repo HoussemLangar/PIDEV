@@ -5,6 +5,7 @@ import com.santea.model.User;
 import com.santea.navigation.AppNavigator;
 import com.santea.service.AuthSession;
 import com.santea.service.DocumentStorageService;
+import com.santea.service.DocumentClassificationClient;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
@@ -30,9 +31,11 @@ public class DocumentUploadController extends AppBaseViewController {
     @FXML private Button uploadButton;
     @FXML private Button cancelButton;
     @FXML private ComboBox<String> documentTypeCombo;
+    @FXML private Label classificationSummaryLabel;
     @FXML private TextArea descriptionArea;
 
     private final DocumentStorageService service = new DocumentStorageService();
+    private final DocumentClassificationClient classifier = new DocumentClassificationClient();
     private File selectedFile;
 
     @Override
@@ -49,13 +52,74 @@ public class DocumentUploadController extends AppBaseViewController {
         cancelButton.setOnAction(event -> AppNavigator.showDocumentSharing());
         chooseFileButton.setOnAction(event -> chooseFile());
         uploadButton.setOnAction(event -> upload());
+        if (classificationSummaryLabel != null) {
+            classificationSummaryLabel.setText("Aucune auto-détection pour le moment.");
+        }
     }
 
     private void chooseFile() {
         FileChooser chooser = new FileChooser();
         chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Documents", "*.pdf", "*.jpg", "*.jpeg", "*.png", "*.doc", "*.docx", "*.xls", "*.xlsx"));
         selectedFile = chooser.showOpenDialog(chooseFileButton.getScene().getWindow());
-        selectedFileLabel.setText(selectedFile == null ? "Aucun fichier sélectionné" : selectedFile.getName());
+        if (selectedFile != null) {
+            selectedFileLabel.setText(selectedFile.getName());
+            if (classificationSummaryLabel != null) {
+                classificationSummaryLabel.setText("Analyse du document en cours...");
+            }
+            // Try ML classification
+            String description = descriptionArea.getText() != null ? descriptionArea.getText().trim() : "";
+            classifyDocument(selectedFile.getName(), description);
+        } else {
+            selectedFileLabel.setText("Aucun fichier sélectionné");
+        }
+    }
+
+    private void classifyDocument(String filename, String description) {
+        if (!classifier.isAvailable()) {
+            return; // ML service unavailable, user selects manually
+        }
+        
+        // Run classification in background to avoid UI blocking
+        Thread classificationThread = new Thread(() -> {
+            DocumentClassificationClient.ClassificationResult result = classifier.classify(filename, description);
+            javafx.application.Platform.runLater(() -> updateClassificationSummary(result));
+        });
+        classificationThread.setDaemon(true);
+        classificationThread.start();
+    }
+
+    private void updateClassificationSummary(DocumentClassificationClient.ClassificationResult result) {
+        if (classificationSummaryLabel == null) {
+            return;
+        }
+
+        if (!result.success || result.predictedType == null) {
+            classificationSummaryLabel.setText("Auto-détection indisponible : " + (result.error == null ? "service indisponible" : result.error));
+            return;
+        }
+
+        String confidenceText = String.format("%.0f%%", result.confidence * 100);
+        String summary = "Suggestion IA: " + result.predictedType + " (" + confidenceText + ")";
+        if (result.candidateSummary != null && !result.candidateSummary.isBlank()) {
+            summary += "\nTop candidats: " + result.candidateSummary;
+        }
+        classificationSummaryLabel.setText(summary);
+
+        if (result.confidence > 0.5) {
+            String mappedType = mapPredictedType(result.predictedType);
+            if (mappedType != null && documentTypeCombo.getItems().contains(mappedType)) {
+                documentTypeCombo.setValue(mappedType);
+            }
+        }
+    }
+
+    private String mapPredictedType(String predicted) {
+        predicted = predicted.toLowerCase();
+        if (predicted.contains("lab") || predicted.contains("analysis")) return "lab_results";
+        if (predicted.contains("imaging") || predicted.contains("scan")) return "imaging";
+        if (predicted.contains("prescription")) return "prescription";
+        if (predicted.contains("report")) return "report";
+        return null;
     }
 
     private void upload() {
