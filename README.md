@@ -12,10 +12,7 @@
 
 Image (vue physique):
 
-![Architecture physique](docs/architecture/architecture-physique.png)
-
-Si l'image ne s'affiche pas encore, ajoutez le fichier dans le projet a ce chemin:
-- docs/architecture/architecture-physique.png
+![Architecture physique](/docs/architecture/architecture%20physique.png)
 
 ```mermaid
 flowchart TB
@@ -97,7 +94,7 @@ flowchart TB
 
 Image (vue logique):
 
-![Architecture logique](docs/architecture/architecture-logique.png)
+![Architecture logique](/docs/architecture/architecture%20logique.png)
 
 Si l'image ne s'affiche pas encore, ajoutez le fichier dans le projet a ce chemin:
 - docs/architecture/architecture-logique.png
