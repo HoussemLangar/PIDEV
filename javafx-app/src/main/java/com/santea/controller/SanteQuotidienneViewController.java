@@ -3,17 +3,27 @@ package com.santea.controller;
 import com.santea.model.SanteDataSource;
 import com.santea.model.SanteQuotidienne;
 import com.santea.model.User;
+import com.santea.model.GoogleFitAccount;
 import com.santea.navigation.AppNavigator;
+import com.santea.repository.GoogleFitAccountRepository;
 import com.santea.service.AuthSession;
+import com.santea.service.DatabaseService;
+import com.santea.service.GoogleFitApiServiceV2;
+import com.santea.service.GoogleOAuthService;
 import com.santea.service.SanteQuotidienneService;
+import com.santea.config.DatabaseConfig;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
+import javafx.scene.Node;
+import javafx.scene.input.ScrollEvent;
 
 import java.net.URL;
 import java.time.LocalDate;
@@ -60,6 +70,8 @@ public class SanteQuotidienneViewController implements Initializable {
     @FXML
     private ListView<String> historiqueListView;
     @FXML
+    private ScrollPane pageScrollPane;
+    @FXML
     private Label selectedDetailsLabel;
     @FXML
     private Label imcPreviewLabel;
@@ -69,6 +81,8 @@ public class SanteQuotidienneViewController implements Initializable {
     private Label statsLabel;
 
     private final SanteQuotidienneService santeService = new SanteQuotidienneService();
+    private final GoogleFitAccountRepository googleFitAccountRepository =
+            new GoogleFitAccountRepository(new DatabaseService(DatabaseConfig.fromEnvironment()));
     private final List<SanteQuotidienne> filteredEntries = new ArrayList<>();
     private final ObservableList<String> historyItems = FXCollections.observableArrayList();
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
@@ -85,6 +99,46 @@ public class SanteQuotidienneViewController implements Initializable {
         historiqueListView.getSelectionModel().selectedIndexProperty()
                 .addListener((obs, oldIndex, newIndex) -> handleHistorySelection(newIndex.intValue()));
         historiqueDatePicker.valueProperty().addListener((obs, oldDate, newDate) -> refreshHistoryForSelectedDate());
+        if (pageScrollPane != null) {
+            pageScrollPane.addEventFilter(ScrollEvent.SCROLL, event -> {
+                double delta = event.getDeltaY();
+                if (Math.abs(delta) < 0.01) {
+                    return;
+                }
+                double speed = 0.0032;
+                double newValue = pageScrollPane.getVvalue() - delta * speed;
+                pageScrollPane.setVvalue(Math.max(0.0, Math.min(1.0, newValue)));
+                event.consume();
+            });
+            // Scroll garanti même si un enfant capte la molette
+            bindScrollRecursive(pageScrollPane.getContent());
+            Platform.runLater(() -> {
+                if (pageScrollPane.getScene() != null) {
+                    pageScrollPane.getScene().addEventFilter(ScrollEvent.SCROLL, event -> {
+                        double delta = event.getDeltaY();
+                        if (Math.abs(delta) < 0.01) {
+                            return;
+                        }
+                        double speed = 0.0032;
+                        double newValue = pageScrollPane.getVvalue() - delta * speed;
+                        pageScrollPane.setVvalue(Math.max(0.0, Math.min(1.0, newValue)));
+                    });
+                }
+            });
+        }
+        // Permet de scroller la page meme quand le curseur est au-dessus de la ListView.
+        historiqueListView.addEventFilter(ScrollEvent.SCROLL, event -> {
+            if (pageScrollPane == null) {
+                return;
+            }
+            double delta = event.getDeltaY();
+            if (Math.abs(delta) < 0.01) {
+                return;
+            }
+            double speed = 0.0032;
+            double newValue = pageScrollPane.getVvalue() - delta * speed;
+            pageScrollPane.setVvalue(Math.max(0.0, Math.min(1.0, newValue)));
+        });
 
         updateStats();
         refreshHistoryForSelectedDate();
@@ -132,37 +186,92 @@ public class SanteQuotidienneViewController implements Initializable {
             return;
         }
 
-        boolean accountLinked = currentUser.getGoogleFitAccount() != null;
         try {
             LocalDate pickedDate = datePicker.getValue() == null ? LocalDate.now() : datePicker.getValue();
             SanteQuotidienne item = new SanteQuotidienne();
             item.setUser(currentUser);
             item.setDate(LocalDateTime.of(pickedDate, LocalTime.now().withSecond(0).withNano(0)));
+            item.setSourceDonnees(SanteDataSource.GOOGLE_FIT);
 
-            Double poids = parseOptionalDecimal(poidsField.getText(), "Poids");
-            Double taille = parseOptionalDecimal(tailleField.getText(), "Taille");
-            item.setPoids(poids == null ? 70.0 : poids);
-            item.setTaille(taille == null ? 1.75 : taille);
+            // Toujours re-authentifier avant chaque import, selon besoin produit.
+            GoogleFitApiServiceV2 fitService = new GoogleFitApiServiceV2();
+            GoogleFitApiServiceV2.FitResult fitResult;
+            showFeedback("Authentification Google en cours...", true);
+            GoogleOAuthService.AuthResult authResult = new GoogleOAuthService().authenticate();
+            if (!authResult.success()) {
+                showFeedback(authResult.message(), false);
+                return;
+            }
 
+            GoogleFitAccount googleFitAccount = new GoogleFitAccount();
+            googleFitAccount.setGoogleAccountId(authResult.googleAccountId());
+            googleFitAccount.setAccessToken(authResult.accessToken());
+            googleFitAccount.setRefreshToken(authResult.refreshToken());
+            googleFitAccount.setTokenExpiration(authResult.tokenExpiration());
+            currentUser.setGoogleFitAccount(googleFitAccount);
+            googleFitAccountRepository.saveOrUpdateForUser(userId, googleFitAccount);
+
+            fitResult = fitService.fetchDailyData(
+                    currentUser.getGoogleFitAccount(),
+                    pickedDate
+            );
+
+            if (!fitResult.success() || fitResult.data() == null) {
+                showFeedback(fitResult.message(), false);
+                return;
+            }
+
+            fitService.applyFitDataToHealth(fitResult.data(), item);
+
+            if (item.getPoids() == null || item.getTaille() == null) {
+                // Fallback 1: champs saisis dans le formulaire
+                if (item.getPoids() == null) {
+                    Double poidsForm = parseOptionalDecimal(poidsField.getText(), "Poids");
+                    if (poidsForm != null && poidsForm > 0) {
+                        item.setPoids(poidsForm);
+                    }
+                }
+                if (item.getTaille() == null) {
+                    Double tailleForm = parseOptionalDecimal(tailleField.getText(), "Taille");
+                    if (tailleForm != null && tailleForm > 0) {
+                        item.setTaille(tailleForm);
+                    }
+                }
+
+                // Fallback 2: derniere entree locale
+                SanteQuotidienne latest = santeService.findLatestByUser(userId).orElse(null);
+                if (latest != null) {
+                    if (item.getPoids() == null && latest.getPoids() != null && latest.getPoids() > 0) {
+                        item.setPoids(latest.getPoids());
+                    }
+                    if (item.getTaille() == null && latest.getTaille() != null && latest.getTaille() > 0) {
+                        item.setTaille(latest.getTaille());
+                    }
+                }
+
+            }
+
+            if (item.getPoids() == null || item.getTaille() == null) {
+                showFeedback("Google Fit n'a pas renvoye poids/taille et aucune valeur locale n'est disponible.", false);
+                return;
+            }
             if (item.getPoids() <= 0 || item.getPoids() >= 350) {
-                throw new IllegalArgumentException("Poids invalide: il doit etre > 0 et < 350 kg.");
+                throw new IllegalArgumentException("Poids invalide importe depuis Google Fit.");
             }
             if (!isValidTaille(item.getTaille())) {
-                throw new IllegalArgumentException("Taille invalide: > 0 et max 2.5 m (ou 250 cm).");
+                throw new IllegalArgumentException("Taille invalide importee depuis Google Fit.");
             }
-
             item.setImc(calculateImc(item.getPoids(), item.getTaille()));
-            item.setTensionArterielle(defaultIfNull(parseOptionalDecimal(tensionField.getText(), "Tension arterielle"), 12.0));
+
+            item.setActivitePhysique("");
+            item.setAlimentation("");
+            item.setHumeur(new ArrayList<>());
+            item.setEauBue(null);
+
+            // Validation des données
             if (item.getTensionArterielle() != null && (item.getTensionArterielle() <= 0 || item.getTensionArterielle() > 25)) {
                 throw new IllegalArgumentException("Tension arterielle invalide: > 0 et <= 25.");
             }
-
-            item.setSommeil(defaultIfNull(parseOptionalDecimal(sommeilField.getText(), "Sommeil"), 7.5));
-            item.setEauBue(defaultIfNull(parseOptionalDecimal(eauBueField.getText(), "Eau bue"), 2.0));
-            item.setPas(defaultIfNull(parseOptionalInteger(pasField.getText(), "Pas"), 8200));
-            item.setCalories(defaultIfNull(parseOptionalInteger(caloriesField.getText(), "Calories"), 2200));
-            item.setDureeActiviteMinutes(defaultIfNull(parseOptionalInteger(dureeActiviteField.getText(), "Duree activite"), 40));
-
             if ((item.getSommeil() != null && item.getSommeil() < 0)
                     || (item.getEauBue() != null && item.getEauBue() < 0)
                     || (item.getPas() != null && item.getPas() < 0)
@@ -171,38 +280,21 @@ public class SanteQuotidienneViewController implements Initializable {
                 throw new IllegalArgumentException("Les valeurs numeriques optionnelles doivent etre >= 0.");
             }
 
-            if (!isLettersOnly(activiteField.getText())) {
-                throw new IllegalArgumentException("Activite physique: lettres uniquement.");
-            }
-            if (!isMoodLettersOnly(humeurField.getText())) {
-                throw new IllegalArgumentException("Humeur: lettres uniquement (separees par des virgules).");
-            }
-            if (!isLettersOnly(alimentationField.getText())) {
-                throw new IllegalArgumentException("Alimentation: lettres uniquement.");
-            }
-
-            item.setActivitePhysique(clean(activiteField.getText()).isBlank() ? "Marche rapide" : clean(activiteField.getText()));
-            item.setAlimentation(clean(alimentationField.getText()).isBlank() ? "Equilibree" : clean(alimentationField.getText()));
-            item.setHumeur(parseMood(humeurField.getText()));
-            item.setSourceDonnees(SanteDataSource.GOOGLE_FIT);
-
+            // Sauvegarder en base de données
             SanteQuotidienneService.CrudResult result = santeService.create(userId, item);
             if (!result.success()) {
                 showFeedback(result.message(), false);
                 return;
             }
 
-            if (accountLinked) {
-                showFeedback("Donnees importees depuis Google Fit et enregistrees en base.", true);
-            } else {
-                showFeedback("Compte Google Fit non lie: donnees de demonstration enregistrees en base.", true);
-            }
-
+            showFeedback("Donnees Google Fit reelles importees et enregistrees avec succes!", true);
             refreshHistoryForSelectedDate();
             updateStats();
             selectEntryById(result.entryId());
         } catch (IllegalArgumentException exception) {
             showFeedback(exception.getMessage(), false);
+        } catch (Exception exception) {
+            showFeedback("Erreur lors de l'importation: " + exception.getMessage(), false);
         }
     }
 
@@ -453,6 +545,27 @@ public class SanteQuotidienneViewController implements Initializable {
     private Integer currentUserId() {
         User user = AuthSession.getCurrentUser();
         return user == null ? null : user.getId();
+    }
+
+    private void bindScrollRecursive(Node node) {
+        if (node == null || pageScrollPane == null) {
+            return;
+        }
+        node.addEventFilter(ScrollEvent.SCROLL, event -> {
+            double delta = event.getDeltaY();
+            if (Math.abs(delta) < 0.01) {
+                return;
+            }
+            double speed = 0.0032;
+            double newValue = pageScrollPane.getVvalue() - delta * speed;
+            pageScrollPane.setVvalue(Math.max(0.0, Math.min(1.0, newValue)));
+            event.consume();
+        });
+        if (node instanceof javafx.scene.Parent parent) {
+            for (Node child : parent.getChildrenUnmodifiable()) {
+                bindScrollRecursive(child);
+            }
+        }
     }
 
     private void clearInputForm() {

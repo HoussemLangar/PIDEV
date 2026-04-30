@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 public class SanteQuotidienneService {
     private final DatabaseService databaseService;
@@ -120,6 +121,24 @@ public class SanteQuotidienneService {
         }
 
         return rows;
+    }
+
+    public Optional<SanteQuotidienne> findLatestByUser(int userId) {
+        String sql = "SELECT id, poids, taille, imc, tension_arterielle, sommeil, activite_physique, humeur, alimentation, eau_bue, date, pas, calories, duree_activite_minutes, source_donnees "
+                + "FROM sante_quotidienne WHERE user_id=? ORDER BY date DESC LIMIT 1";
+
+        try (Connection connection = databaseService.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, userId);
+            try (ResultSet rs = statement.executeQuery()) {
+                if (rs.next()) {
+                    return Optional.of(mapRow(rs));
+                }
+            }
+        } catch (SQLException ignored) {
+        }
+
+        return Optional.empty();
     }
 
     public Stats loadStats(int userId) {

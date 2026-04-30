@@ -2,6 +2,7 @@ package com.santea.service;
 
 import com.santea.config.DatabaseConfig;
 import com.santea.model.User;
+import com.santea.repository.GoogleFitAccountRepository;
 import com.santea.repository.UserRepository;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
@@ -34,6 +35,7 @@ public class AuthService {
 
     private final DatabaseService databaseService;
     private final UserRepository userRepository;
+    private final GoogleFitAccountRepository googleFitAccountRepository;
     private final EmailService emailService;
     private final TwoFactorService twoFactorService;
 
@@ -41,6 +43,7 @@ public class AuthService {
         DatabaseConfig databaseConfig = DatabaseConfig.fromEnvironment();
         this.databaseService = new DatabaseService(databaseConfig);
         this.userRepository = new UserRepository(databaseService);
+        this.googleFitAccountRepository = new GoogleFitAccountRepository(databaseService);
         this.emailService = new EmailService();
         this.twoFactorService = new TwoFactorService();
     }
@@ -93,6 +96,7 @@ public class AuthService {
             }
         }
 
+        hydrateGoogleFitAccount(user);
         AuthSession.login(user);
         registerUserSession(user);
         rememberSuccessfulLoginEmail(user.getEmail());
@@ -150,6 +154,7 @@ public class AuthService {
             return LoginResult.failure("Votre compte est banni.", LoginFailureReason.BANNED, user);
         }
 
+        hydrateGoogleFitAccount(user);
         AuthSession.login(user);
         registerUserSession(user);
         rememberSuccessfulLoginEmail(user.getEmail());
@@ -185,9 +190,20 @@ public class AuthService {
             return false;
         }
 
+        hydrateGoogleFitAccount(user);
         AuthSession.login(user);
         rememberSuccessfulLoginEmail(user.getEmail());
         return true;
+    }
+
+    private void hydrateGoogleFitAccount(User user) {
+        if (user == null || user.getId() == null || user.getId() <= 0) {
+            return;
+        }
+        googleFitAccountRepository.findByUserId(user.getId()).ifPresent(account -> {
+            account.setUser(user);
+            user.setGoogleFitAccount(account);
+        });
     }
 
     public RegisterResult register(RegistrationRequest request) {
