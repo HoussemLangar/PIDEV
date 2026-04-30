@@ -8,4 +8,5 @@ target/
 generated-exports/
 logs/*.log
 .env.local
+models
 # Ignore JDK
