@@ -20,6 +20,7 @@ module com.santea.javafxapp {
     requires org.kordamp.ikonli.fontawesome5;
     requires org.kordamp.bootstrapfx.core;
     requires com.almasb.fxgl.all;
+    requires vosk;
 
     opens com.santea to javafx.fxml;
     opens com.santea.controller to javafx.fxml;

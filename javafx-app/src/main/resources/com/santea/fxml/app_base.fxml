@@ -2,6 +2,7 @@
 
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.control.ScrollPane?>
 
 <BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.santea.controller.AppBaseViewController"
@@ -10,6 +11,15 @@
         <fx:include fx:id="navbarInclude" source="components/navbar.fxml"/>
     </top>
     <center>
-        <StackPane fx:id="contentContainer" styleClass="app-content-host"/>
+        <ScrollPane fx:id="appScrollPane"
+                    fitToWidth="true"
+                    pannable="true"
+                    hbarPolicy="NEVER"
+                    vbarPolicy="AS_NEEDED"
+                    styleClass="home-scroll">
+            <content>
+                <StackPane fx:id="contentContainer" styleClass="app-content-host"/>
+            </content>
+        </ScrollPane>
     </center>
 </BorderPane>

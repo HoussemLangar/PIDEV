@@ -7,14 +7,23 @@
 <?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<StackPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+<AnchorPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
            fx:controller="com.santea.controller.SanteQuotidienneViewController"
            styleClass="profile-page-root">
-    <ScrollPane fx:id="pageScrollPane" fitToWidth="true" pannable="true" vbarPolicy="ALWAYS" styleClass="home-scroll">
+    <ScrollPane fx:id="pageScrollPane"
+                fitToWidth="true"
+                pannable="true"
+                vbarPolicy="ALWAYS"
+                hbarPolicy="NEVER"
+                styleClass="home-scroll"
+                AnchorPane.topAnchor="0.0"
+                AnchorPane.rightAnchor="0.0"
+                AnchorPane.bottomAnchor="0.0"
+                AnchorPane.leftAnchor="0.0">
         <content>
             <VBox spacing="16" alignment="TOP_CENTER" styleClass="profile-content-shell">
                 <padding>
@@ -32,8 +41,8 @@
 
                 <Label fx:id="feedbackLabel" text="" visible="false" managed="false" wrapText="true" styleClass="alert" maxWidth="1100"/>
 
-                <HBox spacing="16" maxWidth="1320" alignment="TOP_CENTER" style="-fx-padding: 0 0 0 170;">
-                    <VBox spacing="12" styleClass="profile-card" prefWidth="980" minWidth="980" maxWidth="980">
+                <HBox spacing="16" maxWidth="1100" alignment="TOP_CENTER">
+                    <VBox spacing="12" styleClass="profile-card" HBox.hgrow="ALWAYS" minWidth="0.0">
                         <Label text="Entrez vos donnees de sante.." styleClass="profile-section-title"/>
 
                         <HBox spacing="12">
@@ -112,11 +121,12 @@
                         <Label fx:id="imcPreviewLabel" text="IMC calcule: -" styleClass="sub-checkout-help"/>
                     </VBox>
 
-                    <VBox spacing="10" styleClass="profile-card" prefWidth="430" minWidth="430" maxWidth="430">
+                    <VBox spacing="10" styleClass="profile-card" prefWidth="380" minWidth="0.0" HBox.hgrow="SOMETIMES">
                         <Label text="Historique des entrees" styleClass="profile-section-title"/>
                         <Label text="Selectionne une date precise:" styleClass="sub-checkout-help"/>
                         <DatePicker fx:id="historiqueDatePicker"/>
                         <Label fx:id="statsLabel" text="Aucune entree enregistree pour le moment." styleClass="sub-checkout-help"/>
+                        <Label fx:id="hydrationAdviceLabel" text="" visible="false" managed="false" wrapText="true" styleClass="sub-checkout-help"/>
                         <ListView fx:id="historiqueListView" prefHeight="300"/>
                         <Label text="Details de l'entree selectionnee" styleClass="field-label"/>
                         <Label fx:id="selectedDetailsLabel" text="Aucune entree selectionnee." wrapText="true" styleClass="sub-checkout-help"/>
@@ -129,4 +139,4 @@
             </VBox>
         </content>
     </ScrollPane>
-</StackPane>
+</AnchorPane>

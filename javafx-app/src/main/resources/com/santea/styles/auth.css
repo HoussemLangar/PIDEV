@@ -97,6 +97,44 @@
     -fx-background-color: transparent;
 }
 
+.home-scroll .scroll-bar:vertical,
+.app-content-scroll .scroll-bar:vertical,
+.auth-content-scroll .scroll-bar:vertical {
+    -fx-background-color: transparent;
+    -fx-padding: 0 2 0 2;
+}
+
+.home-scroll .scroll-bar:vertical .track,
+.app-content-scroll .scroll-bar:vertical .track,
+.auth-content-scroll .scroll-bar:vertical .track {
+    -fx-background-color: rgba(219, 231, 242, 0.9);
+    -fx-background-radius: 8;
+}
+
+.home-scroll .scroll-bar:vertical .thumb,
+.app-content-scroll .scroll-bar:vertical .thumb,
+.auth-content-scroll .scroll-bar:vertical .thumb {
+    -fx-background-color: #9fc4de;
+    -fx-background-radius: 8;
+}
+
+.home-scroll .increment-button,
+.home-scroll .decrement-button,
+.home-scroll .increment-arrow,
+.home-scroll .decrement-arrow,
+.app-content-scroll .increment-button,
+.app-content-scroll .decrement-button,
+.app-content-scroll .increment-arrow,
+.app-content-scroll .decrement-arrow,
+.auth-content-scroll .increment-button,
+.auth-content-scroll .decrement-button,
+.auth-content-scroll .increment-arrow,
+.auth-content-scroll .decrement-arrow {
+    -fx-padding: 0;
+    -fx-shape: "";
+    -fx-background-color: transparent;
+}
+
 .app-content-host {
     -fx-background-color: #f0f6f9;
 }

@@ -14,6 +14,7 @@ import javafx.scene.chart.PieChart;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
@@ -41,6 +42,7 @@ public class SanteQuotidienneAdminViewController implements Initializable {
     @FXML private Label pageInfoLabel;
     @FXML private Label entriesInfoLabel;
     @FXML private Label autoRefreshStatusLabel;
+    @FXML private ScrollPane pageScrollPane;
 
     @FXML private TextField searchField;
     @FXML private Button searchButton;
@@ -79,10 +81,22 @@ public class SanteQuotidienneAdminViewController implements Initializable {
             System.out.println("✅ Données actualisées");
             startAutoRefresh();
             System.out.println("✅ Auto refresh démarré");
+            enablePageScrolling();
         } catch (Exception e) {
             System.err.println("❌ Erreur initialization: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    private void enablePageScrolling() {
+        if (pageScrollPane == null) {
+            return;
+        }
+        // Enable native scrolling with proper settings
+        pageScrollPane.setFitToWidth(true);
+        pageScrollPane.setPannable(true);
+        pageScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        pageScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
     }
 
     private void setupSummaryTable() {

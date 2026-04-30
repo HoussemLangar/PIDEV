@@ -36,7 +36,9 @@ public class SymptomesQuotidiensRepository {
                         safe(resultSet.getString("categorie"))
                 ));
             }
-        } catch (SQLException ignored) {
+        } catch (SQLException exception) {
+            System.err.println("❌ Erreur chargement symptomes: " + exception.getMessage());
+            exception.printStackTrace();
         }
 
         return rows;

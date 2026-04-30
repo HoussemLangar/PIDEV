@@ -10,11 +10,15 @@ import com.santea.service.AuthSession;
 import com.santea.service.DatabaseService;
 import com.santea.service.GoogleFitApiServiceV2;
 import com.santea.service.GoogleOAuthService;
+import com.santea.service.HydrationRecommendationService;
+import com.santea.service.OpenMeteoService;
 import com.santea.service.SanteQuotidienneService;
+import com.santea.service.WeatherRiskAdviceService;
 import com.santea.config.DatabaseConfig;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.DatePicker;
@@ -23,7 +27,6 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.Node;
-import javafx.scene.input.ScrollEvent;
 
 import java.net.URL;
 import java.time.LocalDate;
@@ -34,6 +37,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 public class SanteQuotidienneViewController implements Initializable {
@@ -79,6 +83,8 @@ public class SanteQuotidienneViewController implements Initializable {
     private Label feedbackLabel;
     @FXML
     private Label statsLabel;
+    @FXML
+    private Label hydrationAdviceLabel;
 
     private final SanteQuotidienneService santeService = new SanteQuotidienneService();
     private final GoogleFitAccountRepository googleFitAccountRepository =
@@ -88,6 +94,8 @@ public class SanteQuotidienneViewController implements Initializable {
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     private SanteQuotidienne selectedEntry;
+    private final AtomicInteger historySeq = new AtomicInteger(0);
+    private final AtomicInteger statsSeq = new AtomicInteger(0);
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -98,50 +106,123 @@ public class SanteQuotidienneViewController implements Initializable {
         historiqueListView.setItems(historyItems);
         historiqueListView.getSelectionModel().selectedIndexProperty()
                 .addListener((obs, oldIndex, newIndex) -> handleHistorySelection(newIndex.intValue()));
-        historiqueDatePicker.valueProperty().addListener((obs, oldDate, newDate) -> refreshHistoryForSelectedDate());
-        if (pageScrollPane != null) {
-            pageScrollPane.addEventFilter(ScrollEvent.SCROLL, event -> {
-                double delta = event.getDeltaY();
-                if (Math.abs(delta) < 0.01) {
-                    return;
-                }
-                double speed = 0.0032;
-                double newValue = pageScrollPane.getVvalue() - delta * speed;
-                pageScrollPane.setVvalue(Math.max(0.0, Math.min(1.0, newValue)));
-                event.consume();
-            });
-            // Scroll garanti même si un enfant capte la molette
-            bindScrollRecursive(pageScrollPane.getContent());
-            Platform.runLater(() -> {
-                if (pageScrollPane.getScene() != null) {
-                    pageScrollPane.getScene().addEventFilter(ScrollEvent.SCROLL, event -> {
-                        double delta = event.getDeltaY();
-                        if (Math.abs(delta) < 0.01) {
-                            return;
-                        }
-                        double speed = 0.0032;
-                        double newValue = pageScrollPane.getVvalue() - delta * speed;
-                        pageScrollPane.setVvalue(Math.max(0.0, Math.min(1.0, newValue)));
-                    });
-                }
-            });
-        }
-        // Permet de scroller la page meme quand le curseur est au-dessus de la ListView.
-        historiqueListView.addEventFilter(ScrollEvent.SCROLL, event -> {
-            if (pageScrollPane == null) {
-                return;
-            }
-            double delta = event.getDeltaY();
-            if (Math.abs(delta) < 0.01) {
-                return;
-            }
-            double speed = 0.0032;
-            double newValue = pageScrollPane.getVvalue() - delta * speed;
-            pageScrollPane.setVvalue(Math.max(0.0, Math.min(1.0, newValue)));
-        });
+        historiqueDatePicker.valueProperty().addListener((obs, oldDate, newDate) -> refreshHistoryForSelectedDateAsync());
+        // Scrolling is handled by the ScrollPane itself + the global scroll bridge in AppBaseViewController.
 
-        updateStats();
-        refreshHistoryForSelectedDate();
+        setupHydrationAdviser();
+        updateStatsAsync();
+        refreshHistoryForSelectedDateAsync();
+    }
+
+    private void setupHydrationAdviser() {
+        if (hydrationAdviceLabel != null) {
+            hydrationAdviceLabel.setText("");
+            hydrationAdviceLabel.setVisible(false);
+            hydrationAdviceLabel.setManaged(false);
+        }
+
+        if (pasField != null) {
+            pasField.textProperty().addListener((obs, oldV, newV) -> updateHydrationAdviceAsync());
+        }
+        if (dureeActiviteField != null) {
+            dureeActiviteField.textProperty().addListener((obs, oldV, newV) -> updateHydrationAdviceAsync());
+        }
+        if (activiteField != null) {
+            activiteField.textProperty().addListener((obs, oldV, newV) -> updateHydrationAdviceAsync());
+        }
+
+        updateHydrationAdviceAsync();
+    }
+
+    private void updateHydrationAdviceAsync() {
+        if (hydrationAdviceLabel == null) {
+            return;
+        }
+        Integer steps = safeParseInt(pasField == null ? null : pasField.getText());
+        Integer minutes = safeParseInt(dureeActiviteField == null ? null : dureeActiviteField.getText());
+
+        hydrationAdviceLabel.setText("Conseil hydratation: chargement météo...");
+        hydrationAdviceLabel.setVisible(true);
+        hydrationAdviceLabel.setManaged(true);
+
+        Task<String> task = new Task<>() {
+            @Override
+            protected String call() throws Exception {
+                // Default: Tunis (can be overridden by env vars)
+                double lat = parseEnvDouble("OPEN_METEO_LAT", 36.8065);
+                double lon = parseEnvDouble("OPEN_METEO_LON", 10.1815);
+                OpenMeteoService.WeatherSnapshot snap = OpenMeteoService.getTodaySnapshot(lat, lon);
+                Double temp = snap == null ? null : snap.apparentTemperatureC();
+                if (temp == null && snap != null) {
+                    temp = snap.temperatureC();
+                }
+                HydrationRecommendationService.Recommendation rec =
+                        HydrationRecommendationService.recommend(temp, steps, minutes);
+                List<String> risks = WeatherRiskAdviceService.buildRiskTips(temp, snap == null ? null : snap.humidityPercent());
+                String reasons = (rec.reasons() == null || rec.reasons().isEmpty())
+                        ? ""
+                        : " (ajusté: " + String.join(", ", rec.reasons()) + ")";
+                String city = System.getenv("OPEN_METEO_CITY");
+                String location = (city == null || city.isBlank()) ? "Tunis" : city.trim();
+                StringBuilder sb = new StringBuilder();
+                sb.append("💧 Objectif eau: ")
+                        .append(String.format("%.1f", rec.targetLiters()))
+                        .append(" L/jour")
+                        .append(reasons)
+                        .append(".");
+                if (temp != null) {
+                    sb.append("\n🌡️ Météo: ").append(String.format("%.0f°C", temp)).append(" (").append(location).append(").");
+                }
+                if (risks != null && !risks.isEmpty()) {
+                    sb.append("\n🧠 Conseils liés à la météo:");
+                    for (String line : risks) {
+                        if (line == null || line.isBlank()) {
+                            continue;
+                        }
+                        sb.append("\n").append(line.trim());
+                    }
+                }
+                sb.append("\n(Conseils généraux, pas un diagnostic.)");
+                return sb.toString();
+            }
+        };
+
+        task.setOnSucceeded(evt -> hydrationAdviceLabel.setText(task.getValue()));
+        task.setOnFailed(evt -> hydrationAdviceLabel.setText("Conseil hydratation indisponible (météo)."));
+
+        Thread t = new Thread(task, "open-meteo-hydration-task");
+        t.setDaemon(true);
+        t.start();
+    }
+
+    private Integer safeParseInt(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        if (trimmed.isBlank()) {
+            return null;
+        }
+        if (!trimmed.matches("^\\d+$")) {
+            return null;
+        }
+        try {
+            return Integer.parseInt(trimmed);
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    private double parseEnvDouble(String name, double fallback) {
+        String raw = System.getenv(name);
+        if (raw == null || raw.isBlank()) {
+            return fallback;
+        }
+        try {
+            return Double.parseDouble(raw.trim().replace(',', '.'));
+        } catch (Exception ignored) {
+            return fallback;
+        }
     }
 
     @FXML
@@ -168,8 +249,8 @@ public class SanteQuotidienneViewController implements Initializable {
             }
 
             showFeedback("Donnees ajoutées avec succes.", true);
-            refreshHistoryForSelectedDate();
-            updateStats();
+            refreshHistoryForSelectedDateAsync();
+            updateStatsAsync();
             selectEntryById(result.entryId());
             clearInputForm();
         } catch (IllegalArgumentException exception) {
@@ -288,8 +369,8 @@ public class SanteQuotidienneViewController implements Initializable {
             }
 
             showFeedback("Donnees Google Fit reelles importees et enregistrees avec succes!", true);
-            refreshHistoryForSelectedDate();
-            updateStats();
+            refreshHistoryForSelectedDateAsync();
+            updateStatsAsync();
             selectEntryById(result.entryId());
         } catch (IllegalArgumentException exception) {
             showFeedback(exception.getMessage(), false);
@@ -323,8 +404,8 @@ public class SanteQuotidienneViewController implements Initializable {
 
             showFeedback("Donnees mise ajours avec sucess.", true);
             historiqueDatePicker.setValue(updated.getDate().toLocalDate());
-            refreshHistoryForSelectedDate();
-            updateStats();
+            refreshHistoryForSelectedDateAsync();
+            updateStatsAsync();
             selectEntryById(updated.getId());
         } catch (IllegalArgumentException exception) {
             showFeedback(exception.getMessage(), false);
@@ -352,8 +433,8 @@ public class SanteQuotidienneViewController implements Initializable {
         selectedEntry = null;
         selectedDetailsLabel.setText("Aucune entree selectionnee.");
         showFeedback(result.message(), true);
-        refreshHistoryForSelectedDate();
-        updateStats();
+        refreshHistoryForSelectedDateAsync();
+        updateStatsAsync();
         clearInputForm();
     }
 
@@ -484,6 +565,94 @@ public class SanteQuotidienneViewController implements Initializable {
                 + " | Pas cumules: " + stats.totalSteps());
     }
 
+    private void refreshHistoryForSelectedDateAsync() {
+        Integer userId = currentUserId();
+        int seq = historySeq.incrementAndGet();
+
+        filteredEntries.clear();
+        historyItems.clear();
+        selectedEntry = null;
+        selectedDetailsLabel.setText(userId == null ? "Utilisateur non connecte." : "Chargement...");
+
+        if (userId == null) {
+            return;
+        }
+
+        LocalDate selectedDate = historiqueDatePicker.getValue() == null ? LocalDate.now() : historiqueDatePicker.getValue();
+        Task<List<SanteQuotidienne>> task = new Task<>() {
+            @Override
+            protected List<SanteQuotidienne> call() {
+                return santeService.findByUserAndDate(userId, selectedDate);
+            }
+        };
+        task.setOnSucceeded(evt -> {
+            if (seq != historySeq.get()) {
+                return;
+            }
+            List<SanteQuotidienne> entries = task.getValue();
+            filteredEntries.clear();
+            if (entries != null) {
+                filteredEntries.addAll(entries);
+            }
+            historyItems.setAll(filteredEntries.stream().map(this::toHistoryLine).toList());
+
+            if (filteredEntries.isEmpty()) {
+                selectedEntry = null;
+                selectedDetailsLabel.setText("Aucune entree pour la date selectionnee.");
+                return;
+            }
+            historiqueListView.getSelectionModel().select(0);
+        });
+        task.setOnFailed(evt -> {
+            if (seq != historySeq.get()) {
+                return;
+            }
+            selectedDetailsLabel.setText("Chargement historique impossible.");
+        });
+        Thread t = new Thread(task, "sante-history-task");
+        t.setDaemon(true);
+        t.start();
+    }
+
+    private void updateStatsAsync() {
+        Integer userId = currentUserId();
+        int seq = statsSeq.incrementAndGet();
+        if (userId == null) {
+            statsLabel.setText("Utilisateur non connecte.");
+            return;
+        }
+        statsLabel.setText("Chargement stats...");
+
+        Task<SanteQuotidienneService.Stats> task = new Task<>() {
+            @Override
+            protected SanteQuotidienneService.Stats call() {
+                return santeService.loadStats(userId);
+            }
+        };
+        task.setOnSucceeded(evt -> {
+            if (seq != statsSeq.get()) {
+                return;
+            }
+            SanteQuotidienneService.Stats stats = task.getValue();
+            if (stats == null || stats.totalEntries() <= 0) {
+                statsLabel.setText("Aucune entree enregistree pour le moment.");
+                return;
+            }
+            statsLabel.setText("Entrees: " + stats.totalEntries()
+                    + " | IMC moyen: " + String.format("%.2f", stats.averageImc())
+                    + " | Pas cumules: " + stats.totalSteps());
+        });
+        task.setOnFailed(evt -> {
+            if (seq != statsSeq.get()) {
+                return;
+            }
+            statsLabel.setText("Chargement stats impossible.");
+        });
+        Thread t = new Thread(task, "sante-stats-task");
+        t.setDaemon(true);
+        t.start();
+    }
+
     private void handleHistorySelection(int index) {
         if (index < 0 || index >= filteredEntries.size()) {
             selectedEntry = null;
@@ -547,26 +716,7 @@ public class SanteQuotidienneViewController implements Initializable {
         return user == null ? null : user.getId();
     }
 
-    private void bindScrollRecursive(Node node) {
-        if (node == null || pageScrollPane == null) {
-            return;
-        }
-        node.addEventFilter(ScrollEvent.SCROLL, event -> {
-            double delta = event.getDeltaY();
-            if (Math.abs(delta) < 0.01) {
-                return;
-            }
-            double speed = 0.0032;
-            double newValue = pageScrollPane.getVvalue() - delta * speed;
-            pageScrollPane.setVvalue(Math.max(0.0, Math.min(1.0, newValue)));
-            event.consume();
-        });
-        if (node instanceof javafx.scene.Parent parent) {
-            for (Node child : parent.getChildrenUnmodifiable()) {
-                bindScrollRecursive(child);
-            }
-        }
-    }
+    // (Removed custom scroll interception - handled globally.)
 
     private void clearInputForm() {
         selectedEntry = null;
