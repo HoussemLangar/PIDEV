@@ -83,6 +83,14 @@ class SubscriptionGateSubscriber implements EventSubscriberInterface
             }
         }
 
+        // Certains comptes peuvent avoir un statut ACTIVE sans date de fin synchronisée.
+        // Dans ce cas, essayer de reconstruire les champs depuis le dernier Abonnement.
+        if ($user->getSubscriptionStatus() === 'ACTIVE' && $user->getSubscriptionEndAt() === null) {
+            if ($this->syncMissingActiveSubscriptionEndAt($user)) {
+                $mustFlush = true;
+            }
+        }
+
         if ($user->getSubscriptionStatus() !== 'ACTIVE' && $this->normalizeInactiveUserAccess($user)) {
             $mustFlush = true;
         }
@@ -180,6 +188,34 @@ class SubscriptionGateSubscriber implements EventSubscriberInterface
         }
 
         return $changed;
+    }
+
+    private function syncMissingActiveSubscriptionEndAt(User $user): bool
+    {
+        $latest = $this->abonnementRepository->findLatestForUser($user);
+        if ($latest === null || !$latest->getDateFin() instanceof \DateTimeInterface) {
+            $this->revokeExpiredSubscriptionAccess($user);
+            return true;
+        }
+
+        $endAt = \DateTimeImmutable::createFromInterface($latest->getDateFin())->setTime(23, 59, 59);
+        if ($endAt <= new \DateTimeImmutable()) {
+            $this->revokeExpiredSubscriptionAccess($user);
+            return true;
+        }
+
+        $type = (string) $latest->getTypeAbonnement();
+
+        $user->defineSubscriptionEndAt($endAt);
+        if ($type !== '' && $user->getSubscriptionType() !== $type) {
+            $user->setSubscriptionType($type);
+        }
+        if ($type !== '' && str_starts_with($type, 'ROLE_') && $user->getRole() !== $type) {
+            $user->setRole($type);
+        }
+        $user->forceUpdatedAt(new \DateTimeImmutable());
+
+        return true;
     }
 
     private function isExpiredByData(User $user): bool

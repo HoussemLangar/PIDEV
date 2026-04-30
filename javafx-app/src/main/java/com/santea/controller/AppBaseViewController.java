@@ -10,6 +10,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.layout.Pane;
 
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -74,26 +75,14 @@ public class AppBaseViewController implements Initializable {
 
             ScrollPane foundPageScrollPane = findScrollPaneById(content, "pageScrollPane");
             if (foundPageScrollPane != null) {
-                // Prefer the page's own ScrollPane. Disable outer vertical scrolling to avoid conflicts.
-                appScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-                appScrollPane.setPannable(false);
-                foundPageScrollPane.setFitToWidth(true);
-                foundPageScrollPane.setFitToHeight(false);
-                foundPageScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
-                setWrappedContent(foundPageScrollPane);
+                hostInnerScrollPane(foundPageScrollPane);
                 return;
             }
 
             // Avoid nested ScrollPane issues: many pages already define their own ScrollPane.
             // If the page root is a ScrollPane, we host only its content in the global ScrollPane.
             if (content instanceof ScrollPane pageScrollPane) {
-                var pageContent = pageScrollPane.getContent();
-                if (pageContent != null) {
-                    normalizeScrollableNode(pageContent);
-                    setWrappedContent(pageContent);
-                } else {
-                    setWrappedContent(scrollContentWrapper);
-                }
+                hostInnerScrollPane(pageScrollPane);
                 return;
             }
 
@@ -191,5 +180,41 @@ public class AppBaseViewController implements Initializable {
             }
         }
         return null;
+    }
+
+    private void hostInnerScrollPane(ScrollPane innerScrollPane) {
+        if (appScrollPane == null) {
+            return;
+        }
+        if (innerScrollPane == null) {
+            setWrappedContent(scrollContentWrapper);
+            return;
+        }
+
+        // Detach from previous parent to avoid "Node already has a parent" at runtime.
+        Parent previousParent = innerScrollPane.getParent();
+        if (previousParent instanceof Pane pane) {
+            pane.getChildren().remove(innerScrollPane);
+        } else if (previousParent instanceof ScrollPane previousScrollPane) {
+            if (previousScrollPane.getContent() == innerScrollPane) {
+                previousScrollPane.setContent(null);
+            }
+        }
+
+        // Make the outer ScrollPane act as a simple viewport container (no scrolling),
+        // so the page's own ScrollPane receives proper size and handles scrolling.
+        appScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        appScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        appScrollPane.setPannable(false);
+        appScrollPane.setFitToWidth(true);
+        appScrollPane.setFitToHeight(true);
+
+        innerScrollPane.setFitToWidth(true);
+        innerScrollPane.setFitToHeight(false);
+        innerScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        innerScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        innerScrollPane.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+
+        appScrollPane.setContent(innerScrollPane);
     }
 }

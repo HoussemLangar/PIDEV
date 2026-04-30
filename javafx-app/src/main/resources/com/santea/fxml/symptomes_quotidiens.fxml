@@ -100,7 +100,7 @@
                 </HBox>
 
                 <VBox spacing="10" styleClass="profile-card" maxWidth="1100">
-                    <Label text="Prédiction & tendances (basé sur tes données)" styleClass="profile-section-title"/>
+                    <Label text="Prédiction &amp; tendances (basé sur tes données)" styleClass="profile-section-title"/>
                     <Label text="Analyse automatique des symptômes + journal santé (hydratation, sommeil, activité)."
                            styleClass="sub-checkout-help" wrapText="true"/>
                     <Label fx:id="predictionLabel" text="Chargement..." wrapText="true" styleClass="sub-checkout-help"/>
