@@ -1,4 +1,4 @@
-# PI-DEV - Environnement de développement
+# SANTEA - Environnement de développement
 
 ## Stack technique
 - Symfony 6.4
@@ -9,8 +9,6 @@
 - JavaFX (OpenJDK 17)
 
 ## Architecture physique
-
-Image (vue physique):
 
 ![Architecture physique](/docs/architecture/architecture%20physique.png)
 
@@ -91,8 +89,6 @@ flowchart TB
 ```
 
 ## Architecture logique
-
-Image (vue logique):
 
 ![Architecture logique](/docs/architecture/architecture%20logique.png)
 

@@ -8,6 +8,7 @@
 <?import javafx.scene.control.Pagination?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.web.WebView?>
 <?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
@@ -60,6 +61,7 @@
 							<Button fx:id="pharmaciesSectionButton" text="Pharmacies" styleClass="pharm-switch-btn" onAction="#handleSectionPharmacies"/>
 							<Button fx:id="medicamentsSectionButton" text="Medicaments" styleClass="pharm-switch-btn" onAction="#handleSectionMedicaments"/>
 							<Button fx:id="reservationsSectionButton" text="Reservations" styleClass="pharm-switch-btn" onAction="#handleSectionReservations"/>
+							<Button fx:id="aiAssistantSectionButton" text="Assistant IA" styleClass="pharm-switch-btn" onAction="#handleSectionAiAssistant"/>
 						</HBox>
 
 						<Label fx:id="feedbackLabel" text="" styleClass="pharm-feedback"/>
@@ -123,6 +125,19 @@
 											</styleClass>
 										</Button>
 									</FlowPane>
+									<VBox spacing="8" styleClass="pharm-map-box">
+										<Label text="Localisation pharmacie (carte + recherche)" styleClass="pharm-panel-subtitle"/>
+										<WebView fx:id="pharmacyLocationMapView" prefHeight="320" minHeight="280"/>
+										<HBox alignment="CENTER_LEFT" spacing="10">
+											<Label fx:id="pharmacyCoordsLabel" text="Coordonnees: non selectionnees" styleClass="pharm-map-coords" HBox.hgrow="ALWAYS"/>
+											<Button fx:id="myPositionButton" text="📍 Ma Position" onAction="#handleMyPosition">
+												<styleClass>
+													<String fx:value="pharm-btn"/>
+													<String fx:value="pharm-btn-secondary"/>
+												</styleClass>
+											</Button>
+										</HBox>
+									</VBox>
 								</VBox>
 								<FlowPane fx:id="managedPharmaciesBox" hgap="10" vgap="10" prefWrapLength="1180"/>
 								<Pagination fx:id="managedPharmaciesPagination" visible="false" managed="false"/>
@@ -250,6 +265,55 @@
 								<FlowPane fx:id="incomingReservationsBox" hgap="10" vgap="10" prefWrapLength="1180"/>
 								<Pagination fx:id="incomingReservationsPagination" visible="false" managed="false"/>
 							</VBox>
+						</VBox>
+
+						<VBox fx:id="aiAssistantSection" spacing="12" visible="false" managed="false" styleClass="pharm-panel">
+							<VBox spacing="4">
+								<Label text="Assistant IA Pharmacien" styleClass="pharm-panel-title"/>
+								<Label text="Posez une question sur votre activite: stock, reservations, priorites quotidiennes." styleClass="pharm-panel-subtitle" wrapText="true"/>
+							</VBox>
+
+							<FlowPane hgap="10" vgap="10" prefWrapLength="1180">
+								<VBox styleClass="pharm-ai-context-card">
+									<Label text="Pharmacies" styleClass="pharm-ai-context-label"/>
+									<Label fx:id="aiContextPharmaciesLabel" text="0" styleClass="pharm-ai-context-value"/>
+								</VBox>
+								<VBox styleClass="pharm-ai-context-card">
+									<Label text="Medicaments" styleClass="pharm-ai-context-label"/>
+									<Label fx:id="aiContextMedicamentsLabel" text="0" styleClass="pharm-ai-context-value"/>
+								</VBox>
+								<VBox styleClass="pharm-ai-context-card">
+									<Label text="Reservations en attente" styleClass="pharm-ai-context-label"/>
+									<Label fx:id="aiContextPendingLabel" text="0" styleClass="pharm-ai-context-value"/>
+								</VBox>
+								<VBox styleClass="pharm-ai-context-card">
+									<Label text="Stocks &lt;= 10" styleClass="pharm-ai-context-label"/>
+									<Label fx:id="aiContextLowStockLabel" text="0" styleClass="pharm-ai-context-value"/>
+								</VBox>
+							</FlowPane>
+
+							<ScrollPane fx:id="aiChatScrollPane" fitToWidth="true" styleClass="pharm-ai-chat-scroll">
+								<content>
+									<VBox fx:id="aiChatLogBox" spacing="8" styleClass="pharm-ai-chat-log"/>
+								</content>
+							</ScrollPane>
+
+							<FlowPane hgap="8" vgap="8" prefWrapLength="1180">
+								<Button text="Priorites du jour" styleClass="pharm-ai-prompt-btn" onAction="#handleAiPromptPriorities"/>
+								<Button text="Analyse du stock" styleClass="pharm-ai-prompt-btn" onAction="#handleAiPromptStock"/>
+								<Button text="Reservations en attente" styleClass="pharm-ai-prompt-btn" onAction="#handleAiPromptReservations"/>
+							</FlowPane>
+
+							<HBox alignment="CENTER_LEFT" spacing="10" styleClass="pharm-ai-input-row">
+								<TextField fx:id="aiChatInput" promptText="Posez une question..." styleClass="pharm-input" HBox.hgrow="ALWAYS" onAction="#handleAiSubmit"/>
+								<Button text="Envoyer" onAction="#handleAiSubmit">
+									<styleClass>
+										<String fx:value="pharm-btn"/>
+										<String fx:value="pharm-btn-primary"/>
+									</styleClass>
+								</Button>
+							</HBox>
+							<Label text="Conseils d'aide a la decision - verifiez toujours la reglementation applicable." styleClass="pharm-ai-note" wrapText="true"/>
 						</VBox>
 					</VBox>
 				</VBox>

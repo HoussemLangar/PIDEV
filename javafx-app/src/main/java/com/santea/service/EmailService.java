@@ -86,6 +86,10 @@ public class EmailService {
         return sendEmail(toEmail, subject, html, text);
     }
 
+    public boolean sendCustomEmail(String toEmail, String subject, String htmlBody, String textBody) {
+        return sendEmail(toEmail, subject, htmlBody, textBody);
+    }
+
     public boolean isConfigured() {
         return mailConfig.isEnabled();
     }

@@ -61,7 +61,7 @@
                                 <Region HBox.hgrow="ALWAYS"/>
                                 <Label text="Personnalisé" styleClass="blog-personalized-badge"/>
                             </HBox>
-                            <Label text="Top 4 contenus avec les meilleurs scores." styleClass="blog-panel-subtitle"/>
+                            <Label text="Mots-clés issus de votre rôle, abonnement, spécialités et interactions (likes / commentaires) — sinon contenus récents." styleClass="blog-panel-subtitle"/>
                             <FlowPane fx:id="recommendedCardsPane" hgap="12" vgap="12" prefWrapLength="1180"/>
                         </VBox>
 

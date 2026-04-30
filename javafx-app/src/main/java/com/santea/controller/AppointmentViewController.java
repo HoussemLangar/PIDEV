@@ -3,12 +3,16 @@ package com.santea.controller;
 import com.santea.model.User;
 import com.santea.navigation.AppNavigator;
 import com.santea.service.AppointmentService;
+import com.santea.service.AppointmentVoiceIntentServer;
 import com.santea.service.AuthSession;
+import com.santea.service.VoiceRecognitionService;
 import javafx.animation.PauseTransition;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
+import javafx.geometry.NodeOrientation;
 import javafx.geometry.Pos;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonBar;
@@ -18,6 +22,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
@@ -26,12 +31,12 @@ import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.Modality;
 import javafx.util.Duration;
-
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -42,10 +47,51 @@ import java.util.ResourceBundle;
 
 public class AppointmentViewController implements Initializable {
 	private static final String APPOINTMENT_STYLESHEET = "/com/santea/styles/auth.css";
+	private static final String VOICE_MODEL_HINT = AppointmentService.VOICE_MODEL_HINT;
+	private static final String VOICE_WELCOME = AppointmentService.VOICE_WELCOME;
+	private static final String VOICE_STATUS_ONLINE = AppointmentService.VOICE_STATUS_ONLINE;
+	private static final String VOICE_STATUS_LISTENING = AppointmentService.VOICE_STATUS_LISTENING;
+	private static final String VOICE_STATUS_PROCESSING = AppointmentService.VOICE_STATUS_PROCESSING;
+	private static final String VOICE_STATUS_READY = AppointmentService.VOICE_STATUS_READY;
+	private static final String VOICE_STATUS_BOOKED = AppointmentService.VOICE_STATUS_BOOKED;
+	private static final String VOICE_HINT_READY = AppointmentService.VOICE_HINT_READY;
+	private static final String VOICE_HEARD_PREFIX = AppointmentService.VOICE_HEARD_PREFIX;
+	private static final String VOICE_ERROR_MIC_PREFIX = AppointmentService.VOICE_ERROR_MIC_PREFIX;
+	private static final String VOICE_USER_LABEL = AppointmentService.VOICE_USER_LABEL;
+	private static final String VOICE_ASSISTANT_LABEL = AppointmentService.VOICE_ASSISTANT_LABEL;
 
 	private final AppointmentService appointmentService = new AppointmentService();
+	private final VoiceRecognitionService voiceRecognitionService = new VoiceRecognitionService();
 
 	private final ToggleGroup slotsToggleGroup = new ToggleGroup();
+	private final VoiceRecognitionService.Listener voiceListener = new VoiceRecognitionService.Listener() {
+		@Override
+		public void onListening(boolean listening) {
+			Platform.runLater(() -> setVoiceListening(listening));
+		}
+
+		@Override
+		public void onTranscript(String text) {
+			Platform.runLater(() -> submitVoiceText(text));
+		}
+
+		@Override
+		public void onPartial(String text) {
+			Platform.runLater(() -> {
+				if (voiceHint != null && voiceListening) {
+					voiceHint.setText(VOICE_HEARD_PREFIX + text);
+				}
+			});
+		}
+
+		@Override
+		public void onError(String message) {
+			Platform.runLater(() -> {
+				addVoiceMessage(VOICE_ERROR_MIC_PREFIX + safe(message), false);
+				setVoiceListening(false);
+			});
+		}
+	};
 
 	private User currentUser;
 	private AppointmentService.AccessScope accessScope = AppointmentService.AccessScope.DENIED;
@@ -53,6 +99,8 @@ public class AppointmentViewController implements Initializable {
 	private List<AppointmentService.PatientAppointmentRow> patientAppointments = List.of();
 	private List<AppointmentService.DoctorAppointmentRow> doctorAppointments = List.of();
 	private PauseTransition bookingFeedbackHideTimer;
+	private boolean voiceListening;
+	private String pendingVoiceCommand;
 
 	@FXML
 	private VBox root;
@@ -80,6 +128,36 @@ public class AppointmentViewController implements Initializable {
 
 	@FXML
 	private Button heroVoiceButton;
+
+	@FXML
+	private StackPane voiceOverlay;
+
+	@FXML
+	private VBox voiceDrawer;
+
+	@FXML
+	private ScrollPane voiceLogScroll;
+
+	@FXML
+	private VBox voiceLog;
+
+	@FXML
+	private Label voiceStatus;
+
+	@FXML
+	private Label voiceHint;
+
+	@FXML
+	private TextArea voiceInput;
+
+	@FXML
+	private Button voiceMicButton;
+
+	@FXML
+	private Button voiceSendButton;
+
+	@FXML
+	private WebView voiceWebView;
 
 	@FXML
 	private VBox restrictedCard;
@@ -164,8 +242,10 @@ public class AppointmentViewController implements Initializable {
 		setupDoctorCombo();
 		setupDefaultDates();
 		setupListeners();
+		setupVoiceDrawer();
 		hideBookingFeedback();
 		configurePageByAccess();
+		AppointmentVoiceIntentServer.startIfNeeded(appointmentService);
 	}
 
 	@FXML
@@ -208,43 +288,22 @@ public class AppointmentViewController implements Initializable {
 		if (accessScope != AppointmentService.AccessScope.PATIENT) {
 			return;
 		}
+		openVoiceDrawer();
+	}
 
-		Dialog<String> dialog = new Dialog<>();
-		dialog.setTitle("Assistant Vocal");
-		dialog.setHeaderText("Commande vocale (ar/fr)\nEx: خذي رونديفو 24/02/2026 مع دكتور حسام 10:00");
+	@FXML
+	private void handleCloseVoiceDrawer() {
+		closeVoiceDrawer();
+	}
 
-		TextArea input = new TextArea();
-		input.getStyleClass().add("appt-textarea");
-		input.setWrapText(true);
-		input.setPrefRowCount(4);
-		dialog.getDialogPane().setContent(input);
-		dialog.getDialogPane().getButtonTypes().addAll(javafx.scene.control.ButtonType.OK, javafx.scene.control.ButtonType.CANCEL);
-		styleDialog(dialog, false);
+	@FXML
+	private void handleVoiceSend() {
+		submitVoiceText(voiceInput == null ? "" : voiceInput.getText());
+	}
 
-		dialog.setResultConverter(buttonType -> buttonType == javafx.scene.control.ButtonType.OK ? input.getText() : null);
-		Optional<String> command = dialog.showAndWait();
-		if (command.isEmpty() || command.get().isBlank()) {
-			return;
-		}
-
-		AppointmentService.VoiceBookingResult result = appointmentService.bookFromVoice(currentUser, command.get());
-		if (!result.success()) {
-			showError("Commande vocale", result.message());
-			return;
-		}
-
-		if (result.doctor() != null) {
-			doctorCombo.getSelectionModel().select(result.doctor());
-		}
-		if (result.date() != null) {
-			bookingDatePicker.setValue(result.date());
-		}
-
-		showSuccess(result.summary());
-		reloadPatientData();
-		refreshSlots();
-		bookingSection.setManaged(false);
-		bookingSection.setVisible(false);
+	@FXML
+	private void handleVoiceMic() {
+		toggleVoiceListening();
 	}
 
 	@FXML
@@ -358,6 +417,170 @@ public class AppointmentViewController implements Initializable {
 
 		doctorCombo.valueProperty().addListener((obs, oldV, newV) -> refreshSlots());
 		bookingDatePicker.valueProperty().addListener((obs, oldV, newV) -> refreshSlots());
+	}
+
+	private void setupVoiceDrawer() {
+		if (voiceOverlay == null || voiceDrawer == null) {
+			return;
+		}
+		voiceOverlay.setVisible(false);
+		voiceOverlay.setManaged(false);
+		voiceOverlay.setOnMouseClicked(event -> closeVoiceDrawer());
+		voiceDrawer.setOnMouseClicked(event -> event.consume());
+		if (voiceInput != null) {
+			voiceInput.setWrapText(true);
+			voiceInput.setNodeOrientation(NodeOrientation.RIGHT_TO_LEFT);
+		}
+		addVoiceMessage(VOICE_WELCOME, false);
+		updateVoiceStatus(VOICE_STATUS_ONLINE);
+		if (voiceHint != null) {
+			voiceHint.setText(VOICE_HINT_READY);
+			voiceHint.setNodeOrientation(NodeOrientation.RIGHT_TO_LEFT);
+		}
+	}
+
+	private void openVoiceDrawer() {
+		if (voiceOverlay == null) {
+			return;
+		}
+		voiceOverlay.setVisible(true);
+		voiceOverlay.setManaged(true);
+		if (voiceInput != null) {
+			voiceInput.requestFocus();
+		}
+	}
+
+	private void closeVoiceDrawer() {
+		if (voiceOverlay == null) {
+			return;
+		}
+		stopVoiceListening();
+		voiceOverlay.setVisible(false);
+		voiceOverlay.setManaged(false);
+	}
+
+	private void submitVoiceText(String raw) {
+		String command = safe(raw);
+		if (command.isBlank()) {
+			return;
+		}
+		addVoiceMessage(command, true);
+		if (voiceInput != null) {
+			voiceInput.clear();
+		}
+		updateVoiceStatus(VOICE_STATUS_PROCESSING);
+
+		String effectiveCommand = buildVoiceCommand(command);
+		AppointmentService.VoiceBookingResult result = appointmentService.bookFromVoice(currentUser, effectiveCommand);
+		if (!result.success()) {
+			addVoiceMessage(result.message(), false);
+			updateVoiceStatus(VOICE_STATUS_READY);
+			if (needsFollowUp(result.message())) {
+				pendingVoiceCommand = effectiveCommand;
+			}
+			return;
+		}
+		pendingVoiceCommand = null;
+
+		if (result.doctor() != null) {
+			doctorCombo.getSelectionModel().select(result.doctor());
+		}
+		if (result.date() != null) {
+			bookingDatePicker.setValue(result.date());
+		}
+		addVoiceMessage(result.summary(), false);
+		updateVoiceStatus(VOICE_STATUS_BOOKED);
+		reloadPatientData();
+		refreshSlots();
+		bookingSection.setManaged(false);
+		bookingSection.setVisible(false);
+	}
+
+	private String buildVoiceCommand(String latest) {
+		if (pendingVoiceCommand == null || pendingVoiceCommand.isBlank()) {
+			return latest;
+		}
+		if (!isShortFollowUp(latest)) {
+			pendingVoiceCommand = null;
+			return latest;
+		}
+		String combined = (pendingVoiceCommand + " " + latest).trim();
+		pendingVoiceCommand = null;
+		return combined;
+	}
+
+	private boolean isShortFollowUp(String text) {
+		String normalized = safe(text);
+		if (normalized.isBlank()) {
+			return false;
+		}
+		int length = normalized.length();
+		int tokens = normalized.split("\\s+").length;
+		return length <= 28 || tokens <= 4;
+	}
+
+	private boolean needsFollowUp(String message) {
+		if (message == null || message.isBlank()) {
+			return false;
+		}
+		return message.equals(AppointmentService.VOICE_PROMPT_MISSING_DATE)
+			|| message.equals(AppointmentService.VOICE_PROMPT_MISSING_DOCTOR);
+	}
+
+	private void addVoiceMessage(String text, boolean fromUser) {
+		if (voiceLog == null) {
+			return;
+		}
+		HBox row = new HBox(8);
+		row.getStyleClass().add("voice-msg");
+		if (fromUser) {
+			row.getStyleClass().add("user");
+		}
+		Label bubble = new Label(text);
+		bubble.getStyleClass().add("voice-bubble");
+		bubble.setWrapText(true);
+
+		Label avatar = new Label(fromUser ? VOICE_USER_LABEL : VOICE_ASSISTANT_LABEL);
+		avatar.getStyleClass().add("voice-avatar");
+		bubble.setNodeOrientation(NodeOrientation.RIGHT_TO_LEFT);
+
+		if (fromUser) {
+			row.getChildren().addAll(bubble, avatar);
+			row.setAlignment(Pos.CENTER_RIGHT);
+		} else {
+			row.getChildren().addAll(avatar, bubble);
+			row.setAlignment(Pos.CENTER_LEFT);
+		}
+		voiceLog.getChildren().add(row);
+		scrollVoiceLogToBottom();
+	}
+
+	private void scrollVoiceLogToBottom() {
+		if (voiceLogScroll == null) {
+			return;
+		}
+		Platform.runLater(() -> voiceLogScroll.setVvalue(1.0));
+	}
+
+	private void updateVoiceStatus(String text) {
+		if (voiceStatus != null) {
+			voiceStatus.setText(text);
+		}
+	}
+
+	private void toggleVoiceListening() {
+		if (voiceListening) {
+			stopVoiceListening();
+			return;
+		}
+		boolean started = voiceRecognitionService.start(voiceListener);
+		if (!started && voiceHint != null) {
+			voiceHint.setText(VOICE_MODEL_HINT);
+		}
+	}
+
+	private void stopVoiceListening() {
+		voiceRecognitionService.stop();
 	}
 
 	private void configurePageByAccess() {
@@ -922,6 +1145,22 @@ public class AppointmentViewController implements Initializable {
 			.replace("\\", "\\\\")
 			.replace("'", "\\'")
 			.replace("\n", " ");
+	}
+
+	private void setVoiceListening(boolean listening) {
+		voiceListening = listening;
+		if (voiceMicButton == null) {
+			return;
+		}
+		if (listening) {
+			if (!voiceMicButton.getStyleClass().contains("active")) {
+				voiceMicButton.getStyleClass().add("active");
+			}
+			updateVoiceStatus(VOICE_STATUS_LISTENING);
+		} else {
+			voiceMicButton.getStyleClass().removeAll("active");
+			updateVoiceStatus(VOICE_STATUS_ONLINE);
+		}
 	}
 
 	private String safe(String value) {

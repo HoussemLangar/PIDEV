@@ -123,4 +123,38 @@
 		</content>
 	</ScrollPane>
 
+	<StackPane fx:id="voiceOverlay" styleClass="voice-overlay" visible="false" managed="false">
+		<HBox alignment="CENTER_RIGHT" spacing="0" StackPane.alignment="CENTER_RIGHT">
+			<VBox fx:id="voiceDrawer" spacing="12" styleClass="voice-drawer">
+				<HBox alignment="CENTER_LEFT" spacing="12" styleClass="voice-drawer-header">
+					<Label text="AI" styleClass="voice-header-icon"/>
+					<VBox spacing="2" HBox.hgrow="ALWAYS">
+						<Label text="Assistant Vocal" styleClass="voice-drawer-title"/>
+						<Label text="Arabe tunisien" styleClass="voice-drawer-subtitle"/>
+					</VBox>
+					<HBox alignment="CENTER_LEFT" spacing="6">
+						<Label text="" styleClass="voice-status-dot"/>
+						<Label fx:id="voiceStatus" text="En ligne" styleClass="voice-drawer-status"/>
+					</HBox>
+					<Button text="X" styleClass="voice-close-btn" onAction="#handleCloseVoiceDrawer"/>
+				</HBox>
+
+				<ScrollPane fx:id="voiceLogScroll" fitToWidth="true" styleClass="voice-log-scroll" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED">
+					<content>
+						<VBox fx:id="voiceLog" spacing="10" styleClass="voice-log"/>
+					</content>
+				</ScrollPane>
+
+				<HBox spacing="8" alignment="CENTER_LEFT" styleClass="voice-input-row">
+					<Button fx:id="voiceMicButton" text="MIC" styleClass="voice-mic-btn" onAction="#handleVoiceMic"/>
+					<TextArea fx:id="voiceInput" promptText="Ecrire une commande..." prefRowCount="2" styleClass="voice-input" HBox.hgrow="ALWAYS"/>
+					<Button fx:id="voiceSendButton" text=">" styleClass="voice-send-btn" onAction="#handleVoiceSend"/>
+				</HBox>
+
+				<Label fx:id="voiceHint" text="" styleClass="voice-hint"/>
+				<WebView fx:id="voiceWebView" prefWidth="1" prefHeight="1" visible="false" managed="false"/>
+			</VBox>
+		</HBox>
+	</StackPane>
+
 </StackPane>

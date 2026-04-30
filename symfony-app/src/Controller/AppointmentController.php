@@ -601,6 +601,59 @@ class AppointmentController extends AbstractController
         }
     }
 
+    #[Route('/intent', name: 'intent', methods: ['POST'])]
+    public function intent(Request $request): JsonResponse
+    {
+        if (!$this->isVoiceIntentAuthorized($request)) {
+            return new JsonResponse(['success' => false, 'message' => 'Non autorise'], 401);
+        }
+
+        $data = json_decode($request->getContent(), true) ?: [];
+        $rawText = trim((string) ($data['text'] ?? ''));
+        if ($rawText === '') {
+            return new JsonResponse(['success' => false, 'message' => 'Commande vocale vide'], 422);
+        }
+
+        $aiExtraction = $this->extractVoiceIntentWithAi($rawText);
+        $normalizedText = $this->normalizeVoiceText($rawText);
+
+        $date = null;
+        if (is_array($aiExtraction) && isset($aiExtraction['date']) && is_string($aiExtraction['date'])) {
+            $date = $this->parseIsoDate($aiExtraction['date']);
+        }
+        $date ??= $this->extractDateFromVoiceText($normalizedText);
+
+        $doctorHint = $this->extractDoctorNameFromVoiceText($normalizedText);
+        if (is_array($aiExtraction) && isset($aiExtraction['doctor_query']) && is_string($aiExtraction['doctor_query'])) {
+            $doctorHint = trim($aiExtraction['doctor_query']) !== '' ? trim($aiExtraction['doctor_query']) : $doctorHint;
+        }
+
+        $doctorLabel = '';
+        $specialty = '';
+        $doctor = $this->matchDoctorFromVoiceText($doctorHint ?: $normalizedText);
+        if ($doctor instanceof Medecin) {
+            $user = $doctor->getUser();
+            $doctorLabel = trim(($user->getNom() ?? '') . ' ' . ($user->getPrenom() ?? ''));
+            $specialty = (string) ($doctor->getSpecialite() ?? '');
+        } elseif (is_string($doctorHint)) {
+            $doctorLabel = trim($doctorHint);
+        }
+
+        $requestedTime = null;
+        if (is_array($aiExtraction) && isset($aiExtraction['requested_time']) && is_string($aiExtraction['requested_time'])) {
+            $requestedTime = $this->normalizeAiTime($aiExtraction['requested_time']);
+        }
+        $requestedTime ??= $this->extractTimeFromVoiceText($normalizedText, $date);
+
+        return new JsonResponse([
+            'success' => true,
+            'doctor' => $doctorLabel,
+            'specialite' => $specialty,
+            'date' => $date ? $date->format('Y-m-d') : '',
+            'time' => $requestedTime ?? '',
+        ]);
+    }
+
     private function ensurePatient(User $user): ?Patient
     {
         if ($user->getPatient()) {
@@ -617,6 +670,26 @@ class AppointmentController extends AbstractController
         }
 
         return null;
+    }
+
+    private function isVoiceIntentAuthorized(Request $request): bool
+    {
+        $expected = $_ENV['VOICE_INTENT_TOKEN'] ?? $_SERVER['VOICE_INTENT_TOKEN'] ?? '';
+        if (!is_string($expected) || trim($expected) === '') {
+            return true;
+        }
+        $expected = trim($expected);
+        $provided = trim((string) $request->headers->get('X-Voice-Token', ''));
+        if ($provided === '') {
+            $auth = (string) $request->headers->get('Authorization', '');
+            if (str_starts_with($auth, 'Bearer ')) {
+                $provided = trim(substr($auth, 7));
+            }
+        }
+        if ($provided === '') {
+            return false;
+        }
+        return hash_equals($expected, $provided);
     }
 
     private function canAccessPatient(User $user): bool

@@ -13,11 +13,9 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
 
 public class ContentCommunityService {
@@ -30,12 +28,16 @@ public class ContentCommunityService {
 
     private final DatabaseService databaseService;
     private final AuthorizationPolicyService authorizationPolicyService;
-    private final List<String> forbiddenWords;
+    private final ForbiddenWordsFilterService forbiddenWordsFilterService;
+    private final CommentModerationService commentModerationService;
+    private final CommentSentimentScoringService commentSentimentScoringService;
 
     public ContentCommunityService() {
         this.databaseService = new DatabaseService(DatabaseConfig.fromEnvironment());
         this.authorizationPolicyService = new AuthorizationPolicyService();
-        this.forbiddenWords = loadForbiddenWords();
+        this.forbiddenWordsFilterService = new ForbiddenWordsFilterService(loadForbiddenWords());
+        this.commentModerationService = new CommentModerationService(forbiddenWordsFilterService);
+        this.commentSentimentScoringService = new CommentSentimentScoringService();
         ensureTables();
     }
 
@@ -70,12 +72,7 @@ public class ContentCommunityService {
         }
 
         List<ContentSummary> all = findVisibleContents(user, filter);
-        List<ContentSummary> recommended = List.of();
-
-        String effectiveRole = authorizationPolicyService.effectiveRole(user);
-        if ("ROLE_PATIENT".equalsIgnoreCase(effectiveRole)) {
-            recommended = findRecommended(user, 4);
-        }
+        List<ContentSummary> recommended = findRecommended(user, 6);
 
         return new FeedData(all, recommended);
     }
@@ -315,13 +312,14 @@ public class ContentCommunityService {
             return ActionResult.failure("Le commentaire doit contenir entre 3 et 1000 caracteres.");
         }
 
-        ModerationResult moderationResult = moderate(normalized);
-        if (moderationResult.blocked()) {
-            return ActionResult.failure("Commentaire supprime pour contenu inapproprie.");
+        CommentModerationService.ModerationOutcome moderation = commentModerationService.moderate(normalized);
+        if (moderation.blocked()) {
+            return ActionResult.failure("Commentaire supprimé pour contenu inapproprié.");
         }
 
-        SentimentResult sentimentResult = analyzeSentiment(normalized);
-        int note = (int) Math.round(sentimentResult.signedScore() * 100.0);
+        CommentSentimentScoringService.SentimentAnalysis analysis = commentSentimentScoringService.analyze(normalized);
+        double signedScore = commentSentimentScoringService.toSignedScore(analysis);
+        int note = (int) Math.round(signedScore * 100.0);
 
         String sql = "INSERT INTO commentaires (contenu_id, user_id, commentaire, note, statut, created_at, updated_at) VALUES (?, ?, ?, ?, 'publie', ?, ?)";
         try (Connection connection = databaseService.getConnection();
@@ -715,70 +713,105 @@ public class ContentCommunityService {
         }
     }
 
+    /**
+     * Comme ContentRecommendationService Symfony : requête SQL mots-clés (publié/validé ou auteur),
+     * sinon fallback publications récentes (+ contenus de l'utilisateur).
+     */
     private List<ContentSummary> findRecommended(User user, int limit) {
-        List<String> keywords = buildRecommendationKeywords(user);
-        List<ContentSummary> visible = findVisibleContents(user, FeedFilter.defaultFilter());
-        if (visible.isEmpty()) {
+        if (user == null || user.getId() == null || !databaseService.canConnect()) {
             return List.of();
         }
 
-        if (keywords.isEmpty()) {
-            return visible.stream().limit(Math.max(1, limit)).toList();
-        }
-
-        List<ContentSummary> filtered = visible.stream()
-                .filter(summary -> matchesKeywords(summary, keywords))
-                .sorted(Comparator
-                        .comparingDouble(ContentSummary::scoreArticle).reversed()
-                        .thenComparing(ContentSummary::publishedAtOrCreated, Comparator.nullsLast(Comparator.reverseOrder()))
-                        .thenComparingInt(ContentSummary::id).reversed())
+        int safeLimit = Math.max(1, Math.min(12, limit));
+        LinkedHashSet<String> keywordSet = new LinkedHashSet<>(ContentRecommendationService.buildKeywords(user));
+        keywordSet.addAll(loadUserInteractionKeywords(user.getId()));
+        List<String> keywords = keywordSet.stream()
+                .map(k -> k.toLowerCase(Locale.ROOT).trim())
+                .filter(s -> !s.isBlank())
                 .toList();
 
-        if (!filtered.isEmpty()) {
-            return filtered.stream().limit(Math.max(1, limit)).toList();
-        }
-
-        return visible.stream().limit(Math.max(1, limit)).toList();
-    }
-
-    private boolean matchesKeywords(ContentSummary summary, List<String> keywords) {
-        String haystack = (summary.title() + " " + summary.description() + " " + summary.tags() + " " + summary.category())
-                .toLowerCase(Locale.ROOT);
-        for (String keyword : keywords) {
-            if (!keyword.isBlank() && haystack.contains(keyword.toLowerCase(Locale.ROOT))) {
-                return true;
+        if (!keywords.isEmpty()) {
+            List<ContentSummary> matched = queryRecommendedWithKeywords(user.getId(), keywords, safeLimit);
+            matched = filterAccessibleRecommended(user, matched);
+            if (!matched.isEmpty()) {
+                return matched.stream().limit(safeLimit).toList();
             }
         }
-        return false;
+
+        List<ContentSummary> fallback = queryRecommendedFallback(user.getId(), safeLimit);
+        return filterAccessibleRecommended(user, fallback).stream().limit(safeLimit).toList();
     }
 
-    private List<String> buildRecommendationKeywords(User user) {
-        LinkedHashSet<String> keywords = new LinkedHashSet<>();
-
-        String role = normalize(user.getRole()).toUpperCase(Locale.ROOT);
-        String subscriptionType = normalize(user.getSubscriptionType()).toUpperCase(Locale.ROOT);
-        Map<String, List<String>> map = Map.of(
-                "ROLE_PATIENT", List.of("patient", "bien-etre", "sante"),
-                "ROLE_MEDECIN", List.of("medecin", "medical", "clinique"),
-                "ROLE_COACH", List.of("sport", "coaching", "entrainement"),
-                "ROLE_NUTRITIONNISTE", List.of("nutrition", "alimentaire", "dietetique")
-        );
-
-        keywords.addAll(map.getOrDefault(role, List.of()));
-        if (!subscriptionType.isBlank()) {
-            keywords.add(subscriptionType.toLowerCase(Locale.ROOT));
+    private List<ContentSummary> filterAccessibleRecommended(User user, List<ContentSummary> rows) {
+        if (rows == null || rows.isEmpty()) {
+            return List.of();
         }
+        return rows.stream().filter(s -> canSeeContent(user, s)).toList();
+    }
 
-        if (user.getId() != null) {
-            keywords.addAll(loadUserInteractionKeywords(user.getId()));
+    private String sqlContentSummaryBase() {
+        return "SELECT c.id, c.auteur_id, c.titre, c.type, c.description, c.contenu, c.categorie, c.tags, c.statut, "
+                + "c.date_publication, c.created_at, c.updated_at, "
+                + "u.nom, u.prenom, u.email, u.role, u.subscription_type, "
+                + "(SELECT COUNT(*) FROM likes l WHERE l.contenu_id = c.id) AS likes_count, "
+                + "(SELECT COUNT(*) FROM commentaires cm WHERE cm.contenu_id = c.id AND cm.statut = 'publie') AS comments_count, "
+                + "COALESCE(s.score_article, 0) AS score_article, COALESCE(s.nb_commentaires, 0) AS score_count "
+                + "FROM contenu c "
+                + "LEFT JOIN users u ON u.id = c.auteur_id "
+                + "LEFT JOIN article_scores s ON s.contenu_id = c.id ";
+    }
+
+    private List<ContentSummary> queryRecommendedWithKeywords(int userId, List<String> keywords, int safeLimit) {
+        StringBuilder sql = new StringBuilder(sqlContentSummaryBase());
+        sql.append("WHERE (c.statut = 'publie' OR c.auteur_id = ?) AND (");
+        List<Object> params = new ArrayList<>();
+        params.add(userId);
+        for (int i = 0; i < keywords.size(); i++) {
+            if (i > 0) {
+                sql.append(" OR ");
+            }
+            sql.append("(LOWER(c.titre) LIKE ? OR LOWER(COALESCE(c.description,'')) LIKE ? OR ")
+                    .append("LOWER(COALESCE(c.tags,'')) LIKE ? OR LOWER(COALESCE(c.categorie,'')) LIKE ?)");
+            String like = "%" + keywords.get(i) + "%";
+            params.add(like);
+            params.add(like);
+            params.add(like);
+            params.add(like);
         }
+        sql.append(") ORDER BY COALESCE(c.date_publication, c.created_at) DESC, c.id DESC LIMIT ?");
+        params.add(safeLimit);
 
-        return keywords.stream()
-                .map(String::trim)
-                .filter(s -> !s.isBlank())
-                .map(s -> s.toLowerCase(Locale.ROOT))
-                .distinct()
-                .toList();
+        try (Connection connection = databaseService.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql.toString())) {
+            bindParams(statement, params);
+            return mapContentSummaryList(statement);
+        } catch (SQLException exception) {
+            return List.of();
+        }
+    }
+
+    private List<ContentSummary> queryRecommendedFallback(int userId, int safeLimit) {
+        String sql = sqlContentSummaryBase()
+                + "WHERE (c.statut = 'publie' OR c.auteur_id = ?) "
+                + "ORDER BY COALESCE(c.date_publication, c.created_at) DESC, c.id DESC LIMIT ?";
+        try (Connection connection = databaseService.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, userId);
+            statement.setInt(2, safeLimit);
+            return mapContentSummaryList(statement);
+        } catch (SQLException exception) {
+            return List.of();
+        }
+    }
+
+    private List<ContentSummary> mapContentSummaryList(PreparedStatement statement) throws SQLException {
+        List<ContentSummary> list = new ArrayList<>();
+        try (ResultSet rs = statement.executeQuery()) {
+            while (rs.next()) {
+                list.add(mapContentSummary(rs));
+            }
+        }
+        return list;
     }
 
     private List<String> loadUserInteractionKeywords(int userId) {
@@ -849,134 +882,12 @@ public class ContentCommunityService {
         return ValidationResult.ok();
     }
 
-    private ModerationResult moderate(String text) {
-        String normalized = normalize(text);
-        if (normalized.isBlank()) {
-            return new ModerationResult(true, 1.0, "EMPTY");
-        }
-
-        List<String> badWords = findForbiddenWords(normalized);
-        if (!badWords.isEmpty()) {
-            return new ModerationResult(true, 0.9, "TOXIC_FALLBACK");
-        }
-
-        return new ModerationResult(false, 0.1, "CLEAN_FALLBACK");
-    }
-
-    private List<String> findForbiddenWords(String text) {
-        if (forbiddenWords.isEmpty() || blank(text)) {
-            return List.of();
-        }
-
-        String cleanedText = cleanText(text);
-        List<String> matches = new ArrayList<>();
-        for (String forbidden : forbiddenWords) {
-            String word = normalize(forbidden);
-            if (word.isBlank()) {
-                continue;
-            }
-            if (matchesWord(cleanedText, word)) {
-                matches.add(word);
-            }
-        }
-
-        return matches.stream().distinct().toList();
-    }
-
-    private boolean matchesWord(String cleanedText, String word) {
-        String normalizedWord = normalizeLeetToken(word);
-        if (normalizedWord.isBlank()) {
-            return false;
-        }
-
-        String[] tokens = cleanedText.split("\\s+");
-        for (String token : tokens) {
-            if (normalizeLeetToken(token).equals(normalizedWord)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private String cleanText(String text) {
-        String normalized = normalize(text).replaceAll("\\s+", " ");
-        normalized = normalized.replaceAll("[^\\p{L}\\p{N}\\s]", "");
-        return normalized.toLowerCase(Locale.ROOT);
-    }
-
-    private String normalizeLeetToken(String value) {
-        if (value == null) {
-            return "";
-        }
-
-        String normalized = value.toLowerCase(Locale.ROOT)
-                .replace('0', 'o')
-                .replace('1', 'i')
-                .replace('2', 'e')
-                .replace('3', 'e')
-                .replace('4', 'a')
-                .replace('5', 's')
-                .replace('6', 'g')
-                .replace('7', 't')
-                .replace('8', 'b')
-                .replace('9', 'g');
-
-        return normalized.replaceAll("[^\\p{L}\\p{N}]", "");
-    }
-
-    private SentimentResult analyzeSentiment(String text) {
-        String normalized = normalize(text).toLowerCase(Locale.ROOT);
-        if (normalized.isBlank()) {
-            return new SentimentResult(50, "NEUTRAL", 0.0, 0.0);
-        }
-
-        List<String> positiveWords = List.of(
-                "excellent", "super", "merci", "utile", "clair", "parfait", "top", "bon", "bien", "aide",
-                "bravo", "genial", "satisfait", "recommande", "helpful", "great", "love", "nice", "good"
-        );
-        List<String> negativeWords = List.of(
-                "nul", "mauvais", "horrible", "arnaque", "faux", "inutile", "decu", "lent",
-                "bug", "erreur", "grave", "dangereux", "haine", "violence", "spam", "bad"
-        );
-
-        int positive = 0;
-        int negative = 0;
-
-        for (String word : positiveWords) {
-            if (normalized.contains(word)) {
-                positive++;
-            }
-        }
-        for (String word : negativeWords) {
-            if (normalized.contains(word)) {
-                negative++;
-            }
-        }
-
-        int raw = 50 + (positive * 12) - (negative * 12);
-        int score = Math.max(0, Math.min(100, raw));
-        String label = score >= 55 ? "POSITIVE" : (score <= 45 ? "NEGATIVE" : "NEUTRAL");
-        double confidence = Math.min(1.0, 0.45 + (Math.abs(positive - negative) * 0.1));
-
-        double signedScore;
-        if ("POSITIVE".equals(label)) {
-            signedScore = confidence;
-        } else if ("NEGATIVE".equals(label)) {
-            signedScore = -confidence;
-        } else {
-            signedScore = 0.0;
-        }
-
-        return new SentimentResult(score, label, confidence, signedScore);
-    }
-
     private void updateArticleScore(int contentId, boolean flushIgnored) {
         if (contentId <= 0) {
             return;
         }
 
-        String commentsSql = "SELECT commentaire FROM commentaires WHERE contenu_id = ? AND statut = 'publie' ORDER BY created_at ASC";
+        String commentsSql = "SELECT note FROM commentaires WHERE contenu_id = ? AND statut = 'publie' ORDER BY created_at ASC";
         String upsertSql = "INSERT INTO article_scores (contenu_id, score_article, nb_commentaires, updated_at) "
                 + "VALUES (?, ?, ?, ?) "
                 + "ON DUPLICATE KEY UPDATE score_article = VALUES(score_article), nb_commentaires = VALUES(nb_commentaires), updated_at = VALUES(updated_at)";
@@ -991,18 +902,13 @@ public class ContentCommunityService {
 
             try (ResultSet rs = commentsStatement.executeQuery()) {
                 while (rs.next()) {
-                    String text = safe(rs.getString("commentaire"));
-                    if (text.isBlank()) {
+                    int noteRaw = rs.getInt("note");
+                    if (rs.wasNull()) {
                         continue;
                     }
 
-                    ModerationResult moderationResult = moderate(text);
-                    if (moderationResult.blocked()) {
-                        continue;
-                    }
-
-                    SentimentResult sentimentResult = analyzeSentiment(text);
-                    sum += sentimentResult.signedScore();
+                    double signedScore = Math.max(-1.0, Math.min(1.0, noteRaw / 100.0));
+                    sum += signedScore;
                     count++;
                 }
             }
@@ -1015,7 +921,8 @@ public class ContentCommunityService {
             upsertStatement.setInt(3, count);
             upsertStatement.setTimestamp(4, now);
             upsertStatement.executeUpdate();
-        } catch (SQLException ignored) {
+        } catch (SQLException exception) {
+            System.err.println("[ContentCommunityService] updateArticleScore error for contentId=" + contentId + ": " + exception.getMessage());
         }
     }
 
@@ -1300,12 +1207,6 @@ public class ContentCommunityService {
         static ValidationResult invalid(String message) {
             return new ValidationResult(false, message);
         }
-    }
-
-    private record ModerationResult(boolean blocked, double score, String label) {
-    }
-
-    private record SentimentResult(int score, String label, double confidence, double signedScore) {
     }
 
     public static String formatDateTime(LocalDateTime value) {

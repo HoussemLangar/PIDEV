@@ -7,6 +7,7 @@ import com.santea.service.AuthSession;
 import com.santea.service.AuthorizationPolicyService;
 import com.santea.service.ContentCommunityService;
 import com.santea.service.HomeDashboardService;
+import com.santea.service.UserAiScoreService;
 import com.santea.ui.ConfirmDialogs;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
@@ -40,6 +41,7 @@ public class HomeViewController {
     private final HomeDashboardService homeDashboardService = new HomeDashboardService();
     private final AuthorizationPolicyService authorizationPolicyService = new AuthorizationPolicyService();
     private final ContentCommunityService contentCommunityService = new ContentCommunityService();
+    private final UserAiScoreService userAiScoreService = new UserAiScoreService();
 
     private String selectedTheme = "light";
 
@@ -901,7 +903,7 @@ public class HomeViewController {
         roleLabel.getStyleClass().add("account-role-pill");
         HBox scoreRow = new HBox(6);
         scoreRow.setAlignment(Pos.CENTER);
-        Label scoreValue = new Label(computeProfileScore(user) + "/100");
+        Label scoreValue = new Label(userAiScoreService.calculateScore(user) + "/100");
         scoreValue.getStyleClass().add("account-score-value");
         Label scoreCaption = new Label("Score IA");
         scoreCaption.getStyleClass().add("account-score-caption");
@@ -1284,25 +1286,7 @@ public class HomeViewController {
         return authorizationPolicyService.hasAiToolsAccess(user);
     }
 
-    private int computeProfileScore(User user) {
-        int score = 35;
-        if (!safe(user.getNom()).isBlank()) {
-            score += 15;
-        }
-        if (!safe(user.getPrenom()).isBlank()) {
-            score += 15;
-        }
-        if (!safe(user.getEmail()).isBlank()) {
-            score += 20;
-        }
-        if (user.getEmailVerified() != null && user.getEmailVerified()) {
-            score += 15;
-        }
-        if (!safe(user.getSubscriptionStatus()).isBlank()) {
-            score += 10;
-        }
-        return Math.min(score, 100);
-    }
+    // Score IA calculé par UserAiScoreService (activité + ancienneté + règles + sanctions)
 
     private String humanizeRole(String role) {
         return switch (role) {

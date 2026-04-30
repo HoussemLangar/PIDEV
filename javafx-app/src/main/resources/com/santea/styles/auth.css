@@ -4332,6 +4332,155 @@
     -fx-background-color: linear-gradient(to right, #ef4444, #b91c1c);
 }
 
+/* ===== VOICE DRAWER ===== */
+.voice-overlay {
+    -fx-background-color: rgba(0, 0, 0, 0.45);
+}
+
+.voice-drawer {
+    -fx-background-color: linear-gradient(to bottom, #0b1424 0%, #0c1c34 60%, #0b2544 100%);
+    -fx-background-radius: 18 0 0 18;
+    -fx-padding: 18 18 18 18;
+    -fx-pref-width: 390;
+    -fx-max-width: 430;
+    -fx-min-height: 640;
+    -fx-spacing: 12;
+    -fx-border-color: rgba(255,255,255,0.08);
+    -fx-border-width: 1 0 1 1;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.45), 36, 0.2, -8, 0);
+}
+
+.voice-drawer-header {
+    -fx-padding: 6 0 10 0;
+    -fx-border-color: rgba(255,255,255,0.08);
+    -fx-border-width: 0 0 1 0;
+}
+
+.voice-drawer-title {
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 15;
+    -fx-font-weight: 900;
+}
+
+.voice-drawer-subtitle {
+    -fx-text-fill: rgba(255,255,255,0.5);
+    -fx-font-size: 10;
+    -fx-font-weight: 700;
+}
+
+.voice-drawer-status {
+    -fx-text-fill: rgba(255,255,255,0.6);
+    -fx-font-size: 10;
+}
+
+.voice-header-icon {
+    -fx-background-color: linear-gradient(to right, #00c9a7, #0d8abc);
+    -fx-background-radius: 12;
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 10;
+    -fx-font-weight: 900;
+    -fx-alignment: center;
+    -fx-min-width: 34;
+    -fx-min-height: 34;
+}
+
+.voice-status-dot {
+    -fx-background-color: #22c55e;
+    -fx-background-radius: 50;
+    -fx-min-width: 8;
+    -fx-min-height: 8;
+}
+
+.voice-close-btn {
+    -fx-background-color: rgba(255,255,255,0.12);
+    -fx-text-fill: #ffffff;
+    -fx-background-radius: 10;
+    -fx-font-size: 11;
+    -fx-font-weight: 900;
+    -fx-padding: 6 10 6 10;
+}
+
+.voice-log-scroll {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.voice-log-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+
+.voice-log {
+    -fx-padding: 8 0 8 0;
+}
+
+.voice-msg {
+    -fx-padding: 0 0 0 0;
+}
+
+.voice-avatar {
+    -fx-background-color: rgba(255,255,255,0.12);
+    -fx-background-radius: 50;
+    -fx-text-fill: rgba(255,255,255,0.7);
+    -fx-font-size: 9;
+    -fx-font-weight: 800;
+    -fx-min-width: 26;
+    -fx-min-height: 26;
+    -fx-alignment: center;
+}
+
+.voice-bubble {
+    -fx-background-color: rgba(255,255,255,0.08);
+    -fx-background-radius: 14;
+    -fx-text-fill: rgba(255,255,255,0.9);
+    -fx-padding: 8 12 8 12;
+    -fx-font-size: 12;
+}
+
+.voice-msg.user .voice-bubble {
+    -fx-background-color: linear-gradient(to right, #0d8abc, #00c9a7);
+    -fx-text-fill: #ffffff;
+}
+
+.voice-input-row {
+    -fx-background-color: rgba(255,255,255,0.1);
+    -fx-background-radius: 14;
+    -fx-border-color: rgba(255,255,255,0.16);
+    -fx-border-radius: 14;
+    -fx-padding: 6 8 6 8;
+}
+
+.voice-input {
+    -fx-background-color: transparent;
+    -fx-text-fill: rgba(255,255,255,0.9);
+    -fx-font-size: 12;
+    -fx-border-color: transparent;
+}
+
+.voice-mic-btn {
+    -fx-background-color: linear-gradient(to right, #0d8abc, #00c9a7);
+    -fx-text-fill: #ffffff;
+    -fx-background-radius: 12;
+    -fx-font-weight: 900;
+    -fx-padding: 8 12 8 12;
+}
+
+.voice-mic-btn.active {
+    -fx-background-color: linear-gradient(to right, #ef4444, #f97316);
+}
+
+.voice-send-btn {
+    -fx-background-color: rgba(255,255,255,0.18);
+    -fx-text-fill: #ffffff;
+    -fx-background-radius: 12;
+    -fx-font-weight: 900;
+    -fx-padding: 8 12 8 12;
+}
+
+.voice-hint {
+    -fx-text-fill: rgba(255,255,255,0.5);
+    -fx-font-size: 10;
+}
+
 /* ===== BLOG & FORUM (capture-match) ===== */
 .blog-root {
     -fx-background-color: #f0f6f9;
@@ -5250,6 +5399,21 @@
     -fx-text-fill: #64748b;
 }
 
+.pharm-map-box {
+    -fx-background-color: #f8fbff;
+    -fx-border-color: #d8e5f0;
+    -fx-border-width: 1;
+    -fx-border-radius: 12;
+    -fx-background-radius: 12;
+    -fx-padding: 10;
+}
+
+.pharm-map-coords {
+    -fx-font-size: 12;
+    -fx-font-weight: 700;
+    -fx-text-fill: #2f546f;
+}
+
 .pharm-feedback {
     -fx-font-size: 12;
     -fx-font-weight: 800;
@@ -5328,3 +5492,155 @@
 .pagination .button:disabled {
     -fx-opacity: 0.5;
 }
+
+.pharm-ai-context-card {
+    -fx-background-color: #f8fbff;
+    -fx-border-color: #dce6f1;
+    -fx-border-width: 1;
+    -fx-border-radius: 12;
+    -fx-background-radius: 12;
+    -fx-padding: 10 12 10 12;
+    -fx-pref-width: 220;
+}
+
+.pharm-ai-context-label {
+    -fx-font-size: 11;
+    -fx-font-weight: 800;
+    -fx-text-fill: #64748b;
+}
+
+.pharm-ai-context-value {
+    -fx-font-size: 22;
+    -fx-font-weight: 900;
+    -fx-text-fill: #0f172a;
+}
+
+.pharm-ai-chat-scroll,
+.pharm-ai-chat-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+
+.pharm-ai-chat-scroll {
+    -fx-pref-height: 280;
+    -fx-min-height: 220;
+    -fx-max-height: 320;
+    -fx-border-color: #dce6f1;
+    -fx-border-width: 1;
+    -fx-border-radius: 14;
+    -fx-background-radius: 14;
+}
+
+.pharm-ai-chat-log {
+    -fx-padding: 10;
+    -fx-background-color: #f8fbff;
+}
+
+.pharm-ai-msg {
+    -fx-padding: 6 0 6 0;
+}
+
+.pharm-ai-msg-bot {
+    -fx-alignment: center-left;
+}
+
+.pharm-ai-msg-user {
+    -fx-alignment: center-right;
+}
+
+.pharm-ai-msg-text {
+    -fx-max-width: 680;
+    -fx-background-color: #ffffff;
+    -fx-border-color: #dce6f1;
+    -fx-border-width: 1;
+    -fx-border-radius: 14;
+    -fx-background-radius: 14;
+    -fx-padding: 9 12 9 12;
+    -fx-font-size: 12;
+    -fx-font-weight: 700;
+    -fx-text-fill: #1e293b;
+}
+
+.pharm-ai-msg-user .pharm-ai-msg-text {
+    -fx-background-color: linear-gradient(to right, #35bdf6, #0d8abc);
+    -fx-border-color: transparent;
+    -fx-text-fill: #ffffff;
+}
+
+.pharm-ai-prompt-btn {
+    -fx-background-color: #ffffff;
+    -fx-text-fill: #2f546f;
+    -fx-border-color: #bfd3e2;
+    -fx-border-width: 1;
+    -fx-border-radius: 999;
+    -fx-background-radius: 999;
+    -fx-padding: 6 12 6 12;
+    -fx-font-size: 12;
+    -fx-font-weight: 800;
+}
+
+.pharm-ai-prompt-btn:hover {
+    -fx-cursor: hand;
+    -fx-background-color: #eef7fe;
+}
+
+.pharm-ai-input-row {
+    -fx-padding: 2 0 0 0;
+}
+
+.pharm-ai-note {
+    -fx-font-size: 11;
+    -fx-font-weight: 700;
+    -fx-text-fill: #64748b;
+}
+
+/* ===== PROFILE AI SCORE PANEL ===================================== */
+
+.profile-ai-chip {
+    -fx-font-size: 12;
+    -fx-font-weight: 700;
+    -fx-text-fill: #0c4a6e;
+    -fx-padding: 6 10 6 10;
+    -fx-background-radius: 999;
+    -fx-background-color: #e0f2fe;
+    -fx-border-color: #bae6fd;
+    -fx-border-radius: 999;
+}
+
+.profile-ai-progress {
+    -fx-pref-height: 8;
+    -fx-background-radius: 4;
+    -fx-accent: #0d8abc;
+}
+
+.profile-ai-meta-grid {
+    -fx-padding: 4 0 4 0;
+}
+
+.profile-ai-meta-cell {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 10;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 10;
+    -fx-padding: 8 10 8 10;
+    -fx-alignment: center-left;
+}
+
+.profile-ai-meta-key {
+    -fx-font-size: 12;
+    -fx-text-fill: #334155;
+}
+
+.profile-ai-meta-val {
+    -fx-font-size: 12;
+    -fx-font-weight: 800;
+    -fx-text-fill: #0f172a;
+}
+
+.profile-ai-eligibility {
+    -fx-font-size: 13;
+    -fx-font-weight: 700;
+    -fx-text-fill: #0369a1;
+    -fx-padding: 2 0 2 0;
+}
+
+/* ================================================================= */

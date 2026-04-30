@@ -23,8 +23,15 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.scene.web.WebEngine;
+import javafx.scene.web.WebView;
 import javafx.util.Duration;
+import javafx.concurrent.Worker;
+import netscape.javascript.JSObject;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -33,6 +40,8 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.Set;
+import javafx.application.Platform;
+import javafx.concurrent.Task;
 
 public class PharmacyViewController implements Initializable {
 	private static final int GRID_PAGE_SIZE = 6;
@@ -52,7 +61,8 @@ public class PharmacyViewController implements Initializable {
 	private enum Section {
 		PHARMACIES,
 		MEDICAMENTS,
-		RESERVATIONS
+		RESERVATIONS,
+		AI_ASSISTANT
 	}
 
 	@FXML
@@ -92,6 +102,9 @@ public class PharmacyViewController implements Initializable {
 	private Button reservationsSectionButton;
 
 	@FXML
+	private Button aiAssistantSectionButton;
+
+	@FXML
 	private VBox pharmaciesSection;
 
 	@FXML
@@ -99,6 +112,9 @@ public class PharmacyViewController implements Initializable {
 
 	@FXML
 	private VBox reservationsSection;
+
+	@FXML
+	private VBox aiAssistantSection;
 
 	@FXML
 	private TextField pharmacySearchField;
@@ -147,6 +163,12 @@ public class PharmacyViewController implements Initializable {
 
 	@FXML
 	private TextField pharmacyHorairesInput;
+
+	@FXML
+	private WebView pharmacyLocationMapView;
+
+	@FXML
+	private Label pharmacyCoordsLabel;
 
 	@FXML
 	private FlowPane medicamentsPane;
@@ -245,10 +267,34 @@ public class PharmacyViewController implements Initializable {
 	private Label feedbackLabel;
 
 	@FXML
+	private Label aiContextPharmaciesLabel;
+
+	@FXML
+	private Label aiContextMedicamentsLabel;
+
+	@FXML
+	private Label aiContextPendingLabel;
+
+	@FXML
+	private Label aiContextLowStockLabel;
+
+	@FXML
+	private ScrollPane aiChatScrollPane;
+
+	@FXML
+	private VBox aiChatLogBox;
+
+	@FXML
+	private TextField aiChatInput;
+
+	@FXML
 	private Button pharmacySubmitButton;
 
 	@FXML
 	private Button medicamentSubmitButton;
+
+	@FXML
+	private Button myPositionButton;
 
 	private Integer editingPharmacyId;
 	private Integer editingMedicamentId;
@@ -257,6 +303,9 @@ public class PharmacyViewController implements Initializable {
 
 	private boolean pharmacyFormVisible;
 	private boolean medicamentFormVisible;
+	private String selectedLatitude = "";
+	private String selectedLongitude = "";
+	private boolean pharmacyMapLoaded;
 
 	private int publicPharmaciesPage;
 	private int managedPharmaciesPage;
@@ -315,6 +364,8 @@ public class PharmacyViewController implements Initializable {
 		setHeroText();
 		setPharmacyFormVisible(false);
 		setMedicamentFormVisible(false);
+		initializePharmacyMap();
+		initAiAssistant();
 		setActiveSection(Section.PHARMACIES);
 		refreshData();
 	}
@@ -389,7 +440,7 @@ public class PharmacyViewController implements Initializable {
 
 	@FXML
 	private void handleOpenAiAssistant() {
-		AppNavigator.showAiToolsPage();
+		setActiveSection(Section.AI_ASSISTANT);
 	}
 
 	@FXML
@@ -410,6 +461,36 @@ public class PharmacyViewController implements Initializable {
 	@FXML
 	private void handleSectionReservations() {
 		setActiveSection(Section.RESERVATIONS);
+	}
+
+	@FXML
+	private void handleSectionAiAssistant() {
+		setActiveSection(Section.AI_ASSISTANT);
+	}
+
+	@FXML
+	private void handleAiPromptPriorities() {
+		handleAiQuestion("Quelles sont mes priorites aujourd'hui ?");
+	}
+
+	@FXML
+	private void handleAiPromptStock() {
+		handleAiQuestion("Analyse mon niveau de stock");
+	}
+
+	@FXML
+	private void handleAiPromptReservations() {
+		handleAiQuestion("Que faire pour les reservations en attente ?");
+	}
+
+	@FXML
+	private void handleAiSubmit() {
+		String question = aiChatInput == null ? "" : safe(aiChatInput.getText());
+		if (question.isBlank()) {
+			return;
+		}
+		handleAiQuestion(question);
+		aiChatInput.clear();
 	}
 
 	@FXML
@@ -483,8 +564,8 @@ public class PharmacyViewController implements Initializable {
 				pharmacyTelephoneInput.getText(),
 				pharmacyEmailInput.getText(),
 				pharmacyHorairesInput.getText(),
-				"",
-				"",
+				nullIfBlank(selectedLatitude),
+				nullIfBlank(selectedLongitude),
 				true
 		);
 
@@ -671,10 +752,12 @@ public class PharmacyViewController implements Initializable {
 		setVisibleManaged(pharmaciesSection, section == Section.PHARMACIES);
 		setVisibleManaged(medicamentsSection, section == Section.MEDICAMENTS);
 		setVisibleManaged(reservationsSection, section == Section.RESERVATIONS);
+		setVisibleManaged(aiAssistantSection, section == Section.AI_ASSISTANT);
 
 		updateTabState(pharmaciesSectionButton, section == Section.PHARMACIES);
 		updateTabState(medicamentsSectionButton, section == Section.MEDICAMENTS);
 		updateTabState(reservationsSectionButton, section == Section.RESERVATIONS);
+		updateTabState(aiAssistantSectionButton, section == Section.AI_ASSISTANT);
 	}
 
 	private void updateTabState(Button button, boolean active) {
@@ -714,6 +797,114 @@ public class PharmacyViewController implements Initializable {
 		stockPharmacyCombo.getItems().setAll(moduleData.managedPharmacies());
 		stockMedicamentCombo.getItems().setAll(moduleData.medicaments());
 		syncSelectedPharmacyInCombo();
+		updateAiContext();
+	}
+
+	private void initAiAssistant() {
+		if (aiChatLogBox == null) {
+			return;
+		}
+		aiChatLogBox.getChildren().clear();
+		appendAiMessage("bot", "Bonjour. Je suis votre assistant IA du module pharmacien.");
+		appendAiMessage("bot", "Je peux vous aider a prioriser les actions sur les stocks et reservations.");
+	}
+
+	private void updateAiContext() {
+		if (aiContextPharmaciesLabel != null) {
+			aiContextPharmaciesLabel.setText(String.valueOf(moduleData.publicPharmacies().size()));
+		}
+		if (aiContextMedicamentsLabel != null) {
+			aiContextMedicamentsLabel.setText(String.valueOf(moduleData.medicaments().size()));
+		}
+		if (aiContextPendingLabel != null) {
+			aiContextPendingLabel.setText(String.valueOf(pendingReservationsCount()));
+		}
+		if (aiContextLowStockLabel != null) {
+			aiContextLowStockLabel.setText(String.valueOf(lowStockCount()));
+		}
+	}
+
+	private int pendingReservationsCount() {
+		int count = 0;
+		for (PharmacyService.ReservationRow row : moduleData.incomingReservations()) {
+			if ("en_attente".equalsIgnoreCase(safe(row.statut()))) {
+				count++;
+			}
+		}
+		return count;
+	}
+
+	private int lowStockCount() {
+		int count = 0;
+		for (PharmacyService.StockRow row : moduleData.managedStocks()) {
+			if (row.quantite() <= 10) {
+				count++;
+			}
+		}
+		return count;
+	}
+
+	private void handleAiQuestion(String question) {
+		String clean = safe(question);
+		if (clean.isBlank()) {
+			return;
+		}
+		appendAiMessage("user", clean);
+		appendAiMessage("bot", getAiReply(clean));
+	}
+
+	private String getAiReply(String question) {
+		String q = safe(question).toLowerCase(Locale.ROOT);
+		int pending = pendingReservationsCount();
+		int lowStock = lowStockCount();
+		int pharmacies = moduleData.publicPharmacies().size();
+		int medicaments = moduleData.medicaments().size();
+		int stocks = moduleData.managedStocks().size();
+		int reservations = moduleData.incomingReservations().size();
+
+		if (q.contains("priorit") || q.contains("aujourd")) {
+			return "Priorites du jour : 1) traiter " + pending + " reservation(s) en attente, 2) verifier "
+					+ lowStock + " stock(s) faible(s), 3) valider les prix sur les produits les plus demandes.";
+		}
+		if (q.contains("stock") || q.contains("rupture") || q.contains("quantit")) {
+			if (lowStock > 0) {
+				return "Vous avez " + lowStock + " stock(s) avec quantite <= 10. Je recommande un reassort par criticite "
+						+ "(medicaments a forte rotation d'abord) et une verification des seuils d'alerte.";
+			}
+			return "Aucun stock critique detecte (<= 10) actuellement. Vous pouvez optimiser les prix et anticiper les besoins saisonniers.";
+		}
+		if (q.contains("reservation") || q.contains("attente") || q.contains("patient")) {
+			return "Il y a " + pending + " reservation(s) en attente sur " + reservations
+					+ " au total. Traitez d'abord les demandes anciennes, puis confirmez selon disponibilite reelle du stock.";
+		}
+		if (q.contains("medicament") || q.contains("catalogue") || q.contains("prix")) {
+			return "Votre catalogue lie au dashboard contient " + medicaments
+					+ " medicament(s). Pensez a harmoniser dosage/forme/prix pour faciliter la recherche et limiter les erreurs de dispensation.";
+		}
+		if (q.contains("pharmacie") || q.contains("horaire") || q.contains("localisation")) {
+			return "Vous gerez " + pharmacies
+					+ " pharmacie(s). Verifiez les horaires et la geolocalisation pour reduire les annulations et ameliorer la fiabilite cote patient.";
+		}
+		return "Resume actuel : " + pharmacies + " pharmacie(s), " + medicaments + " medicament(s), "
+				+ stocks + " ligne(s) de stock, " + pending
+				+ " reservation(s) en attente. Demandez \"priorites\", \"stock\" ou \"reservations\" pour une recommandation ciblee.";
+	}
+
+	private void appendAiMessage(String type, String text) {
+		if (aiChatLogBox == null) {
+			return;
+		}
+		HBox row = new HBox();
+		row.getStyleClass().addAll("pharm-ai-msg", "user".equals(type) ? "pharm-ai-msg-user" : "pharm-ai-msg-bot");
+
+		Label label = new Label(text);
+		label.setWrapText(true);
+		label.getStyleClass().add("pharm-ai-msg-text");
+		row.getChildren().add(label);
+		aiChatLogBox.getChildren().add(row);
+		if (aiChatScrollPane != null) {
+			aiChatScrollPane.setVvalue(1.0);
+		}
 	}
 
 	private List<PharmacyService.PharmacyRow> applyPharmacyFilters(List<PharmacyService.PharmacyRow> input) {
@@ -975,6 +1166,10 @@ public class PharmacyViewController implements Initializable {
 				pharmacyTelephoneInput.setText(pharmacy.telephone());
 				pharmacyEmailInput.setText(pharmacy.email());
 				pharmacyHorairesInput.setText(pharmacy.horaires());
+				selectedLatitude = safe(pharmacy.latitude());
+				selectedLongitude = safe(pharmacy.longitude());
+				updateCoordsLabel();
+				moveMapMarkerIfReady(selectedLatitude, selectedLongitude, pharmacy.nom());
 				pharmacySubmitButton.setText("Enregistrer pharmacie");
 				setActiveSection(Section.PHARMACIES);
 			});
@@ -1497,6 +1692,11 @@ public class PharmacyViewController implements Initializable {
 		return value == null ? "" : value.trim();
 	}
 
+	private String nullIfBlank(String value) {
+		String normalized = safe(value);
+		return normalized.isBlank() ? null : normalized;
+	}
+
 	private void setPharmacyFormVisible(boolean visible) {
 		pharmacyFormVisible = visible && canManage;
 		setVisibleManaged(pharmacyFormBox, pharmacyFormVisible);
@@ -1527,6 +1727,206 @@ public class PharmacyViewController implements Initializable {
 		pharmacyTelephoneInput.clear();
 		pharmacyEmailInput.clear();
 		pharmacyHorairesInput.clear();
+		selectedLatitude = "";
+		selectedLongitude = "";
+		updateCoordsLabel();
+		moveMapMarkerIfReady(null, null, "");
+	}
+
+	private void initializePharmacyMap() {
+		if (pharmacyLocationMapView == null) {
+			return;
+		}
+		WebEngine engine = pharmacyLocationMapView.getEngine();
+		engine.getLoadWorker().stateProperty().addListener((obs, oldState, newState) -> {
+			if (newState != Worker.State.SUCCEEDED) {
+				return;
+			}
+			JSObject window = (JSObject) engine.executeScript("window");
+			window.setMember("javaPharmacyBridge", new PharmacyMapBridge());
+			engine.executeScript("if (window.initPharmacyMapBridge) { window.initPharmacyMapBridge(); }");
+			pharmacyMapLoaded = true;
+		});
+		engine.loadContent(buildPharmacyMapHtml());
+	}
+
+	private void moveMapMarkerIfReady(String latitude, String longitude, String label) {
+		if (!pharmacyMapLoaded || pharmacyLocationMapView == null) {
+			return;
+		}
+		Double lat = parseDoubleOrNull(latitude);
+		Double lng = parseDoubleOrNull(longitude);
+		if (lat == null || lng == null) {
+			pharmacyLocationMapView.getEngine().executeScript("if (window.resetPharmacyMapMarker) { window.resetPharmacyMapMarker(); }");
+			return;
+		}
+		String safeLabel = escapeJs(label == null ? "" : label);
+		pharmacyLocationMapView.getEngine().executeScript(
+				"if (window.setPharmacyMapMarker) { window.setPharmacyMapMarker(" + lat + "," + lng + ",'" + safeLabel + "'); }"
+		);
+	}
+
+	private Double parseDoubleOrNull(String value) {
+		String raw = safe(value);
+		if (raw.isBlank()) {
+			return null;
+		}
+		try {
+			return Double.parseDouble(raw);
+		} catch (NumberFormatException exception) {
+			return null;
+		}
+	}
+
+	private String escapeJs(String value) {
+		return value
+				.replace("\\", "\\\\")
+				.replace("'", "\\'")
+				.replace("\n", " ")
+				.replace("\r", " ");
+	}
+
+	private void updateCoordsLabel() {
+		if (pharmacyCoordsLabel == null) {
+			return;
+		}
+		if (safe(selectedLatitude).isBlank() || safe(selectedLongitude).isBlank()) {
+			pharmacyCoordsLabel.setText("Coordonnees: non selectionnees");
+			return;
+		}
+		pharmacyCoordsLabel.setText("Coordonnees: " + selectedLatitude + ", " + selectedLongitude);
+	}
+
+	@FXML
+	private void handleMyPosition() {
+		if (myPositionButton != null) {
+			myPositionButton.setDisable(true);
+			myPositionButton.setText("Localisation...");
+		}
+		Task<double[]> task = new Task<>() {
+			@Override
+			protected double[] call() throws Exception {
+				// ip-api.com : geolocalisation par adresse IP (gratuit, sans cle API)
+				URL url = new URL("http://ip-api.com/json/?fields=status,lat,lon");
+				HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+				conn.setConnectTimeout(5000);
+				conn.setReadTimeout(5000);
+				conn.setRequestProperty("User-Agent", "SanteaApp/1.0");
+				try (BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
+					StringBuilder sb = new StringBuilder();
+					String line;
+					while ((line = reader.readLine()) != null) {
+						sb.append(line);
+					}
+					String json = sb.toString();
+					// Parsing minimal sans librairie JSON externe
+					if (!json.contains("\"status\":\"success\"")) {
+						return null;
+					}
+					double lat = extractJsonDouble(json, "lat");
+					double lon = extractJsonDouble(json, "lon");
+					return new double[]{lat, lon};
+				} finally {
+					conn.disconnect();
+				}
+			}
+		};
+		task.setOnSucceeded(event -> Platform.runLater(() -> {
+			double[] coords = task.getValue();
+			if (myPositionButton != null) {
+				myPositionButton.setDisable(false);
+				myPositionButton.setText("📍 Ma Position");
+			}
+			if (coords != null) {
+				String latStr = String.format(Locale.US, "%.6f", coords[0]);
+				String lonStr = String.format(Locale.US, "%.6f", coords[1]);
+				selectedLatitude = latStr;
+				selectedLongitude = lonStr;
+				updateCoordsLabel();
+				moveMapMarkerIfReady(latStr, lonStr, "Ma position");
+				showFeedback(true, "Position detectee: " + latStr + ", " + lonStr);
+			} else {
+				showFeedback(false, "Impossible de detecter la position automatiquement.");
+			}
+		}));
+		task.setOnFailed(event -> Platform.runLater(() -> {
+			if (myPositionButton != null) {
+				myPositionButton.setDisable(false);
+				myPositionButton.setText("📍 Ma Position");
+			}
+			showFeedback(false, "Erreur reseau: impossible de recuperer la position.");
+		}));
+		Thread thread = new Thread(task);
+		thread.setDaemon(true);
+		thread.start();
+	}
+
+	private double extractJsonDouble(String json, String key) {
+		String search = "\"" + key + "\":"; 
+		int idx = json.indexOf(search);
+		if (idx < 0) return 0.0;
+		int start = idx + search.length();
+		int end = start;
+		while (end < json.length() && (Character.isDigit(json.charAt(end)) || json.charAt(end) == '.' || json.charAt(end) == '-')) {
+			end++;
+		}
+		try {
+			return Double.parseDouble(json.substring(start, end));
+		} catch (NumberFormatException e) {
+			return 0.0;
+		}
+	}
+
+	private String buildPharmacyMapHtml() {
+		return "<!doctype html><html><head><meta charset='utf-8'>"
+				+ "<meta name='viewport' content='width=device-width,initial-scale=1'>"
+				+ "<link rel='stylesheet' href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'/>"
+				+ "<style>"
+				+ "html,body,#map{height:100%;margin:0}body{background:#eef5fb;font-family:Segoe UI,Tahoma,sans-serif}"
+				+ "#wrap{position:relative;height:100%}"
+				+ "#search{position:absolute;top:10px;left:10px;right:10px;z-index:900;display:flex;gap:8px;flex-wrap:wrap}"
+				+ "#q{flex:1;padding:9px 10px;border:1px solid #cbd5e1;border-radius:10px;font-size:13px}"
+				+ "#btn{padding:9px 12px;background:#0d8abc;color:white;border:none;border-radius:10px;font-weight:700;cursor:pointer}"
+				+ "#geo{padding:9px 12px;background:#0ea5e9;color:white;border:none;border-radius:10px;font-weight:700;cursor:pointer}"
+				+ "#note{position:absolute;bottom:10px;left:10px;right:10px;z-index:900;background:rgba(255,255,255,.94);padding:7px 10px;border-radius:9px;font-size:11px;color:#475569}"
+				+ "</style></head><body><div id='wrap'><div id='map'></div>"
+				+ "<div id='search'><input id='q' placeholder='Rechercher une localisation...'><button id='btn'>Rechercher</button><button id='geo' title='Utiliser ma position actuelle'>Ma position</button></div>"
+				+ "<div id='note'>Cliquez sur la carte ou deplacez le marqueur pour definir la position.</div></div>"
+				+ "<script src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'></script>"
+				+ "<script>"
+				+ "const defaultLat=36.8065,defaultLng=10.1815;"
+				+ "const map=L.map('map').setView([defaultLat,defaultLng],12);"
+				+ "L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);"
+				+ "const marker=L.marker([defaultLat,defaultLng],{draggable:true}).addTo(map);"
+				+ "function publish(lat,lng,label){if(window.javaPharmacyBridge&&window.javaPharmacyBridge.onLocationSelected){window.javaPharmacyBridge.onLocationSelected(lat,lng,label||'');}}"
+				+ "function setAt(lat,lng,label){marker.setLatLng([lat,lng]);map.setView([lat,lng],14);publish(lat,lng,label||'');}"
+				+ "map.on('click',e=>setAt(e.latlng.lat,e.latlng.lng,''));"
+				+ "marker.on('dragend',()=>{const ll=marker.getLatLng();publish(ll.lat,ll.lng,'');});"
+				+ "window.setPharmacyMapMarker=(lat,lng,label)=>setAt(lat,lng,label||'');"
+				+ "window.resetPharmacyMapMarker=()=>setAt(defaultLat,defaultLng,'');"
+				+ "window.initPharmacyMapBridge=()=>{const ll=marker.getLatLng();publish(ll.lat,ll.lng,'');};"
+				+ "async function doSearch(){const q=document.getElementById('q').value.trim();if(!q)return;"
+				+ "const url='https://nominatim.openstreetmap.org/search?format=json&limit=1&q='+encodeURIComponent(q);"
+				+ "const res=await fetch(url);const data=await res.json();if(!Array.isArray(data)||!data.length)return;"
+				+ "const r=data[0],lat=parseFloat(r.lat),lng=parseFloat(r.lon);if(Number.isNaN(lat)||Number.isNaN(lng))return;"
+				+ "setAt(lat,lng,r.display_name||q);}"
+				+ "function useMyPosition(){if(!navigator.geolocation)return;"
+				+ "navigator.geolocation.getCurrentPosition((p)=>{setAt(p.coords.latitude,p.coords.longitude,'Ma position');},()=>{}, {enableHighAccuracy:true,timeout:12000,maximumAge:0});}"
+				+ "document.getElementById('btn').addEventListener('click',()=>{doSearch().catch(()=>{});});"
+				+ "document.getElementById('geo').addEventListener('click',()=>{useMyPosition();});"
+				+ "document.getElementById('q').addEventListener('keydown',(e)=>{if(e.key==='Enter'){e.preventDefault();doSearch().catch(()=>{});}});"
+				+ "</script></body></html>";
+	}
+
+	public final class PharmacyMapBridge {
+		public void onLocationSelected(double latitude, double longitude, String label) {
+			selectedLatitude = String.format(Locale.US, "%.6f", latitude);
+			selectedLongitude = String.format(Locale.US, "%.6f", longitude);
+			updateCoordsLabel();
+			if (pharmacyAdresseInput != null && safe(pharmacyAdresseInput.getText()).isBlank() && !safe(label).isBlank()) {
+				pharmacyAdresseInput.setText(label);
+			}
+		}
 	}
 
 	private void clearMedicamentForm() {

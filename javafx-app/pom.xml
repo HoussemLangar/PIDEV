@@ -86,6 +86,11 @@
             <version>11.2.1</version>
         </dependency>
         <dependency>
+            <groupId>com.alphacephei</groupId>
+            <artifactId>vosk</artifactId>
+            <version>0.3.45</version>
+        </dependency>
+        <dependency>
             <groupId>com.dlsc.formsfx</groupId>
             <artifactId>formsfx-core</artifactId>
             <version>11.6.0</version>
@@ -204,4 +209,5 @@
             </plugin>
         </plugins>
     </build>
+
 </project>

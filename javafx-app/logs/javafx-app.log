@@ -1,0 +1,80 @@
+[2026-04-19 17:16:42] Starting JavaFX app
+JavaFX ne peut pas ouvrir d'interface: DISPLAY/WAYLAND_DISPLAY est absent.
+Lance l'application depuis une session graphique (desktop local, VNC, ou SSH -X). 
+[2026-04-19 17:16:51] JavaFX app exited with code 0
+[2026-04-19 17:19:08] Starting JavaFX app
+🔍 Recherche ressource: /com/santea/fxml/home.fxml
+✓ Ressource trouvée: file:/home/pi-dev/PIDEV/javafx-app/target/classes/com/santea/fxml/home.fxml
+📂 Chargement FXML: /com/santea/fxml/home.fxml
+✅ FXML chargé: /com/santea/fxml/home.fxml
+[2026-04-19 17:19:21] JavaFX app exited with code 0
+[2026-04-19 17:19:27] Starting JavaFX app
+🔍 Recherche ressource: /com/santea/fxml/home.fxml
+✓ Ressource trouvée: file:/home/pi-dev/PIDEV/javafx-app/target/classes/com/santea/fxml/home.fxml
+📂 Chargement FXML: /com/santea/fxml/home.fxml
+✅ FXML chargé: /com/santea/fxml/home.fxml
+[2026-04-19 17:19:40] JavaFX app exited with code 0
+[2026-04-19 17:19:47] Starting JavaFX app
+🔍 Recherche ressource: /com/santea/fxml/home.fxml
+✓ Ressource trouvée: file:/home/pi-dev/PIDEV/javafx-app/target/classes/com/santea/fxml/home.fxml
+📂 Chargement FXML: /com/santea/fxml/home.fxml
+✅ FXML chargé: /com/santea/fxml/home.fxml
+🔍 Recherche ressource: /com/santea/fxml/auth_base.fxml
+✓ Ressource trouvée: file:/home/pi-dev/PIDEV/javafx-app/target/classes/com/santea/fxml/auth_base.fxml
+🔍 Recherche ressource: /com/santea/fxml/login.fxml
+✓ Ressource trouvée: file:/home/pi-dev/PIDEV/javafx-app/target/classes/com/santea/fxml/login.fxml
+📂 Chargement FXML: /com/santea/fxml/login.fxml
+✅ FXML chargé: /com/santea/fxml/login.fxml
+🔍 Recherche ressource: /com/santea/fxml/home.fxml
+✓ Ressource trouvée: file:/home/pi-dev/PIDEV/javafx-app/target/classes/com/santea/fxml/home.fxml
+📂 Chargement FXML: /com/santea/fxml/home.fxml
+✅ FXML chargé: /com/santea/fxml/home.fxml
+🔍 Recherche ressource: /com/santea/fxml/feature_page.fxml
+✓ Ressource trouvée: file:/home/pi-dev/PIDEV/javafx-app/target/classes/com/santea/fxml/feature_page.fxml
+🔍 Recherche ressource: /com/santea/fxml/app_base.fxml
+✓ Ressource trouvée: file:/home/pi-dev/PIDEV/javafx-app/target/classes/com/santea/fxml/app_base.fxml
+🔍 Recherche ressource: /com/santea/fxml/home.fxml
+✓ Ressource trouvée: file:/home/pi-dev/PIDEV/javafx-app/target/classes/com/santea/fxml/home.fxml
+📂 Chargement FXML: /com/santea/fxml/home.fxml
+✅ FXML chargé: /com/santea/fxml/home.fxml
+🔍 Recherche ressource: /com/santea/fxml/feature_page.fxml
+✓ Ressource trouvée: file:/home/pi-dev/PIDEV/javafx-app/target/classes/com/santea/fxml/feature_page.fxml
+🔍 Recherche ressource: /com/santea/fxml/home.fxml
+✓ Ressource trouvée: file:/home/pi-dev/PIDEV/javafx-app/target/classes/com/santea/fxml/home.fxml
+📂 Chargement FXML: /com/santea/fxml/home.fxml
+✅ FXML chargé: /com/santea/fxml/home.fxml
+[2026-04-19 17:20:36] JavaFX app exited with code 0
+[2026-04-19 17:20:44] Starting JavaFX app
+🔍 Recherche ressource: /com/santea/fxml/home.fxml
+✓ Ressource trouvée: file:/home/pi-dev/PIDEV/javafx-app/target/classes/com/santea/fxml/home.fxml
+📂 Chargement FXML: /com/santea/fxml/home.fxml
+✅ FXML chargé: /com/santea/fxml/home.fxml
+[2026-04-19 17:20:53] JavaFX app exited with code 0
+[2026-04-19 17:21:21] Starting JavaFX app
+🔍 Recherche ressource: /com/santea/fxml/home.fxml
+✓ Ressource trouvée: file:/home/pi-dev/PIDEV/javafx-app/target/classes/com/santea/fxml/home.fxml
+📂 Chargement FXML: /com/santea/fxml/home.fxml
+✅ FXML chargé: /com/santea/fxml/home.fxml
+[2026-04-19 17:21:28] JavaFX app exited with code 0
+[2026-04-19 21:32:21] Starting JavaFX app
+🔍 Recherche ressource: /com/santea/fxml/home.fxml
+✓ Ressource trouvée: file:/home/pi-dev/PIDEV/javafx-app/target/classes/com/santea/fxml/home.fxml
+📂 Chargement FXML: /com/santea/fxml/home.fxml
+✅ FXML chargé: /com/santea/fxml/home.fxml
+🔍 Recherche ressource: /com/santea/fxml/auth_base.fxml
+✓ Ressource trouvée: file:/home/pi-dev/PIDEV/javafx-app/target/classes/com/santea/fxml/auth_base.fxml
+🔍 Recherche ressource: /com/santea/fxml/login.fxml
+✓ Ressource trouvée: file:/home/pi-dev/PIDEV/javafx-app/target/classes/com/santea/fxml/login.fxml
+📂 Chargement FXML: /com/santea/fxml/login.fxml
+✅ FXML chargé: /com/santea/fxml/login.fxml
+🔍 Recherche ressource: /com/santea/fxml/home.fxml
+✓ Ressource trouvée: file:/home/pi-dev/PIDEV/javafx-app/target/classes/com/santea/fxml/home.fxml
+📂 Chargement FXML: /com/santea/fxml/home.fxml
+✅ FXML chargé: /com/santea/fxml/home.fxml
+[2026-04-19 21:32:32] JavaFX app exited with code 0
+[2026-04-21 14:35:53] Starting JavaFX app
+🔍 Recherche ressource: /com/santea/fxml/home.fxml
+✓ Ressource trouvée: file:/home/pi-dev/PIDEV/javafx-app/target/classes/com/santea/fxml/home.fxml
+📂 Chargement FXML: /com/santea/fxml/home.fxml
+✅ FXML chargé: /com/santea/fxml/home.fxml
+[2026-04-21 14:36:17] JavaFX app exited with code 0
