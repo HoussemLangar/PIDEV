@@ -147,8 +147,9 @@ public class LoginViewController {
 
             showFeedback(response.message(), response.success());
             if (response.success()) {
+                // Face verification is now optional for admins - route directly to dashboard
                 if (response.user() != null && "ROLE_ADMIN".equalsIgnoreCase(response.user().getRole())) {
-                    AppNavigator.showAdminFaceVerification();
+                    AppNavigator.showAdminDashboard();
                 } else {
                     AppNavigator.showHome();
                 }
@@ -216,8 +217,9 @@ public class LoginViewController {
         emailSuggestions = authService.suggestLoginEmails(12);
         Window owner = resolveOwnerWindow();
 
+        // Face verification is now optional for admins - route directly to dashboard
         if (response.user() != null && "ROLE_ADMIN".equalsIgnoreCase(response.user().getRole())) {
-            AppNavigator.showAdminFaceVerification();
+            AppNavigator.showAdminDashboard();
         } else {
             AppNavigator.showHome();
         }
@@ -292,8 +294,9 @@ public class LoginViewController {
         showFeedback(response.message(), response.success());
 
         if (response.success()) {
+            // Face verification is now optional for admins - route directly to dashboard
             if (response.user() != null && "ROLE_ADMIN".equalsIgnoreCase(response.user().getRole())) {
-                AppNavigator.showAdminFaceVerification();
+                AppNavigator.showAdminDashboard();
             } else {
                 AppNavigator.showHome();
             }

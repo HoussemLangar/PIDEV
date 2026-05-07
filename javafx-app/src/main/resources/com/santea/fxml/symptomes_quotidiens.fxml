@@ -9,14 +9,19 @@
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<StackPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+<AnchorPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
            fx:controller="com.santea.controller.SymptomesQuotidiensViewController"
            styleClass="profile-page-root">
-    <ScrollPane fitToWidth="true" styleClass="home-scroll">
+    <ScrollPane fx:id="pageScrollPane" fitToWidth="true" pannable="true" vbarPolicy="ALWAYS" hbarPolicy="NEVER" styleClass="home-scroll">
+        <AnchorPane.topAnchor>0.0</AnchorPane.topAnchor>
+        <AnchorPane.rightAnchor>0.0</AnchorPane.rightAnchor>
+        <AnchorPane.bottomAnchor>0.0</AnchorPane.bottomAnchor>
+        <AnchorPane.leftAnchor>0.0</AnchorPane.leftAnchor>
         <content>
             <VBox spacing="16" alignment="TOP_CENTER" styleClass="profile-content-shell">
                 <padding>
@@ -34,8 +39,8 @@
 
                 <Label fx:id="feedbackLabel" text="" visible="false" managed="false" wrapText="true" styleClass="alert" maxWidth="1100"/>
 
-                <HBox spacing="16" maxWidth="1320" alignment="TOP_CENTER" style="-fx-padding: 0 0 0 120;">
-                    <VBox spacing="12" styleClass="profile-card" prefWidth="900" minWidth="900" maxWidth="900">
+                <HBox spacing="16" maxWidth="1100" alignment="TOP_CENTER">
+                    <VBox spacing="12" styleClass="profile-card" HBox.hgrow="ALWAYS" minWidth="0.0">
                         <Label text="Symptomes a declarer" styleClass="profile-section-title"/>
                         <Label text="Astuce: maintiens Ctrl (ou Cmd) pour selectionner plusieurs elements." styleClass="sub-checkout-help"/>
                         <ListView fx:id="symptomsListView" prefHeight="280"/>
@@ -79,7 +84,7 @@
                         </HBox>
                     </VBox>
 
-                    <VBox spacing="10" styleClass="profile-card" prefWidth="460" minWidth="460" maxWidth="460">
+                    <VBox spacing="10" styleClass="profile-card" prefWidth="420" minWidth="0.0" HBox.hgrow="SOMETIMES">
                         <Label text="Historique" styleClass="profile-section-title"/>
 
                         <HBox spacing="8" alignment="CENTER_LEFT">
@@ -94,10 +99,32 @@
                     </VBox>
                 </HBox>
 
+                <VBox spacing="10" styleClass="profile-card" maxWidth="1100">
+                    <Label text="Prédiction &amp; tendances (basé sur tes données)" styleClass="profile-section-title"/>
+                    <Label text="Analyse automatique des symptômes + journal santé (hydratation, sommeil, activité)."
+                           styleClass="sub-checkout-help" wrapText="true"/>
+                    <Label fx:id="predictionLabel" text="Chargement..." wrapText="true" styleClass="sub-checkout-help"/>
+                </VBox>
+
+                <VBox spacing="10" styleClass="profile-card" maxWidth="1100">
+                    <Label text="Chatbot sante (Ollama local)" styleClass="profile-section-title"/>
+                    <Label text="Parle de tes symptomes: le chatbot t'aide avec des conseils generaux personnalises." styleClass="sub-checkout-help" wrapText="true"/>
+                    <ListView fx:id="chatbotMessagesListView" prefHeight="220"/>
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <TextField fx:id="chatbotInputField" promptText="Ex: J'ai de la fievre et mal a la gorge depuis 2 jours..." HBox.hgrow="ALWAYS" styleClass="form-control"/>
+                        <Button fx:id="chatbotVoiceButton" text="🎤" styleClass="sub-outline-button" onAction="#handleVoiceInput">
+                            <tooltip>
+                                <Tooltip text="Clique pour enregistrer, reclique pour envoyer"/>
+                            </tooltip>
+                        </Button>
+                        <Button text="Envoyer" styleClass="sub-primary-button" onAction="#handleSendChatbotMessage"/>
+                    </HBox>
+                </VBox>
+
                 <HBox alignment="CENTER_RIGHT" spacing="10" maxWidth="980">
                     <Button text="Retour accueil" styleClass="sub-outline-button" onAction="#handleBackHome"/>
                 </HBox>
             </VBox>
         </content>
     </ScrollPane>
-</StackPane>
+</AnchorPane>

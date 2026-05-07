@@ -29,7 +29,7 @@ class SymptomeQuotidienController extends AbstractController
      * Interface web pour ajouter un symptôme
      */
     #[Route('/symptomes', name: 'app_symptomes', methods: ['GET', 'POST'])]
-    #[IsGranted('ROLE_PATIENT')]
+    #[IsGranted('ROLE_USER')]
     public function webInterface(Request $request, EntityManagerInterface $em, SymptomeQuotidienRepository $symptomeRepository): Response
     {
         $user = $this->getUser();
@@ -122,7 +122,7 @@ class SymptomeQuotidienController extends AbstractController
     }
 
     #[Route('/symptomes/filter-by-category', name: 'app_symptomes_filter', methods: ['POST'])]
-    #[IsGranted('ROLE_PATIENT')]
+    #[IsGranted('ROLE_USER')]
     public function filterSymptomesByCategory(Request $request, SymptomeListeRepository $symptomeListeRepository): JsonResponse
     {
         $categorie = $request->request->get('categorie');
@@ -148,7 +148,7 @@ class SymptomeQuotidienController extends AbstractController
     }
 
     #[Route('/symptomes/by-date/{date}', name: 'app_symptomes_by_date', methods: ['GET'])]
-    #[IsGranted('ROLE_PATIENT')]
+    #[IsGranted('ROLE_USER')]
     public function getSymptomesByDate(string $date, SymptomeQuotidienRepository $symptomeRepository): JsonResponse
     {
         $user = $this->getUser();
@@ -176,7 +176,7 @@ class SymptomeQuotidienController extends AbstractController
     }
 
     #[Route('/symptomes/delete/{id}', name: 'app_symptome_delete', methods: ['DELETE'])]
-    #[IsGranted('ROLE_PATIENT')]
+    #[IsGranted('ROLE_USER')]
     public function deleteSymptome(int $id, SymptomeQuotidienRepository $symptomeRepository, EntityManagerInterface $em): JsonResponse
     {
         $user = $this->getUser();
@@ -199,7 +199,7 @@ class SymptomeQuotidienController extends AbstractController
     }
 
     #[Route('/symptomes/edit/{id}', name: 'app_symptome_edit', methods: ['POST'])]
-    #[IsGranted('ROLE_PATIENT')]
+    #[IsGranted('ROLE_USER')]
     public function editSymptome(int $id, Request $request, SymptomeQuotidienRepository $symptomeRepository, EntityManagerInterface $em, ValidatorInterface $validator): JsonResponse
     {
         $user = $this->getUser();

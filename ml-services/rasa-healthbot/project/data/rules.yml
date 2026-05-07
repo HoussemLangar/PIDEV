@@ -1,0 +1,21 @@
+version: "3.1"
+
+rules:
+  - rule: Greet
+    steps:
+      - intent: greet
+      - action: utter_greet
+      - action: utter_disclaimer
+
+  - rule: Goodbye
+    steps:
+      - intent: goodbye
+      - action: utter_goodbye
+
+  - rule: Symptom report
+    steps:
+      - intent: symptom_report
+      - action: utter_disclaimer
+      - action: utter_symptom_generic
+      - action: utter_ask_more
+

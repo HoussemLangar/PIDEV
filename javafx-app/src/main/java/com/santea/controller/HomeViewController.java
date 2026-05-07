@@ -1166,9 +1166,6 @@ public class HomeViewController {
     }
 
     private void openSymptomsPage() {
-        if (!guardPremiumAccess()) {
-            return;
-        }
         AppNavigator.showSymptomesQuotidiensPage();
     }
 

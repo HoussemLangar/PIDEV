@@ -548,11 +548,7 @@ public class AdminDashboardController {
 
     @FXML
     private void initialize() {
-        if (!AuthSession.isFaceVerified()) {
-            AppNavigator.showAdminFaceVerification();
-            return;
-        }
-
+        // Face verification is now optional for admins
         setupFilterControls();
         refresh();
         showPage(pageDashboard, navDashboardButton, "Dashboard Admin", "Vue d'ensemble de la plateforme SANTEA");

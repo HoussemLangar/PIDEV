@@ -24,7 +24,7 @@
         <Region HBox.hgrow="ALWAYS"/>
     </HBox>
 
-    <ScrollPane fitToWidth="true" hbarPolicy="NEVER" styleClass="admin-scroll" VBox.vgrow="ALWAYS">
+    <ScrollPane fx:id="pageScrollPane" fitToWidth="true" pannable="true" vbarPolicy="ALWAYS" hbarPolicy="NEVER" styleClass="admin-scroll" VBox.vgrow="ALWAYS">
         <content>
             <VBox spacing="16" styleClass="admin-shell">
                 <padding><Insets top="18" right="18" bottom="20" left="18"/></padding>

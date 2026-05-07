@@ -150,6 +150,11 @@
             <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.alphacephei</groupId>
+            <artifactId>vosk</artifactId>
+            <version>0.3.45</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -209,5 +214,4 @@
             </plugin>
         </plugins>
     </build>
-
 </project>

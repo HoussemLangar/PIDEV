@@ -11,6 +11,7 @@ import javafx.scene.chart.PieChart;
 import javafx.scene.control.Button;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
@@ -39,6 +40,7 @@ public class SymptomesListeAdminViewController implements Initializable {
     @FXML private DatePicker filterToPicker;
     @FXML private Label feedbackLabel;
     @FXML private Label tableInfoLabel;
+    @FXML private ScrollPane pageScrollPane;
 
     @FXML private Button addButton;
     @FXML private Button updateButton;
@@ -65,6 +67,18 @@ public class SymptomesListeAdminViewController implements Initializable {
         setupTable();
         createdAtPicker.setValue(LocalDate.now());
         refreshAll();
+        enablePageScrolling();
+    }
+
+    private void enablePageScrolling() {
+        if (pageScrollPane == null) {
+            return;
+        }
+        // Enable native scrolling with proper settings
+        pageScrollPane.setFitToWidth(true);
+        pageScrollPane.setPannable(true);
+        pageScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        pageScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
     }
 
     private void setupTable() {

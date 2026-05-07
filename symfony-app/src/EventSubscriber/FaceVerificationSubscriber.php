@@ -66,16 +66,9 @@ class FaceVerificationSubscriber implements EventSubscriberInterface
             return;
         }
 
-        // Vérifier si la reconnaissance faciale a été validée
-        $session = $request->getSession();
-        $faceVerified = $session->get('face_verified', false);
-
-        if (!$faceVerified) {
-            // Rediriger vers la page de vérification faciale
-            $response = new RedirectResponse(
-                $this->urlGenerator->generate('admin_face_verification')
-            );
-            $event->setResponse($response);
-        }
+        // Face verification is now optional for admins - no forced redirect
+        // Users can voluntarily verify their face through the admin face verification page
+        // if they choose to do so. The face_verified session flag is still set when they
+        // complete verification, but is no longer required to access admin pages.
     }
 }

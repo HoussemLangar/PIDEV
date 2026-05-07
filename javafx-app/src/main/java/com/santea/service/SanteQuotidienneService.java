@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 public class SanteQuotidienneService {
     private final DatabaseService databaseService;
@@ -120,6 +121,62 @@ public class SanteQuotidienneService {
         }
 
         return rows;
+    }
+
+    public List<SanteQuotidienne> findByUserBetweenDates(int userId, LocalDate startDate, LocalDate endDateInclusive) {
+        List<SanteQuotidienne> rows = new ArrayList<>();
+        if (userId <= 0) {
+            return rows;
+        }
+        LocalDate safeStart = startDate == null ? LocalDate.now() : startDate;
+        LocalDate safeEnd = endDateInclusive == null ? safeStart : endDateInclusive;
+        if (safeEnd.isBefore(safeStart)) {
+            LocalDate tmp = safeStart;
+            safeStart = safeEnd;
+            safeEnd = tmp;
+        }
+
+        String sql = "SELECT id, poids, taille, imc, tension_arterielle, sommeil, activite_physique, humeur, alimentation, eau_bue, date, pas, calories, duree_activite_minutes, source_donnees "
+                + "FROM sante_quotidienne "
+                + "WHERE user_id=? AND date >= ? AND date < ? "
+                + "ORDER BY date DESC";
+
+        Timestamp start = Timestamp.valueOf(safeStart.atStartOfDay());
+        Timestamp endExclusive = Timestamp.valueOf(safeEnd.plusDays(1).atStartOfDay());
+
+        try (Connection connection = databaseService.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, userId);
+            statement.setTimestamp(2, start);
+            statement.setTimestamp(3, endExclusive);
+
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    rows.add(mapRow(rs));
+                }
+            }
+        } catch (SQLException ignored) {
+        }
+
+        return rows;
+    }
+
+    public Optional<SanteQuotidienne> findLatestByUser(int userId) {
+        String sql = "SELECT id, poids, taille, imc, tension_arterielle, sommeil, activite_physique, humeur, alimentation, eau_bue, date, pas, calories, duree_activite_minutes, source_donnees "
+                + "FROM sante_quotidienne WHERE user_id=? ORDER BY date DESC LIMIT 1";
+
+        try (Connection connection = databaseService.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, userId);
+            try (ResultSet rs = statement.executeQuery()) {
+                if (rs.next()) {
+                    return Optional.of(mapRow(rs));
+                }
+            }
+        } catch (SQLException ignored) {
+        }
+
+        return Optional.empty();
     }
 
     public Stats loadStats(int userId) {

@@ -1,0 +1,31 @@
+services:
+  rasa:
+    image: rasa/rasa:3.6.20
+    container_name: santea-rasa
+    working_dir: /app
+    ports:
+      - "5005:5005"
+    volumes:
+      - ./project:/app
+      - rasa_models:/app/models
+    environment:
+      - RASA_TELEMETRY_ENABLED=false
+    # For local/dev convenience: ensure the container can write models into the mounted volume.
+    user: "0:0"
+    # rasa/rasa image uses "rasa" as ENTRYPOINT. We override it to run a shell script.
+    entrypoint: ["bash", "-lc"]
+    command: >
+      if [ ! -d models ] || [ -z "$(ls -A models 2>/dev/null)" ]; then
+        echo '[Rasa] Training initial model...';
+        rasa train --quiet;
+      fi;
+      echo '[Rasa] Starting server on :5005...';
+      rasa run --enable-api -p 5005 --cors "*";
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:5005/status').read()\" >/dev/null 2>&1 || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 40
+
+volumes:
+  rasa_models:

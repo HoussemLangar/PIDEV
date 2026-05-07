@@ -18,6 +18,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.SecureRandom;
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
@@ -79,7 +80,11 @@ public class GoogleOAuthService {
                     + "?response_type=code"
                     + "&client_id=" + enc(clientId)
                     + "&redirect_uri=" + enc(redirectUri)
-                    + "&scope=" + enc("openid email profile")
+                    + "&scope=" + enc("openid email profile " +
+                        "https://www.googleapis.com/auth/fitness.activity.read " +
+                        "https://www.googleapis.com/auth/fitness.sleep.read " +
+                        "https://www.googleapis.com/auth/fitness.heart_rate.read " +
+                        "https://www.googleapis.com/auth/fitness.body.read")
                     + "&access_type=offline"
                     + "&prompt=select_account"
                     + "&state=" + enc(state);
@@ -109,6 +114,10 @@ public class GoogleOAuthService {
             }
 
             String idToken = jsonString(tokenResponse, "id_token");
+            String accessToken = jsonString(tokenResponse, "access_token");
+            String refreshToken = jsonString(tokenResponse, "refresh_token");
+            long expiresIn = parseLongOrDefault(jsonString(tokenResponse, "expires_in"), 3600L);
+            LocalDateTime tokenExpiration = LocalDateTime.now().plusSeconds(Math.max(60L, expiresIn));
             if (idToken.isBlank()) {
                 return AuthResult.failure("id_token Google absent dans la reponse OAuth.");
             }
@@ -129,7 +138,14 @@ public class GoogleOAuthService {
                 prenom = fullName;
             }
 
-            return AuthResult.success(new GoogleProfile(email, nom, prenom, fullName));
+            String googleAccountId = jsonString(payloadJson, "sub");
+            return AuthResult.success(
+                    new GoogleProfile(email, nom, prenom, fullName),
+                    accessToken,
+                    refreshToken,
+                    tokenExpiration,
+                    googleAccountId
+            );
         } catch (TimeoutException e) {
             return AuthResult.failure("Google n'a pas redirige vers l'application. Verifiez dans Google Cloud Console l'URI autorisee exacte: " + redirectUri);
         } catch (Exception e) {
@@ -385,6 +401,17 @@ public class GoogleOAuthService {
         return value.substring(0, Math.max(0, max - 3)) + "...";
     }
 
+    private long parseLongOrDefault(String value, long fallback) {
+        if (value == null || value.isBlank()) {
+            return fallback;
+        }
+        try {
+            return Long.parseLong(value.trim());
+        } catch (NumberFormatException ignored) {
+            return fallback;
+        }
+    }
+
     private String safeMessage(Exception e) {
         return e == null || e.getMessage() == null || e.getMessage().isBlank()
                 ? "erreur inconnue"
@@ -394,13 +421,39 @@ public class GoogleOAuthService {
     public record GoogleProfile(String email, String nom, String prenom, String fullName) {
     }
 
-    public record AuthResult(boolean success, GoogleProfile profile, String message) {
+    public record AuthResult(
+            boolean success,
+            GoogleProfile profile,
+            String message,
+            String accessToken,
+            String refreshToken,
+            LocalDateTime tokenExpiration,
+            String googleAccountId
+    ) {
         public static AuthResult success(GoogleProfile profile) {
-            return new AuthResult(true, profile, "Connexion Google reussie.");
+            return new AuthResult(true, profile, "Connexion Google reussie.", "", "", null, "");
+        }
+
+        public static AuthResult success(
+                GoogleProfile profile,
+                String accessToken,
+                String refreshToken,
+                LocalDateTime tokenExpiration,
+                String googleAccountId
+        ) {
+            return new AuthResult(
+                    true,
+                    profile,
+                    "Connexion Google reussie.",
+                    accessToken == null ? "" : accessToken,
+                    refreshToken == null ? "" : refreshToken,
+                    tokenExpiration,
+                    googleAccountId == null ? "" : googleAccountId
+            );
         }
 
         public static AuthResult failure(String message) {
-            return new AuthResult(false, null, message == null ? "Erreur OAuth" : message);
+            return new AuthResult(false, null, message == null ? "Erreur OAuth" : message, "", "", null, "");
         }
     }
 

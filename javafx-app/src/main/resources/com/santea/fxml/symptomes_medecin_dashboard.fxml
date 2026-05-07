@@ -26,7 +26,7 @@
         <Label fx:id="dashboardInfoLabel" text="0 jour(s) de donnees" styleClass="admin-line"/>
     </HBox>
 
-    <ScrollPane fitToWidth="true" hbarPolicy="NEVER" styleClass="admin-scroll" VBox.vgrow="ALWAYS">
+    <ScrollPane fx:id="pageScrollPane" fitToWidth="true" pannable="true" vbarPolicy="ALWAYS" hbarPolicy="NEVER" styleClass="admin-scroll" VBox.vgrow="ALWAYS">
         <content>
             <VBox spacing="14" styleClass="admin-shell">
                 <padding><Insets top="16" right="18" bottom="18" left="18"/></padding>

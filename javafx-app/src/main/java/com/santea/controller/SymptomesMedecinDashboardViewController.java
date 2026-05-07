@@ -12,6 +12,7 @@ import javafx.scene.chart.XYChart;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -43,6 +44,8 @@ public class SymptomesMedecinDashboardViewController implements Initializable {
 
     @FXML
     private Label dashboardInfoLabel;
+    @FXML
+    private ScrollPane pageScrollPane;
 
     private final SymptomesMedecinDashboardService service = new SymptomesMedecinDashboardService();
 
@@ -60,6 +63,18 @@ public class SymptomesMedecinDashboardViewController implements Initializable {
         yAxis.setTickUnit(1);
 
         refreshDashboard();
+        enablePageScrolling();
+    }
+
+    private void enablePageScrolling() {
+        if (pageScrollPane == null) {
+            return;
+        }
+        // Enable native scrolling with proper settings
+        pageScrollPane.setFitToWidth(true);
+        pageScrollPane.setPannable(true);
+        pageScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        pageScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
     }
 
     @FXML
@@ -135,7 +150,7 @@ public class SymptomesMedecinDashboardViewController implements Initializable {
 
     private void renderAlerts(SymptomesMedecinDashboardService.DashboardData data) {
         if (data.alerts().isEmpty()) {
-            alertsListView.setItems(FXCollections.observableArrayList("Aucun pic anormal detecte sur la periode."));
+            alertsListView.setItems(FXCollections.observableArrayList("Aucun pic aberrant detecte sur la periode."));
             return;
         }
 
