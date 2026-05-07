@@ -13,8 +13,6 @@ module com.santea.javafxapp {
     requires org.apache.pdfbox;
     requires webcam.capture;
     requires org.bytedeco.javacv;
-    requires vosk;
-
     requires org.controlsfx.controls;
     requires com.dlsc.formsfx;
     requires net.synedra.validatorfx;
