@@ -1,4 +1,4 @@
-# SANTEA - ## Environnement de développement
+# SANTEA - Environnement de développement
 
 ## Stack technique
 - Symfony 6.4
