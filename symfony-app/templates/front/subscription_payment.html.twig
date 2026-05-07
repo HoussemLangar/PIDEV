@@ -1,0 +1,65 @@
+{% extends 'front/base.html.twig' %}
+
+{% block title %}Paiement{% endblock %}
+
+{% block body %}
+<section class="payment-page">
+    <div class="payment-shell">
+        <div class="payment-left">
+            <div class="payment-title">
+                <div class="payment-badge">Paiement sécurisé</div>
+                <h1>Finalisez votre abonnement</h1>
+                <p>Abonnement sélectionné : <strong>{{ planLabel|default(type) }}</strong> — {{ price|default(10)|number_format(2, '.', ' ') }} DT / mois</p>
+            </div>
+
+            {% for message in app.flashes('error') %}
+                <div class="alert alert-danger">{{ message }}</div>
+            {% endfor %}
+            {% for message in app.flashes('success') %}
+                <div class="alert alert-success">{{ message }}</div>
+            {% endfor %}
+
+            <form method="post" class="payment-form">
+                <div class="payment-actions">
+                    <button class="btn-appointment" type="submit">Payer {{ price|default(10)|number_format(2, '.', ' ') }} DT</button>
+                    <a class="btn-ghost" href="{{ path('app_subscription') }}">Retour</a>
+                </div>
+                <p style="margin-top:12px;color:#64748b;font-size:13px;">
+                    Vous serez redirigé vers la page sécurisée du fournisseur de paiement.
+                </p>
+                {% if providerCurrency is defined and providerAmount is defined %}
+                    <p style="margin-top:4px;color:#64748b;font-size:13px;">
+                        Affichage local: {{ price|default(10)|number_format(2, '.', ' ') }} DT · Débit API estimé: {{ providerAmount|number_format(2, '.', ' ') }} {{ providerCurrency }}.
+                    </p>
+                {% endif %}
+            </form>
+        </div>
+        <aside class="payment-right">
+            <div class="payment-summary">
+                <h3>Résumé</h3>
+                <div class="summary-row">
+                    <span>Plan</span>
+                    <strong>{{ planLabel|default(type) }}</strong>
+                </div>
+                <div class="summary-row">
+                    <span>Durée</span>
+                    <strong>1 mois</strong>
+                </div>
+                <div class="summary-row">
+                    <span>Renouvellement</span>
+                    <strong>Mensuel</strong>
+                </div>
+                <div class="summary-total">
+                    <span>Total</span>
+                    <strong>{{ price|default(10)|number_format(2, '.', ' ') }} DT</strong>
+                </div>
+            </div>
+            <div class="payment-trust">
+                <div class="trust-item">🔒 Paiement sécurisé</div>
+                <div class="trust-item">✅ Annulation possible</div>
+                <div class="trust-item">⚡ Activation immédiate</div>
+            </div>
+        </aside>
+    </div>
+</section>
+{% endblock %}

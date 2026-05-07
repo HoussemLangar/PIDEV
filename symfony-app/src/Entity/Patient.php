@@ -32,37 +32,37 @@ class Patient
     #[ORM\Column(type: 'text', nullable: true)]
     private ?string $antecedentsMedicaux = null;
 
-    #[ORM\Column(type: 'datetime', options: ['default' => 'CURRENT_TIMESTAMP'])]
+    #[ORM\Column(type: 'datetimetz', options: ['default' => 'CURRENT_TIMESTAMP'])]
     private \DateTimeInterface $createdAt;
 
-    #[ORM\Column(type: 'datetime', options: ['default' => 'CURRENT_TIMESTAMP'])]
+    #[ORM\Column(type: 'datetimetz', options: ['default' => 'CURRENT_TIMESTAMP'])]
     private \DateTimeInterface $updatedAt;
 
-    #[ORM\OneToMany(mappedBy: 'patient', targetEntity: RendezVous::class, cascade: ['persist', 'remove'])]
+    #[ORM\OneToMany(mappedBy: 'patient', targetEntity: RendezVous::class, cascade: ['persist'], orphanRemoval: true)]
     private Collection $rendezVous;
 
-    #[ORM\OneToMany(mappedBy: 'patient', targetEntity: RapportAnalyse::class, cascade: ['persist', 'remove'])]
+    #[ORM\OneToMany(mappedBy: 'patient', targetEntity: RapportAnalyse::class, cascade: ['persist'], orphanRemoval: true)]
     private Collection $rapportsAnalyses;
 
-    #[ORM\OneToMany(mappedBy: 'patient', targetEntity: RapportMedical::class, cascade: ['persist', 'remove'])]
+    #[ORM\OneToMany(mappedBy: 'patient', targetEntity: RapportMedical::class, cascade: ['persist'], orphanRemoval: true)]
     private Collection $rapportsMedicaux;
 
-    #[ORM\OneToMany(mappedBy: 'patient', targetEntity: JournalItem::class, cascade: ['persist', 'remove'])]
+    #[ORM\OneToMany(mappedBy: 'patient', targetEntity: JournalItem::class, cascade: ['persist'], orphanRemoval: true)]
     private Collection $journalItems;
 
-    #[ORM\OneToMany(mappedBy: 'patient', targetEntity: SymptomeQuotidien::class, cascade: ['persist', 'remove'])]
+    #[ORM\OneToMany(mappedBy: 'patient', targetEntity: SymptomeQuotidien::class, cascade: ['persist'], orphanRemoval: true)]
     private Collection $symptomesQuotidiens;
 
-    #[ORM\OneToMany(mappedBy: 'patient', targetEntity: PlanExercice::class, cascade: ['persist', 'remove'])]
+    #[ORM\OneToMany(mappedBy: 'patient', targetEntity: PlanExercice::class, cascade: ['persist'], orphanRemoval: true)]
     private Collection $plansExercices;
 
-    #[ORM\OneToMany(mappedBy: 'patient', targetEntity: PlanRegime::class, cascade: ['persist', 'remove'])]
+    #[ORM\OneToMany(mappedBy: 'patient', targetEntity: PlanRegime::class, cascade: ['persist'], orphanRemoval: true)]
     private Collection $plansRegimes;
 
     public function __construct()
     {
-        $this->createdAt = new \DateTimeImmutable();
-        $this->updatedAt = new \DateTimeImmutable();
+        $this->createdAt = new \DateTime();
+        $this->updatedAt = new \DateTime();
         $this->rendezVous = new ArrayCollection();
         $this->rapportsAnalyses = new ArrayCollection();
         $this->rapportsMedicaux = new ArrayCollection();
@@ -84,9 +84,9 @@ class Patient
     public function getAntecedentsMedicaux(): ?string { return $this->antecedentsMedicaux; }
     public function setAntecedentsMedicaux(?string $antecedentsMedicaux): void { $this->antecedentsMedicaux = $antecedentsMedicaux; }
     public function getCreatedAt(): \DateTimeInterface { return $this->createdAt; }
-    public function setCreatedAt(\DateTimeInterface $createdAt): void { $this->createdAt = $createdAt; }
+    public function forceCreatedAt(\DateTimeInterface $createdAt): void { $this->createdAt = $createdAt; }
     public function getUpdatedAt(): \DateTimeInterface { return $this->updatedAt; }
-    public function setUpdatedAt(\DateTimeInterface $updatedAt): void { $this->updatedAt = $updatedAt; }
+    public function forceUpdatedAt(\DateTimeInterface $updatedAt): void { $this->updatedAt = $updatedAt; }
     public function getRendezVous(): Collection { return $this->rendezVous; }
     public function getRapportsAnalyses(): Collection { return $this->rapportsAnalyses; }
     public function getRapportsMedicaux(): Collection { return $this->rapportsMedicaux; }

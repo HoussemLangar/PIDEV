@@ -1,0 +1,80 @@
+{% extends 'back/base.html.twig' %}
+
+{% block title %}Connexions suspectes{% endblock %}
+
+{% block admin_content %}
+<div class="admin-page-header">
+    <div class="admin-page-title">
+        <h1>Connexions suspectes</h1>
+        <p>Alertes de sécurité et tentatives bloquées.</p>
+    </div>
+</div>
+
+<div class="admin-card">
+    <form method="get" class="admin-form">
+        <div class="form-row filters-inline filters-modern">
+            <div class="filter-search filter-field">
+                <label class="filter-label">Recherche</label>
+                <input type="text" name="q" value="{{ filters.q }}" placeholder="Email ou nom">
+            </div>
+            <div class="filter-field">
+                <label>Statut</label>
+                <select name="status">
+                    <option value="">Tous</option>
+                    <option value="blocked" {{ filters.status == 'blocked' ? 'selected' : '' }}>Bloqué</option>
+                    <option value="allowed" {{ filters.status == 'allowed' ? 'selected' : '' }}>Autorisé</option>
+                </select>
+            </div>
+            <div class="filter-field">
+                <label>Pays</label>
+                <input type="text" name="country" value="{{ filters.country }}" placeholder="TN, FR">
+            </div>
+            <div class="filter-actions">
+                <a class="btn btn-secondary" href="{{ path('admin_security_suspicious') }}">Réinitialiser</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="admin-card">
+    <div style="overflow-x: auto;">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Utilisateur</th>
+                    <th>Raison</th>
+                    <th>IP</th>
+                    <th>Pays</th>
+                    <th>Date</th>
+                    <th>Statut</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for item in logins %}
+                <tr>
+                    <td>
+                        <div style="font-weight: 600;">{{ item.user.fullName ?? item.user.email }}</div>
+                        <div style="color: var(--admin-muted); font-size: 0.9rem;">{{ item.user.email }}</div>
+                    </td>
+                    <td>{{ item.reason }}</td>
+                    <td>{{ item.ipAddress ?? '-' }}</td>
+                    <td>{{ item.country ?? '-' }}</td>
+                    <td>{{ item.createdAt|date('d/m/Y H:i') }}</td>
+                    <td>
+                        {% if item.blocked %}
+                            <span class="admin-badge danger">Bloqué</span>
+                        {% else %}
+                            <span class="admin-badge success">Autorisé</span>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="6" style="text-align:center; color: var(--admin-muted);">Aucune alerte</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

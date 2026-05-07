@@ -1,0 +1,53 @@
+{% extends 'front/base.html.twig' %}
+
+{% block title %}Notifications de sécurité{% endblock %}
+
+{% block body %}
+<section class="profile-page">
+    <div class="profile-shell">
+        <div class="profile-hero">
+            <div>
+                <div class="profile-badge">Notifications</div>
+                <h1>Notifications de sécurité</h1>
+                <p>Alertes envoyées en cas de changement de pays ou d’adresse IP.</p>
+            </div>
+            <div class="profile-hero-card">
+                <div class="profile-hero-label">Compte</div>
+                <div class="profile-hero-name">{{ app.user.fullName ?? app.user.email }}</div>
+                <div class="profile-hero-meta">{{ app.user.email }}</div>
+            </div>
+        </div>
+
+        <div class="profile-card notification-card">
+            <div class="notification-header">
+                <h3>Historique</h3>
+                <span class="notification-badge">{{ securityNotifications|length }}</span>
+            </div>
+            <div class="notification-list">
+                {% if securityNotifications is not empty %}
+                    {% for notif in securityNotifications %}
+                        <div class="notification-item">
+                            <div class="notification-icon">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <div class="notification-content">
+                                <div class="notification-title">{{ notif.reason }}</div>
+                                <div class="notification-meta">
+                                    {{ notif.country ?? '—' }} · {{ notif.ipAddress ?? '—' }} · {{ notif.createdAt|date('d/m/Y H:i') }}
+                                </div>
+                            </div>
+                            <span class="notification-status {{ notif.blocked ? 'blocked' : 'allowed' }}">
+                                {{ notif.blocked ? 'Bloqué' : 'Autorisé' }}
+                            </span>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="notification-empty">
+                        <i class="fas fa-check-circle"></i> Aucune alerte récente
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,154 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Scanner Document IA – SANTÉA{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+{% include 'ai_tools/_styles.html.twig' %}
+<style>
+.ait-tool-color { --tool-color: #6366f1; --tool-bg: rgba(99,102,241,.1); }
+.ait-tool-header { background: linear-gradient(135deg,#3730a3 0%,#6366f1 60%,#818cf8 100%); }
+.ait-btn-submit { background: linear-gradient(135deg,#6366f1,#818cf8); }
+.ait-btn-submit:hover { background: linear-gradient(135deg,#4f46e5,#6366f1); }
+.ait-table th { background: rgba(99,102,241,.08); color:#4338ca; }
+.ait-tag { background: rgba(99,102,241,.1); color:#4338ca; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ait-page ait-tool-color">
+
+    <div class="ait-tool-header">
+        <div class="ait-tool-header-inner">
+            <a href="{{ path('app_ai_tools_index') }}" class="ait-back-btn"><i class="fas fa-arrow-left"></i> Outils IA</a>
+            <div class="ait-tool-icon"><i class="fas fa-file-medical-alt"></i></div>
+            <h1 class="ait-tool-title">Scanner de document</h1>
+            <p class="ait-tool-sub">Collez du texte médical ou chargez un fichier — l'IA extrait résumé, valeurs et actions.</p>
+        </div>
+    </div>
+
+    <div class="ait-tool-body">
+
+        {# ── Form card ─────────────────────────────────── #}
+        <div class="ait-card-wrap">
+            <form method="post" enctype="multipart/form-data" id="aitForm" class="ait-form">
+                <div class="ait-field">
+                    <label class="ait-label"><i class="fas fa-paste"></i> Contenu du document</label>
+                    <textarea name="content" rows="8" class="ait-input ait-textarea" placeholder="Collez ici le contenu du document médical (ordonnance, bilan sanguin, compte-rendu…)">{{ app.request.request.get('content') }}</textarea>
+                </div>
+                <div class="ait-field">
+                    <label class="ait-label"><i class="fas fa-upload"></i> Ou chargez un fichier <span class="ait-hint">.pdf · .txt · .csv · .log · .md</span></label>
+                    <input type="file" name="document" accept=".pdf,.txt,.csv,.log,.md,application/pdf,text/plain,text/csv,text/markdown" class="ait-file-input">
+                </div>
+                <div class="ait-form-footer">
+                    <button type="submit" class="ait-btn-submit ait-btn" id="aitSubmitBtn">
+                        <span class="ait-btn-normal"><i class="fas fa-search"></i> Analyser le document</span>
+                        <span class="ait-btn-loading" style="display:none"><span class="ait-spinner"></span> Analyse en cours…</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        {# ── Results ────────────────────────────────────── #}
+        {% if result is defined and result %}
+        <div class="ait-results">
+            <div class="ait-results-header">
+                <span class="ait-results-badge"><i class="fas fa-sparkles"></i> Résultats IA</span>
+            </div>
+
+            <div class="ait-result-section">
+                <div class="ait-result-section-title"><i class="fas fa-align-left"></i> Résumé</div>
+                <p class="ait-result-text">{{ result.summary }}</p>
+            </div>
+
+            {% if result.analysisPrediction is defined and result.analysisPrediction %}
+            <div class="ait-result-section">
+                <div class="ait-result-section-title"><i class="fas fa-stethoscope"></i> Prédiction d'analyse</div>
+                <p class="ait-result-text">{{ result.analysisPrediction }}</p>
+            </div>
+            {% endif %}
+
+            {% if result.abnormalFindings is defined and result.abnormalFindings|length %}
+            <div class="ait-result-section">
+                <div class="ait-result-section-title"><i class="fas fa-exclamation-circle"></i> Écarts détectés</div>
+                <ul class="ait-bullet-list">
+                    {% for p in result.abnormalFindings %}
+                        <li><i class="fas fa-circle"></i> {{ p }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            {% if result.keyPoints is defined and result.keyPoints|length %}
+            <div class="ait-result-section">
+                <div class="ait-result-section-title"><i class="fas fa-list-ul"></i> Points clés</div>
+                <ul class="ait-bullet-list">
+                    {% for p in result.keyPoints %}
+                        <li><i class="fas fa-check-circle"></i> {{ p }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            {% if result.values is defined and result.values|length %}
+            <div class="ait-result-section">
+                <div class="ait-result-section-title"><i class="fas fa-table"></i> Valeurs extraites</div>
+                <div class="ait-table-wrap">
+                    <table class="ait-table">
+                        <thead><tr><th>Libellé</th><th>Valeur</th><th>Unité</th></tr></thead>
+                        <tbody>
+                        {% for v in result.values %}
+                            <tr><td>{{ v.label }}</td><td><strong>{{ v.value }}</strong></td><td class="ait-tag">{{ v.unit }}</td></tr>
+                        {% else %}
+                            <tr><td colspan="3" style="text-align:center;color:#94a3b8;">Aucune valeur extraite.</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if result.suggestedActions is defined and result.suggestedActions|length %}
+            <div class="ait-result-section">
+                <div class="ait-result-section-title"><i class="fas fa-tasks"></i> Actions suggérées</div>
+                <ul class="ait-action-list">
+                    {% for a in result.suggestedActions %}
+                        <li><span class="ait-action-num">{{ loop.index }}</span> {{ a }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+    </div>{# /ait-tool-body #}
+</div>
+
+<script>
+(function(){
+    var form = document.getElementById('aitForm');
+    var btn  = document.getElementById('aitSubmitBtn');
+    if (!form || !btn) return;
+
+    form.addEventListener('submit', function(e) {
+        if (form.dataset.submitting === '1') { e.preventDefault(); return; }
+        form.dataset.submitting = '1';
+        requestAnimationFrame(function() {
+            btn.classList.add('ait-btn--loading');
+            btn.querySelector('.ait-btn-normal').style.display = 'none';
+            btn.querySelector('.ait-btn-loading').style.display = 'inline-flex';
+        });
+    });
+
+    window.addEventListener('pageshow', function(e) {
+        if (e.persisted) {
+            form.dataset.submitting = '0';
+            btn.classList.remove('ait-btn--loading');
+            btn.querySelector('.ait-btn-normal').style.display = '';
+            btn.querySelector('.ait-btn-loading').style.display = 'none';
+        }
+    });
+})();
+</script>
+{% endblock %}
+

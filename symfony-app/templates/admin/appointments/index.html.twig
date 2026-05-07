@@ -1,0 +1,145 @@
+{% extends 'back/base.html.twig' %}
+
+{% block title %}Rendez-vous{% endblock %}
+
+{% block admin_content %}
+<div class="admin-page-header">
+    <div class="admin-page-title">
+        <h1>Rendez-vous</h1>
+        <p>Suivi des réservations, annulations et disponibilités.</p>
+    </div>
+</div>
+
+<div class="admin-card">
+    <h3>Organiser un rendez-vous</h3>
+    <form method="post" action="{{ path('admin_appointments_create') }}" class="admin-filters-row">
+        <select name="patient_id" required>
+            <option value="">Patient</option>
+            {% for p in patients %}
+                <option value="{{ p.id }}">{{ p.user.fullName ?? p.user.email }}</option>
+            {% endfor %}
+        </select>
+        <select name="medecin_id" required>
+            <option value="">Médecin</option>
+            {% for m in medecins %}
+                <option value="{{ m.id }}">{{ m.user.fullName ?? m.user.email }}</option>
+            {% endfor %}
+        </select>
+        <input type="date" name="date" required>
+        <input type="time" name="time" required>
+        <input type="text" name="motif" placeholder="Motif (optionnel)">
+        <button type="submit" class="btn btn-primary">Créer</button>
+    </form>
+</div>
+
+<div class="admin-stats">
+    <div class="stat-card-admin">
+        <div class="stat-title">Total</div>
+        <div class="stat-value">{{ stats.total }}</div>
+    </div>
+    <div class="stat-card-admin">
+        <div class="stat-title">Confirmés</div>
+        <div class="stat-value">{{ stats.confirmed }}</div>
+    </div>
+    <div class="stat-card-admin">
+        <div class="stat-title">Annulés</div>
+        <div class="stat-value">{{ stats.cancelled }}</div>
+    </div>
+</div>
+
+<div class="admin-card">
+    <h3>Liste des rendez-vous</h3>
+    <p class="admin-subtitle">Derniers 200 rendez-vous</p>
+    <form method="get" class="admin-filters-row" id="adminAppointmentsFilters">
+        <select name="status">
+            <option value="">Tous statuts</option>
+            <option value="en_attente" {{ filters.status == 'en_attente' ? 'selected' : '' }}>En attente</option>
+            <option value="confirme" {{ filters.status == 'confirme' ? 'selected' : '' }}>Confirmé</option>
+            <option value="refuse" {{ filters.status == 'refuse' ? 'selected' : '' }}>Refusé</option>
+            <option value="annule" {{ filters.status == 'annule' ? 'selected' : '' }}>Annulé</option>
+        </select>
+        <select name="medecin">
+            <option value="">Tous médecins</option>
+            {% for m in medecins %}
+                <option value="{{ m.id }}" {{ filters.medecin == m.id ? 'selected' : '' }}>{{ m.user.fullName ?? m.user.email }}</option>
+            {% endfor %}
+        </select>
+        <select name="patient">
+            <option value="">Tous patients</option>
+            {% for p in patients %}
+                <option value="{{ p.id }}" {{ filters.patient == p.id ? 'selected' : '' }}>{{ p.user.fullName ?? p.user.email }}</option>
+            {% endfor %}
+        </select>
+        <input type="date" name="date" value="{{ filters.date }}">
+        <input type="text" name="q" placeholder="Rechercher..." value="{{ filters.q }}">
+        <a href="{{ path('admin_appointments') }}" class="btn btn-secondary btn-xs">Réinitialiser</a>
+    </form>
+    <div class="admin-table-container">
+        <table class="admin-table">
+            <thead>
+            <tr>
+                <th>Patient</th>
+                <th>Médecin</th>
+                <th>Date</th>
+                <th>Heure</th>
+                <th>Statut</th>
+                <th>Motif</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for rdv in rdvs %}
+                <tr>
+                    <td>{{ rdv.patient.user.fullName ?? rdv.patient.user.email }}</td>
+                    <td>{{ rdv.medecin.user.fullName ?? rdv.medecin.user.email }}</td>
+                    <td>{{ rdv.dateRdv|date('d/m/Y') }}</td>
+                    <td>{{ rdv.heureRdv|date('H:i') }}</td>
+                    <td>
+                        {% if rdv.statut == 'confirme' %}
+                            <span class="status-pill status-confirmed">Confirmé</span>
+                        {% elseif rdv.statut == 'annule' %}
+                            <span class="status-pill status-cancelled">Annulé</span>
+                        {% elseif rdv.statut == 'refuse' %}
+                            <span class="status-pill status-cancelled">Refusé</span>
+                        {% else %}
+                            <span class="status-pill status-pending">{{ rdv.statut }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ rdv.motif ?: '-' }}</td>
+                    <td>
+                        <form method="post" action="{{ path('admin_appointments_cancel', {id: rdv.id}) }}" style="display:inline-block" onsubmit="return confirm('Annuler ce rendez-vous ?');">
+                            <button type="submit" class="btn btn-danger btn-xs">Annuler</button>
+                        </form>
+                        <form method="post" action="{{ path('admin_appointments_reschedule', {id: rdv.id}) }}" class="inline-form">
+                            <input type="date" name="date" required>
+                            <input type="time" name="time" required>
+                            <button type="submit" class="btn btn-secondary btn-xs">Replanifier</button>
+                        </form>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="7">Aucun rendez-vous.</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    (function () {
+        const form = document.getElementById('adminAppointmentsFilters');
+        if (!form) return;
+        const inputs = form.querySelectorAll('select, input[type="date"], input[type="text"]');
+        let t = null;
+        inputs.forEach((el) => {
+            const evt = el.tagName === 'INPUT' && el.type === 'text' ? 'input' : 'change';
+            el.addEventListener(evt, () => {
+                if (t) clearTimeout(t);
+                t = setTimeout(() => form.submit(), 300);
+            });
+        });
+    })();
+</script>
+{% endblock %}

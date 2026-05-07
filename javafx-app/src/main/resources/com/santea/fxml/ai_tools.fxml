@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<ScrollPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.santea.controller.AiToolsViewController"
+            fitToWidth="true" pannable="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED"
+            styleClass="ait-scroll">
+    <content>
+        <VBox spacing="18" styleClass="ait-page-root">
+            <padding>
+                <Insets top="0" right="0" bottom="28" left="0"/>
+            </padding>
+
+            <VBox spacing="10" styleClass="ait-index-hero">
+                <padding>
+                    <Insets top="46" right="24" bottom="54" left="24"/>
+                </padding>
+                <HBox alignment="CENTER" spacing="10" styleClass="ait-hero-top-row">
+                    <Label text="IA" styleClass="ait-hero-main-icon"/>
+                    <Label text="INTELLIGENCE ARTIFICIELLE" styleClass="ait-hero-chip"/>
+                </HBox>
+                <Label text="Outils IA SANTEA" styleClass="ait-hero-title"/>
+                <Label text="Des assistants intelligents pour analyser vos documents medicaux, planifier votre nutrition, optimiser vos entrainements et comprendre vos resultats."
+                       wrapText="true" styleClass="ait-hero-sub" maxWidth="760"/>
+                <Label fx:id="accessInfoLabel" text="" styleClass="ait-hero-status"/>
+            </VBox>
+
+            <VBox fx:id="lockedBanner" styleClass="ait-lock-banner" spacing="6">
+                <padding>
+                    <Insets top="14" right="20" bottom="14" left="20"/>
+                </padding>
+                <Label text="L acces aux Outils IA SANTEA necessite un abonnement IA actif (5 DT / mois)." styleClass="ait-lock-banner-text" wrapText="true"/>
+            </VBox>
+
+            <VBox fx:id="lockedHeroCard" styleClass="ait-lock-card" spacing="12" maxWidth="560">
+                <Label text="Outils IA SANTEA" styleClass="ait-lock-title"/>
+                <Label text="Diagnostic intelligent, analyse de symptomes et suivi medical alimentes par l IA."
+                       wrapText="true" styleClass="ait-lock-sub"/>
+                <HBox alignment="CENTER_LEFT" spacing="12">
+                    <Label text="5,00 DT / mois" styleClass="ait-lock-price"/>
+                    <Button text="Activer" styleClass="ait-btn-primary" onAction="#handleOpenSubscription"/>
+                </HBox>
+                <Label fx:id="lockDetailLabel" text="" wrapText="true" styleClass="ait-lock-detail"/>
+            </VBox>
+
+            <FlowPane fx:id="toolsGrid" hgap="18" vgap="18" prefWrapLength="1240" alignment="CENTER" styleClass="ait-tools-grid">
+                <VBox spacing="8" styleClass="ait-tool-card ait-tool-card-indigo" prefWidth="280">
+                    <Label text="DOC" styleClass="ait-card-icon ait-card-icon-indigo"/>
+                    <Label text="Scanner de document" styleClass="ait-card-title"/>
+                    <Label text="Analysez une ordonnance, un bilan biologique ou tout document medical." wrapText="true" styleClass="ait-card-desc"/>
+                    <Button text="Ouvrir" styleClass="ait-card-btn" onAction="#handleOpenDocumentScanner"/>
+                </VBox>
+
+                <VBox spacing="8" styleClass="ait-tool-card ait-tool-card-green" prefWidth="280">
+                    <Label text="NUT" styleClass="ait-card-icon ait-card-icon-green"/>
+                    <Label text="Assistant Nutrition" styleClass="ait-card-title"/>
+                    <Label text="Obtenez un plan alimentaire personnalise selon votre objectif et vos intolerances." wrapText="true" styleClass="ait-card-desc"/>
+                    <Button text="Ouvrir" styleClass="ait-card-btn" onAction="#handleOpenNutritionPlanner"/>
+                </VBox>
+
+                <VBox spacing="8" styleClass="ait-tool-card ait-tool-card-orange" prefWidth="280">
+                    <Label text="FIT" styleClass="ait-card-icon ait-card-icon-orange"/>
+                    <Label text="Assistant Exercice" styleClass="ait-card-title"/>
+                    <Label text="Generez un programme d entrainement sur mesure adapte a votre niveau." wrapText="true" styleClass="ait-card-desc"/>
+                    <Button text="Ouvrir" styleClass="ait-card-btn" onAction="#handleOpenWorkoutPlanner"/>
+                </VBox>
+
+                <VBox spacing="8" styleClass="ait-tool-card ait-tool-card-blue" prefWidth="280">
+                    <Label text="LAB" styleClass="ait-card-icon ait-card-icon-blue"/>
+                    <Label text="Explicateur de resultat" styleClass="ait-card-title"/>
+                    <Label text="L IA explique vos valeurs medicales en langage simple et actionnable." wrapText="true" styleClass="ait-card-desc"/>
+                    <Button text="Ouvrir" styleClass="ait-card-btn" onAction="#handleOpenResultExplainer"/>
+                </VBox>
+            </FlowPane>
+        </VBox>
+    </content>
+</ScrollPane>

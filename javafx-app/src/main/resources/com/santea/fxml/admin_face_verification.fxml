@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<StackPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="com.santea.controller.AdminFaceVerificationController"
+           styleClass="face-root">
+
+    <VBox spacing="16" styleClass="face-card" maxWidth="860">
+        <padding>
+            <Insets top="26" right="26" bottom="26" left="26"/>
+        </padding>
+
+        <VBox spacing="6" styleClass="face-header">
+            <Label text="Reconnaissance Faciale - Administrateur" styleClass="face-title"/>
+            <Label fx:id="infoBannerLabel" text="Informations" styleClass="face-info-banner" wrapText="true"/>
+        </VBox>
+
+        <HBox spacing="16" alignment="CENTER_LEFT">
+            <VBox spacing="10" HBox.hgrow="ALWAYS">
+                <Button fx:id="startCameraButton" text="Demarrer la camera" styleClass="face-btn-primary" onAction="#handleStartCamera"/>
+                <Button fx:id="stopCameraButton" text="Arreter la camera" styleClass="face-btn-outline" onAction="#handleStopCamera"/>
+                <Button fx:id="registerFaceButton" text="Enregistrer / Re-enregistrer mon visage" styleClass="face-btn-success" onAction="#handleRegisterFace"/>
+                <Button fx:id="verifyFaceButton" text="Verifier mon visage" styleClass="face-btn-success" onAction="#handleVerifyFace"/>
+                <Button text="Se deconnecter" styleClass="face-btn-outline" onAction="#handleLogout"/>
+            </VBox>
+
+            <VBox alignment="CENTER" spacing="8" styleClass="face-preview-wrap">
+                <ImageView fx:id="previewImageView" fitWidth="420" fitHeight="300" preserveRatio="true" smooth="true" styleClass="face-preview"/>
+                <Label text="Apercu visage" styleClass="face-preview-caption"/>
+            </VBox>
+        </HBox>
+
+        <Label fx:id="statusLabel" text="Demarrez la camera, regardez en face, puis enregistrez ou verifiez votre identite." styleClass="face-status" wrapText="true"/>
+    </VBox>
+</StackPane>

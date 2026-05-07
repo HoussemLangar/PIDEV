@@ -1,0 +1,4 @@
+javafx-app/documents/
+compose.log
+ml-services/document-classifier/venv/
+ml-services/document-classifier/__pycache__/

@@ -4,6 +4,46 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
+    geoip_db_path: '%kernel.project_dir%/var/geoip/GeoLite2-Country.mmdb'
+    geoip_api_url: '%env(resolve:GEOIP_API_URL)%'
+    jitsi_server_url: '%env(JITSI_SERVER_URL)%'
+    ai_api_base_url: '%env(resolve:AI_API_BASE_URL)%'
+    ai_api_key: '%env(resolve:AI_API_KEY)%'
+    ai_model: '%env(resolve:AI_MODEL)%'
+    hf_emotion_api_url: '%env(string:HF_EMOTION_API_URL)%'
+    hf_emotion_api_token: '%env(string:HF_EMOTION_API_TOKEN)%'
+    hf_emotion_model: '%env(string:HF_EMOTION_MODEL)%'
+    hf_intent_api_url: '%env(string:HF_INTENT_API_URL)%'
+    hf_intent_model: '%env(string:HF_INTENT_MODEL)%'
+    hf_chat_api_url: '%env(string:HF_CHAT_API_URL)%'
+    hf_chat_model: '%env(string:HF_CHAT_MODEL)%'
+    hf_emotion_timeout: '%env(float:HF_EMOTION_TIMEOUT)%'
+    content_forbidden_words:
+        - spam
+        - arnaque
+        - insultant
+        - obscenite
+        - merde
+        - putain
+        - con
+        - connard
+        - salop
+        - salope
+        - salopard
+        - salopards
+        - pute
+        - putes
+        - bitch
+        - bitches
+        - batard
+        - fuck
+        - shit
+        - menace
+        - haine
+        - violence
+        - harcelement
+        - discriminant
+        - faux
 
 services:
     # default configuration for services in *this* file
@@ -19,6 +59,59 @@ services:
             - '../src/DependencyInjection/'
             - '../src/Entity/'
             - '../src/Kernel.php'
+            - '../src/Twig/Components/'
+
+    App\Twig\Components\:
+        resource: '../src/Twig/Components/'
+        autowire: true
+        autoconfigure: true
+
+    App\Service\InvoiceService:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+
+    App\Service\Payment\StripeCheckoutService:
+        arguments:
+            $secretKey: '%env(string:STRIPE_SECRET_KEY)%'
+            $webhookSecret: '%env(string:STRIPE_WEBHOOK_SECRET)%'
+            $currency: '%env(string:STRIPE_CURRENCY)%'
+            $tndToStripeRate: '%env(float:STRIPE_TND_TO_CURRENCY_RATE)%'
+
+    App\Security\GeoIpService:
+        arguments:
+            $geoIpDbPath: '%geoip_db_path%'
+            $geoIpApiUrl: '%geoip_api_url%'
+
+    App\Service\ForbiddenWordsFilterService:
+        arguments:
+            $forbiddenWords: '%content_forbidden_words%'
+
+    App\Service\Ai\AiGatewayService:
+        arguments:
+            $baseUrl: '%ai_api_base_url%'
+            $apiKey: '%ai_api_key%'
+            $model: '%ai_model%'
+
+    App\Service\MessageRealtimePublisher:
+        arguments:
+            $hub: '@?mercure.hub.default'
+    App\Service\MentalHealthChatbotService:
+        arguments:
+            $hfEmotionApiUrl: '%hf_emotion_api_url%'
+            $hfEmotionApiToken: '%hf_emotion_api_token%'
+            $hfEmotionModel: '%hf_emotion_model%'
+            $hfIntentApiUrl: '%hf_intent_api_url%'
+            $hfIntentModel: '%hf_intent_model%'
+            $hfChatApiUrl: '%hf_chat_api_url%'
+            $hfChatModel: '%hf_chat_model%'
+            $hfEmotionTimeout: '%hf_emotion_timeout%'
+
+    App\EventSubscriber\CommentScoreSubscriber:
+        tags:
+            - { name: doctrine.event_subscriber }
+    App\EventSubscriber\ContentScoreSubscriber:
+        tags:
+            - { name: doctrine.event_subscriber }
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

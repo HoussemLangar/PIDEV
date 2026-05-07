@@ -1,0 +1,40 @@
+version: "3.1"
+
+intents:
+  - greet
+  - goodbye
+  - affirm
+  - deny
+  - symptom_report
+
+entities:
+  - symptom
+
+slots:
+  symptom:
+    type: text
+    influence_conversation: true
+    mappings:
+      - type: from_entity
+        entity: symptom
+
+responses:
+  utter_greet:
+    - text: "Bonjour. Decris-moi tes symptomes et depuis quand, et je te donne des conseils generaux."
+
+  utter_goodbye:
+    - text: "D'accord. Prends soin de toi. Si les symptomes s'aggravent, consulte un professionnel."
+
+  utter_ask_more:
+    - text: "Tu peux me dire: depuis quand, intensite (1-10), et si tu as de la fievre, toux, douleur, etc. ?"
+
+  utter_disclaimer:
+    - text: "Important: je donne des informations generales. Ca ne remplace pas un avis medical."
+
+  utter_symptom_generic:
+    - text: "Merci. Pour \"{symptom}\": hydrate-toi, repose-toi, et surveille l'evolution. Si douleur forte, fievre elevee ou duree > 48h, consulte."
+
+session_config:
+  session_expiration_time: 60
+  carry_over_slots_to_new_session: true
+

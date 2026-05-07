@@ -1,0 +1,261 @@
+nav:
+  home: الرئيسية
+  about: من نحن
+  services: الخدمات
+  blog: المدونة
+  contact: تواصل
+  account: حسابي
+  settings: الإعدادات
+  notifications: الإشعارات
+  mfa: الأمان (MFA)
+  subscription: الاشتراك
+  logout: تسجيل الخروج
+  login: تسجيل الدخول
+  theme: المظهر
+  language: اللغة
+  dashboard: لوحة التحكم
+  users_section: إدارة المستخدمين
+  users: المستخدمون
+  validation: التحقق من الحسابات
+  sessions: الجلسات
+  suspicious: محاولات تسجيل مشبوهة
+  subscriptions_section: الاشتراكات
+  subscriptions: الاشتراكات
+  payments: الإيرادات والفواتير
+  medical_section: الخدمات الطبية
+  accompaniments: المرافقة
+  appointments: المواعيد
+  medical_control: الفحص الطبي
+  pharmacy_section: الصيدلية
+  pharmacies: الصيدليات
+  medications: الأدوية
+  tracker_section: تتبع الصحة
+  tracker_stats: إحصائيات المتتبع
+  content_section: المحتوى
+  content: المقالات والأدلة
+  moderation: الإشراف
+  system_section: النظام
+  reports: البلاغات
+  admin: مسؤول
+
+theme:
+  light: فاتح
+  dark: داكن
+
+common:
+  search: بحث
+  reset: إعادة ضبط
+  cancel: إلغاء
+  confirm: تأكيد
+  save: حفظ
+  edit: تعديل
+  delete: حذف
+  view: عرض
+  close: إغلاق
+  back: رجوع
+  next: التالي
+  previous: السابق
+  submit: إرسال
+  loading: جارٍ التحميل...
+  no_results: لا توجد نتائج.
+  all: الكل
+  filter: تصفية
+  publish: نشر
+  add: إضافة
+  send: إرسال
+  yes: نعم
+  no: لا
+  status: الحالة
+  date: التاريخ
+  time: الوقت
+  actions: الإجراءات
+  details: التفاصيل
+  load_more: تحميل المزيد
+  real_time: في الوقت الفعلي
+  my: الخاص بي
+  for_you: لك
+
+status:
+  pending: قيد الانتظار
+  confirmed: مؤكد
+  refused: مرفوض
+  cancelled: ملغى
+  published: منشور
+  rejected: مرفوض
+  active: نشط
+  inactive: غير نشط
+  all: جميع الحالات
+
+appt:
+  title: المواعيد الطبية
+  restricted: وصول مقيد
+  restricted_msg: هذه الوحدة مخصصة للمشتركين من المرضى أو الأطباء.
+  restricted_sub: فعّل اشتراكًا لفتح إمكانية حجز أو إدارة المواعيد.
+  choose_plan: اختر اشتراكًا
+  my_appointments: مواعيدي
+  my_appointments_sub: أدر مواعيدك القادمة.
+  find_doctor: البحث عن طبيب
+  find_doctor_sub: انقر على طبيب لعرض مواعيده المتاحة.
+  book_slot: حجز موعد
+  doctor: الطبيب
+  slot: الفترة الزمنية
+  reason: السبب (اختياري)
+  reason_placeholder: سبب زيارتك
+  doctor_placeholder: اكتب الاسم أو التخصص
+  patient_placeholder: المريض...
+  select_doctor_date: اختر طبيبًا وتاريخًا.
+  select_valid: يرجى اختيار طبيب صالح وتاريخ.
+  no_slots: لا توجد مواعيد متاحة.
+  no_appointments: لا توجد مواعيد.
+  doctor_appointments: مواعيد الطبيب
+  doctor_appointments_sub: استشاراتك المؤكدة.
+  read_only: للقراءة فقط
+  reschedule: إعادة الجدولة
+  reschedule_title: إعادة جدولة الموعد
+  reschedule_sub: اختر تاريخًا ووقتًا جديدًا
+  reschedule_approval: في انتظار موافقة الطبيب.
+  book_btn: حجز موعد
+
+pharma:
+  title: الصيدليات
+  subtitle: ابحث عن صيدلية، قارن الأسعار وأطلب أدويتك.
+  search_compare: بحث ومقارنة
+  search_compare_sub: الصيدليات النشطة مرتبة حسب المسافة والسعر.
+  search_placeholder: صيدلية أو عنوان
+  city_placeholder: 'المدينة (مثال: تونس)'
+  near_me: بالقرب مني
+  results: النتائج
+  no_results: لم يتم العثور على صيدلية.
+  stock: مخزون هذه الصيدلية الحالي
+  stock_empty: لا توجد أدوية في المخزون.
+  med_search: الأدوية المتاحة
+  med_placeholder: الدواء (الاسم أو الباركود)
+  med_not_found: لم يتم العثور على دواء.
+  compare: مقارنة الأسعار
+  compare_title: مقارنة دواء
+  compare_sub: التوفر والأسعار في جميع الصيدليات
+  compare_btn: مقارنة
+  reserve: حجز
+  reservations: طلباتي
+  reservations_title: سجل الطلبات
+  reservations_sub: تتبع حالة طلبات الأدوية في الوقت الفعلي.
+  no_reservations: لا توجد طلبات حتى الآن.
+  browse: تصفح الصيدليات
+  qty: الكمية
+  pharmacy_label: الصيدلية
+
+content:
+  title: المدونة والمنتدى
+  subtitle: استكشف المحتوى المعتمد وتبادل التعليقات.
+  add: إضافة محتوى
+  add_sub: مقالات، مقاطع فيديو، PDF أو روابط. يتطلب موافقة الإدارة.
+  all: جميع المحتويات
+  mine: محتواي
+  recommended: موصى به لك
+  recommended_sub: بناءً على ملفك الشخصي وتفاعلاتك.
+  no_recommended: لا توجد توصيات متاحة.
+  list_sub: قائمة قابلة للتصفية — تحديث فوري.
+  search_placeholder: البحث عن محتوى...
+  all_types: جميع الأنواع
+  all_categories: جميع الفئات
+  type_article: مقالة
+  type_video: فيديو
+  type_pdf: PDF
+  type_link: رابط
+  comments: التعليقات
+  comment_placeholder: أضف تعليقًا...
+  create_title: إنشاء محتوى
+  create_sub: مقالات، مقاطع فيديو، PDF أو روابط. يتطلب موافقة الإدارة.
+  edit_title: تعديل المحتوى
+  personalized: مخصص
+
+category:
+  general: عام
+  mental_health: الصحة النفسية
+  medications: الأدوية
+  sport: الرياضة
+  nutrition: التغذية
+  sleep: النوم
+  stress: التوتر
+  addiction: الإدمان
+  wellbeing: الرفاهية
+  cardiology: أمراض القلب
+  dermatology: الأمراض الجلدية
+  dental: طب الأسنان
+  ophthalmology: طب العيون
+  pediatrics: طب الأطفال
+  geriatrics: طب الشيخوخة
+  pregnancy: الحمل
+  preventive: الوقاية
+  chronic: الأمراض المزمنة
+  alternative: الطب البديل
+  generic: الأدوية الجنيسة
+  sexuality: الصحة الجنسية
+  vaccination: التطعيم
+  emergencies: الطوارئ
+  therapy: العلاجات
+
+profile:
+  title: ملفي الشخصي
+  edit_title: تعديل ملفي الشخصي
+  avatar: صورة الملف الشخصي
+  first_name: الاسم الأول
+  last_name: اللقب
+  email: البريد الإلكتروني
+  phone: الهاتف
+  specialty: التخصص
+  bio: نبذة شخصية
+  save: حفظ التغييرات
+  password_section: تغيير كلمة المرور
+  current_password: كلمة المرور الحالية
+  new_password: كلمة المرور الجديدة
+  confirm_password: تأكيد كلمة المرور
+
+auth:
+  login_title: تسجيل الدخول
+  register_title: إنشاء حساب
+  email: البريد الإلكتروني
+  password: كلمة المرور
+  remember_me: تذكرني
+  forgot_password: نسيت كلمة المرور؟
+  no_account: ليس لديك حساب؟
+  has_account: لديك حساب بالفعل؟
+  sign_in: تسجيل الدخول
+  sign_up: إنشاء حساب
+  or_continue: أو تابع مع
+  first_name: الاسم الأول
+  last_name: اللقب
+  role: الدور
+  patient: مريض
+  doctor: طبيب
+  pharmacist: صيدلاني
+  coach: مدرب
+
+home:
+  hero_title: صحتك، أولويتنا
+  hero_sub: استشر طبيبًا وأدر وصفاتك وتابع صحتك من منصة ذكية واحدة.
+  book_appointment: احجز موعدًا
+  discover: اكتشف
+  about_title: عن Santéa
+  stats_patients: مريض
+  stats_doctors: طبيب
+  stats_pharmacies: صيدلية
+  stats_consults: استشارة
+  services_title: خدماتنا
+  testimonials_title: شهادات
+  contact_title: تواصل معنا
+  contact_send: إرسال الرسالة
+  footer_rights: جميع الحقوق محفوظة.
+
+sub:
+  title: اشتراكاتي
+  choose_title: اختر خطتك
+  active: نشط
+  expired: منتهي
+  free: مجاني
+  monthly: شهر
+  yearly: سنة
+  features: المميزات
+  subscribe: اشترك
+  current: الخطة الحالية
+  upgrade: ترقية

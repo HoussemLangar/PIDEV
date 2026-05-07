@@ -4,62 +4,59 @@ namespace App\Controller;
 
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
+use KnpU\OAuth2ClientBundle\Client\ClientRegistry;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Security\Http\Authentication\UserAuthenticatorInterface;
-use Symfony\Component\Security\Http\Authenticator\FormLoginAuthenticator;
 
 class OAuthController extends AbstractController
 {
-    #[Route('/oauth/google/callback', name: 'oauth_google_callback')]
-    public function googleCallback(Request $request): Response
+    /**
+     * Lien pour rediriger vers Google OAuth
+     */
+    #[Route('/connect/google', name: 'connect_google_start')]
+    public function connectGoogle(ClientRegistry $clientRegistry): RedirectResponse
     {
-        $session = $request->getSession();
-        $oauthData = $session->get('_oauth_data');
-
-        // Si pas de données OAuth, rediriger vers login
-        if (!$oauthData) {
-            $this->addFlash('error', 'Erreur lors de la connexion avec Google.');
-            return $this->redirectToRoute('login');
-        }
-
-        // Afficher la page de confirmation
-        return $this->render('security/oauth_confirm.html.twig', [
-            'provider' => 'Google',
-            'user_data' => $oauthData,
-            'provider_icon' => 'fab fa-google',
-            'provider_color' => '#DB4437',
-        ]);
+        return $clientRegistry
+            ->getClient('google')
+            ->redirect([
+                'email', 'profile'
+            ], []);
     }
 
-    #[Route('/oauth/facebook/callback', name: 'oauth_facebook_callback')]
-    public function facebookCallback(Request $request): Response
+    /**
+     * Google redirige ici après l'authentification
+     */
+    #[Route('/connect/google/check', name: 'connect_google_check')]
+    public function connectGoogleCheck(Request $request, ClientRegistry $clientRegistry)
     {
-        $session = $request->getSession();
-        $oauthData = $session->get('_oauth_data');
+        // Cette méthode ne sera jamais exécutée
+        // L'authenticator intercepte la requête avant
+    }
 
-        if (!$oauthData) {
-            $this->addFlash('error', 'Erreur lors de la connexion avec Facebook.');
-            return $this->redirectToRoute('login');
-        }
-
-        return $this->render('security/oauth_confirm.html.twig', [
-            'provider' => 'Facebook',
-            'user_data' => $oauthData,
-            'provider_icon' => 'fab fa-facebook-f',
-            'provider_color' => '#4267B2',
-        ]);
+    /**
+     * Lien pour rediriger vers Facebook OAuth
+     */
+    #[Route('/connect/facebook', name: 'connect_facebook_start')]
+    public function connectFacebook(ClientRegistry $clientRegistry): RedirectResponse
+    {
+        return $clientRegistry
+            ->getClient('facebook')
+            ->redirect([
+                'public_profile', 'email'
+            ], []);
     }
 
     #[Route('/oauth/confirm', name: 'oauth_confirm', methods: ['POST'])]
     public function confirmOAuth(
         Request $request,
         EntityManagerInterface $entityManager,
-        UserAuthenticatorInterface $userAuthenticator,
-        FormLoginAuthenticator $formLoginAuthenticator
+        UserPasswordHasherInterface $passwordHasher,
+        Security $security,
     ): Response {
         $session = $request->getSession();
         $oauthData = $session->get('_oauth_data');
@@ -101,14 +98,15 @@ class OAuthController extends AbstractController
             $user->setPrenom($oauthData['prenom'] ?? '');
             
             // Mot de passe aléatoire (connexion via OAuth uniquement)
-            $user->setPassword(bin2hex(random_bytes(32)));
+            $randomPassword = bin2hex(random_bytes(32));
+            $user->setPassword($passwordHasher->hashPassword($user, $randomPassword));
             
             // Rôle utilisateur standard
             $user->setRole('ROLE_USER');
             
             // Dates
-            $user->setCreatedAt(new \DateTimeImmutable());
-            $user->setUpdatedAt(new \DateTimeImmutable());
+            $user->forceCreatedAt(new \DateTimeImmutable());
+            $user->forceUpdatedAt(new \DateTimeImmutable());
             
             // Sauvegarder
             $entityManager->persist($user);
@@ -126,23 +124,17 @@ class OAuthController extends AbstractController
         $session->remove('_oauth_needs_confirmation');
 
         // Authentifier l'utilisateur manuellement
-        return $userAuthenticator->authenticateUser(
-            $user,
-            $formLoginAuthenticator,
-            $request
-        );
+        $response = $security->login($user, 'main');
+        return $response ?? $this->redirectToRoute('app_home');
     }
 
-    #[Route('/oauth/cancel', name: 'oauth_cancel')]
-    public function cancelOAuth(Request $request): Response
+    /**
+     * Facebook redirige ici après l'authentification
+     */
+    #[Route('/connect/facebook/check', name: 'connect_facebook_check')]
+    public function connectFacebookCheck(Request $request, ClientRegistry $clientRegistry)
     {
-        $session = $request->getSession();
-        $session->remove('_oauth_data');
-        $session->remove('_oauth_pending');
-        $session->remove('_oauth_existing_user');
-        $session->remove('_oauth_needs_confirmation');
-        
-        $this->addFlash('info', 'Connexion OAuth annulée.');
-        return $this->redirectToRoute('login');
+        // Cette méthode ne sera jamais exécutée
+        // L'authenticator intercepte la requête avant
     }
 }

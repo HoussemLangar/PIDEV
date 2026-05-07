@@ -1,0 +1,155 @@
+{% extends 'back/base.html.twig' %}
+
+{% block title %}Validation comptes{% endblock %}
+
+{% block admin_content %}
+<div class="admin-page-header validation-header">
+    <div class="admin-page-title">
+        <div class="validation-title">
+            <span class="validation-chip">Validation</span>
+            <h1>Validation des comptes</h1>
+        </div>
+        <p>Suivez les confirmations email et approuvez les comptes en attente.</p>
+    </div>
+    <div class="admin-actions-row">
+        <form method="post" action="{{ path('admin_validation_approve_all') }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('approve_all') }}">
+            <button class="btn btn-primary" type="submit">Approuver tous</button>
+        </form>
+        <form method="post" action="{{ path('admin_validation_resend_all') }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('resend_all') }}">
+            <button class="btn btn-secondary" type="submit">Renvoyer emails</button>
+        </form>
+    </div>
+</div>
+
+<div class="admin-grid cards-4 validation-stats">
+    <div class="admin-card">
+        <div class="admin-badge">Total</div>
+        <h2>{{ stats.total }}</h2>
+    </div>
+    <div class="admin-card">
+        <div class="admin-badge success">Email confirmés</div>
+        <h2>{{ stats.emailVerified }}</h2>
+    </div>
+    <div class="admin-card">
+        <div class="admin-badge warning">Email non confirmés</div>
+        <h2>{{ stats.emailNotVerified }}</h2>
+    </div>
+    <div class="admin-card">
+        <div class="admin-badge danger">En attente admin</div>
+        <h2>{{ stats.adminPending }}</h2>
+    </div>
+</div>
+
+<div class="admin-card validation-filters">
+    <form method="get" class="admin-form" id="validationFilterForm">
+        <div class="form-row filters-inline filters-modern">
+            <div class="filter-search filter-field">
+                <label class="filter-label">Recherche</label>
+                <i class="fas fa-search"></i>
+                <input type="text" name="q" value="{{ filters.q }}" placeholder="Search">
+            </div>
+            <div class="filter-field">
+                <label>Email confirmé</label>
+                <select name="email_verified">
+                    <option value="">Tous</option>
+                    <option value="yes" {{ filters.email_verified == 'yes' ? 'selected' : '' }}>Oui</option>
+                    <option value="no" {{ filters.email_verified == 'no' ? 'selected' : '' }}>Non</option>
+                </select>
+            </div>
+            <div class="filter-field">
+                <label>Admin validé</label>
+                <select name="admin_approved">
+                    <option value="">Tous</option>
+                    <option value="yes" {{ filters.admin_approved == 'yes' ? 'selected' : '' }}>Oui</option>
+                    <option value="no" {{ filters.admin_approved == 'no' ? 'selected' : '' }}>Non</option>
+                </select>
+            </div>
+            <div class="filter-actions">
+                <a class="btn btn-secondary" href="{{ path('admin_validation') }}">Réinitialiser</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="admin-card validation-table">
+    <div class="validation-table-header">
+        <div>
+            <strong>{{ users|length }}</strong> comptes affichés
+        </div>
+        <div class="validation-legend">
+            <span class="admin-badge success">Email OK</span>
+            <span class="admin-badge warning">Email non confirmé</span>
+            <span class="admin-badge danger">Admin en attente</span>
+        </div>
+    </div>
+    <div style="overflow-x:auto;">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Utilisateur</th>
+                    <th>Email</th>
+                    <th>Email confirmé</th>
+                    <th>Admin validé</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for user in users %}
+                <tr>
+                    <td>{{ user.fullName }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>
+                        {% if user.emailVerified %}
+                            <span class="admin-badge success">Oui</span>
+                        {% else %}
+                            <span class="admin-badge warning">Non</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if user.adminApproved %}
+                            <span class="admin-badge success">Oui</span>
+                        {% else %}
+                            <span class="admin-badge danger">Non</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="admin-actions-row">
+                        <form method="post" action="{{ path('admin_validation_approve', {id: user.id}) }}">
+                            <input type="hidden" name="_token" value="{{ csrf_token('approve_' ~ user.id) }}">
+                            <button class="btn btn-primary" type="submit">Approuver</button>
+                        </form>
+                        {% if not user.emailVerified %}
+                            <form method="post" action="{{ path('admin_validation_resend', {id: user.id}) }}">
+                                <input type="hidden" name="_token" value="{{ csrf_token('resend_' ~ user.id) }}">
+                                <button class="btn btn-secondary" type="submit">Renvoyer email</button>
+                            </form>
+                        {% endif %}
+                        </div>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="5" style="text-align:center; color: var(--admin-muted);">Aucun compte en attente</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        (function () {
+            const form = document.getElementById('validationFilterForm');
+            if (!form) return;
+            const inputs = form.querySelectorAll('select,input[type="text"]');
+            inputs.forEach((el) => {
+                el.addEventListener('change', () => form.submit());
+            });
+        })();
+    </script>
+{% endblock %}

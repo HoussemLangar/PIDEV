@@ -43,19 +43,26 @@ class Abonnement
     #[ORM\Column(type: 'string', length: 20, options: ['default' => 'actif'])]
     private string $statut = 'actif';
 
-    #[ORM\Column(type: 'datetime', options: ['default' => 'CURRENT_TIMESTAMP'])]
+    #[ORM\Column(type: 'string', length: 255, nullable: true, unique: true)]
+    private ?string $paymentSessionId = null;
+
+    #[ORM\Column(type: 'datetimetz', options: ['default' => 'CURRENT_TIMESTAMP'])]
     private \DateTimeInterface $createdAt;
 
-    #[ORM\Column(type: 'datetime', options: ['default' => 'CURRENT_TIMESTAMP'])]
+    #[ORM\Column(type: 'datetimetz', options: ['default' => 'CURRENT_TIMESTAMP'])]
     private \DateTimeInterface $updatedAt;
 
-    #[ORM\OneToMany(mappedBy: 'abonnement', targetEntity: Accompagnement::class, cascade: ['persist', 'remove'])]
+    #[ORM\OneToMany(mappedBy: 'abonnement', targetEntity: Accompagnement::class, cascade: ['persist'], orphanRemoval: true)]
     private Collection $accompagnements;
+
+    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id', nullable: true, onDelete: 'SET NULL')]
+    private ?User $user = null;
 
     public function __construct()
     {
-        $this->createdAt = new \DateTimeImmutable();
-        $this->updatedAt = new \DateTimeImmutable();
+        $this->createdAt = new \DateTime();
+        $this->updatedAt = new \DateTime();
         $this->accompagnements = new ArrayCollection();
     }
 
@@ -78,9 +85,14 @@ class Abonnement
     public function setDateFin(\DateTimeInterface $dateFin): void { $this->dateFin = $dateFin; }
     public function getStatut(): string { return $this->statut; }
     public function setStatut(string $statut): void { $this->statut = $statut; }
+    public function getPaymentSessionId(): ?string { return $this->paymentSessionId; }
+    public function setPaymentSessionId(?string $paymentSessionId): void { $this->paymentSessionId = $paymentSessionId; }
     public function getCreatedAt(): \DateTimeInterface { return $this->createdAt; }
-    public function setCreatedAt(\DateTimeInterface $createdAt): void { $this->createdAt = $createdAt; }
+    public function forceCreatedAt(\DateTimeInterface $createdAt): void { $this->createdAt = $createdAt; }
     public function getUpdatedAt(): \DateTimeInterface { return $this->updatedAt; }
-    public function setUpdatedAt(\DateTimeInterface $updatedAt): void { $this->updatedAt = $updatedAt; }
+    public function forceUpdatedAt(\DateTimeInterface $updatedAt): void { $this->updatedAt = $updatedAt; }
     public function getAccompagnements(): Collection { return $this->accompagnements; }
+
+    public function getUser(): ?User { return $this->user; }
+    public function setUser(?User $user): void { $this->user = $user; }
 }

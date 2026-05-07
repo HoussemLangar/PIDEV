@@ -29,10 +29,10 @@ class Pharmacien
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private ?string $pharmacieAdresse = null;
 
-    #[ORM\Column(type: 'datetime', options: ['default' => 'CURRENT_TIMESTAMP'])]
+    #[ORM\Column(type: 'datetimetz', options: ['default' => 'CURRENT_TIMESTAMP'])]
     private \DateTimeInterface $createdAt;
 
-    #[ORM\Column(type: 'datetime', options: ['default' => 'CURRENT_TIMESTAMP'])]
+    #[ORM\Column(type: 'datetimetz', options: ['default' => 'CURRENT_TIMESTAMP'])]
     private \DateTimeInterface $updatedAt;
 
     #[ORM\OneToMany(mappedBy: 'pharmacien', targetEntity: Pharmacy::class)]
@@ -40,8 +40,8 @@ class Pharmacien
 
     public function __construct()
     {
-        $this->createdAt = new \DateTimeImmutable();
-        $this->updatedAt = new \DateTimeImmutable();
+        $this->createdAt = new \DateTime();
+        $this->updatedAt = new \DateTime();
         $this->pharmacies = new ArrayCollection();
     }
 
@@ -55,8 +55,8 @@ class Pharmacien
     public function getPharmacieAdresse(): ?string { return $this->pharmacieAdresse; }
     public function setPharmacieAdresse(?string $pharmacieAdresse): void { $this->pharmacieAdresse = $pharmacieAdresse; }
     public function getCreatedAt(): \DateTimeInterface { return $this->createdAt; }
-    public function setCreatedAt(\DateTimeInterface $createdAt): void { $this->createdAt = $createdAt; }
+    public function forceCreatedAt(\DateTimeInterface $createdAt): void { $this->createdAt = $createdAt; }
     public function getUpdatedAt(): \DateTimeInterface { return $this->updatedAt; }
-    public function setUpdatedAt(\DateTimeInterface $updatedAt): void { $this->updatedAt = $updatedAt; }
+    public function forceUpdatedAt(\DateTimeInterface $updatedAt): void { $this->updatedAt = $updatedAt; }
     public function getPharmacies(): Collection { return $this->pharmacies; }
 }

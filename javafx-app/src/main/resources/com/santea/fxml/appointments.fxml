@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.web.WebView?>
+
+<StackPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+		   fx:controller="com.santea.controller.AppointmentViewController"
+		   styleClass="appt-page-root">
+
+	<ScrollPane fitToWidth="true" pannable="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" styleClass="home-scroll">
+		<content>
+			<StackPane alignment="TOP_CENTER">
+				<VBox fx:id="root" spacing="18" alignment="TOP_CENTER" maxWidth="1400" styleClass="appt-shell profile-content-shell">
+					<padding>
+						<Insets top="24" right="20" bottom="28" left="20"/>
+					</padding>
+
+				<VBox spacing="10" maxWidth="1280" styleClass="appt-hero-card">
+					<Label fx:id="accessBadge" text="Rendez-vous medicaux" styleClass="appt-hero-badge"/>
+					<Label fx:id="heroTitle" text="Reserver un rendez-vous" styleClass="appt-hero-title"/>
+					<Label fx:id="heroSubtitle" text="Choisissez un medecin, une date et un creneau disponible en quelques clics." styleClass="appt-hero-subtitle" wrapText="true"/>
+
+					<FlowPane fx:id="heroActions" hgap="10" vgap="10" alignment="CENTER_LEFT" styleClass="appt-hero-actions" prefWrapLength="980">
+						<Button fx:id="locateButton" text="Ma position" styleClass="appt-hero-btn-ghost" onAction="#handleLocate"/>
+						<TextField fx:id="cityInput" promptText="Ville (ex: Tunis)" styleClass="appt-search-input" HBox.hgrow="ALWAYS"/>
+						<Button fx:id="searchCityButton" text="Rechercher" styleClass="appt-hero-btn-primary" onAction="#handleSearchCity"/>
+						<Button fx:id="heroVoiceButton" text="Assistant Vocal" styleClass="appt-hero-btn-voice" onAction="#handleVoiceBooking"/>
+					</FlowPane>
+				</VBox>
+
+				<VBox fx:id="restrictedCard" spacing="8" maxWidth="1280" styleClass="appt-restricted-card" visible="false" managed="false">
+					<Label text="Acces restreint" styleClass="appt-restricted-title"/>
+					<Label fx:id="restrictedMessage" text="Abonnement actif requis." styleClass="appt-restricted-text" wrapText="true"/>
+					<Button text="Choisir un abonnement" styleClass="appt-btn-primary" onAction="#handleOpenSubscription"/>
+				</VBox>
+
+				<VBox fx:id="patientSection" spacing="14" maxWidth="1280" visible="false" managed="false">
+					<VBox spacing="12" styleClass="appt-card">
+						<HBox alignment="CENTER_LEFT" spacing="12">
+							<Label text="Mes rendez-vous" styleClass="appt-card-title"/>
+							<Label text="Gerez vos rendez-vous a venir." styleClass="appt-card-subtitle" HBox.hgrow="ALWAYS"/>
+							<Button fx:id="openBookingButton" text="+ Reserver un rendez-vous" styleClass="appt-btn-primary" onAction="#handleOpenBooking"/>
+						</HBox>
+
+						<FlowPane hgap="10" vgap="10" alignment="CENTER_LEFT" styleClass="appt-filters-row" prefWrapLength="1020">
+							<ComboBox fx:id="patientStatusFilter" styleClass="appt-filter-control" prefWidth="190"/>
+							<DatePicker fx:id="patientDateFilter" styleClass="appt-filter-control" prefWidth="190"/>
+							<TextField fx:id="patientSearchFilter" promptText="Medecin..." styleClass="appt-filter-control" HBox.hgrow="ALWAYS"/>
+							<Button fx:id="patientResetFilterButton" text="Reinitialiser" styleClass="appt-btn-soft" onAction="#handleResetPatientFilters"/>
+						</FlowPane>
+
+						<VBox fx:id="patientAppointmentsContainer" spacing="10"/>
+					</VBox>
+
+					<VBox fx:id="bookingSection" spacing="12" styleClass="appt-booking-shell" visible="false" managed="false">
+						<HBox alignment="CENTER_RIGHT" spacing="10">
+							<Button fx:id="bookingVoiceButton" text="Reserver par commande vocale" styleClass="appt-hero-btn-voice" onAction="#handleVoiceBooking"/>
+							<Button fx:id="closeBookingButton" text="Fermer" styleClass="appt-btn-soft" onAction="#handleCloseBooking"/>
+						</HBox>
+
+						<FlowPane hgap="14" vgap="14" alignment="TOP_CENTER" styleClass="appt-booking-grid" prefWrapLength="1220">
+							<VBox spacing="10" styleClass="appt-card" HBox.hgrow="ALWAYS">
+								<Label text="Trouver un medecin" styleClass="appt-card-title"/>
+								<WebView fx:id="doctorsMapView" prefHeight="360"/>
+								<Label text="Cliquez sur un medecin pour voir ses creneaux." styleClass="appt-card-subtitle"/>
+							</VBox>
+
+							<VBox spacing="10" styleClass="appt-card" HBox.hgrow="ALWAYS">
+								<Label text="Prendre un creneau" styleClass="appt-card-title"/>
+
+								<Label text="Medecin" styleClass="appt-field-label"/>
+								<ComboBox fx:id="doctorCombo" styleClass="appt-filter-control" prefWidth="360"/>
+
+								<Label text="Date" styleClass="appt-field-label"/>
+								<DatePicker fx:id="bookingDatePicker" styleClass="appt-filter-control" prefWidth="220"/>
+
+								<Label text="Creneau" styleClass="appt-field-label"/>
+								<FlowPane fx:id="slotsPane" hgap="8" vgap="8" prefWrapLength="380"/>
+
+								<Label text="Motif (optionnel)" styleClass="appt-field-label"/>
+								<TextArea fx:id="motifInput" promptText="Votre motif" prefRowCount="3" styleClass="appt-textarea"/>
+
+								<HBox alignment="CENTER_LEFT" spacing="10">
+									<Button fx:id="confirmBookingButton" text="Confirmer" styleClass="appt-btn-primary" onAction="#handleConfirmBooking"/>
+									<Label fx:id="bookingFeedback" text="" styleClass="appt-feedback"/>
+								</HBox>
+							</VBox>
+						</FlowPane>
+					</VBox>
+				</VBox>
+
+				<VBox fx:id="doctorSection" spacing="14" maxWidth="1280" visible="false" managed="false">
+					<VBox spacing="12" styleClass="appt-card">
+						<HBox alignment="CENTER_LEFT" spacing="12">
+							<Label text="Rendez-vous du medecin" styleClass="appt-card-title"/>
+							<Label text="Vos consultations confirmees." styleClass="appt-card-subtitle" HBox.hgrow="ALWAYS"/>
+							<Label text="Lecture seule" styleClass="appt-read-badge"/>
+						</HBox>
+
+						<FlowPane hgap="10" vgap="10" alignment="CENTER_LEFT" styleClass="appt-filters-row" prefWrapLength="1020">
+							<ComboBox fx:id="doctorStatusFilter" styleClass="appt-filter-control" prefWidth="190"/>
+							<DatePicker fx:id="doctorDateFilter" styleClass="appt-filter-control" prefWidth="190"/>
+							<TextField fx:id="doctorSearchFilter" promptText="Patient..." styleClass="appt-filter-control" HBox.hgrow="ALWAYS"/>
+							<Button fx:id="doctorResetFilterButton" text="Reinitialiser" styleClass="appt-btn-soft" onAction="#handleResetDoctorFilters"/>
+						</FlowPane>
+
+						<VBox fx:id="doctorAppointmentsContainer" spacing="10"/>
+					</VBox>
+				</VBox>
+				</VBox>
+			</StackPane>
+		</content>
+	</ScrollPane>
+
+	<StackPane fx:id="voiceOverlay" styleClass="voice-overlay" visible="false" managed="false">
+		<HBox alignment="CENTER_RIGHT" spacing="0" StackPane.alignment="CENTER_RIGHT">
+			<VBox fx:id="voiceDrawer" spacing="12" styleClass="voice-drawer">
+				<HBox alignment="CENTER_LEFT" spacing="12" styleClass="voice-drawer-header">
+					<Label text="AI" styleClass="voice-header-icon"/>
+					<VBox spacing="2" HBox.hgrow="ALWAYS">
+						<Label text="Assistant Vocal" styleClass="voice-drawer-title"/>
+						<Label text="Arabe tunisien" styleClass="voice-drawer-subtitle"/>
+					</VBox>
+					<HBox alignment="CENTER_LEFT" spacing="6">
+						<Label text="" styleClass="voice-status-dot"/>
+						<Label fx:id="voiceStatus" text="En ligne" styleClass="voice-drawer-status"/>
+					</HBox>
+					<Button text="X" styleClass="voice-close-btn" onAction="#handleCloseVoiceDrawer"/>
+				</HBox>
+
+				<ScrollPane fx:id="voiceLogScroll" fitToWidth="true" styleClass="voice-log-scroll" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED">
+					<content>
+						<VBox fx:id="voiceLog" spacing="10" styleClass="voice-log"/>
+					</content>
+				</ScrollPane>
+
+				<HBox spacing="8" alignment="CENTER_LEFT" styleClass="voice-input-row">
+					<Button fx:id="voiceMicButton" text="MIC" styleClass="voice-mic-btn" onAction="#handleVoiceMic"/>
+					<TextArea fx:id="voiceInput" promptText="Ecrire une commande..." prefRowCount="2" styleClass="voice-input" HBox.hgrow="ALWAYS"/>
+					<Button fx:id="voiceSendButton" text=">" styleClass="voice-send-btn" onAction="#handleVoiceSend"/>
+				</HBox>
+
+				<Label fx:id="voiceHint" text="" styleClass="voice-hint"/>
+				<WebView fx:id="voiceWebView" prefWidth="1" prefHeight="1" visible="false" managed="false"/>
+			</VBox>
+		</HBox>
+	</StackPane>
+
+</StackPane>

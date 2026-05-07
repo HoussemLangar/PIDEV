@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.String?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<StackPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="com.santea.controller.AccompanimentPlansController"
+           styleClass="appt-page-root">
+    <children>
+        <ScrollPane fitToWidth="true" pannable="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" styleClass="home-scroll">
+            <content>
+                <StackPane alignment="TOP_CENTER">
+                    <VBox spacing="18" alignment="TOP_CENTER" maxWidth="1320" styleClass="plan-root appt-shell profile-content-shell">
+                        <padding>
+                            <Insets top="24" right="20" bottom="28" left="20"/>
+                        </padding>
+
+                        <children>
+                            <VBox spacing="10" maxWidth="1240" styleClass="appt-hero-card">
+                                <Label text="Accompagnement" styleClass="appt-hero-badge"/>
+                                <Label fx:id="pageTitleLabel" text="Plans d'accompagnement" styleClass="appt-hero-title"/>
+                                <Label fx:id="pageSubtitleLabel" text="Suivez vos programmes personnalisés" styleClass="appt-hero-subtitle" wrapText="true"/>
+                            </VBox>
+
+                            <FlowPane hgap="16" vgap="16" prefWrapLength="1220" styleClass="plan-stats-grid">
+                                <children>
+                                    <VBox spacing="6">
+                                        <styleClass>
+                                            <String fx:value="plan-stat-card"/>
+                                            <String fx:value="plan-stat-active"/>
+                                        </styleClass>
+                                        <Label text="Actifs" styleClass="tele-stat-badge"/>
+                                        <Label fx:id="activeCountLabel" text="0" styleClass="tele-stat-value"/>
+                                        <Label text="Plans en cours" styleClass="tele-stat-caption"/>
+                                    </VBox>
+                                    <VBox spacing="6">
+                                        <styleClass>
+                                            <String fx:value="plan-stat-card"/>
+                                            <String fx:value="plan-stat-secondary"/>
+                                        </styleClass>
+                                        <Label text="Suivi" styleClass="tele-stat-badge"/>
+                                        <Label fx:id="secondaryCountLabel" text="0" styleClass="tele-stat-value"/>
+                                        <Label fx:id="secondaryCaptionLabel" text="Patients suivis" styleClass="tele-stat-caption"/>
+                                    </VBox>
+                                    <VBox spacing="6">
+                                        <styleClass>
+                                            <String fx:value="plan-stat-card"/>
+                                            <String fx:value="plan-stat-tertiary"/>
+                                        </styleClass>
+                                        <Label text="Historique" styleClass="tele-stat-badge"/>
+                                        <Label fx:id="tertiaryCountLabel" text="0" styleClass="tele-stat-value"/>
+                                        <Label fx:id="tertiaryCaptionLabel" text="Plans complétés" styleClass="tele-stat-caption"/>
+                                    </VBox>
+                                </children>
+                            </FlowPane>
+
+                            <VBox spacing="14" maxWidth="1240">
+                                <children>
+                                    <VBox fx:id="createSection" spacing="12" styleClass="plan-create-section appt-card">
+                                        <padding>
+                                            <Insets top="4" right="4" bottom="4" left="4"/>
+                                        </padding>
+                                        <children>
+                                            <Label text="Créer un nouveau plan" styleClass="panel-title"/>
+                                            <VBox fx:id="patientCreateContainer" spacing="10"/>
+                                        </children>
+                                    </VBox>
+
+                                    <VBox spacing="12" styleClass="plan-list-section appt-card">
+                                        <children>
+                                            <Label text="Plans visibles" styleClass="panel-title"/>
+                                            <VBox fx:id="plansContainer" spacing="12"/>
+                                        </children>
+                                    </VBox>
+                                </children>
+                            </VBox>
+                        </children>
+                    </VBox>
+                </StackPane>
+            </content>
+        </ScrollPane>
+    </children>
+</StackPane>

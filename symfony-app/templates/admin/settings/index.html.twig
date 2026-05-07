@@ -1,0 +1,543 @@
+{% extends 'back/base.html.twig' %}
+
+{% block title %}Paramètres - SANTÉA Admin{% endblock %}
+
+{% block admin_content %}
+<div class="admin-header">
+    <div class="admin-header-left">
+        <h1><i class="fas fa-cog"></i> Paramètres</h1>
+        <p class="header-subtitle">Configuration et paramètres de la plateforme</p>
+    </div>
+</div>
+
+<!-- Settings Tabs -->
+<div class="settings-tabs">
+    <button class="settings-tab active" data-tab="general">
+        <i class="fas fa-sliders-h"></i> Général
+    </button>
+    <button class="settings-tab" data-tab="email">
+        <i class="fas fa-envelope"></i> Emails
+    </button>
+    <button class="settings-tab" data-tab="security">
+        <i class="fas fa-shield-alt"></i> Sécurité
+    </button>
+    <button class="settings-tab" data-tab="notifications">
+        <i class="fas fa-bell"></i> Notifications
+    </button>
+    <button class="settings-tab" data-tab="payment">
+        <i class="fas fa-credit-card"></i> Paiements
+    </button>
+    <button class="settings-tab" data-tab="maintenance">
+        <i class="fas fa-tools"></i> Maintenance
+    </button>
+</div>
+
+<!-- General Settings -->
+<div class="settings-panel active" id="settings-general">
+    <div class="admin-card">
+        <div class="settings-section-header">
+            <h2><i class="fas fa-sliders-h"></i> Paramètres généraux</h2>
+            <p>Configuration de base de l'application</p>
+        </div>
+        
+        <div class="settings-grid">
+            <div class="setting-item">
+                <label class="setting-label">
+                    <i class="fas fa-globe"></i> Nom de l'application
+                </label>
+                <input type="text" class="setting-input" value="SANTÉA" placeholder="Nom de l'application">
+                <small class="setting-help">Nom affiché dans l'application et les emails</small>
+            </div>
+
+            <div class="setting-item">
+                <label class="setting-label">
+                    <i class="fas fa-language"></i> Langue par défaut
+                </label>
+                <select class="setting-input">
+                    <option value="fr" selected>Français</option>
+                    <option value="en">English</option>
+                    <option value="ar">العربية</option>
+                </select>
+                <small class="setting-help">Langue par défaut pour les nouveaux utilisateurs</small>
+            </div>
+
+            <div class="setting-item">
+                <label class="setting-label">
+                    <i class="fas fa-clock"></i> Fuseau horaire
+                </label>
+                <select class="setting-input">
+                    <option value="Africa/Tunis" selected>Africa/Tunis (GMT+1)</option>
+                    <option value="Europe/Paris">Europe/Paris (GMT+1)</option>
+                    <option value="UTC">UTC</option>
+                </select>
+                <small class="setting-help">Fuseau horaire de l'application</small>
+            </div>
+
+            <div class="setting-item">
+                <label class="setting-label">
+                    <i class="fas fa-users"></i> Inscription publique
+                </label>
+                <div class="setting-toggle">
+                    <input type="checkbox" id="public-registration" checked>
+                    <label for="public-registration"></label>
+                </div>
+                <small class="setting-help">Autoriser les nouvelles inscriptions</small>
+            </div>
+
+            <div class="setting-item">
+                <label class="setting-label">
+                    <i class="fas fa-envelope-open-text"></i> Validation email obligatoire
+                </label>
+                <div class="setting-toggle">
+                    <input type="checkbox" id="email-validation" checked>
+                    <label for="email-validation"></label>
+                </div>
+                <small class="setting-help">Forcer la validation d'email à l'inscription</small>
+            </div>
+
+            <div class="setting-item">
+                <label class="setting-label">
+                    <i class="fas fa-user-check"></i> Validation manuelle des professionnels
+                </label>
+                <div class="setting-toggle">
+                    <input type="checkbox" id="manual-validation" checked>
+                    <label for="manual-validation"></label>
+                </div>
+                <small class="setting-help">Requiert validation admin pour médecins/pharmaciens</small>
+            </div>
+        </div>
+
+        <div class="settings-actions">
+            <button class="btn-settings-save"><i class="fas fa-save"></i> Sauvegarder</button>
+            <button class="btn-settings-reset"><i class="fas fa-undo"></i> Réinitialiser</button>
+        </div>
+    </div>
+</div>
+
+<!-- Email Settings -->
+<div class="settings-panel" id="settings-email">
+    <div class="admin-card">
+        <div class="settings-section-header">
+            <h2><i class="fas fa-envelope"></i> Configuration Email (SMTP)</h2>
+            <p>Paramètres d'envoi d'emails</p>
+        </div>
+        
+        <div class="settings-grid">
+            <div class="setting-item">
+                <label class="setting-label">
+                    <i class="fas fa-server"></i> Serveur SMTP
+                </label>
+                <input type="text" class="setting-input" placeholder="smtp.gmail.com">
+            </div>
+
+            <div class="setting-item">
+                <label class="setting-label">
+                    <i class="fas fa-network-wired"></i> Port SMTP
+                </label>
+                <input type="number" class="setting-input" value="587" placeholder="587">
+            </div>
+
+            <div class="setting-item">
+                <label class="setting-label">
+                    <i class="fas fa-user"></i> Nom d'utilisateur
+                </label>
+                <input type="email" class="setting-input" placeholder="noreply@santea.com">
+            </div>
+
+            <div class="setting-item">
+                <label class="setting-label">
+                    <i class="fas fa-key"></i> Mot de passe
+                </label>
+                <input type="password" class="setting-input" placeholder="••••••••">
+            </div>
+
+            <div class="setting-item">
+                <label class="setting-label">
+                    <i class="fas fa-lock"></i> Chiffrement
+                </label>
+                <select class="setting-input">
+                    <option value="tls" selected>TLS</option>
+                    <option value="ssl">SSL</option>
+                    <option value="none">Aucun</option>
+                </select>
+            </div>
+
+            <div class="setting-item">
+                <label class="setting-label">
+                    <i class="fas fa-at"></i> Email expéditeur
+                </label>
+                <input type="email" class="setting-input" value="noreply@santea.com">
+            </div>
+        </div>
+
+        <div class="setting-item">
+            <button class="btn-settings-test"><i class="fas fa-paper-plane"></i> Tester la configuration</button>
+        </div>
+
+        <div class="settings-actions">
+            <button class="btn-settings-save"><i class="fas fa-save"></i> Sauvegarder</button>
+        </div>
+    </div>
+</div>
+
+<!-- Security Settings -->
+<div class="settings-panel" id="settings-security">
+    <div class="admin-card">
+        <div class="settings-section-header">
+            <h2><i class="fas fa-shield-alt"></i> Paramètres de sécurité</h2>
+            <p>Protection et authentification</p>
+        </div>
+        
+        <div class="settings-grid">
+            <div class="setting-item">
+                <label class="setting-label">
+                    <i class="fas fa-user-lock"></i> Authentification à deux facteurs (2FA)
+                </label>
+                <div class="setting-toggle">
+                    <input type="checkbox" id="2fa-enabled">
+                    <label for="2fa-enabled"></label>
+                </div>
+                <small class="setting-help">Activer 2FA pour tous les administrateurs</small>
+            </div>
+
+            <div class="setting-item">
+                <label class="setting-label">
+                    <i class="fas fa-shield-virus"></i> Détection connexions suspectes
+                </label>
+                <div class="setting-toggle">
+                    <input type="checkbox" id="suspicious-detection" checked>
+                    <label for="suspicious-detection"></label>
+                </div>
+                <small class="setting-help">Bloquer les connexions depuis nouveaux pays/navigateurs</small>
+            </div>
+
+            <div class="setting-item">
+                <label class="setting-label">
+                    <i class="fas fa-clock"></i> Durée session (minutes)
+                </label>
+                <input type="number" class="setting-input" value="120" min="30" max="1440">
+                <small class="setting-help">Durée avant déconnexion automatique (inactivité)</small>
+            </div>
+
+            <div class="setting-item">
+                <label class="setting-label">
+                    <i class="fas fa-ban"></i> Tentatives de connexion max
+                </label>
+                <input type="number" class="setting-input" value="5" min="3" max="10">
+                <small class="setting-help">Nombre d'échecs avant blocage temporaire</small>
+            </div>
+
+            <div class="setting-item">
+                <label class="setting-label">
+                    <i class="fas fa-lock"></i> Politique mots de passe forts
+                </label>
+                <div class="setting-toggle">
+                    <input type="checkbox" id="strong-passwords" checked>
+                    <label for="strong-passwords"></label>
+                </div>
+                <small class="setting-help">8+ caractères, majuscules, chiffres, symboles</small>
+            </div>
+
+            <div class="setting-item">
+                <label class="setting-label">
+                    <i class="fas fa-sync"></i> Expiration mots de passe (jours)
+                </label>
+                <input type="number" class="setting-input" value="90" min="0" placeholder="0 = jamais">
+                <small class="setting-help">Forcer changement périodique (0 = désactivé)</small>
+            </div>
+        </div>
+
+        <div class="settings-actions">
+            <button class="btn-settings-save"><i class="fas fa-save"></i> Sauvegarder</button>
+        </div>
+    </div>
+</div>
+
+<!-- Notifications Settings -->
+<div class="settings-panel" id="settings-notifications">
+    <div class="admin-card">
+        <div class="settings-section-header">
+            <h2><i class="fas fa-bell"></i> Notifications système</h2>
+            <p>Gestion des alertes et notifications</p>
+        </div>
+        
+        <div class="settings-grid">
+            <div class="setting-item">
+                <label class="setting-label">
+                    <i class="fas fa-user-plus"></i> Nouvelle inscription
+                </label>
+                <div class="setting-toggle">
+                    <input type="checkbox" id="notif-registration" checked>
+                    <label for="notif-registration"></label>
+                </div>
+                <small class="setting-help">Email admin lors nouvelle inscription</small>
+            </div>
+
+            <div class="setting-item">
+                <label class="setting-label">
+                    <i class="fas fa-user-check"></i> Compte à valider
+                </label>
+                <div class="setting-toggle">
+                    <input type="checkbox" id="notif-validation" checked>
+                    <label for="notif-validation"></label>
+                </div>
+                <small class="setting-help">Notifier validation professionnelle requise</small>
+            </div>
+
+            <div class="setting-item">
+                <label class="setting-label">
+                    <i class="fas fa-credit-card"></i> Nouveau paiement
+                </label>
+                <div class="setting-toggle">
+                    <input type="checkbox" id="notif-payment" checked>
+                    <label for="notif-payment"></label>
+                </div>
+                <small class="setting-help">Email lors paiement reçu</small>
+            </div>
+
+            <div class="setting-item">
+                <label class="setting-label">
+                    <i class="fas fa-flag"></i> Nouveau signalement
+                </label>
+                <div class="setting-toggle">
+                    <input type="checkbox" id="notif-report" checked>
+                    <label for="notif-report"></label>
+                </div>
+                <small class="setting-help">Alerter contenu signalé</small>
+            </div>
+
+            <div class="setting-item">
+                <label class="setting-label">
+                    <i class="fas fa-exclamation-triangle"></i> Erreurs système
+                </label>
+                <div class="setting-toggle">
+                    <input type="checkbox" id="notif-errors" checked>
+                    <label for="notif-errors"></label>
+                </div>
+                <small class="setting-help">Notifier erreurs critiques</small>
+            </div>
+
+            <div class="setting-item">
+                <label class="setting-label">
+                    <i class="fas fa-database"></i> Sauvegardes
+                </label>
+                <div class="setting-toggle">
+                    <input type="checkbox" id="notif-backups" checked>
+                    <label for="notif-backups"></label>
+                </div>
+                <small class="setting-help">Rapport quotidien des sauvegardes</small>
+            </div>
+        </div>
+
+        <div class="settings-actions">
+            <button class="btn-settings-save"><i class="fas fa-save"></i> Sauvegarder</button>
+        </div>
+    </div>
+</div>
+
+<!-- Payment Settings -->
+<div class="settings-panel" id="settings-payment">
+    <div class="admin-card">
+        <div class="settings-section-header">
+            <h2><i class="fas fa-credit-card"></i> Configuration paiements</h2>
+            <p>Passerelles et tarifs</p>
+        </div>
+        
+        <div class="settings-grid">
+            <div class="setting-item">
+                <label class="setting-label">
+                    <i class="fas fa-money-check-alt"></i> Passerelle de paiement
+                </label>
+                <select class="setting-input">
+                    <option value="stripe">Stripe</option>
+                    <option value="paypal">PayPal</option>
+                    <option value="local">Paiement local</option>
+                </select>
+            </div>
+
+            <div class="setting-item">
+                <label class="setting-label">
+                    <i class="fas fa-dollar-sign"></i> Devise
+                </label>
+                <select class="setting-input">
+                    <option value="TND" selected>TND - Dinar Tunisien</option>
+                    <option value="EUR">EUR - Euro</option>
+                    <option value="USD">USD - Dollar</option>
+                </select>
+            </div>
+
+            <div class="setting-item">
+                <label class="setting-label">
+                    <i class="fas fa-percentage"></i> Taxe (%)
+                </label>
+                <input type="number" class="setting-input" value="19" step="0.1" min="0" max="100">
+                <small class="setting-help">TVA ou taxe applicable</small>
+            </div>
+
+            <div class="setting-item">
+                <label class="setting-label">
+                    <i class="fas fa-calendar-alt"></i> Abonnement patient (mensuel)
+                </label>
+                <input type="number" class="setting-input" value="29.99" step="0.01">
+            </div>
+
+            <div class="setting-item">
+                <label class="setting-label">
+                    <i class="fas fa-user-md"></i> Abonnement médecin (mensuel)
+                </label>
+                <input type="number" class="setting-input" value="99.99" step="0.01">
+            </div>
+
+            <div class="setting-item">
+                <label class="setting-label">
+                    <i class="fas fa-pills"></i> Abonnement pharmacien (mensuel)
+                </label>
+                <input type="number" class="setting-input" value="79.99" step="0.01">
+            </div>
+        </div>
+
+        <div class="settings-actions">
+            <button class="btn-settings-save"><i class="fas fa-save"></i> Sauvegarder</button>
+        </div>
+    </div>
+</div>
+
+<!-- Maintenance Settings -->
+<div class="settings-panel" id="settings-maintenance">
+    <div class="admin-card">
+        <div class="settings-section-header">
+            <h2><i class="fas fa-tools"></i> Maintenance & Système</h2>
+            <p>Gestion système et opérations</p>
+        </div>
+        
+        <div class="settings-grid">
+            <div class="setting-item">
+                <label class="setting-label">
+                    <i class="fas fa-wrench"></i> Mode maintenance
+                </label>
+                <div class="setting-toggle">
+                    <input type="checkbox" id="maintenance-mode">
+                    <label for="maintenance-mode"></label>
+                </div>
+                <small class="setting-help">Désactiver l'accès au site (sauf admins)</small>
+            </div>
+
+            <div class="setting-item full-width">
+                <label class="setting-label">
+                    <i class="fas fa-comment"></i> Message de maintenance
+                </label>
+                <textarea class="setting-input" rows="3" placeholder="Message affiché pendant la maintenance">Le site est actuellement en maintenance. Nous serons de retour sous peu.</textarea>
+            </div>
+        </div>
+
+        <div class="settings-section-header" style="margin-top: 30px;">
+            <h3><i class="fas fa-database"></i> Opérations système</h3>
+        </div>
+
+        <div class="settings-actions-grid">
+            <button class="btn-system-action btn-clear-cache">
+                <i class="fas fa-broom"></i>
+                <span>Vider le cache</span>
+                <small>Supprimer les fichiers cache temporaires</small>
+            </button>
+
+            <button class="btn-system-action btn-backup">
+                <i class="fas fa-download"></i>
+                <span>Sauvegarder la base</span>
+                <small>Créer une sauvegarde complète</small>
+            </button>
+
+            <button class="btn-system-action btn-logs">
+                <i class="fas fa-file-alt"></i>
+                <span>Consulter les logs</span>
+                <small>Voir les logs d'erreurs système</small>
+            </button>
+
+            <button class="btn-system-action btn-optimize">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>Optimiser la base</span>
+                <small>Nettoyer et optimiser les tables</small>
+            </button>
+        </div>
+
+        <div class="settings-section-header" style="margin-top: 30px;">
+            <h3><i class="fas fa-info-circle"></i> Informations système</h3>
+        </div>
+
+        <div class="system-info-grid">
+            <div class="system-info-item">
+                <i class="fas fa-code-branch"></i>
+                <div>
+                    <strong>Version SANTÉA</strong>
+                    <span>v2.5.0</span>
+                </div>
+            </div>
+            <div class="system-info-item">
+                <i class="fab fa-php"></i>
+                <div>
+                    <strong>PHP Version</strong>
+                    <span>{{ constant('PHP_VERSION') }}</span>
+                </div>
+            </div>
+            <div class="system-info-item">
+                <i class="fab fa-symfony"></i>
+                <div>
+                    <strong>Symfony Version</strong>
+                    <span>{{ constant('Symfony\\Component\\HttpKernel\\Kernel::VERSION') }}</span>
+                </div>
+            </div>
+            <div class="system-info-item">
+                <i class="fas fa-database"></i>
+                <div>
+                    <strong>Base de données</strong>
+                    <span>MySQL/MariaDB</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        // Settings tabs functionality
+        document.querySelectorAll('.settings-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                const targetTab = this.dataset.tab;
+                
+                // Remove active class from all tabs and panels
+                document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.settings-panel').forEach(p => p.classList.remove('active'));
+                
+                // Add active class to clicked tab and corresponding panel
+                this.classList.add('active');
+                document.getElementById('settings-' + targetTab).classList.add('active');
+            });
+        });
+
+        // Save button click handler
+        document.querySelectorAll('.btn-settings-save').forEach(btn => {
+            btn.addEventListener('click', function() {
+                alert('Paramètres sauvegardés avec succès!');
+                // TODO: Implement actual save logic
+            });
+        });
+
+        // System actions
+        document.querySelector('.btn-clear-cache')?.addEventListener('click', function() {
+            if(confirm('Vider le cache système?')) {
+                alert('Cache vidé avec succès!');
+                // TODO: Implement cache clear
+            }
+        });
+
+        document.querySelector('.btn-backup')?.addEventListener('click', function() {
+            if(confirm('Créer une sauvegarde de la base de données?')) {
+                alert('Sauvegarde en cours...');
+                // TODO: Implement backup
+            }
+        });
+    </script>
+{% endblock %}

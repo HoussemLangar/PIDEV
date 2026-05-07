@@ -1,0 +1,376 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Partager – {{ document.fileName }}{% endblock %}
+
+{% block content %}
+<div class="content-wrapper" style="padding: 30px 40px; max-width: 960px; margin: 0 auto;">
+
+    {# ── Page Header ── #}
+    <div style="margin-bottom: 32px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-share-alt" style="color: white; font-size: 22px;"></i>
+                </div>
+                <div>
+                    <h1 style="margin: 0; font-size: 26px; font-weight: 700; color: #1a1a2e;">Partager un document</h1>
+                    <p style="margin: 4px 0 0 0; color: #64748b; font-size: 14px;">
+                        <i class="fas fa-file-alt" style="margin-right: 5px; color: #10b981;"></i>{{ document.fileName }}
+                    </p>
+                </div>
+            </div>
+            <a href="{{ path('app_document_show', {id: document.id}) }}"
+               style="padding: 10px 22px; background: #f1f5f9; color: #475569; border: none; border-radius: 10px; font-weight: 600; text-decoration: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px;"
+               onmouseover="this.style.background='#e2e8f0';" onmouseout="this.style.background='#f1f5f9';">
+                <i class="fas fa-arrow-left"></i> Retour au document
+            </a>
+        </div>
+    </div>
+
+    {# ── Flash messages ── #}
+    {% for label, messages in app.flashes %}
+        {% for message in messages %}
+            <div style="padding: 14px 20px; margin-bottom: 20px; border-radius: 10px; font-weight: 600; font-size: 14px;
+                        {% if label == 'success' %}background: linear-gradient(135deg,#d1fae5,#a7f3d0); color: #065f46; border-left: 4px solid #10b981;
+                        {% elseif label == 'error' %}background: #fee2e2; color: #991b1b; border-left: 4px solid #ef4444;
+                        {% else %}background: #dbeafe; color: #1e40af; border-left: 4px solid #3b82f6;{% endif %}">
+                <i class="fas {% if label == 'success' %}fa-check-circle{% elseif label == 'error' %}fa-exclamation-circle{% else %}fa-info-circle{% endif %}" style="margin-right: 8px;"></i>{{ message }}
+            </div>
+        {% endfor %}
+    {% endfor %}
+
+    {# ── Form Card ── #}
+    <div style="background: white; border-radius: 16px; padding: 32px; box-shadow: 0 2px 8px rgba(15,23,42,0.06); border: 1px solid #e2e8f0; margin-bottom: 28px;">
+
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 2px solid #f1f5f9;">
+            <div style="width: 36px; height: 36px; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-user-plus" style="color: #3b82f6; font-size: 16px;"></i>
+            </div>
+            <h2 style="margin: 0; font-size: 18px; font-weight: 700; color: #1e293b;">Nouveau partage</h2>
+        </div>
+
+        {{ form_start(form, {'attr': {'class': 'needs-validation', 'novalidate': true}}) }}
+
+        {# ── Recipient searchable select ── #}
+        <div style="margin-bottom: 24px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #1e293b; font-size: 14px;">
+                <i class="fas fa-user" style="margin-right: 6px; color: #10b981;"></i>
+                {{ form.sharedWith.vars.label }}
+            </label>
+
+            {# Hidden actual select #}
+            {{ form_widget(form.sharedWith, {'attr': {'id': 'share_select', 'style': 'display:none;'}}) }}
+
+            {# Custom searchable dropdown #}
+            <div id="share-wrapper" style="position: relative;">
+                <div style="position: relative;">
+                    <span style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #10b981; pointer-events: none;">
+                        <i class="fas fa-search" style="font-size: 14px;"></i>
+                    </span>
+                    <input type="text" id="share_search"
+                           placeholder="Rechercher par nom ou e-mail…"
+                           autocomplete="off"
+                           style="width: 100%; padding: 12px 16px 12px 40px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 15px; transition: all 0.2s; box-sizing: border-box; outline: none;"
+                           onfocus="this.style.borderColor='#10b981'; shareDropdown().style.display='block'; shareRender(this.value);"
+                           onblur="setTimeout(()=>{ shareDropdown().style.display='none'; },200);"
+                           oninput="shareRender(this.value); shareDropdown().style.display='block';">
+                    <span id="share_clear" onclick="shareClear()" title="Effacer"
+                          style="display:none; position:absolute; right:14px; top:50%; transform:translateY(-50%); cursor:pointer; color:#94a3b8; font-size:16px;">&#10005;</span>
+                </div>
+
+                <div id="share_dropdown"
+                     style="display:none; position:absolute; top:calc(100% + 4px); left:0; right:0; background:white; border:2px solid #10b981; border-radius:10px; box-shadow:0 8px 24px rgba(16,185,129,0.15); z-index:1000; max-height:260px; overflow-y:auto;">
+                    <div id="share_list"></div>
+                    <div id="share_no_result" style="display:none; padding:16px; text-align:center; color:#94a3b8; font-size:14px;">
+                        <i class="fas fa-search" style="margin-right:6px;"></i>Aucun résultat
+                    </div>
+                </div>
+            </div>
+
+            <div id="share_badge" style="display:none; margin-top:10px; padding:10px 14px; background:linear-gradient(135deg,#d1fae5,#a7f3d0); border-radius:10px; border:1px solid #6ee7b7; align-items:center; gap:10px;">
+                <i class="fas fa-user-check" style="color:#059669;"></i>
+                <span id="share_badge_text" style="font-weight:600; color:#065f46; font-size:14px;"></span>
+                <span id="share_badge_role" style="margin-left:4px; padding:2px 10px; border-radius:20px; font-size:12px; font-weight:600; background:#10b981; color:white;"></span>
+            </div>
+
+            {% if form.sharedWith.vars.errors|length > 0 %}
+                <div style="background:#fee2e2; border-left:4px solid #ef4444; padding:12px; border-radius:8px; margin-top:8px; color:#991b1b;">
+                    {{ form_errors(form.sharedWith) }}
+                </div>
+            {% endif %}
+        </div>
+
+        {# ── Permission ── #}
+        <div style="margin-bottom: 24px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #1e293b; font-size: 14px;">
+                <i class="fas fa-shield-alt" style="margin-right: 6px; color: #10b981;"></i>
+                {{ form.permission.vars.label }}
+            </label>
+            {{ form_widget(form.permission, {'attr': {'style': 'width:100%; padding:12px 16px; border:2px solid #e2e8f0; border-radius:10px; font-size:15px; transition:all 0.2s;'}}) }}
+            <div style="display:flex; gap:12px; margin-top:10px; flex-wrap:wrap;">
+                <div style="flex:1; min-width:200px; padding:12px 16px; background:linear-gradient(135deg,#dbeafe,#bfdbfe); border-radius:10px; border:1px solid #93c5fd;">
+                    <div style="font-weight:600; color:#1e40af; font-size:13px; margin-bottom:4px;"><i class="fas fa-eye" style="margin-right:6px;"></i>Affichage seulement</div>
+                    <div style="color:#3b82f6; font-size:12px;">L'utilisateur peut consulter le document sans le télécharger</div>
+                </div>
+                <div style="flex:1; min-width:200px; padding:12px 16px; background:linear-gradient(135deg,#d1fae5,#a7f3d0); border-radius:10px; border:1px solid #6ee7b7;">
+                    <div style="font-weight:600; color:#065f46; font-size:13px; margin-bottom:4px;"><i class="fas fa-download" style="margin-right:6px;"></i>Télécharger</div>
+                    <div style="color:#059669; font-size:12px;">L'utilisateur peut télécharger une copie du document</div>
+                </div>
+            </div>
+        </div>
+
+        {# ── Expiry ── #}
+        <div style="margin-bottom: 28px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #1e293b; font-size: 14px;">
+                <i class="fas fa-calendar-times" style="margin-right: 6px; color: #10b981;"></i>
+                {{ form.expiresAt.vars.label }}
+            </label>
+            {{ form_widget(form.expiresAt, {'attr': {'style': 'width:100%; padding:12px 16px; border:2px solid #e2e8f0; border-radius:10px; font-size:15px; transition:all 0.2s;'}}) }}
+            <small style="display:block; margin-top:8px; color:#64748b; font-size:13px;">
+                <i class="fas fa-info-circle" style="margin-right:4px;"></i>Laissez vide pour un accès illimité
+            </small>
+        </div>
+
+        {# ── Buttons ── #}
+        <div style="display:flex; gap:12px; flex-wrap:wrap;">
+            <button type="submit"
+                    style="padding:12px 28px; background:linear-gradient(135deg,#10b981,#059669); color:white; border:none; border-radius:10px; font-weight:600; cursor:pointer; transition:all 0.2s; box-shadow:0 4px 12px rgba(16,185,129,0.3); display:inline-flex; align-items:center; gap:8px;"
+                    onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 20px rgba(16,185,129,0.4)';"
+                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(16,185,129,0.3)';">
+                <i class="fas fa-check-circle"></i> Partager le document
+            </button>
+            <a href="{{ path('app_document_show', {id: document.id}) }}"
+               style="padding:12px 28px; background:#f1f5f9; color:#475569; border:none; border-radius:10px; font-weight:600; text-decoration:none; transition:all 0.2s; display:inline-flex; align-items:center; gap:8px;"
+               onmouseover="this.style.background='#e2e8f0';" onmouseout="this.style.background='#f1f5f9';">
+                <i class="fas fa-times"></i> Annuler
+            </a>
+        </div>
+
+        {{ form_end(form) }}
+    </div>
+
+    {# ── Active Accesses Table ── #}
+    {% if activeAccesses is not empty %}
+    <div style="background:white; border-radius:16px; box-shadow:0 4px 20px rgba(15,23,42,0.08); overflow:hidden; border:1px solid #e2e8f0;">
+
+        <div style="padding:20px 28px; background:linear-gradient(135deg,#f8fafc,#f1f5f9); border-bottom:2px solid #e2e8f0; display:flex; align-items:center; gap:12px;">
+            <div style="width:36px; height:36px; background:linear-gradient(135deg,#e0f2fe,#bae6fd); border-radius:10px; display:flex; align-items:center; justify-content:center;">
+                <i class="fas fa-users" style="color:#0369a1; font-size:16px;"></i>
+            </div>
+            <div>
+                <h2 style="margin:0; font-size:18px; font-weight:700; color:#1e293b;">Accès actifs</h2>
+                <p style="margin:2px 0 0 0; color:#64748b; font-size:13px;">{{ activeAccesses|length }} utilisateur(s) ont accès à ce document</p>
+            </div>
+        </div>
+
+        <div style="overflow-x:auto;">
+            <table style="width:100%; border-collapse:separate; border-spacing:0;">
+                <thead>
+                    <tr style="background:linear-gradient(135deg,#f8fafc,#f1f5f9);">
+                        <th style="padding:16px 24px; text-align:left; font-weight:700; color:#1e293b; font-size:12px; text-transform:uppercase; letter-spacing:0.5px; border-bottom:1px solid #e2e8f0;">
+                            <i class="fas fa-user" style="margin-right:6px; color:#64748b;"></i>Utilisateur
+                        </th>
+                        <th style="padding:16px 24px; text-align:left; font-weight:700; color:#1e293b; font-size:12px; text-transform:uppercase; letter-spacing:0.5px; border-bottom:1px solid #e2e8f0;">
+                            <i class="fas fa-shield-alt" style="margin-right:6px; color:#64748b;"></i>Permission
+                        </th>
+                        <th style="padding:16px 24px; text-align:left; font-weight:700; color:#1e293b; font-size:12px; text-transform:uppercase; letter-spacing:0.5px; border-bottom:1px solid #e2e8f0;">
+                            <i class="fas fa-calendar-plus" style="margin-right:6px; color:#64748b;"></i>Partagé le
+                        </th>
+                        <th style="padding:16px 24px; text-align:left; font-weight:700; color:#1e293b; font-size:12px; text-transform:uppercase; letter-spacing:0.5px; border-bottom:1px solid #e2e8f0;">
+                            <i class="fas fa-hourglass-end" style="margin-right:6px; color:#64748b;"></i>Expire
+                        </th>
+                        <th style="padding:16px 24px; text-align:center; font-weight:700; color:#1e293b; font-size:12px; text-transform:uppercase; letter-spacing:0.5px; border-bottom:1px solid #e2e8f0;">
+                            <i class="fas fa-cog" style="margin-right:6px; color:#64748b;"></i>Action
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for access in activeAccesses %}
+                    <tr style="border-bottom:1px solid #f1f5f9; transition:all 0.2s;"
+                        onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+                        <td style="padding:18px 24px;">
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <div style="width:38px; height:38px; border-radius:50%; background:linear-gradient(135deg,#dbeafe,#bfdbfe); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                                    <i class="fas fa-user" style="color:#3b82f6; font-size:15px;"></i>
+                                </div>
+                                <div>
+                                    <div style="font-weight:600; color:#1e293b; font-size:14px;">{{ access.sharedWith.username }}</div>
+                                    <div style="color:#64748b; font-size:12px;">{{ access.sharedWith.email }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="padding:18px 24px;">
+                            {% if access.permission == 'view' %}
+                                <span style="display:inline-flex; align-items:center; gap:6px; padding:5px 12px; background:linear-gradient(135deg,#dbeafe,#bfdbfe); color:#1e40af; border-radius:20px; font-size:12px; font-weight:700;">
+                                    <i class="fas fa-eye" style="font-size:11px;"></i>Affichage
+                                </span>
+                            {% elseif access.permission == 'download' %}
+                                <span style="display:inline-flex; align-items:center; gap:6px; padding:5px 12px; background:linear-gradient(135deg,#d1fae5,#a7f3d0); color:#065f46; border-radius:20px; font-size:12px; font-weight:700;">
+                                    <i class="fas fa-download" style="font-size:11px;"></i>Télécharger
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td style="padding:18px 24px; color:#475569; font-size:14px;">
+                            <i class="fas fa-clock" style="margin-right:6px; color:#94a3b8; font-size:12px;"></i>{{ access.sharedAt|date('d/m/Y H:i') }}
+                        </td>
+                        <td style="padding:18px 24px;">
+                            {% if access.expiresAt %}
+                                {% if access.isExpired() %}
+                                    <span style="display:inline-flex; align-items:center; gap:6px; padding:5px 12px; background:#fee2e2; color:#991b1b; border-radius:20px; font-size:12px; font-weight:700;">
+                                        <i class="fas fa-times-circle" style="font-size:11px;"></i>Expiré
+                                    </span>
+                                {% else %}
+                                    <span style="color:#1e293b; font-size:14px; font-weight:600;">{{ access.expiresAt|date('d/m/Y') }}</span>
+                                {% endif %}
+                            {% else %}
+                                <span style="display:inline-flex; align-items:center; gap:6px; padding:5px 12px; background:linear-gradient(135deg,#fef9c3,#fef08a); color:#854d0e; border-radius:20px; font-size:12px; font-weight:700;">
+                                    <i class="fas fa-infinity" style="font-size:11px;"></i>Illimité
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td style="padding:18px 24px; text-align:center;">
+                            <form action="{{ path('app_document_revoke_access', {id: document.id, accessId: access.id}) }}"
+                                  method="POST" style="display:inline;">
+                                <input type="hidden" name="_token" value="{{ csrf_token('revoke' ~ access.id) }}">
+                                <button type="submit"
+                                        onclick="return confirm('Révoquer l\'accès ?')"
+                                        style="padding:8px 16px; background:linear-gradient(135deg,#fee2e2,#fecaca); color:#991b1b; border:1px solid #fca5a5; border-radius:8px; font-weight:600; font-size:13px; cursor:pointer; transition:all 0.2s; display:inline-flex; align-items:center; gap:6px;">
+                                    <i class="fas fa-ban" style="font-size:12px;"></i> Révoquer
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+(function () {
+    const select    = document.getElementById('share_select');
+    const search    = document.getElementById('share_search');
+    const list      = document.getElementById('share_list');
+    const noRes     = document.getElementById('share_no_result');
+    const badge     = document.getElementById('share_badge');
+    const badgeTxt  = document.getElementById('share_badge_text');
+    const badgeRole = document.getElementById('share_badge_role');
+    const clearBtn  = document.getElementById('share_clear');
+
+    if (!select) return;
+
+    const roleLabel = {
+        'ROLE_MEDECIN': 'Médecin', 'ROLE_COACH': 'Coach Sportif',
+        'ROLE_NUTRITIONNISTE': 'Nutritionniste', 'ROLE_PHARMACIEN': 'Pharmacien',
+        'ROLE_PATIENT': 'Patient',
+    };
+    const roleColor = {
+        'ROLE_MEDECIN': '#0ea5e9', 'ROLE_COACH': '#10b981',
+        'ROLE_NUTRITIONNISTE': '#f59e0b', 'ROLE_PHARMACIEN': '#8b5cf6',
+        'ROLE_PATIENT': '#3b82f6',
+    };
+
+    const options = Array.from(select.options).filter(o => o.value !== '').map(o => ({
+        value: o.value,
+        label: o.text,
+        role: (o.getAttribute('data-role') || '').toUpperCase(),
+    }));
+
+    function detectRole(o) {
+        if (o.role) return o.role;
+        const l = o.label.toLowerCase();
+        if (l.includes('médecin') || l.includes('medecin')) return 'ROLE_MEDECIN';
+        if (l.includes('coach')) return 'ROLE_COACH';
+        if (l.includes('nutritionniste')) return 'ROLE_NUTRITIONNISTE';
+        if (l.includes('pharmacien')) return 'ROLE_PHARMACIEN';
+        return '';
+    }
+
+    window.shareDropdown = () => document.getElementById('share_dropdown');
+
+    window.shareRender = function (filter) {
+        list.innerHTML = '';
+        const q = (filter || '').toLowerCase();
+        const filtered = options.filter(o => o.label.toLowerCase().includes(q));
+        if (filtered.length === 0) {
+            noRes.style.display = 'block';
+        } else {
+            noRes.style.display = 'none';
+            filtered.forEach(o => {
+                const div = document.createElement('div');
+                div.style.cssText = 'padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;border-bottom:1px solid #f1f5f9;transition:background 0.15s;';
+                div.onmouseover = () => div.style.background = '#f0fdf4';
+                div.onmouseout  = () => div.style.background = 'white';
+
+                const av = document.createElement('div');
+                av.style.cssText = 'width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#d1fae5,#a7f3d0);display:flex;align-items:center;justify-content:center;flex-shrink:0;';
+                av.innerHTML = '<i class="fas fa-user" style="color:#059669;font-size:13px;"></i>';
+                div.appendChild(av);
+
+                const nd = document.createElement('div');
+                nd.style.cssText = 'flex:1;min-width:0;';
+                const nt = document.createElement('div');
+                nt.style.cssText = 'font-weight:600;color:#1e293b;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+                nt.textContent = o.label;
+                nd.appendChild(nt);
+                div.appendChild(nd);
+
+                const dr = detectRole(o);
+                if (dr) {
+                    const rb = document.createElement('span');
+                    rb.style.cssText = 'padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;color:white;white-space:nowrap;background:' + (roleColor[dr] || '#10b981');
+                    rb.textContent = roleLabel[dr] || dr;
+                    div.appendChild(rb);
+                }
+
+                div.addEventListener('mousedown', e => {
+                    e.preventDefault();
+                    shareSelect(o, dr);
+                });
+                list.appendChild(div);
+            });
+        }
+    };
+
+    function shareSelect(o, dr) {
+        select.value = o.value;
+        search.value = o.label;
+        clearBtn.style.display = 'block';
+        badge.style.display = 'flex';
+        badgeTxt.textContent = o.label;
+        badgeRole.textContent = roleLabel[dr] || '';
+        badgeRole.style.background = roleColor[dr] || '#10b981';
+        shareDropdown().style.display = 'none';
+        search.style.borderColor = '#10b981';
+    }
+
+    window.shareClear = function () {
+        select.value = '';
+        search.value = '';
+        clearBtn.style.display = 'none';
+        badge.style.display = 'none';
+        search.style.borderColor = '#e2e8f0';
+    };
+
+    search.addEventListener('focus', () => {
+        search.style.borderColor = '#10b981';
+        search.style.boxShadow = '0 0 0 3px rgba(16,185,129,0.15)';
+        shareRender(search.value);
+        shareDropdown().style.display = 'block';
+    });
+    search.addEventListener('blur', () => {
+        search.style.boxShadow = 'none';
+        if (!select.value) search.style.borderColor = '#e2e8f0';
+    });
+
+    shareRender('');
+
+    if (select.value) {
+        const found = options.find(o => o.value === select.value);
+        if (found) shareSelect(found, detectRole(found));
+    }
+})();
+</script>
+{% endblock %}

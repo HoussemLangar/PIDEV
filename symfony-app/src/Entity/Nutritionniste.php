@@ -24,12 +24,12 @@ class Nutritionniste
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private ?string $justificatif = null;
 
-    #[ORM\Column(type: 'datetime', options: ['default' => 'CURRENT_TIMESTAMP'])]
+    #[ORM\Column(type: 'datetimetz', options: ['default' => 'CURRENT_TIMESTAMP'])]
     private \DateTimeInterface $createdAt;
 
     public function __construct()
     {
-        $this->createdAt = new \DateTimeImmutable();
+        $this->createdAt = new \DateTime();
     }
 
     public function getId(): ?int { return $this->id; }
@@ -40,5 +40,5 @@ class Nutritionniste
     public function getJustificatif(): ?string { return $this->justificatif; }
     public function setJustificatif(?string $justificatif): void { $this->justificatif = $justificatif; }
     public function getCreatedAt(): \DateTimeInterface { return $this->createdAt; }
-    public function setCreatedAt(\DateTimeInterface $createdAt): void { $this->createdAt = $createdAt; }
+    public function forceCreatedAt(\DateTimeInterface $createdAt): void { $this->createdAt = $createdAt; }
 }

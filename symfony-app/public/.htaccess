@@ -1,0 +1,19 @@
+<IfModule mod_rewrite.c>
+	DirectorySlash Off
+	RewriteEngine On
+	# Serve real files directly
+	RewriteCond %{REQUEST_FILENAME} -f
+	RewriteRule . - [L]
+	# Rewrite directories to index.php (for /documents, /img, etc)
+	RewriteCond %{REQUEST_FILENAME} -d
+	RewriteRule ^ index.php [L]
+	# Rewrite everything else to index.php
+	RewriteRule ^ index.php [L]
+</IfModule>
+
+DirectoryIndex index.php
+
+# Prevent access to .env and other sensitive files
+<FilesMatch "\.(env|yaml|yml|xml|twig|ini)$">
+	Require all denied
+</FilesMatch>

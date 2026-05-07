@@ -1,0 +1,277 @@
+{% extends 'back/base.html.twig' %}
+
+{% block title %}Gestion des Revenus - SANTÉA{% endblock %}
+
+{% block admin_content %}
+    <!-- Header -->
+    <div class="admin-page-header">
+        <div class="admin-page-title">
+            <h1><i class="fas fa-coins"></i> Gestion des Revenus & Factures</h1>
+            <p>Suivi des paiements et statistiques financières</p>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="admin-grid cards-4" style="margin-bottom: 30px;">
+        <div class="admin-card">
+            <div class="admin-badge success">Revenus Total</div>
+            <h2>{{ stats.total|number_format(2, ',', ' ') }} <small>TND</small></h2>
+            <p style="font-size: 13px; color: #888; margin-top: 8px;">
+                <i class="fas fa-chart-line"></i> Depuis le début
+            </p>
+        </div>
+
+        <div class="admin-card">
+            <div class="admin-badge">Revenus du Mois</div>
+            <h2>{{ stats.monthly|number_format(2, ',', ' ') }} <small>TND</small></h2>
+            <p style="font-size: 13px; color: #888; margin-top: 8px;">
+                <i class="fas fa-calendar-alt"></i> {{ "now"|date("F Y") }}
+            </p>
+        </div>
+
+        <div class="admin-card">
+            <div class="admin-badge warning">Total Factures</div>
+            <h2>{{ stats.count|number_format(0, ',', ' ') }}</h2>
+            <p style="font-size: 13px; color: #888; margin-top: 8px;">
+                <i class="fas fa-file-invoice"></i> Toutes périodes
+            </p>
+        </div>
+
+        <div class="admin-card">
+            <div class="admin-badge">Montant Moyen</div>
+            <h2>{{ stats.average|number_format(2, ',', ' ') }} <small>TND</small></h2>
+            <p style="font-size: 13px; color: #888; margin-top: 8px;">
+                <i class="fas fa-calculator"></i> Par facture
+            </p>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="dashboard-charts-section" style="margin-bottom: 30px;">
+        <div class="chart-card-large">
+            <div class="chart-card-header">
+                <div>
+                    <h3><i class="fas fa-chart-line"></i> Évolution des Revenus (6 derniers mois)</h3>
+                    <p>Revenus mensuels en TND</p>
+                </div>
+            </div>
+            <div class="chart-card-body">
+                <canvas id="revenueChart" height="80"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card-medium">
+            <div class="chart-card-header">
+                <div>
+                    <h3><i class="fas fa-chart-pie"></i> Revenus par Type</h3>
+                    <p>Répartition par abonnement</p>
+                </div>
+            </div>
+            <div class="chart-card-body" style="display: flex; align-items: center; justify-content: center;">
+                <canvas id="typeChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="admin-card" style="margin-bottom: 20px;">
+        <form method="get" action="{{ path('admin_revenues') }}">
+            <div class="filters-inline">
+                <div class="filter-field filter-search">
+                    <label><i class="fas fa-search"></i> Rechercher</label>
+                    <input type="text" name="q" class="admin-input" placeholder="Numéro, nom, email..." value="{{ filters.search }}">
+                </div>
+
+                <div class="filter-field">
+                    <label><i class="fas fa-calendar-alt"></i> Date Début</label>
+                    <input type="date" name="date_from" class="admin-input" value="{{ filters.date_from }}">
+                </div>
+
+                <div class="filter-field">
+                    <label><i class="fas fa-calendar-alt"></i> Date Fin</label>
+                    <input type="date" name="date_to" class="admin-input" value="{{ filters.date_to }}">
+                </div>
+
+                <div class="filter-field">
+                    <label><i class="fas fa-money-bill-wave"></i> Montant Min</label>
+                    <input type="number" step="0.01" name="min_amount" class="admin-input" placeholder="0.00" value="{{ filters.min_amount }}">
+                </div>
+
+                <div class="filter-field">
+                    <label><i class="fas fa-money-bill-wave"></i> Montant Max</label>
+                    <input type="number" step="0.01" name="max_amount" class="admin-input" placeholder="0.00" value="{{ filters.max_amount }}">
+                </div>
+
+                <div class="filter-field" style="align-self: flex-end;">
+                    <button type="submit" class="admin-panel-toggle">
+                        <i class="fas fa-filter"></i> Filtrer
+                    </button>
+                </div>
+
+                {% if filters.search or filters.date_from or filters.date_to or filters.min_amount or filters.max_amount %}
+                    <div class="filter-field" style="align-self: flex-end;">
+                        <a href="{{ path('admin_revenues') }}" class="btn-settings-reset">
+                            <i class="fas fa-times"></i> Réinitialiser
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <!-- Factures Table -->
+    <div class="admin-card">
+        <div class="admin-panel-title">
+            <i class="fas fa-file-invoice-dollar"></i> Liste des Factures ({{ factures|length }})
+        </div>
+
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Numéro</th>
+                    <th>Utilisateur</th>
+                    <th>Type Abonnement</th>
+                    <th>Montant HT</th>
+                    <th>TVA</th>
+                    <th>Montant TTC</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for facture in factures %}
+                    <tr>
+                        <td><strong>{{ facture.numero }}</strong></td>
+                        <td>
+                            <div style="display: flex; flex-direction: column; gap: 3px;">
+                                <strong>{{ facture.user.nom }} {{ facture.user.prenom }}</strong>
+                                <small style="color: #888;">{{ facture.user.email }}</small>
+                            </div>
+                        </td>
+                        <td>
+                            {% set typeColors = {
+                                'ROLE_MEDECIN': 'primary',
+                                'ROLE_PHARMACIEN': 'success',
+                                'ROLE_COACH': 'warning',
+                                'ROLE_NUTRITIONNISTE': 'info',
+                                'ROLE_PATIENT': 'secondary'
+                            } %}
+                            <span class="admin-badge {{ typeColors[facture.abonnement.typeAbonnement] ?? '' }}">
+                                {{ facture.abonnement.typeAbonnement|replace({'ROLE_': ''})|capitalize }}
+                            </span>
+                        </td>
+                        <td>{{ facture.montantHt|number_format(2, ',', ' ') }} TND</td>
+                        <td>{{ facture.tvaTaux }}% ({{ facture.tvaMontant|number_format(2, ',', ' ') }} TND)</td>
+                        <td><strong style="color: #4CAF50;">{{ facture.montantTtc|number_format(2, ',', ' ') }} TND</strong></td>
+                        <td>
+                            <div style="display: flex; flex-direction: column; gap: 3px;">
+                                <span>{{ facture.createdAt|date('d/m/Y') }}</span>
+                                <small style="color: #888;">{{ facture.createdAt|date('H:i') }}</small>
+                            </div>
+                        </td>
+                        <td>
+                            {% if facture.pdfPath %}
+                                <a href="{{ asset(facture.pdfPath) }}" class="btn-action-table" target="_blank" title="Télécharger PDF">
+                                    <i class="fas fa-file-pdf"></i>
+                                </a>
+                            {% else %}
+                                <button class="btn-action-table" disabled title="PDF non disponible">
+                                    <i class="fas fa-file-pdf" style="opacity: 0.3;"></i>
+                                </button>
+                            {% endif %}
+                            <button class="btn-action-table" onclick="viewInvoiceDetails({{ facture.id }})" title="Voir détails">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 40px; color: #888;">
+                            <i class="fas fa-inbox" style="font-size: 48px; margin-bottom: 15px; opacity: 0.3;"></i>
+                            <p>Aucune facture trouvée</p>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Revenue Evolution Chart
+        const revenueCtx = document.getElementById('revenueChart');
+        if (revenueCtx) {
+            const monthlyData = {{ monthlyChart|json_encode|raw }};
+            new Chart(revenueCtx, {
+                type: 'line',
+                data: {
+                    labels: monthlyData.map(m => m.month),
+                    datasets: [{
+                        label: 'Revenus (TND)',
+                        data: monthlyData.map(m => m.revenue),
+                        borderColor: '#FF9800',
+                        backgroundColor: 'rgba(255, 152, 0, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString() + ' TND';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Revenue by Type Chart
+        const typeCtx = document.getElementById('typeChart');
+        if (typeCtx) {
+            const revenueByType = {{ revenueByType|json_encode|raw }};
+            new Chart(typeCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: revenueByType.map(r => (r.type || '').replace('ROLE_', '')),
+                    datasets: [{
+                        data: revenueByType.map(r => r.total),
+                        backgroundColor: ['#40C4FF', '#4CAF50', '#FF9800', '#9C27B0', '#F44336']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.label + ': ' + context.parsed.toLocaleString() + ' TND';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function viewInvoiceDetails(id) {
+            alert('Détails de la facture #' + id + ' (À implémenter)');
+        }
+    </script>
+{% endblock %}

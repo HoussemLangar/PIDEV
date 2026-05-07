@@ -38,10 +38,10 @@ class Accompagnement
     #[ORM\Column(type: 'string', length: 20, options: ['default' => 'en_cours'])]
     private string $statut = 'en_cours';
 
-    #[ORM\Column(type: 'datetime', options: ['default' => 'CURRENT_TIMESTAMP'])]
+    #[ORM\Column(type: 'datetimetz', options: ['default' => 'CURRENT_TIMESTAMP'])]
     private \DateTimeInterface $createdAt;
 
-    #[ORM\Column(type: 'datetime', options: ['default' => 'CURRENT_TIMESTAMP'])]
+    #[ORM\Column(type: 'datetimetz', options: ['default' => 'CURRENT_TIMESTAMP'])]
     private \DateTimeInterface $updatedAt;
 
     #[ORM\OneToMany(mappedBy: 'accompagnement', targetEntity: PlanExercice::class)]
@@ -49,6 +49,7 @@ class Accompagnement
 
     #[ORM\OneToMany(mappedBy: 'accompagnement', targetEntity: PlanRegime::class)]
     private Collection $plansRegimes;
+
 
     public function __construct()
     {
@@ -74,9 +75,7 @@ class Accompagnement
     public function getStatut(): string { return $this->statut; }
     public function setStatut(string $statut): void { $this->statut = $statut; }
     public function getCreatedAt(): \DateTimeInterface { return $this->createdAt; }
-    public function setCreatedAt(\DateTimeInterface $createdAt): void { $this->createdAt = $createdAt; }
+    public function forceCreatedAt(\DateTimeInterface $createdAt): void { $this->createdAt = $createdAt; }
     public function getUpdatedAt(): \DateTimeInterface { return $this->updatedAt; }
-    public function setUpdatedAt(\DateTimeInterface $updatedAt): void { $this->updatedAt = $updatedAt; }
-    public function getPlansExercices(): Collection { return $this->plansExercices; }
-    public function getPlansRegimes(): Collection { return $this->plansRegimes; }
+    public function forceUpdatedAt(\DateTimeInterface $updatedAt): void { $this->updatedAt = $updatedAt; }
 }

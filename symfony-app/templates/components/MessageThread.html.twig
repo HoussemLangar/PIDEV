@@ -1,0 +1,84 @@
+<div {{ attributes }}>
+    <div class="chat-messages" id="chatMessages{{ this.conversationId }}">
+        {% if this.messages is empty %}
+            <div class="chat-empty">
+                <div class="chat-empty-icon">💬</div>
+                <h3>Commencez la conversation</h3>
+                <p>Envoyez votre premier message.</p>
+            </div>
+        {% else %}
+            {% for message in this.messages %}
+                {% set isOwn = message.sender == app.user %}
+                <div class="msg-row {{ isOwn ? 'sent' : 'received' }}">
+                    <div class="msg-bubble">
+                        <span>{{ message.content }}</span>
+                        <div class="msg-meta">
+                            <span>{{ message.createdAt|date('H:i') }}</span>
+                            {% if isOwn %}
+                                {% if message.isRead %}
+                                    <i class="fas fa-check-double msg-read-icon read" title="Lu"></i>
+                                {% else %}
+                                    <i class="fas fa-check msg-read-icon unread" title="Envoyé"></i>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <div class="chat-input-area">
+        <form class="chat-form" data-ajax="1" data-action="live#action:prevent" data-live-action-param="send">
+            <textarea
+                class="chat-input"
+                data-model="content"
+                rows="1"
+                placeholder="Écrivez votre message…"
+            ></textarea>
+            <button type="submit" class="chat-send-btn" title="Envoyer">
+                <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+        </form>
+        <button
+            type="button"
+            id="chatRefresh{{ this.conversationId }}"
+            style="display:none"
+            data-action="live#action"
+            data-live-action-param="refresh"
+        ></button>
+    </div>
+
+    <script>
+        (function () {
+            const conversationId = {{ this.conversationId }};
+            const messagesEl = document.getElementById('chatMessages' + conversationId);
+            const refreshBtn = document.getElementById('chatRefresh' + conversationId);
+            if (!messagesEl || !refreshBtn) {
+                return;
+            }
+
+            const scrollBottom = () => {
+                messagesEl.scrollTop = messagesEl.scrollHeight;
+            };
+
+            scrollBottom();
+            window.addEventListener('chat:message-sent', scrollBottom);
+
+            window.__chatMercureStreams = window.__chatMercureStreams || {};
+            if (!window.__chatMercureStreams[conversationId]) {
+                const streamUrl = "{{ mercure(this.mercureTopic)|e('js') }}";
+                const eventSource = new EventSource(streamUrl);
+                eventSource.onmessage = () => {
+                    refreshBtn.click();
+                    setTimeout(scrollBottom, 60);
+                };
+                eventSource.onerror = () => {
+                    // keep component functional even if hub is unavailable
+                };
+                window.__chatMercureStreams[conversationId] = eventSource;
+                window.addEventListener('beforeunload', () => eventSource.close());
+            }
+        })();
+    </script>
+</div>

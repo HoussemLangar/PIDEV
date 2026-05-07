@@ -1,0 +1,441 @@
+{% extends 'front/base.html.twig' %}
+
+{% block title %}Forum & Contenus — SANTÉA{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+    .content-pill.status-pending  { background:#fef9c3; color:#b45309; border-color:#fde68a; }
+    .content-pill.status-published{ background:#dcfce7; color:#15803d; border-color:#bbf7d0; }
+    .content-pill.status-rejected { background:#fee2e2; color:#b91c1c; border-color:#fecaca; }
+    [data-theme="dark"] .content-pill.status-pending  { background:rgba(245,158,11,.2);  color:#fcd34d; border-color:#f59e0b44; }
+    [data-theme="dark"] .content-pill.status-published{ background:rgba(34,197,94,.2);   color:#86efac; border-color:#22c55e44; }
+    [data-theme="dark"] .content-pill.status-rejected { background:rgba(239,68,68,.2);   color:#fca5a5; border-color:#ef444444; }
+    .content-mine-btn.active { background:rgba(13,138,188,.15)!important; color:#0D8ABC!important; border-color:#0D8ABC!important; }
+    /* Hero filter inputs — keep text visible at all states */
+    .page-hero .content-filters input,
+    .page-hero .content-filters select {
+        color: #1a1a2e !important;
+        background: rgba(255,255,255,.92) !important;
+        border-color: rgba(255,255,255,.6) !important;
+    }
+    .page-hero .content-filters input:focus,
+    .page-hero .content-filters select:focus {
+        color: #1a1a2e !important;
+        background: #fff !important;
+        outline: 2px solid rgba(255,255,255,.8) !important;
+    }
+    .page-hero .content-filters input::placeholder {
+        color: #6b7280 !important;
+    }
+    .page-hero .content-filters input:-webkit-autofill,
+    .page-hero .content-filters input:-webkit-autofill:focus {
+        -webkit-text-fill-color: #1a1a2e !important;
+        -webkit-box-shadow: 0 0 0 1000px #fff inset !important;
+    }
+    [data-theme="dark"] .page-hero .content-filters input,
+    [data-theme="dark"] .page-hero .content-filters select {
+        color: #e2e8f0 !important;
+        background: rgba(30,41,59,.85) !important;
+    }
+    [data-theme="dark"] .page-hero .content-filters input:focus,
+    [data-theme="dark"] .page-hero .content-filters select:focus {
+        color: #e2e8f0 !important;
+        background: #1e293b !important;
+    }
+        .content-pill.status-pending {
+            background-color: #ffc107;
+            color: #000;
+        }
+        .content-pill.status-published {
+            background-color: #28a745;
+            color: #fff;
+        }
+        .content-pill.status-rejected {
+            background-color: #dc3545;
+            color: #fff;
+        }
+        .score-insights {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        .top-comments-list {
+            display: grid;
+            gap: 10px;
+        }
+        .top-comment-item {
+            border: 1px solid #e6eef5;
+            border-radius: 10px;
+            padding: 10px 12px;
+            background: #fff;
+        }
+        .top-comment-meta {
+            font-size: 12px;
+            color: #6c7a89;
+            margin-bottom: 4px;
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .score-badge {
+            font-weight: 700;
+            color: #0f766e;
+        }
+        .content-score-line {
+            margin: 8px 0 0;
+            font-size: 13px;
+            color: #0f766e;
+            font-weight: 600;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+<section class="content-page">
+
+    <!-- Hero -->
+    <div class="page-hero">
+        <i class="fas fa-plus page-hero-cross"></i>
+        <i class="fas fa-plus page-hero-cross"></i>
+        <div class="page-hero-header">
+            <div>
+                <div class="page-hero-badge"><i class="fas fa-newspaper"></i> {{ 'content.title'|trans }}</div>
+                <h1>Articles, Forum &amp; Guides</h1>
+                <p>{{ 'content.subtitle'|trans }}</p>
+            </div>
+            {% if canCreate %}
+            <div class="page-hero-actions">
+                <a href="{{ path('front_content_create') }}" class="btn" style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:10px;font-weight:700;font-size:14px;background:white;color:#0D8ABC;border:none;text-decoration:none;">
+                    <i class="fas fa-plus"></i> Ajouter un contenu
+                </a>
+            </div>
+            {% endif %}
+        </div>
+        <!-- Filters inside hero -->
+        <div class="content-filters" style="margin-top:20px;">
+            <input type="text" id="contentSearch" placeholder="{{ 'content.search_placeholder'|trans }}" style="min-width:200px;">
+            <select id="contentTypeFilter">
+                <option value="">{{ 'content.all_types'|trans }}</option>
+                <option value="article">{{ 'content.type_article'|trans }}</option>
+                <option value="video">{{ 'content.type_video'|trans }}</option>
+                <option value="pdf">{{ 'content.type_pdf'|trans }}</option>
+                <option value="lien">{{ 'content.type_link'|trans }}</option>
+            </select>
+            <select id="contentCategoryFilter">
+                <option value="">{{ 'content.all_categories'|trans }}</option>
+                <option value="Santé mentale">Santé mentale</option>
+                <option value="Général">Général</option>
+                <option value="Médicaments">Médicaments</option>
+                <option value="Sport">Sport</option>
+                <option value="Nutrition">Nutrition</option>
+                <option value="Bien-être">Bien-être</option>
+                <option value="Prévention">Prévention</option>
+                <option value="Maladies chroniques">Maladies chroniques</option>
+                <option value="Grossesse">Grossesse</option>
+                <option value="Pédiatrie">Pédiatrie</option>
+                <option value="Gériatrie">Gériatrie</option>
+                <option value="Urgences">Urgences</option>
+                <option value="Dermatologie">Dermatologie</option>
+                <option value="Cardiologie">Cardiologie</option>
+                <option value="Dentaire">Dentaire</option>
+                <option value="Ophtalmologie">Ophtalmologie</option>
+                <option value="Sexualité">Sexualité</option>
+                <option value="Addictions">Addictions</option>
+                <option value="Sommeil">Sommeil</option>
+                <option value="Stress">Stress</option>
+                <option value="Alimentation">Alimentation</option>
+                <option value="Vaccination">Vaccination</option>
+                <option value="Thérapies">Thérapies</option>
+                <option value="Médicaments génériques">Médicaments génériques</option>
+                <option value="Médecine douce">Médecine douce</option>
+            </select>
+            {% if app.user.role != 'ROLE_PATIENT' %}
+                <button class="btn btn-secondary btn-xs content-mine-btn" id="contentMine" style="background:rgba(255,255,255,.15);color:white;border:1.5px solid rgba(255,255,255,.3);height:42px;padding:0 16px;border-radius:10px;font-weight:700;">{{ 'content.mine'|trans }}</button>
+            {% endif %}
+            <button class="btn btn-secondary btn-xs" id="contentReset" style="background:rgba(255,255,255,.1);color:white;border:1.5px solid rgba(255,255,255,.2);height:42px;padding:0 16px;border-radius:10px;font-weight:700;"><i class="fas fa-undo" style="margin-right:4px;"></i>{{ 'common.reset'|trans }}</button>
+        </div>
+    </div>
+
+    {% if showRecommended %}
+        <div class="content-section">
+            <div>
+            <div class="content-section-header">
+                <div class="content-section-title">
+                    <h3>Recommandé pour vous</h3>
+                    <p>Top 4 contenus avec les meilleurs scores.</p>
+                </div>
+                <span class="content-pill">Personnalisé</span>
+            </div>
+            <div class="content-grid" id="recommendedGrid">
+                {% for item in recommended %}
+                    {% set isLiked = item.id in likedIds %}
+                    {% set isOwner = item.auteur and app.user and item.auteur.id == app.user.id %}
+                    <div class="content-card" data-content-id="{{ item.id }}">
+                        <div class="content-meta">
+                            <span class="content-pill">{{ item.type|upper }}</span>
+                            {% if isOwner and item.statut %}
+                                {% set statutClass = 'content-pill' %}
+                                {% set statutLabel = '' %}
+                                {% if item.statut == 'en_attente' %}
+                                    {% set statutClass = statutClass ~ ' status-pending' %}
+                                    {% set statutLabel = 'En attente' %}
+                                {% elseif item.statut == 'publie' or item.statut == 'valide' %}
+                                    {% set statutClass = statutClass ~ ' status-published' %}
+                                    {% set statutLabel = 'Publié' %}
+                                {% elseif item.statut == 'rejete' %}
+                                    {% set statutClass = statutClass ~ ' status-rejected' %}
+                                    {% set statutLabel = 'Rejeté' %}
+                                {% else %}
+                                    {% set statutClass = statutClass ~ ' status-pending' %}
+                                    {% set statutLabel = item.statut %}
+                                {% endif %}
+                                {% if statutLabel %}
+                                    <span class="{{ statutClass }}">{{ statutLabel }}</span>
+                                {% endif %}
+                            {% endif %}
+                            <span>{{ (item.datePublication ?? item.createdAt)|date('d/m/Y') }}</span>
+                            <span>{{ item.auteur ? (item.auteur.fullName ?? item.auteur.email) : 'Anonyme' }}</span>
+                        </div>
+                        <h3>{{ item.titre }}</h3>
+                        <p>{{ item.description ?? item.contenu|striptags|slice(0, 140) }}</p>
+                        <div class="content-actions">
+                            <button class="like-btn {{ isLiked ? 'active' : '' }}" data-liked="{{ isLiked ? '1' : '0' }}">
+                                <i class="fas fa-heart"></i>
+                                <span class="like-count">{{ item.likes|length }}</span>
+                            </button>
+                            <button class="btn btn-secondary btn-xs comment-toggle">
+                                Commentaires (<span class="comment-count">{{ item.commentaires|length }}</span>)
+                            </button>
+                            <a class="btn btn-primary btn-xs" href="{{ path('front_content_show', {id: item.id}) }}">Voir</a>
+                        </div>
+                        <div class="comment-panel" hidden>
+                            <div class="comment-list"></div>
+                            <form class="comment-form" data-ajax="1">
+                                <textarea rows="2" placeholder="Ajouter un commentaire..."></textarea>
+                                <div class="content-actions">
+                                    <button type="submit" class="btn btn-primary btn-xs">Publier</button>
+                                    <div class="form-error" data-comment-error></div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                {% else %}
+                    <p>Aucune recommandation disponible.</p>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- All contents -->
+    <div class="content-section">
+        <div class="content-section-header">
+            <div class="content-section-title">
+                <h3><i class="fas fa-th-large" style="color:#0D8ABC;margin-right:8px;"></i>{{ 'content.all'|trans }}</h3>
+                <p>{{ 'content.list_sub'|trans }}</p>
+            </div>
+        </div>
+        <div id="contentAlert" class="appointment-alert" hidden></div>
+        <div class="content-grid" id="contentGrid"></div>
+        <div class="content-load-more">
+            <button class="btn btn-secondary" id="loadMoreBtn"><i class="fas fa-chevron-down" style="margin-right:6px;"></i>{{ 'common.load_more'|trans }}</button>
+        </div>
+    </div>
+
+</section>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+
+        const TRANS = {
+            loading:        '{{ "common.loading"|trans|e("js") }}',
+            no_results:     '{{ "common.no_results"|trans|e("js") }}',
+            edit:           '{{ "common.edit"|trans|e("js") }}',
+            delete_btn:     '{{ "common.delete"|trans|e("js") }}',
+            view:           '{{ "common.view"|trans|e("js") }}',
+            publish:        '{{ "common.publish"|trans|e("js") }}',
+            pending:        '{{ "status.pending"|trans|e("js") }}',
+            published:      '{{ "status.published"|trans|e("js") }}',
+            rejected:       '{{ "status.rejected"|trans|e("js") }}',
+            type_article:   '{{ "content.type_article"|trans|e("js") }}',
+            type_video:     '{{ "content.type_video"|trans|e("js") }}',
+            type_pdf:       '{{ "content.type_pdf"|trans|e("js") }}',
+            type_link:      '{{ "content.type_link"|trans|e("js") }}',
+            comments:       '{{ "content.comments"|trans|e("js") }}',
+            load_more:      '{{ "common.load_more"|trans|e("js") }}',
+        };
+
+        (function () {
+            const grid = document.getElementById('contentGrid');
+            const recommendedGrid = document.getElementById('recommendedGrid');
+            const loadMoreBtn = document.getElementById('loadMoreBtn');
+            const searchInput = document.getElementById('contentSearch');
+            const typeFilter = document.getElementById('contentTypeFilter');
+            const categoryFilter = document.getElementById('contentCategoryFilter');
+            const resetBtn = document.getElementById('contentReset');
+            const mineBtn = document.getElementById('contentMine');
+            const alertBox = document.getElementById('contentAlert');
+            const csrfToken = '{{ csrf_token('content_action') }}';
+            const currentUserId = {{ app.user ? app.user.id : 'null' }};
+            let onlyMine = false;
+            
+            if (!grid || !searchInput || !typeFilter || !categoryFilter) { return; }
+
+            let page = 1;
+            let loading = false;
+            let hasMore = true;
+
+            const showAlert = (message, type = 'error') => {
+                if (!alertBox) return;
+                alertBox.textContent = message;
+                alertBox.classList.remove('error', 'success');
+                alertBox.classList.add(type);
+                alertBox.hidden = false;
+            };
+            const hideAlert = () => { if (alertBox) alertBox.hidden = true; };
+
+            const typeIcon = (t) => {
+                const map = { article:'newspaper', video:'video', pdf:'file-pdf', lien:'link' };
+                return `<i class="fas fa-${map[t]||'file'}" style="margin-right:3px;"></i>`;
+            };
+
+            const formatSignedScore = (value) => {
+                const numeric = Number(value ?? 0);
+                if (!Number.isFinite(numeric)) {
+                    return '0.000';
+                }
+
+                return numeric.toFixed(3);
+            };
+
+            const buildCard = (item) => {
+                const likedClass = item.liked ? 'active' : '';
+                let statutBadge = '';
+                if (item.isOwner && item.statut) {
+                    const isPublished = item.statut === 'publie' || item.statut === 'valide';
+                    const cls = item.statut === 'en_attente' ? 'status-pending' : (isPublished ? 'status-published' : 'status-rejected');
+                    const lbl = item.statut === 'en_attente' ? TRANS.pending : (isPublished ? TRANS.published : TRANS.rejected);
+                    statutBadge = `<span class="content-pill ${cls}">${lbl}</span>`;
+                }
+                return `
+                <div class="content-card" data-content-id="${item.id}">
+                    <div class="content-meta">
+                        <span class="content-pill">${typeIcon(item.type)}${item.type.toUpperCase()}</span>
+                        ${statutBadge}
+                        <span>${item.date}</span>
+                        <span>${item.auteur}</span>
+                    </div>
+                    <h3>${item.titre}</h3>
+                    <p>${item.description ?? ''}</p>
+                    <p class="content-score-line">Score moyen: ${formatSignedScore(item.score)} (${item.score_count ?? 0} commentaires valides)</p>
+                    <div class="content-actions">
+                        <button class="like-btn ${likedClass}" data-liked="${item.liked ? '1' : '0'}">
+                            <i class="fas fa-heart"></i>
+                            <span class="like-count">${item.likes}</span>
+                        </button>
+                        <button class="btn btn-secondary btn-xs comment-toggle">
+                            <i class="fas fa-comment" style="margin-right:4px;"></i>(<span class="comment-count">${item.commentaires}</span>)
+                        </button>
+                        <a class="btn btn-primary btn-xs" href="{{ path('front_content_show', {id: 0})|slice(0, -1) }}${item.id}">{{ 'common.view'|trans }}</a>
+                    </div>
+                    <div class="comment-panel" hidden>
+                        <div class="comment-list"></div>
+                        <form class="comment-form" data-ajax="1">
+                            <textarea rows="2" placeholder="Ajouter un commentaire..."></textarea>
+                            <div class="content-actions">
+                                <button type="submit" class="btn btn-primary btn-xs">Publier</button>
+                                <div class="form-error" data-comment-error></div>
+                            </div>
+                        </form>
+                    </div>
+                </div>`;
+            };
+
+            const loadContents = async (reset = false) => {
+                if (loading || (!hasMore && !reset)) return;
+                loading = true;
+                hideAlert();
+                if (reset) { page = 1; hasMore = true; grid.innerHTML = ''; }
+                const params = new URLSearchParams({ page: String(page), limit: '8', q: searchInput.value.trim(), type: typeFilter.value, category: categoryFilter.value.trim() });
+                if (onlyMine) params.set('owner', 'me');
+                try {
+                    const res = await fetch(`{{ path('api_content_list') }}?${params.toString()}`);
+                    const data = await res.json();
+                    if (!data.items) throw new Error('Erreur');
+                    data.items.forEach((item) => { grid.insertAdjacentHTML('beforeend', buildCard(item)); });
+                    hasMore = data.page < data.pages;
+                    loadMoreBtn.style.display = hasMore ? 'inline-flex' : 'none';
+                    page += 1;
+                } catch (e) { showAlert('Impossible de charger les contenus.'); } finally { loading = false; }
+            };
+
+            const fetchComments = async (contentId, listEl) => {
+                const res = await fetch(`{{ path('api_content_list') }}/${contentId}/comments`);
+                const data = await res.json();
+                listEl.innerHTML = '';
+                (data.items || []).forEach((c) => {
+                    const canDelete = currentUserId && c.user_id === currentUserId;
+                    listEl.insertAdjacentHTML('beforeend', `<div class="comment-item" data-comment-id="${c.id}"><div class="comment-meta">${c.user} · ${c.date}</div><div>${c.message}</div>${canDelete ? `<button class="btn btn-secondary btn-xs comment-delete" data-comment-id="${c.id}" style="margin-top:6px;">{{ 'common.delete'|trans }}</button>` : ''}</div>`);
+                });
+            };
+
+            const toggleLike = async (contentId, btn, countEl) => {
+                const res = await fetch(`{{ path('api_content_list') }}/${contentId}/like`, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': csrfToken } });
+                const data = await res.json();
+                if (!data.success) { showAlert(data.message || 'Action impossible.'); return; }
+                btn.classList.toggle('active', data.liked);
+                btn.dataset.liked = data.liked ? '1' : '0';
+                countEl.textContent = data.count;
+            };
+
+            const submitComment = async (contentId, textarea, errorEl, listEl, countEl) => {
+                errorEl.textContent = '';
+                const message = textarea.value.trim();
+                if (!message) { errorEl.textContent = 'Le commentaire est obligatoire.'; return; }
+                const res = await fetch(`{{ path('api_content_list') }}/${contentId}/comment`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': csrfToken }, body: JSON.stringify({ message }) });
+                const data = await res.json();
+                if (!data.success) { errorEl.textContent = data.message || (data.errors ? data.errors.join(', ') : 'Erreur.'); return; }
+                textarea.value = '';
+                const c = data.comment;
+                listEl.insertAdjacentHTML('afterbegin', `<div class="comment-item" data-comment-id="${c.id}"><div class="comment-meta">${c.user} · ${c.date}</div><div>${c.message}</div><button class="btn btn-secondary btn-xs comment-delete" data-comment-id="${c.id}" style="margin-top:6px;">{{ 'common.delete'|trans }}</button></div>`);
+                countEl.textContent = data.count;
+            };
+
+            const deleteComment = async (commentId, itemEl, countEl) => {
+                const res = await fetch(`{{ path('api_content_list') }}/comments/${commentId}/delete`, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': csrfToken } });
+                const data = await res.json();
+                if (!data.success) { showAlert(data.message || 'Suppression impossible.'); return; }
+                itemEl.remove();
+                if (countEl && data.count !== undefined) countEl.textContent = data.count;
+            };
+
+            document.addEventListener('click', async (e) => {
+                const likeBtn = e.target.closest('.like-btn');
+                if (likeBtn) { const card = likeBtn.closest('.content-card'); if (!card) return; await toggleLike(card.dataset.contentId, likeBtn, likeBtn.querySelector('.like-count')); return; }
+                const toggleBtn = e.target.closest('.comment-toggle');
+                if (toggleBtn) { const card = toggleBtn.closest('.content-card'); const panel = card.querySelector('.comment-panel'); panel.hidden = !panel.hidden; if (!panel.hidden) await fetchComments(card.dataset.contentId, panel.querySelector('.comment-list')); return; }
+                const deleteBtn = e.target.closest('.comment-delete');
+                if (deleteBtn) { const itemEl = deleteBtn.closest('.comment-item'); const card = deleteBtn.closest('.content-card'); if (confirm('Supprimer ce commentaire ?')) await deleteComment(deleteBtn.dataset.commentId, itemEl, card.querySelector('.comment-count')); }
+            });
+
+            document.addEventListener('submit', async (e) => {
+                const form = e.target.closest('.comment-form');
+                if (!form) return;
+                e.preventDefault();
+                const card = form.closest('.content-card');
+                await submitComment(card.dataset.contentId, form.querySelector('textarea'), form.querySelector('[data-comment-error]'), card.querySelector('.comment-list'), card.querySelector('.comment-count'));
+            });
+
+            loadMoreBtn.addEventListener('click', () => loadContents(false));
+            resetBtn.addEventListener('click', () => { searchInput.value = ''; typeFilter.value = ''; categoryFilter.value = ''; onlyMine = false; if (mineBtn) mineBtn.classList.remove('active'); loadContents(true); });
+            if (mineBtn) { mineBtn.addEventListener('click', () => { onlyMine = !onlyMine; mineBtn.classList.toggle('active', onlyMine); loadContents(true); }); }
+            searchInput.addEventListener('input', () => loadContents(true));
+            typeFilter.addEventListener('change', () => loadContents(true));
+            categoryFilter.addEventListener('change', () => loadContents(true));
+
+            loadContents(true);
+        })();
+    </script>
+{% endblock %}

@@ -1,0 +1,19 @@
+{% extends 'front/base.html.twig' %}
+
+{% block title %}Compte en attente{% endblock %}
+
+{% block body %}
+<section class="subscription-wrap">
+    <div class="subscription-card" style="max-width: 640px; margin: 0 auto; text-align: center;">
+        <h2>Votre compte est en attente</h2>
+        <p>Merci de confirmer votre adresse email et d'attendre la validation par l'administrateur.</p>
+        {% if not app.user.emailVerified %}
+            <p><strong>Email non confirmé.</strong> Vérifiez votre boîte de réception.</p>
+        {% endif %}
+        {% if app.user.emailVerified and not app.user.adminApproved %}
+            <p><strong>Email confirmé.</strong> Validation admin en attente.</p>
+        {% endif %}
+        <a href="{{ path('app_logout') }}" class="btn-ghost">Se déconnecter</a>
+    </div>
+</section>
+{% endblock %}

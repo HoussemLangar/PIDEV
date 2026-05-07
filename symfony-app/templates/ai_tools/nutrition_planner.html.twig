@@ -1,0 +1,136 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Assistant Nutrition IA – SANTÉA{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+{% include 'ai_tools/_styles.html.twig' %}
+<style>
+.ait-tool-color { --tool-color: #10b981; --tool-bg: rgba(16,185,129,.1); }
+.ait-tool-header { background: linear-gradient(135deg,#065f46 0%,#10b981 60%,#34d399 100%); }
+.ait-btn-submit { background: linear-gradient(135deg,#10b981,#34d399); }
+.ait-btn-submit:hover { background: linear-gradient(135deg,#059669,#10b981); }
+.ait-tag { background: rgba(16,185,129,.1); color:#065f46; }
+.ait-meal-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px; }
+.ait-meal-item { background:#f0fdf4; border-radius:9px; padding:9px 11px; font-size:13px; }
+.ait-meal-label { font-size:10.5px; font-weight:700; color:#10b981; text-transform:uppercase; letter-spacing:.5px; margin-bottom:3px; }
+@media(max-width:500px){.ait-meal-grid{grid-template-columns:1fr;}}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ait-page ait-tool-color">
+
+    <div class="ait-tool-header">
+        <div class="ait-tool-header-inner">
+            <a href="{{ path('app_ai_tools_index') }}" class="ait-back-btn"><i class="fas fa-arrow-left"></i> Outils IA</a>
+            <div class="ait-tool-icon"><i class="fas fa-apple-alt"></i></div>
+            <h1 class="ait-tool-title">Assistant Nutrition</h1>
+            <p class="ait-tool-sub">Obtenez un plan alimentaire personnalisé selon votre objectif, votre régime et vos intolérances.</p>
+        </div>
+    </div>
+
+    <div class="ait-tool-body">
+
+        <div class="ait-card-wrap">
+            <form method="post" id="aitForm" class="ait-form">
+                <div class="ait-field">
+                    <label class="ait-label"><i class="fas fa-bullseye"></i> Objectif nutritionnel</label>
+                    <input name="goal" class="ait-input" placeholder="Ex : perte de poids, prise de masse, équilibre alimentaire…" value="{{ app.request.request.get('goal') }}">
+                </div>
+                <div class="ait-row">
+                    <div class="ait-field">
+                        <label class="ait-label"><i class="fas fa-utensils"></i> Style alimentaire</label>
+                        <select name="dietStyle" class="ait-input">
+                            <option value="standard" {{ app.request.request.get('dietStyle') == 'standard' ? 'selected' }}>Standard</option>
+                            <option value="vegetarien" {{ app.request.request.get('dietStyle') == 'vegetarien' ? 'selected' }}>Végétarien</option>
+                            <option value="vegetalien" {{ app.request.request.get('dietStyle') == 'vegetalien' ? 'selected' }}>Végétalien</option>
+                            <option value="mediterraneen" {{ app.request.request.get('dietStyle') == 'mediterraneen' ? 'selected' }}>Méditerranéen</option>
+                            <option value="sans-gluten" {{ app.request.request.get('dietStyle') == 'sans-gluten' ? 'selected' }}>Sans gluten</option>
+                        </select>
+                    </div>
+                    <div class="ait-field">
+                        <label class="ait-label"><i class="fas fa-calendar-day"></i> Nombre de jours</label>
+                        <input type="number" name="days" min="1" max="14" value="{{ app.request.request.get('days', 7) }}" class="ait-input">
+                    </div>
+                </div>
+                <div class="ait-field">
+                    <label class="ait-label"><i class="fas fa-exclamation-triangle"></i> Allergies / intolérances <span class="ait-hint">optionnel</span></label>
+                    <input name="allergies" class="ait-input" placeholder="Ex : lactose, noix, gluten…" value="{{ app.request.request.get('allergies') }}">
+                </div>
+                <div class="ait-form-footer">
+                    <button type="submit" class="ait-btn-submit ait-btn" id="aitSubmitBtn">
+                        <span class="ait-btn-normal"><i class="fas fa-leaf"></i> Générer le plan</span>
+                        <span class="ait-btn-loading" style="display:none"><span class="ait-spinner"></span> Génération en cours…</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        {% if result is defined and result %}
+        <div class="ait-results">
+            <div class="ait-results-header">
+                <span class="ait-results-badge"><i class="fas fa-sparkles"></i> Plan alimentaire IA</span>
+                {% if result.overview is defined %}<p class="ait-result-overview">{{ result.overview }}</p>{% endif %}
+            </div>
+
+            {% if result.days is defined %}
+            <div class="ait-days-grid">
+                {% for d in result.days %}
+                <div class="ait-day-card">
+                    <div class="ait-day-header"><i class="fas fa-sun"></i> Jour {{ d.day }}</div>
+                    <div class="ait-meal-grid">
+                        <div class="ait-meal-item"><div class="ait-meal-label">Petit-déjeuner</div>{{ d.breakfast }}</div>
+                        <div class="ait-meal-item"><div class="ait-meal-label">Déjeuner</div>{{ d.lunch }}</div>
+                        <div class="ait-meal-item"><div class="ait-meal-label">Dîner</div>{{ d.dinner }}</div>
+                        <div class="ait-meal-item"><div class="ait-meal-label">Collation</div>{{ d.snack }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% if result.tips is defined and result.tips|length %}
+            <div class="ait-result-section" style="margin-top:20px;">
+                <div class="ait-result-section-title"><i class="fas fa-lightbulb"></i> Conseils nutritionnels</div>
+                <ul class="ait-bullet-list">
+                    {% for tip in result.tips %}
+                        <li><i class="fas fa-check-circle"></i> {{ tip }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+<script>
+(function(){
+    var form = document.getElementById('aitForm');
+    var btn  = document.getElementById('aitSubmitBtn');
+    if (!form || !btn) return;
+
+    form.addEventListener('submit', function(e) {
+        if (form.dataset.submitting === '1') { e.preventDefault(); return; }
+        form.dataset.submitting = '1';
+        requestAnimationFrame(function() {
+            btn.classList.add('ait-btn--loading');
+            btn.querySelector('.ait-btn-normal').style.display = 'none';
+            btn.querySelector('.ait-btn-loading').style.display = 'inline-flex';
+        });
+    });
+
+    window.addEventListener('pageshow', function(e) {
+        if (e.persisted) {
+            form.dataset.submitting = '0';
+            btn.classList.remove('ait-btn--loading');
+            btn.querySelector('.ait-btn-normal').style.display = '';
+            btn.querySelector('.ait-btn-loading').style.display = 'none';
+        }
+    });
+})();
+</script>
+{% endblock %}
+

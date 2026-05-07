@@ -18,14 +18,14 @@
         </div>
         
         <div class="hero-content">
-            <div class="text-side">
+            <div class="text-side s3d-reveal-left">
                 <span class="badge">BIEN ÊTRE</span>
-                <h1>Votre SANTÉA, en toute confiance</h1>
-                <p>Suivez votre état de SANTÉA au quotidien, bénéficiez d'un accompagnement global et facilitez vos échanges avec les professionnels de SANTÉA.</p>
-                <a href="#doctors" class="btn-primary">Découvrir SANTÉA</a>
+                <h1>Votre SANT&#201;A, en toute confiance</h1>
+                <p>Suivez votre &#233;tat de SANT&#201;A au quotidien, b&#233;n&#233;ficiez d'un accompagnement global et facilitez vos &#233;changes avec les professionnels de SANT&#201;A.</p>
+                <a href="#doctors" class="btn-primary">D&#233;couvrir SANT&#201;A</a>
             </div>
-            <div class="image-side">
-                <img src="{{ asset('img/heart.png') }}" alt="Doctor & Nurse" class="hero-img"/>
+            <div class="image-side s3d-reveal-right">
+                <img src="{{ asset('img/heart.png') }}" alt="Doctor &amp; Nurse" class="hero-img" data-parallax="0.08"/>
             </div>
         </div>
 
@@ -60,45 +60,117 @@
     </section>
 
     <!-- Quick Info Cards -->
-    <section class="quick-info" id="quick-info">
+    <section class="quick-info" id="quick-info" style="position:relative;overflow:hidden;">
+        <i class="fas fa-plus s3d-cross-decoration" style="top:5%;left:3%;font-size:60px;" aria-hidden="true"></i>
+        <i class="fas fa-plus s3d-cross-decoration" style="bottom:8%;right:2%;font-size:40px;animation-delay:-4s;" aria-hidden="true"></i>
         <div class="container">
-            <h2 class="section-title">Pourquoi choisir SANTÉA</h2>
+            <h2 class="section-title s3d-reveal">Pourquoi choisir SANT&#201;A</h2>
         </div>
-        <div class="container">
-            <div class="card">
-                <div class="icon"><i class="fas fa-stethoscope"></i></div>
-                <h3>Tout-en-un santé</h3>
-                <p>Consultations, analyses, suivi quotidien, nutrition et sport réunis sur une seule plateforme.</p>
-                <a href="#" class="btn-small">Découvrir</a>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon-wrapper gradient-purple">
+                    <i class="fas fa-video"></i>
+                </div>
+                <h3>Téléconsultations</h3>
+                <p>Consultez vos médecins à distance en visioconférence sécurisée, où que vous soyez.</p>
+                <a href="{{ path('app_teleconsultation_index') }}" class="btn-feature">
+                    <span>Accéder</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
             </div>
             
-            <div class="card">
-                <div class="icon"><i class="fas fa-heartbeat"></i></div>
-                <h3>Accompagnement personnalisé</h3>
-                <p>Médecin, coach et nutritionniste travaillent ensemble pour votre bien-être.</p>
-                <a href="#" class="btn-small">Découvrir</a>
+            <div class="feature-card">
+                <div class="feature-icon-wrapper gradient-blue">
+                    <i class="fas fa-file-medical"></i>
+                </div>
+                <h3>Gestion des documents</h3>
+                <p>Centralisez et partagez vos documents médicaux en toute sécurité avec les professionnels.</p>
+                <a href="{{ path('app_document_index') }}" class="btn-feature">
+                    <span>Accéder</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
             </div>
             
-            <div class="card">
-                <div class="icon"><i class="fas fa-clipboard-list"></i></div>
-                <h3>Suivi intelligent</h3>
-                <p>IMC, poids, sommeil, activité et symptômes suivis automatiquement au quotidien.</p>
-                <a href="#" class="btn-small">Découvrir</a>
+            <div class="feature-card">
+                <div class="feature-icon-wrapper gradient-green">
+                    <i class="fas fa-book-medical"></i>
+                </div>
+                <h3>Journal santé quotidien</h3>
+                <p>Suivez votre poids, IMC, sommeil et activité physique jour après jour automatiquement.</p>
+                <a href="{{ path('app_sante_quotidienne_index') }}" class="btn-feature">
+                    <span>Accéder</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
             </div>
             
-            <div class="card">
-                <div class="icon"><i class="fas fa-share-alt"></i></div>
+            <div class="feature-card">
+                <div class="feature-icon-wrapper gradient-cyan">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+                <h3>Plans d'accompagnement</h3>
+                <p>Programmes personnalisés avec coach sportif et nutritionniste pour atteindre vos objectifs.</p>
+                <a href="{{ path('app_plan_index') }}" class="btn-feature">
+                    <span>Accéder</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon-wrapper gradient-orange">
+                    <i class="fas fa-stethoscope"></i>
+                </div>
+                <h3>Suivi des symptômes</h3>
+                <p>Enregistrez vos symptômes et recevez des diagnostics préliminaires basés sur l'IA.</p>
+                <a href="{{ path('app_symptomes') }}" class="btn-feature">
+                    <span>Accéder</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon-wrapper gradient-teal">
+                    <i class="fas fa-envelope"></i>
+                </div>
+                <h3>Messagerie sécurisée</h3>
+                <p>Échangez en toute confidentialité avec vos professionnels de santé.</p>
+                <a href="{{ path('app_message_index') }}" class="btn-feature">
+                    <span>Accéder</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon-wrapper gradient-pink">
+                    <i class="fas fa-pills"></i>
+                </div>
+                <h3>Pharmacies de garde</h3>
+                <p>Trouvez les pharmacies ouvertes près de chez vous et réservez vos médicaments.</p>
+                <a href="{{ path('front_pharmacy_index') }}" class="btn-feature">
+                    <span>Accéder</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon-wrapper gradient-indigo">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
                 <h3>Sécurité & confidentialité</h3>
-                <p>Vos données médicales sont protégées et partagées uniquement avec les professionnels autorisés.</p>
-                <a href="#" class="btn-small">Découvrir</a>
+                <p>Vos données sont chiffrées et partagées uniquement avec votre autorisation explicite.</p>
+                <a href="{{ path('profile_edit') }}" class="btn-feature">
+                    <span>Paramètres</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
             </div>
         </div>
     </section>
 
     <!-- Section Prendre Rendez-vous -->
-    <section class="appointment-section" id="appointment-section">
+    <section class="appointment-section" id="appointment-section" style="position:relative;overflow:hidden;">
+        <i class="fas fa-heartbeat s3d-cross-decoration" style="top:5%;right:5%;font-size:90px;opacity:.04;" aria-hidden="true"></i>
         <div class="container">
-            <h2 class="section-title">Nos services médicaux</h2>
+            <h2 class="section-title s3d-reveal">Nos services m&#233;dicaux</h2>
+            <p class="section-subtitle s3d-reveal s3d-delay-1">Des solutions compl&#232;tes pour prendre soin de votre sant&#233;</p>
         </div>
         
         <!-- Première paire : Prendre rendez-vous + Trouver vos médicaments -->
@@ -111,15 +183,18 @@
                         </div>
                         <div class="appointment-badge-customers">
                             <i class="fas fa-star"></i>
-                            <span>+10k Consultations réservés</span>
+                            <span>+10k Consultations réservées</span>
                         </div>
                     </div>
                 </div>
                 <div class="appointment-content">
-                    <span class="appointment-badge">Rendez-vous</span>
+                    <span class="appointment-badge">Rendez-vous médicaux</span>
                     <h2>Réservez une consultation aujourd'hui</h2>
-                    <p>Prenez rendez-vous facilement avec nos médecins certifiés. Profitez d'une prise en charge rapide pour tous vos besoins de SANTÉA.</p>
-                    <a href="#" class="btn-appointment-main">Prendre rendez-vous</a>
+                    <p>Prenez rendez-vous facilement avec nos médecins certifiés. Profitez d'une prise en charge rapide pour tous vos besoins de santé.</p>
+                    <a href="{{ path('app_appointments') }}" class="btn-appointment-main">
+                        <i class="fas fa-calendar-check"></i>
+                        Prendre rendez-vous
+                    </a>
                 </div>
             </div>
             
@@ -131,26 +206,29 @@
                         </div>
                         <div class="appointment-badge-customers">
                             <i class="fas fa-pills"></i>
-                            <span>+1000 Pharmacies</span>
+                            <span>+1000 Pharmacies partenaires</span>
                         </div>
                     </div>
                 </div>
                 <div class="appointment-content">
-                    <span class="appointment-badge">Médicaments et Pharmacies</span>
+                    <span class="appointment-badge">Pharmacies de garde</span>
                     <h2>Trouvez vos médicaments facilement</h2>
-                    <p>Recherchez vos médicaments, comparez les prix et trouvez la pharmacie la plus avantageuse près de chez vous</p>
-                    <a href="#" class="btn-appointment-main">Découvrir</a>
+                    <p>Recherchez vos médicaments, comparez les disponibilités et trouvez la pharmacie ouverte la plus proche de chez vous en temps réel.</p>
+                    <a href="{{ path('front_pharmacy_index') }}" class="btn-appointment-main">
+                        <i class="fas fa-map-marker-alt"></i>
+                        Trouver une pharmacie
+                    </a>
                 </div>
             </div>
         </div>
         
-        <!-- Deuxième paire : Suivre votre SANTÉA + Partage médical -->
+        <!-- Deuxième paire : Suivre votre santé + Téléconsultation -->
         <div class="appointment-pair">
             <div class="container appointment-flex">
                 <div class="appointment-img-block">
                     <div class="appointment-img-wrapper">
                         <div class="appointment-img-circle">
-                            <img src="{{ asset('img/track.jpg') }}" alt="Suivre votre SANTÉA" class="appointment-img" />
+                            <img src="{{ asset('img/track.jpg') }}" alt="Suivre votre santé" class="appointment-img" />
                         </div>
                         <div class="appointment-badge-customers">
                             <i class="fas fa-heartbeat"></i>
@@ -160,9 +238,12 @@
                 </div>
                 <div class="appointment-content">
                     <span class="appointment-badge">Santé quotidienne</span>
-                    <h2>Suivrez votre santé</h2>
-                    <p>Suivez vos indicateurs de santé (poids, activité, alimentation, analyses) grâce à un tracker intelligent et centralisé.</p>
-                    <a href="#" class="btn-appointment-main">Continuer</a>
+                    <h2>Suivez votre santé au quotidien</h2>
+                    <p>Suivez vos indicateurs de santé (poids, IMC, activité, sommeil, alimentation) grâce à un tracker intelligent et centralisé connecté à Google Fit.</p>
+                    <a href="{{ path('app_sante_quotidienne_index') }}" class="btn-appointment-main">
+                        <i class="fas fa-book-medical"></i>
+                        Mon journal santé
+                    </a>
                 </div>
             </div>
             
@@ -170,42 +251,48 @@
                 <div class="appointment-img-block">
                     <div class="appointment-img-wrapper">
                         <div class="appointment-img-circle">
-                            <img src="{{ asset('img/share.jpg') }}" alt="Partage médical sécurisé" class="appointment-img" />
+                            <img src="{{ asset('img/teleconsultation.png') }}" alt="Téléconsultation" class="appointment-img" />
                         </div>
                         <div class="appointment-badge-customers">
-                            <i class="fas fa-share-alt"></i>
-                            <span>+2 300 Partages</span>
+                            <i class="fas fa-video"></i>
+                            <span>Disponible 24/7</span>
                         </div>
                     </div>
                 </div>
                 <div class="appointment-content">
-                    <span class="appointment-badge">Partage sécurisé</span>
-                    <h2>Partagez vos données médicales</h2>
-                    <p>Partagez vos analyses et dossier médical de manière sécurisée avec vos professionnels de santé.</p>
-                    <a href="#" class="btn-appointment-main">Partager</a>
+                    <span class="appointment-badge">Téléconsultation</span>
+                    <h2>Consultez à distance en vidéo</h2>
+                    <p>Consultez vos médecins en visioconférence sécurisée depuis chez vous. Aucune installation requise, connexion immédiate via Jitsi Meet.</p>
+                    <a href="{{ path('app_teleconsultation_index') }}" class="btn-appointment-main">
+                        <i class="fas fa-video"></i>
+                        Mes téléconsultations
+                    </a>
                 </div>
             </div>
         </div>
         
-        <!-- Troisième paire : Coaching Sportif + Coaching Nutritionnistes -->
+        <!-- Troisième paire : Plans d'accompagnement + Documents médicaux -->
         <div class="appointment-pair">
             <div class="container appointment-flex">
                 <div class="appointment-img-block">
                     <div class="appointment-img-wrapper">
                         <div class="appointment-img-circle">
-                            <img src="{{ asset('img/sport.jpg') }}" alt="Coaching sportif personnalisé" class="appointment-img" />
+                            <img src="{{ asset('img/sport.jpg') }}" alt="Plans d'accompagnement" class="appointment-img" />
                         </div>
                         <div class="appointment-badge-customers">
-                            <i class="fas fa-star"></i>
-                            <span>+100 Clients Satisfais</span>
+                            <i class="fas fa-dumbbell"></i>
+                            <span>+3 200 Plans actifs</span>
                         </div>
                     </div>
                 </div>
                 <div class="appointment-content">
-                    <span class="appointment-badge">Coaching personnalisé</span>
-                    <h2>Coaching sportif personnalisé</h2>
-                    <p>Un accompagnement adapté à vos objectifs, votre rythme et votre condition physique.</p>
-                    <a href="#" class="btn-appointment-main">Commencer</a>
+                    <span class="appointment-badge">Accompagnement personnalisé</span>
+                    <h2>Plans sport & nutrition sur mesure</h2>
+                    <p>Bénéficiez d'un accompagnement personnalisé avec coach sportif et nutritionniste. Programmes adaptés à vos objectifs et votre condition physique.</p>
+                    <a href="{{ path('app_plan_index') }}" class="btn-appointment-main">
+                        <i class="fas fa-calendar-check"></i>
+                        Mes plans
+                    </a>
                 </div>
             </div>
             
@@ -213,121 +300,244 @@
                 <div class="appointment-img-block">
                     <div class="appointment-img-wrapper">
                         <div class="appointment-img-circle">
-                            <img src="{{ asset('img/bien.jpg') }}" alt="Coaching avec nutritionnistes personnalisé" class="appointment-img" />
+                            <img src="{{ asset('img/bien.jpg') }}" alt="Documents médicaux sécurisés" class="appointment-img" />
                         </div>
                         <div class="appointment-badge-customers">
-                            <i class="fas fa-star"></i>
-                            <span>+100 Clients Satisfais</span>
+                            <i class="fas fa-file-medical"></i>
+                            <span>+15 000 Documents sécurisés</span>
                         </div>
                     </div>
                 </div>
                 <div class="appointment-content">
-                    <span class="appointment-badge">Coaching personnalisé</span>
-                    <h2>Coaching avec nutritionnistes</h2>
-                    <p>Un suivi nutritionnel personnalisé pour un régime équilibré, adapté à vos besoins et à votre santé.</p>
-                    <a href="#" class="btn-appointment-main">Commencer</a>
+                    <span class="appointment-badge">Stockage sécurisé</span>
+                    <h2>Vos documents médicaux centralisés</h2>
+                    <p>Conservez et partagez vos documents médicaux en toute sécurité. Ordonnances, analyses, comptes-rendus accessibles partout.</p>
+                    <a href="{{ path('app_document_index') }}" class="btn-appointment-main">
+                        <i class="fas fa-folder-open"></i>
+                        Mes documents
+                    </a>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Avis de nos clients et partenaires -->
-    <section class="testimonials-wrapper" id="testimonials">
+    <!-- Forum et publications -->
+    <section class="forum-section" id="forum" style="position:relative;">
+        <i class="fas fa-plus s3d-cross-decoration" style="top:3%;left:1%;font-size:50px;animation-delay:-2s;" aria-hidden="true"></i>
         <div class="container">
-            <h2 class="section-title">Avis de nos clients et partenaires</h2>
-            <p class="section-subtitle">Découvrez ce que disent les professionnels qui ont trouvé le succès grâce à notre plateforme</p>
+            <h2 class="section-title s3d-reveal">Forum &amp; Publications</h2>
         </div>
         
-        <div class="testimonials-section">
+        <div class="forum-posts-container">
             <div class="container">
-                <div class="testimonials-container">
-                    <!-- Avis 1 -->
-                    <div class="testimonial-card">
-                        <div class="testimonial-quote">
-                            <i class="fa-solid fa-stethoscope"></i>
-                        </div>
-                        <p class="testimonial-text">
-                            SANTÉA m'a aidé à trouver un service qui correspond parfaitement à mes besoins de santé et mes objectifs. La plateforme spécialisée pour les professionnels de santé fait toute la différence!
-                        </p>
-                        <div class="testimonial-author">
-                            <div class="author-avatar">
-                                <img src="{{ asset('img/doctor.jpg') }}" alt="Sarah Johnson" />
+                <div class="forum-posts-grid">
+                    {% for post in forumPosts %}
+                    <article class="forum-post-card">
+                        <div class="forum-post-header">
+                            <div class="forum-post-meta">
+                                <span class="forum-post-type {% if post.type == 'article' %}type-article{% elseif post.type == 'video' %}type-video{% elseif post.type == 'pdf' %}type-pdf{% else %}type-link{% endif %}">
+                                    {% if post.type == 'article' %}
+                                        <i class="fas fa-newspaper"></i> Article
+                                    {% elseif post.type == 'video' %}
+                                        <i class="fas fa-video"></i> Vidéo
+                                    {% elseif post.type == 'pdf' %}
+                                        <i class="fas fa-file-pdf"></i> PDF
+                                    {% else %}
+                                        <i class="fas fa-link"></i> Lien
+                                    {% endif %}
+                                </span>
+                                {% if post.categorie %}
+                                    <span class="forum-post-category">{{ post.categorie }}</span>
+                                {% endif %}
                             </div>
-                            <div class="author-info">
-                                <h4>Sarah Johnson</h4>
-                                <p>Patiente</p>
+                            <div class="forum-post-author">
+                                <div class="author-avatar-sm">
+                                    {% if post.auteur %}
+                                        {{ post.auteur.nom|slice(0, 1)|upper }}{{ post.auteur.prenom|slice(0, 1)|upper }}
+                                    {% else %}
+                                        AN
+                                    {% endif %}
+                                </div>
+                                <div class="author-details">
+                                    <span class="author-name">
+                                        {% if post.auteur %}
+                                            {{ post.auteur.nom }} {{ post.auteur.prenom }}
+                                        {% else %}
+                                            Anonyme
+                                        {% endif %}
+                                    </span>
+                                    <span class="post-date">{{ post.createdAt|date('d M Y') }}</span>
+                                </div>
                             </div>
                         </div>
+                        
+                        <h3 class="forum-post-title">
+                            <a href="{{ path('front_content_show', {id: post.id}) }}">{{ post.titre }}</a>
+                        </h3>
+                        
+                        {% if post.description %}
+                            <p class="forum-post-description">{{ post.description|slice(0, 120) }}{% if post.description|length > 120 %}...{% endif %}</p>
+                        {% endif %}
+                        
+                        <div class="forum-post-footer">
+                            <div class="forum-post-stats">
+                                {% if app.user %}
+                                    <button class="stat-item stat-likes" data-content-id="{{ post.id }}">
+                                        <i class="fas fa-heart"></i>
+                                        <span>{{ post.likes|length }}</span>
+                                    </button>
+                                {% else %}
+                                    <span class="stat-item stat-likes-disabled" title="Connectez-vous pour aimer">
+                                        <i class="far fa-heart"></i>
+                                        <span>{{ post.likes|length }}</span>
+                                    </span>
+                                {% endif %}
+                                
+                                <span class="stat-item">
+                                    <i class="fas fa-comment"></i>
+                                    <span>{{ post.commentaires|length }}</span>
+                                </span>
+                            </div>
+                            
+                            <a href="{{ path('front_content_show', {id: post.id}) }}" class="btn-read-more">
+                                Lire la suite <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                        
+                        {% if post.commentaires|length > 0 %}
+                            <div class="forum-post-comments-preview">
+                                <div class="comments-preview-header">
+                                    <i class="fas fa-comments"></i>
+                                    Derniers commentaires
+                                </div>
+                                {% for comment in post.commentaires|slice(0, 2) %}
+                                    <div class="comment-preview-item">
+                                        <div class="comment-author-avatar">
+                                            {% if comment.user %}
+                                                {{ comment.user.nom|slice(0, 1)|upper }}
+                                            {% else %}
+                                                A
+                                            {% endif %}
+                                        </div>
+                                        <div class="comment-content">
+                                            <strong>
+                                                {% if comment.user %}
+                                                    {{ comment.user.nom }}
+                                                {% else %}
+                                                    Anonyme
+                                                {% endif %}
+                                            </strong>
+                                            <p>{{ comment.commentaire|slice(0, 80) }}{% if comment.commentaire|length > 80 %}...{% endif %}</p>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </article>
+                    {% else %}
+                    <div class="no-posts-message">
+                        <i class="fas fa-inbox"></i>
+                        <p>Aucune publication disponible pour le moment.</p>
                     </div>
-
-                    <!-- Avis 2 -->
-                    <div class="testimonial-card">
-                        <div class="testimonial-quote">
-                            <i class="fa-solid fa-stethoscope"></i>
-                        </div>
-                        <p class="testimonial-text">
-                            Les services et accompagnements sur SANTÉA ont considérablement amélioré ma santé au quotidien. J'ai pu me connecter avec d'autres professionnels et prendre soin de ma santé.
-                        </p>
-                        <div class="testimonial-author">
-                            <div class="author-avatar">
-                                <img src="{{ asset('img/bien.jpg') }}" alt="Michael Chen" />
-                            </div>
-                            <div class="author-info">
-                                <h4>Michael Chen</h4>
-                                <p>Patient</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Avis 3 -->
-                    <div class="testimonial-card">
-                        <div class="testimonial-quote">
-                            <i class="fa-solid fa-stethoscope"></i>
-                        </div>
-                        <p class="testimonial-text">
-                            SANTÉA permet une meilleure coordination entre les professionnels de santé et un suivi plus efficace des patients. C'est une solution innovante pour améliorer la continuité des soins.
-                        </p>
-                        <div class="testimonial-author">
-                            <div class="author-avatar">
-                                <img src="{{ asset('img/sport.jpg') }}" alt="Emily Rodriguez" />
-                            </div>
-                            <div class="author-info">
-                                <h4>Emily Rodriguez</h4>
-                                <p>Médecin</p>
-                            </div>
-                        </div>
-                    </div>
+                    {% endfor %}
                 </div>
+                
+                {% if forumPosts|length > 0 %}
+                    <div class="forum-cta">
+                        <a href="{{ path('front_content_index') }}" class="btn-forum-all">
+                            <i class="fas fa-th-large"></i>
+                            Voir toutes les publications
+                        </a>
+                    </div>
+                {% endif %}
             </div>
         </div>
     </section>
 
     <!-- Contactez-nous -->
-    <section class="contact-section" id="contact-section">
+    <section class="contact-section" id="contact-section" style="position:relative;overflow:hidden;">
+        <i class="fas fa-plus s3d-cross-decoration" style="bottom:10%;right:4%;font-size:70px;animation-delay:-6s;" aria-hidden="true"></i>
         <div class="container">
-            <h2 class="section-title">Contactez-nous</h2>
+            <div class="contact-hero">
+                <div class="contact-badge">
+                    <i class="fas fa-headset"></i>
+                    Support 24/7
+                </div>
+                <h2 class="section-title" style="margin-bottom: 12px;">Contactez-nous</h2>
+                <p class="section-subtitle">Une question ? Notre équipe est toujours prête à vous accompagner</p>
+            </div>
         </div>
-        <div class="container contact-container">
-            <div class="contact-info">
-                <p class="contact-desc">Des questions ou un retour ? Notre équipe est toujours prête à vous aider à profiter au mieux de SANTÉA.</p>
-                <div class="contact-details">
-                    <div class="contact-detail">
-                        <div class="contact-icon"><i class="fas fa-phone"></i></div>
-                        <div>
-                            <strong>Appelez-nous</strong><br>
-                            <span>+33 1 11 11 11 11</span>
-                        </div>
+        
+        <div class="container">
+            <div class="contact-grid">
+                <div class="contact-info-card">
+                    <div class="contact-card-icon gradient-blue">
+                        <i class="fas fa-phone"></i>
                     </div>
-                    <div class="contact-detail">
-                        <div class="contact-icon"><i class="fas fa-envelope"></i></div>
-                        <div>
-                            <strong>Email</strong><br>
-                            <span>contact@santea.com</span>
-                        </div>
+                    <h3>Appelez-nous</h3>
+                    <p class="contact-card-desc">Du lundi au vendredi, 9h-18h</p>
+                    <a href="tel:+33111111111" class="contact-link">
+                        <i class="fas fa-phone"></i>
+                        +33 1 11 11 11 11
+                    </a>
+                </div>
+                
+                <div class="contact-info-card">
+                    <div class="contact-card-icon gradient-green">
+                        <i class="fas fa-envelope"></i>
                     </div>
+                    <h3>Envoyez un email</h3>
+                    <p class="contact-card-desc">Réponse sous 24h ouvrées</p>
+                    <a href="mailto:contact@santea.com" class="contact-link">
+                        <i class="fas fa-envelope"></i>
+                        contact@santea.com
+                    </a>
+                </div>
+                
+                <div class="contact-info-card">
+                    <div class="contact-card-icon gradient-purple">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <h3>Notre adresse</h3>
+                    <p class="contact-card-desc">Visitez nos bureaux</p>
+                    <p class="contact-link">
+                        <i class="fas fa-map-marker-alt"></i>
+                        123 Avenue de la Santé<br>
+                        75001 Paris, France
+                    </p>
+                </div>
+                
+                <div class="contact-info-card">
+                    <div class="contact-card-icon gradient-cyan">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <h3>Horaires</h3>
+                    <p class="contact-card-desc">Nos heures d'ouverture</p>
+                    <p class="contact-link">
+                        <i class="fas fa-clock"></i>
+                        Lun - Ven: 9h - 18h<br>
+                        Sam: 10h - 14h
+                    </p>
                 </div>
             </div>
             
+            <div class="contact-social">
+                <h3>Suivez-nous sur les réseaux</h3>
+                <div class="social-links">
+                    <a href="#" class="social-link" style="background: linear-gradient(135deg, #1877f2 0%, #0d5dba 100%);">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="#" class="social-link" style="background: linear-gradient(135deg, #1da1f2 0%, #0d8bd9 100%);">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" class="social-link" style="background: linear-gradient(135deg, #e4405f 0%, #c13584 100%);">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="#" class="social-link" style="background: linear-gradient(135deg, #0077b5 0%, #005885 100%);">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                </div>
+            </div>
         </div>
     </section>
 {% endblock %}

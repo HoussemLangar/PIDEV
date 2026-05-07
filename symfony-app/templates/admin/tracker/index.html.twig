@@ -1,0 +1,243 @@
+{% extends 'back/base.html.twig' %}
+
+{% block title %}Tracker Santé - SANTÉA Admin{% endblock %}
+
+{% block admin_content %}
+    <div class="admin-page-header validation-header">
+        <div class="admin-page-title">
+            <div class="validation-title">
+                <span class="validation-chip">Tracker santé</span>
+                <h1>Suivi des symptômes patients</h1>
+            </div>
+            <p>Visualisez la dynamique des saisies quotidiennes, détectez les pics d'activité et pilotez le catalogue de symptômes.</p>
+        </div>
+        <div class="admin-actions-row">
+            <a class="btn btn-secondary" href="{{ path('app_symptome_liste_export') }}">
+                <i class="fas fa-download"></i>
+                Exporter les symptômes
+            </a>
+            <a class="btn btn-primary" href="{{ path('app_symptome_liste_index') }}">
+                <i class="fas fa-stethoscope"></i>
+                Gérer le catalogue
+            </a>
+        </div>
+    </div>
+
+    <div class="admin-grid cards-4 validation-stats">
+        <div class="admin-card">
+            <div class="admin-badge">Catalogue</div>
+            <h2>{{ stats.list_total }}</h2>
+            <p class="stat-note">Symptômes disponibles</p>
+        </div>
+        <div class="admin-card">
+            <div class="admin-badge warning">Total tracké</div>
+            <h2>{{ stats.tracked_total }}</h2>
+            <p class="stat-note">Entrées enregistrées</p>
+        </div>
+        <div class="admin-card">
+            <div class="admin-badge success">7 derniers jours</div>
+            <h2>{{ stats.tracked_weekly }}</h2>
+            <p class="stat-note">Nouveaux suivis</p>
+        </div>
+        <div class="admin-card">
+            <div class="admin-badge">Intensité</div>
+            <h2>{{ stats.avg_intensity|number_format(1, ',', ' ') }}/10</h2>
+            <p class="stat-note">Moyenne globale</p>
+        </div>
+        <div class="admin-card">
+            <div class="admin-badge">Patients actifs</div>
+            <h2>{{ stats.active_patients }}</h2>
+            <p class="stat-note">Utilisateurs suivis</p>
+        </div>
+    </div>
+
+    <div class="admin-grid" style="margin-top: 24px; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));">
+        <div class="admin-card">
+            <div class="section-header" style="padding:0; margin-bottom:16px;">
+                <h2 class="section-title" style="margin:0;">
+                    <i class="fas fa-chart-pie"></i>
+                    Symptômes les plus courants
+                </h2>
+            </div>
+            {% if most_common_symptoms is not empty %}
+                <div style="max-width:520px; margin:0 auto;">
+                    <canvas id="trackerSymptomsChart"></canvas>
+                </div>
+                <ul class="admin-list" style="margin-top: 18px;">
+                    {% for item in most_common_symptoms|slice(0,4) %}
+                        <li>
+                            <strong>{{ item.symptom_name }}</strong>
+                            <span>{{ item.count }} enregistrements · {{ item.category ?: 'Non classé' }}</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-chart-pie" style="font-size:3rem; color:#cbd5f5;"></i>
+                    <p>Aucune donnée disponible</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="admin-card">
+            <div class="section-header" style="padding:0; margin-bottom:16px;">
+                <h2 class="section-title" style="margin:0;">
+                    <i class="fas fa-bolt"></i>
+                    Insights de suivi
+                </h2>
+            </div>
+            <ul class="admin-list" style="margin:0;">
+                <li>
+                    <div>
+                        <strong>Fréquence globale</strong>
+                        <p>{{ stats.tracked_total }} saisies cumulées sur l'ensemble des patients.</p>
+                    </div>
+                </li>
+                <li>
+                    <div>
+                        <strong>Volumétrie hebdomadaire</strong>
+                        <p>{{ stats.tracked_weekly }} nouvelles entrées sur les 7 derniers jours.</p>
+                    </div>
+                </li>
+                <li>
+                    <div>
+                        <strong>Engagement utilisateurs</strong>
+                        <p>{{ stats.active_patients }} patients réalisent des suivis actifs.</p>
+                    </div>
+                </li>
+                <li>
+                    <div>
+                        <strong>Niveau moyen ressenti</strong>
+                        <p>Intensité moyenne observée: {{ stats.avg_intensity|number_format(1, ',', ' ') }}/10.</p>
+                    </div>
+                </li>
+            </ul>
+            <div class="admin-actions-row" style="margin-top: 20px;">
+                <a class="btn btn-primary" href="{{ path('app_symptome_liste_index') }}">
+                    <i class="fas fa-tasks"></i>
+                    Prioriser les symptômes
+                </a>
+                <a class="btn btn-secondary" href="{{ path('app_patient_stats_export') }}">
+                    <i class="fas fa-download"></i>
+                    Export patients
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="admin-card validation-table" style="margin-top: 24px;">
+        <div class="validation-table-header">
+            <div>
+                <strong>{{ user_stats|length }}</strong> patients suivis
+            </div>
+            <div class="validation-legend">
+                <span class="admin-badge">Tracker</span>
+                <span class="admin-badge warning">Symptômes: {{ stats.tracked_total }}</span>
+                <span class="admin-badge success">Actifs: {{ stats.active_patients }}</span>
+            </div>
+        </div>
+        {% if user_stats is not empty %}
+            <div class="table-container" style="max-height: 420px; overflow:auto;">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Patient</th>
+                            <th>Email</th>
+                            <th>Symptômes</th>
+                            <th>Jours de suivi</th>
+                            <th>Intensité moyenne</th>
+                            <th>Dernière saisie</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for stat in user_stats %}
+                            <tr>
+                                <td><strong>{{ stat.patient_name|default('N/A') }}</strong></td>
+                                <td>{{ stat.user_email }}</td>
+                                <td>{{ stat.total_symptoms }}</td>
+                                <td>{{ stat.days_tracked }}</td>
+                                <td>
+                                    <span class="intensity-badge" style="background: {% if stat.avg_intensity < 4 %}#4CAF50{% elseif stat.avg_intensity < 7 %}#FF9800{% else %}#f44336{% endif %}; color:#fff; padding:3px 8px; border-radius:8px;">
+                                        {{ stat.avg_intensity|number_format(1) }}/10
+                                    </span>
+                                </td>
+                                <td>{{ stat.last_symptom_date ? stat.last_symptom_date|date('d/m/Y') : '-' }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty-state" style="padding: 40px 0;">
+                <i class="fas fa-user-slash" style="font-size: 2.5rem; color:#cbd5f5;"></i>
+                <p>Aucun patient n'a encore enregistré de symptômes.</p>
+            </div>
+        {% endif %}
+    </div>
+
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    {% if most_common_symptoms is not empty %}
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const canvas = document.getElementById('trackerSymptomsChart');
+                if (!canvas) {
+                    return;
+                }
+                const ctx = canvas.getContext('2d');
+                const trackerChartData = {
+                    labels: [
+                        {% for symptom in most_common_symptoms %}
+                            '{{ symptom.symptom_name|e('js') }}'{{ not loop.last ? ',' : '' }}
+                        {% endfor %}
+                    ],
+                    datasets: [{
+                        data: [
+                            {% for symptom in most_common_symptoms %}
+                                {{ symptom.count }}{{ not loop.last ? ',' : '' }}
+                            {% endfor %}
+                        ],
+                        backgroundColor: [
+                            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
+                            '#FF9F40', '#8BC34A', '#F06292', '#26C6DA', '#AB47BC'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                };
+
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: trackerChartData,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        cutout: '55%',
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    padding: 15,
+                                    font: { size: 12 }
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function (context) {
+                                        const label = context.label || '';
+                                        const value = context.parsed || 0;
+                                        const total = context.dataset.data.reduce((acc, cur) => acc + cur, 0);
+                                        const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                        return label + ': ' + value + ' (' + percentage + '%)';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+        </script>
+    {% endif %}
+{% endblock %}

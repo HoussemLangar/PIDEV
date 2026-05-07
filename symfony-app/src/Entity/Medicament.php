@@ -40,23 +40,29 @@ class Medicament
     #[ORM\Column(type: 'string', length: 100, nullable: true)]
     private ?string $laboratoire = null;
 
-    #[ORM\Column(type: 'datetime', options: ['default' => 'CURRENT_TIMESTAMP'])]
+    #[ORM\Column(type: 'string', length: 120, nullable: true)]
+    private ?string $codeBarre = null;
+
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    private ?string $imageName = null;
+
+    #[ORM\Column(type: 'datetimetz', options: ['default' => 'CURRENT_TIMESTAMP'])]
     private \DateTimeInterface $createdAt;
 
-    #[ORM\Column(type: 'datetime', options: ['default' => 'CURRENT_TIMESTAMP'])]
+    #[ORM\Column(type: 'datetimetz', options: ['default' => 'CURRENT_TIMESTAMP'])]
     private \DateTimeInterface $updatedAt;
 
-    #[ORM\OneToMany(mappedBy: 'medicament', targetEntity: StockPharmacy::class, cascade: ['persist', 'remove'])]
+    #[ORM\OneToMany(mappedBy: 'medicament', targetEntity: StockPharmacy::class, cascade: ['persist'], orphanRemoval: true)]
     private Collection $stockPharmacies;
 
-    #[ORM\OneToMany(mappedBy: 'medicament', targetEntity: ReponseMedicament::class)]
+    #[ORM\OneToMany(mappedBy: 'medicament', targetEntity: ReponseMedicament::class, cascade: ['persist'], orphanRemoval: true)]
     private Collection $reponsesMedicaments;
 
 
     public function __construct()
     {
-        $this->createdAt = new \DateTimeImmutable();
-        $this->updatedAt = new \DateTimeImmutable();
+        $this->createdAt = new \DateTime();
+        $this->updatedAt = new \DateTime();
         $this->stockPharmacies = new ArrayCollection();
         $this->reponsesMedicaments = new ArrayCollection();
     }
@@ -78,10 +84,14 @@ class Medicament
     public function setStock(int $stock): void { $this->stock = $stock; }
     public function getLaboratoire(): ?string { return $this->laboratoire; }
     public function setLaboratoire(?string $laboratoire): void { $this->laboratoire = $laboratoire; }
+    public function getCodeBarre(): ?string { return $this->codeBarre; }
+    public function setCodeBarre(?string $codeBarre): void { $this->codeBarre = $codeBarre; }
+    public function getImageName(): ?string { return $this->imageName; }
+    public function setImageName(?string $imageName): void { $this->imageName = $imageName; }
     public function getCreatedAt(): \DateTimeInterface { return $this->createdAt; }
-    public function setCreatedAt(\DateTimeInterface $createdAt): void { $this->createdAt = $createdAt; }
+    public function forceCreatedAt(\DateTimeInterface $createdAt): void { $this->createdAt = $createdAt; }
     public function getUpdatedAt(): \DateTimeInterface { return $this->updatedAt; }
-    public function setUpdatedAt(\DateTimeInterface $updatedAt): void { $this->updatedAt = $updatedAt; }
+    public function forceUpdatedAt(\DateTimeInterface $updatedAt): void { $this->updatedAt = $updatedAt; }
     public function getStockPharmacies(): Collection { return $this->stockPharmacies; }
     public function getReponsesMedicaments(): Collection { return $this->reponsesMedicaments; }
 }

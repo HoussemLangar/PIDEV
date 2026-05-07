@@ -1,0 +1,224 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Santé Quotidienne - Admin{% endblock %}
+
+{% block body %}
+<div class="container-fluid mt-5">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="mb-4">📊 Santé Quotidienne - Dashboard Admin</h1>
+        </div>
+    </div>
+
+    <!-- STATISTIQUES -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Entrées Totales</h5>
+                    <h2>{{ stats.total_entries }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Utilisateurs Actifs</h5>
+                    <h2>{{ stats.users_count }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Aujourd'hui</h5>
+                    <h2>{{ stats.entries_today }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Poids Moyen</h5>
+                    <h2>{{ stats.avg_weight|round(1) }} kg</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Cette Semaine</h5>
+                    <h2 class="text-info">{{ stats.entries_this_week }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Ce Mois</h5>
+                    <h2 class="text-success">{{ stats.entries_this_month }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Sommeil Moyen</h5>
+                    <h2 class="text-warning">{{ stats.avg_sleep|round(1) }} h</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FILTRES ET RECHERCHE -->
+    <div class="card mb-4">
+        <div class="card-header bg-light">
+            <h5>🔍 Filtres et Recherche</h5>
+        </div>
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-4">
+                    <input type="text" name="search" class="form-control" placeholder="Rechercher par email..." 
+                           value="{{ filters.search }}">
+                </div>
+                <div class="col-md-3">
+                    <input type="date" name="date_from" class="form-control" placeholder="Du"
+                           value="{{ filters.dateFrom }}">
+                </div>
+                <div class="col-md-3">
+                    <input type="date" name="date_to" class="form-control" placeholder="Au"
+                           value="{{ filters.dateTo }}">
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">Filtrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- TABLEAU -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center bg-light">
+            <h5 class="mb-0">📋 Données ({{ pagination.total }} entrées)</h5>
+            <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#exportModal">
+                📊 Exporter Excel
+            </button>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>
+                            <a href="?sort=user&order={{ filters.order == 'ASC' ? 'DESC' : 'ASC' }}&search={{ filters.search }}">
+                                Email {{ filters.sort == 'user' ? (filters.order == 'ASC' ? '🔼' : '🔽') : '' }}
+                            </a>
+                        </th>
+                        <th>
+                            <a href="?sort=date&order={{ filters.order == 'ASC' ? 'DESC' : 'ASC' }}&search={{ filters.search }}">
+                                Date {{ filters.sort == 'date' ? (filters.order == 'ASC' ? '🔼' : '🔽') : '' }}
+                            </a>
+                        </th>
+                        <th>
+                            <a href="?sort=poids&order={{ filters.order == 'ASC' ? 'DESC' : 'ASC' }}&search={{ filters.search }}">
+                                Poids {{ filters.sort == 'poids' ? (filters.order == 'ASC' ? '🔼' : '🔽') : '' }}
+                            </a>
+                        </th>
+                        <th>
+                            <a href="?sort=sommeil&order={{ filters.order == 'ASC' ? 'DESC' : 'ASC' }}&search={{ filters.search }}">
+                                Sommeil {{ filters.sort == 'sommeil' ? (filters.order == 'ASC' ? '🔼' : '🔽') : '' }}
+                            </a>
+                        </th>
+                        <th>Humeur</th>
+                        <th>Motivation</th>
+                        <th>Activité</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in data %}
+                    <tr>
+                        <td><strong>{{ entry.user.email }}</strong></td>
+                        <td>{{ entry.date|date('d/m/Y H:i') }}</td>
+                        <td>{{ entry.poids ? entry.poids ~ ' kg' : '-' }}</td>
+                        <td>{{ entry.sommeil ? entry.sommeil ~ ' h' : '-' }}</td>
+                        <td>
+                            {% if entry.humeur %}
+                                <span class="badge bg-warning">{{ entry.humeur }}</span>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if entry.motivation %}
+                                <span class="badge bg-info">{{ entry.motivation }}</span>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>{{ entry.activitePhysique ? entry.activitePhysique : '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- PAGINATION -->
+    {% if pagination.pages > 1 %}
+    <nav aria-label="Page navigation">
+        <ul class="pagination">
+            {% if pagination.page > 1 %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1&sort={{ filters.sort }}&order={{ filters.order }}&search={{ filters.search }}">Première</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ pagination.page - 1 }}&sort={{ filters.sort }}&order={{ filters.order }}&search={{ filters.search }}">Précédente</a>
+            </li>
+            {% endif %}
+
+            {% for p in 1..pagination.pages %}
+                {% if p == pagination.page %}
+                <li class="page-item active"><span class="page-link">{{ p }}</span></li>
+                {% elseif p <= pagination.page + 2 and p >= pagination.page - 2 %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ p }}&sort={{ filters.sort }}&order={{ filters.order }}&search={{ filters.search }}">{{ p }}</a>
+                </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if pagination.page < pagination.pages %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ pagination.page + 1 }}&sort={{ filters.sort }}&order={{ filters.order }}&search={{ filters.search }}">Suivante</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ pagination.pages }}&sort={{ filters.sort }}&order={{ filters.order }}&search={{ filters.search }}">Dernière</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+<!-- MODAL EXPORT -->
+<div class="modal fade" id="exportModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">📊 Exporter les Données</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Exporter toutes les entrées de Santé Quotidienne en fichier CSV (Excel)</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <form method="POST" action="{{ path('admin_sante_quotidienne_export') }}" style="display: inline;">
+                    <button type="submit" class="btn btn-success">Télécharger CSV</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

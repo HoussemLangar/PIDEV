@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Spinner?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Priority?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.santea.controller.TeleconsultationScheduleController"
+      spacing="20" styleClass="teleconsultation-root">
+    <children>
+        <HBox alignment="CENTER_LEFT" spacing="12">
+            <VBox spacing="4">
+                <Label text="Planifier une téléconsultation" styleClass="page-title"/>
+                <Label text="Programmez un rendez-vous vidéo avec votre médecin" styleClass="section-subtitle"/>
+            </VBox>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button fx:id="backButton" text="Retour" styleClass="btn-secondary"/>
+        </HBox>
+
+        <VBox spacing="14" maxWidth="760" styleClass="tele-detail-card">
+            <Label text="Destinataire" styleClass="tele-panel-title"/>
+            <ComboBox fx:id="recipientCombo"/>
+            <Label text="Date" styleClass="tele-panel-title"/>
+            <DatePicker fx:id="datePicker"/>
+            <Label text="Heure" styleClass="tele-panel-title"/>
+            <HBox spacing="10">
+                <Spinner fx:id="hourSpinner"/>
+                <Spinner fx:id="minuteSpinner"/>
+            </HBox>
+            <Label text="Type" styleClass="tele-panel-title"/>
+            <ComboBox fx:id="typeCombo"/>
+            <Label text="Description" styleClass="tele-panel-title"/>
+            <TextArea fx:id="descriptionArea" wrapText="true" prefRowCount="6" styleClass="tele-readonly-area"/>
+            <Label text="Vous pouvez rejoindre 5 minutes avant l'heure prévue." styleClass="tele-detail-muted"/>
+            <HBox spacing="10">
+                <Button fx:id="submitButton" text="Planifier" styleClass="btn-primary"/>
+                <Button fx:id="cancelButton" text="Annuler" styleClass="btn-secondary"/>
+            </HBox>
+        </VBox>
+    </children>
+</VBox>

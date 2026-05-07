@@ -1,0 +1,196 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mes messages{% endblock %}
+
+{% block content %}
+<div class="content-wrapper" style="padding: 30px 40px; max-width: 1400px; margin: 0 auto;">
+    <div class="page-header" style="margin-bottom: 32px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #0D8ABC 0%, #0a6d96 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-envelope" style="color: white; font-size: 24px;"></i>
+                </div>
+                <div>
+                    <h1 style="margin: 0; font-size: 28px; font-weight: 700; color: #1a1a2e;">Messages</h1>
+                    <p style="margin: 4px 0 0 0; color: #64748b; font-size: 14px;">Échangez avec vos professionnels de santé</p>
+                </div>
+            </div>
+            {% if unreadCount > 0 %}
+                <span style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%); color: white; padding: 8px 16px; border-radius: 20px; font-weight: 600; font-size: 14px; box-shadow: 0 4px 12px rgba(255,107,107,0.3);">
+                    {{ unreadCount }} non lu(s)
+                </span>
+            {% endif %}
+        </div>
+    </div>
+
+    <div style="background: white; border-radius: 16px; padding: 28px; margin-bottom: 28px; box-shadow: 0 2px 8px rgba(15,23,42,0.06); border: 1px solid #e2e8f0;">
+        <h3 style="margin: 0 0 20px 0; font-size: 18px; font-weight: 600; color: #1a1a2e; display: flex; align-items: center; gap: 10px;">
+            <i class="fas fa-plus-circle" style="color: #0D8ABC;"></i>
+            Nouvelle discussion
+        </h3>
+        {% if availableRecipients is empty %}
+            <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; border-radius: 8px; color: #92400e;">
+                <i class="fas fa-exclamation-triangle" style="margin-right: 8px;"></i>
+                Aucun destinataire disponible pour le moment.
+            </div>
+        {% else %}
+            <form id="startConversationForm" style="display: flex; gap: 12px; flex-wrap: wrap;" data-ajax="1">
+                <div style="flex: 1; min-width: 280px; position: relative;" id="recipientWrapper">
+                    <div style="position: relative;">
+                        <i class="fas fa-search" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:14px;pointer-events:none;"></i>
+                        <input type="text" id="recipientSearch" placeholder="Rechercher par nom, prénom ou rôle…"
+                               autocomplete="off"
+                               style="width:100%;padding:12px 16px 12px 40px;border:2px solid #e2e8f0;border-radius:10px;font-size:15px;transition:all .2s;background:white;box-sizing:border-box;"
+                               onfocus="this.style.borderColor='#0D8ABC'" onblur="setTimeout(()=>this.style.borderColor='#e2e8f0',200)">
+                    </div>
+                    <div id="recipientDropdown" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:white;border:1.5px solid #e2e8f0;border-radius:10px;box-shadow:0 8px 24px rgba(15,23,42,.1);z-index:100;max-height:220px;overflow-y:auto;"></div>
+                    <input type="hidden" id="recipientId" required>
+                    <div id="recipientSelected" style="display:none;margin-top:8px;background:#eff6ff;border-radius:8px;padding:8px 12px;font-size:13px;display:none;align-items:center;gap:8px;">
+                        <i class="fas fa-user-check" style="color:#0D8ABC;"></i>
+                        <span id="recipientSelectedLabel"></span>
+                        <button type="button" id="recipientClear" style="margin-left:auto;background:none;border:none;color:#94a3b8;cursor:pointer;font-size:16px;line-height:1;">&times;</button>
+                    </div>
+                </div>
+                <button type="submit" style="padding: 12px 28px; background: linear-gradient(135deg, #0D8ABC 0%, #0a6d96 100%); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(13,138,188,0.25);">
+                    <i class="fas fa-paper-plane" style="margin-right: 8px;"></i>Démarrer
+                </button>
+            </form>
+
+            <script>
+            (function () {
+                const recipients = [
+                    {% for recipient in availableRecipients %}
+                    {
+                        id: {{ recipient.id }},
+                        label: "{{ recipient.prenom|e('js') }} {{ recipient.nom|e('js') }}",
+                        role: "{{ recipient.role == 'ROLE_MEDECIN' ? 'Médecin' : (recipient.role == 'ROLE_PHARMACIEN' ? 'Pharmacien' : (recipient.role == 'ROLE_COACH' ? 'Coach' : (recipient.role == 'ROLE_NUTRITIONNISTE' ? 'Nutritionniste' : recipient.role))) }}",
+                        email: "{{ recipient.email|e('js') }}"
+                    }{% if not loop.last %},{% endif %}
+                    {% endfor %}
+                ];
+
+                const searchInput  = document.getElementById('recipientSearch');
+                const dropdown     = document.getElementById('recipientDropdown');
+                const hiddenInput  = document.getElementById('recipientId');
+                const selectedBox  = document.getElementById('recipientSelected');
+                const selectedLbl  = document.getElementById('recipientSelectedLabel');
+                const clearBtn     = document.getElementById('recipientClear');
+
+                function renderOptions(query) {
+                    const q = query.toLowerCase().trim();
+                    const filtered = q ? recipients.filter(r =>
+                        r.label.toLowerCase().includes(q) ||
+                        r.role.toLowerCase().includes(q) ||
+                        r.email.toLowerCase().includes(q)
+                    ) : recipients;
+
+                    if (filtered.length === 0) {
+                        dropdown.innerHTML = '<div style="padding:16px;text-align:center;color:#94a3b8;font-size:13px;"><i class="fas fa-user-slash" style="display:block;font-size:20px;margin-bottom:6px;opacity:.5;"></i>Aucun résultat</div>';
+                    } else {
+                        dropdown.innerHTML = filtered.map(r => `
+                            <div class="recipient-opt" data-id="${r.id}" data-label="${r.label} · ${r.role}"
+                                 style="display:flex;align-items:center;gap:12px;padding:10px 14px;cursor:pointer;transition:background .15s;border-bottom:1px solid #f8fafc;">
+                                <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#e0f2fe,#bae6fd);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                    <i class="fas fa-user" style="color:#0D8ABC;font-size:13px;"></i>
+                                </div>
+                                <div style="flex:1;min-width:0;">
+                                    <div style="font-weight:600;font-size:14px;color:#1a1a2e;">${r.label}</div>
+                                    <div style="font-size:12px;color:#64748b;">${r.role} · ${r.email}</div>
+                                </div>
+                            </div>
+                        `).join('');
+                        dropdown.querySelectorAll('.recipient-opt').forEach(opt => {
+                            opt.addEventListener('mouseenter', () => opt.style.background = '#f0f9ff');
+                            opt.addEventListener('mouseleave', () => opt.style.background = '');
+                            opt.addEventListener('mousedown', (e) => {
+                                e.preventDefault();
+                                selectRecipient(opt.dataset.id, opt.dataset.label);
+                            });
+                        });
+                    }
+                    dropdown.style.display = 'block';
+                }
+
+                function selectRecipient(id, label) {
+                    hiddenInput.value = id;
+                    searchInput.value = '';
+                    searchInput.placeholder = 'Destinataire sélectionné ✓';
+                    selectedLbl.textContent = label;
+                    selectedBox.style.display = 'flex';
+                    dropdown.style.display = 'none';
+                }
+
+                if (clearBtn) {
+                    clearBtn.addEventListener('click', () => {
+                        hiddenInput.value = '';
+                        searchInput.placeholder = 'Rechercher par nom, prénom ou rôle…';
+                        selectedBox.style.display = 'none';
+                        searchInput.value = '';
+                        searchInput.focus();
+                    });
+                }
+
+                searchInput.addEventListener('input', () => renderOptions(searchInput.value));
+                searchInput.addEventListener('focus', () => renderOptions(searchInput.value));
+                document.addEventListener('click', (e) => {
+                    if (!e.target.closest('#recipientWrapper')) dropdown.style.display = 'none';
+                });
+            })();
+            </script>
+        {% endif %}
+    </div>
+
+    {% if conversations is empty %}
+        <div style="background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%); border-radius: 16px; padding: 48px; text-align: center; border: 2px dashed #0D8ABC;">
+            <i class="fas fa-comments" style="font-size: 64px; color: #0D8ABC; opacity: 0.3; margin-bottom: 16px;"></i>
+            <h3 style="margin: 0 0 8px 0; font-size: 20px; font-weight: 600; color: #1a1a2e;">Aucune conversation</h3>
+            <p style="margin: 0; color: #64748b;">Commencez une nouvelle discussion avec un professionnel de santé</p>
+        </div>
+    {% else %}
+        <div style="display: grid; gap: 16px;">
+            {% for conversation in conversations %}
+                {% set otherUser = conversation.getOtherUser(app.user) %}
+                <a href="{{ path('app_message_show', { id: conversation.id }) }}" style="background: white; border-radius: 14px; padding: 20px 24px; text-decoration: none; border: 1px solid #e2e8f0; transition: all 0.2s; display: block; box-shadow: 0 1px 3px rgba(15,23,42,0.04);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 20px rgba(15,23,42,0.12)'; this.style.borderColor='#0D8ABC';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 1px 3px rgba(15,23,42,0.04)'; this.style.borderColor='#e2e8f0';">
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px;">
+                        <div style="display: flex; align-items: center; gap: 16px; flex: 1;">
+                            <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                <i class="fas fa-user" style="color: #0D8ABC; font-size: 20px;"></i>
+                            </div>
+                            <div style="flex: 1; min-width: 0;">
+                                <h4 style="margin: 0 0 6px 0; font-size: 17px; font-weight: 600; color: #1a1a2e;">{{ otherUser.username }}</h4>
+                                <p style="margin: 0; color: #64748b; font-size: 14px;">
+                                    <i class="fas fa-clock" style="margin-right: 6px; font-size: 12px;"></i>
+                                    {{ conversation.lastMessageAt|date('d/m/Y H:i') }}
+                                </p>
+                            </div>
+                        </div>
+                        <div style="text-align: right; flex-shrink: 0;">
+                            <div style="color: #475569; font-size: 14px; font-weight: 500;">{{ otherUser.prenom }} {{ otherUser.nom }}</div>
+                            <i class="fas fa-chevron-right" style="color: #cbd5e1; margin-top: 4px; font-size: 14px;"></i>
+                        </div>
+                    </div>
+                </a>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        const startForm = document.getElementById('startConversationForm');
+        const recipientHiddenInput = document.getElementById('recipientId');
+        if (startForm && recipientHiddenInput) {
+            startForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const recipientId = recipientHiddenInput.value;
+                if (!recipientId) {
+                    window.showToast?.('error', 'Veuillez sélectionner un destinataire.');
+                    return;
+                }
+                window.location.href = "{{ path('app_message_start', { recipient: 'RECIPIENT_ID' }) }}".replace('RECIPIENT_ID', recipientId);
+            });
+        }
+    </script>
+{% endblock %}

@@ -1,0 +1,1632 @@
+{% extends 'front/base.html.twig' %}
+
+{% block title %}{{ 'appt.title'|trans }} — SANTÉA{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+    .appt-hero { background:linear-gradient(135deg,#0D8ABC 0%,#0a6d96 55%,#1e40af 100%); padding:40px 32px 48px; border-radius:20px; margin-bottom:28px; position:relative; overflow:hidden; }
+    .appt-hero::before { content:''; position:absolute; top:-40px; right:-40px; width:200px; height:200px; background:rgba(255,255,255,.06); border-radius:50%; }
+    .appt-hero::after  { content:''; position:absolute; bottom:-60px; right:80px; width:150px; height:150px; background:rgba(255,255,255,.04); border-radius:50%; }
+    .appt-hero h1 { color:white; font-size:clamp(22px,4vw,34px); font-weight:800; margin:0 0 10px; position:relative; }
+    .appt-hero p  { color:rgba(255,255,255,.8); margin:0 0 24px; font-size:15px; position:relative; }
+    .appt-hero-badge { display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,.2); color:white; padding:5px 14px; border-radius:50px; font-size:12px; font-weight:700; margin-bottom:14px; backdrop-filter:blur(4px); }
+    .appt-hero-actions { display:flex; gap:12px; flex-wrap:wrap; position:relative; }
+    .appt-hero-btn { display:inline-flex; align-items:center; gap:8px; padding:10px 20px; border-radius:10px; font-weight:600; font-size:14px; cursor:pointer; border:none; transition:all .2s; }
+    .appt-hero-btn-primary { background:white; color:#0D8ABC; box-shadow:0 4px 14px rgba(0,0,0,.2); }
+    .appt-hero-btn-primary:hover { transform:translateY(-2px); box-shadow:0 8px 20px rgba(0,0,0,.25); }
+    .appt-hero-btn-ghost { background:rgba(255,255,255,.15); color:white; border:1.5px solid rgba(255,255,255,.3); }
+    .appt-hero-btn-ghost:hover { background:rgba(255,255,255,.25); }
+    .appt-hero-search { display:flex; align-items:center; gap:10px; }
+    .appt-hero-search input { height:40px; padding:0 14px; border-radius:10px; border:none; background:rgba(255,255,255,.15); color:white; font-size:14px; outline:none; backdrop-filter:blur(4px); }
+    .appt-hero-search input::placeholder { color:rgba(255,255,255,.65); }
+    .appt-hero-search input:focus { background:rgba(255,255,255,.25); }
+    .appt-step-label { display:flex; align-items:center; gap:10px; font-size:16px; font-weight:700; color:#1a1a2e; margin:0 0 16px; }
+    .appt-step-num { width:28px; height:28px; background:linear-gradient(135deg,#0D8ABC,#0a6d96); color:white; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; flex-shrink:0; }
+
+    /* ── Filter fields: force legible colors in both light & dark mode ── */
+    .appointment-filters select,
+    .appointment-filters input[type="date"],
+    .appointment-filters input[type="text"] {
+        background: #ffffff !important;
+        color: #1a1a2e !important;
+        border: 1px solid #e2e8f0 !important;
+    }
+    .appointment-filters select option {
+        background: #ffffff;
+        color: #1a1a2e;
+    }
+    /* Dark mode overrides */
+    [data-theme="dark"] .appointment-filters select,
+    [data-theme="dark"] .appointment-filters input[type="date"],
+    [data-theme="dark"] .appointment-filters input[type="text"] {
+        background: #1e293b !important;
+        color: #e2e8f0 !important;
+        border: 1px solid #334155 !important;
+    }
+    [data-theme="dark"] .appointment-filters select option {
+        background: #1e293b;
+        color: #e2e8f0;
+    }
+    /* Also fix the patient booking form inputs inside appointment cards */
+    .appointment-form label { color: #374151; }
+    [data-theme="dark"] .appointment-form label { color: #cbd5e1; }
+    .appointment-form input,
+    .appointment-form textarea,
+    .appointment-form select {
+        background: #ffffff !important;
+        color: #1a1a2e !important;
+        border: 1px solid #e2e8f0 !important;
+    }
+    [data-theme="dark"] .appointment-form input,
+    [data-theme="dark"] .appointment-form textarea,
+    [data-theme="dark"] .appointment-form select {
+        background: #1e293b !important;
+        color: #e2e8f0 !important;
+        border: 1px solid #334155 !important;
+    }
+    .appointment-form input::placeholder,
+    .appointment-form textarea::placeholder { color: #94a3b8 !important; }
+
+    /* ── Reschedule modal ── */
+    #rescheduleModal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 100000;
+        align-items: center;
+        justify-content: center;
+    }
+    #rescheduleModal.open { display: flex; }
+    .rmd-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0,0,0,.55);
+        backdrop-filter: blur(4px);
+        animation: rmd-fade-in .2s ease;
+    }
+    .rmd-box {
+        position: relative;
+        background: #ffffff;
+        border-radius: 20px;
+        padding: 32px 28px 28px;
+        width: min(440px, 94vw);
+        box-shadow: 0 24px 60px rgba(0,0,0,.25);
+        animation: rmd-slide-up .25s cubic-bezier(.34,1.3,.64,1);
+    }
+    [data-theme="dark"] .rmd-box { background: #1e293b; }
+    .rmd-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 22px;
+    }
+    .rmd-icon {
+        width: 44px; height: 44px;
+        background: linear-gradient(135deg,#0D8ABC,#00c9a7);
+        border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        color: white; font-size: 18px;
+        flex-shrink: 0;
+    }
+    .rmd-title { font-size: 17px; font-weight: 800; color: #1a1a2e; margin: 0; }
+    [data-theme="dark"] .rmd-title { color: #e2e8f0; }
+    .rmd-subtitle { font-size: 12px; color: #64748b; margin: 2px 0 0; }
+    [data-theme="dark"] .rmd-subtitle { color: #94a3b8; }
+    .rmd-close {
+        position: absolute; top: 16px; right: 18px;
+        background: none; border: none; cursor: pointer;
+        font-size: 18px; color: #94a3b8;
+        width: 32px; height: 32px; border-radius: 8px;
+        display: flex; align-items: center; justify-content: center;
+        transition: background .15s, color .15s;
+    }
+    .rmd-close:hover { background: #f1f5f9; color: #1a1a2e; }
+    [data-theme="dark"] .rmd-close:hover { background: #334155; color: #e2e8f0; }
+    .rmd-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 22px; }
+    .rmd-field label {
+        display: block; font-size: 12px; font-weight: 700;
+        color: #374151; margin-bottom: 6px;
+        text-transform: uppercase; letter-spacing: .5px;
+    }
+    [data-theme="dark"] .rmd-field label { color: #94a3b8; }
+    .rmd-field input {
+        width: 100%; height: 42px;
+        padding: 0 12px;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 10px;
+        font-size: 14px;
+        background: #f8fafc !important;
+        color: #1a1a2e !important;
+        outline: none;
+        transition: border-color .2s, box-shadow .2s;
+        box-sizing: border-box;
+    }
+    [data-theme="dark"] .rmd-field input {
+        background: #0f172a !important;
+        color: #e2e8f0 !important;
+        border-color: #334155;
+    }
+    .rmd-field input:focus {
+        border-color: #0D8ABC;
+        box-shadow: 0 0 0 3px rgba(13,138,188,.15);
+    }
+    .rmd-actions { display: flex; gap: 10px; justify-content: flex-end; }
+    .rmd-btn {
+        padding: 10px 22px; border-radius: 10px;
+        font-size: 14px; font-weight: 700;
+        cursor: pointer; border: none; transition: all .2s;
+    }
+    .rmd-btn-cancel {
+        background: #f1f5f9; color: #475569;
+    }
+    .rmd-btn-cancel:hover { background: #e2e8f0; }
+    [data-theme="dark"] .rmd-btn-cancel { background: #334155; color: #94a3b8; }
+    [data-theme="dark"] .rmd-btn-cancel:hover { background: #475569; }
+    .rmd-btn-confirm {
+        background: linear-gradient(135deg,#0D8ABC,#00c9a7);
+        color: white;
+        box-shadow: 0 4px 12px rgba(13,138,188,.35);
+    }
+    .rmd-btn-confirm:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(13,138,188,.45); }
+    .rmd-btn-confirm:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+    @keyframes rmd-fade-in { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes rmd-slide-up { from { opacity: 0; transform: translateY(24px) scale(.97); } to { opacity: 1; transform: none; } }
+
+    /* ── Voice Bot Card ─────────────────────────────────────────── */
+    .voice-bot-card {
+        background: linear-gradient(135deg,#0b1120 0%,#112240 55%,#0c3460 100%);
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(13,138,188,.22), 0 0 0 1px rgba(255,255,255,.05);
+        margin-bottom: 20px;
+        position: relative;
+    }
+    .voice-bot-card::before {
+        content:'';
+        position:absolute;
+        top:-60px; right:-60px;
+        width:220px; height:220px;
+        background: radial-gradient(circle, rgba(13,138,188,.18) 0%, transparent 70%);
+        pointer-events:none;
+    }
+    .voice-bot-header {
+        padding: 18px 22px 14px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        border-bottom: 1px solid rgba(255,255,255,.07);
+        position: relative;
+    }
+    .voice-bot-avatar {
+        width: 50px; height: 50px;
+        background: linear-gradient(135deg,#0D8ABC,#00c9a7);
+        border-radius: 15px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 20px; color: white;
+        box-shadow: 0 8px 22px rgba(13,138,188,.45);
+        flex-shrink: 0;
+        position: relative;
+        transition: box-shadow .3s;
+    }
+    .voice-bot-avatar.listening {
+        box-shadow: 0 0 0 4px rgba(13,138,188,.35), 0 8px 22px rgba(13,138,188,.45);
+    }
+    .voice-bot-avatar.listening::before,
+    .voice-bot-avatar.listening::after {
+        content:'';
+        position:absolute;
+        inset:-7px;
+        border-radius:22px;
+        border: 2px solid rgba(13,138,188,.7);
+        animation: vb-ring 1.5s infinite;
+    }
+    .voice-bot-avatar.listening::after { inset:-14px; border-color:rgba(13,138,188,.4); animation-delay:.5s; }
+    @keyframes vb-ring {
+        0%   { opacity:.9; transform:scale(1); }
+        100% { opacity:0;  transform:scale(1.25); }
+    }
+    .voice-bot-info { flex:1; min-width:0; }
+    .voice-bot-info h3 { color:white; font-size:14px; font-weight:800; margin:0 0 2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .voice-bot-info small { color:rgba(255,255,255,.45); font-size:11px; }
+    .voice-waves {
+        display: none;
+        align-items: center;
+        gap: 3px;
+        height: 22px;
+        flex-shrink:0;
+    }
+    .voice-waves.active { display: flex; }
+    .voice-wave-bar {
+        width: 3px;
+        border-radius: 3px;
+        background: linear-gradient(to top,#0D8ABC,#00c9a7);
+        animation: vb-wave .75s infinite ease-in-out;
+    }
+    .voice-wave-bar:nth-child(1) { height:5px;  animation-delay:.00s; }
+    .voice-wave-bar:nth-child(2) { height:13px; animation-delay:.10s; }
+    .voice-wave-bar:nth-child(3) { height:20px; animation-delay:.20s; }
+    .voice-wave-bar:nth-child(4) { height:13px; animation-delay:.30s; }
+    .voice-wave-bar:nth-child(5) { height:5px;  animation-delay:.40s; }
+    @keyframes vb-wave {
+        0%,100% { transform:scaleY(.45); opacity:.55; }
+        50%      { transform:scaleY(1);   opacity:1; }
+    }
+    .voice-bot-status-dot {
+        width:9px; height:9px;
+        border-radius:50%;
+        background:#22c55e;
+        box-shadow:0 0 7px #22c55e;
+        flex-shrink:0;
+    }
+    .voice-bot-status-dot.listening { background:#f59e0b; box-shadow:0 0 7px #f59e0b; animation:vb-dot-blink .6s infinite alternate; }
+    @keyframes vb-dot-blink { to { opacity:.25; } }
+    .voice-bot-body { padding: 14px 18px 16px; }
+    /* Chat log */
+    .voice-bot-log {
+        max-height: 200px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 14px;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255,255,255,.12) transparent;
+        padding-right: 2px;
+    }
+    .voice-bot-log::-webkit-scrollbar { width:3px; }
+    .voice-bot-log::-webkit-scrollbar-thumb { background:rgba(255,255,255,.15); border-radius:4px; }
+    .vb-msg {
+        display: flex;
+        gap: 8px;
+        align-items: flex-end;
+        animation: vb-pop .22s cubic-bezier(.34,1.5,.64,1);
+    }
+    .vb-msg.user { flex-direction: row-reverse; }
+    @keyframes vb-pop {
+        from { opacity:0; transform:translateY(10px) scale(.95); }
+        to   { opacity:1; transform:none; }
+    }
+    .vb-bubble {
+        padding: 9px 13px;
+        border-radius: 15px;
+        font-size: 13px;
+        line-height: 1.5;
+        max-width: 82%;
+        word-break: break-word;
+    }
+    .vb-msg.bot  .vb-bubble { background:rgba(255,255,255,.09); color:rgba(255,255,255,.88); border-bottom-left-radius:4px; backdrop-filter:blur(4px); }
+    .vb-msg.user .vb-bubble { background:linear-gradient(135deg,#0D8ABC,#00c9a7); color:white; border-bottom-right-radius:4px; }
+    .vb-avatar {
+        width:26px; height:26px;
+        border-radius:50%;
+        background:rgba(255,255,255,.1);
+        display:flex; align-items:center; justify-content:center;
+        font-size:11px; color:rgba(255,255,255,.6);
+        flex-shrink:0;
+    }
+    /* Input row */
+    .voice-bot-input-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(255,255,255,.06);
+        border: 1px solid rgba(255,255,255,.1);
+        border-radius: 14px;
+        padding: 5px 5px 5px 13px;
+        transition: border-color .2s;
+    }
+    .voice-bot-input-row:focus-within { border-color: rgba(13,138,188,.6); }
+    .voice-bot-input {
+        flex:1;
+        background:transparent !important;
+        border:none !important;
+        outline:none;
+        color:rgba(255,255,255,.88) !important;
+        font-size:13px;
+        padding:4px 0 !important;
+    }
+    .voice-bot-input::placeholder { color:rgba(255,255,255,.3) !important; }
+    .voice-mic-btn {
+        width:38px; height:38px;
+        border-radius:11px;
+        background:linear-gradient(135deg,#0D8ABC,#00c9a7);
+        color:white;
+        border:none;
+        display:flex; align-items:center; justify-content:center;
+        font-size:14px;
+        cursor:pointer;
+        transition:all .2s;
+        flex-shrink:0;
+        box-shadow:0 4px 14px rgba(13,138,188,.4);
+    }
+    .voice-mic-btn:hover { transform:scale(1.08); box-shadow:0 6px 18px rgba(13,138,188,.55); }
+    .voice-mic-btn.active {
+        background:linear-gradient(135deg,#ef4444,#f97316);
+        box-shadow:0 4px 14px rgba(239,68,68,.45);
+        animation:vb-mic-pulse .7s infinite alternate;
+    }
+    @keyframes vb-mic-pulse { to { transform:scale(1.13); } }
+    .voice-send-btn {
+        width:38px; height:38px;
+        border-radius:11px;
+        background:rgba(255,255,255,.09);
+        color:rgba(255,255,255,.65);
+        border:none;
+        display:flex; align-items:center; justify-content:center;
+        font-size:13px;
+        cursor:pointer;
+        transition:all .2s;
+        flex-shrink:0;
+    }
+    .voice-send-btn:hover { background:rgba(255,255,255,.18); color:white; }
+    .voice-bot-hint {
+        text-align:center;
+        font-size:11px;
+        color:rgba(255,255,255,.3);
+        margin-top:10px;
+        line-height:1.5;
+    }
+
+    /* ── Floating Voice Drawer ───────────────────────────────── */
+    .vbd-overlay {
+        display:none;
+        position:fixed; inset:0; z-index:99990;
+        background:rgba(0,0,0,.45);
+        backdrop-filter:blur(3px);
+        animation:vbd-fog-in .22s ease;
+    }
+    .vbd-overlay.open { display:block; }
+    @keyframes vbd-fog-in { from{opacity:0} to{opacity:1} }
+
+    .vbd-panel {
+        position:fixed;
+        top:0; right:0;
+        width: min(400px, 100vw);
+        height:100dvh;
+        z-index:99999;
+        display:flex;
+        flex-direction:column;
+        transform:translateX(100%);
+        transition:transform .32s cubic-bezier(.32,1,.55,1);
+        background:linear-gradient(160deg,#0b1120 0%,#112240 60%,#0c3460 100%);
+        box-shadow:-20px 0 60px rgba(0,0,0,.45);
+        border-left:1px solid rgba(255,255,255,.07);
+    }
+    .vbd-panel.open { transform:translateX(0); }
+
+    .vbd-panel-header {
+        display:flex; align-items:center; gap:12px;
+        padding:18px 18px 14px;
+        border-bottom:1px solid rgba(255,255,255,.07);
+        flex-shrink:0;
+        position:relative;
+    }
+    .vbd-panel-avatar {
+        width:46px; height:46px;
+        background:linear-gradient(135deg,#0D8ABC,#00c9a7);
+        border-radius:14px;
+        display:flex; align-items:center; justify-content:center;
+        font-size:19px; color:white;
+        box-shadow:0 6px 18px rgba(13,138,188,.45);
+        flex-shrink:0; position:relative;
+        transition:box-shadow .3s;
+    }
+    .vbd-panel-avatar.listening {
+        box-shadow:0 0 0 4px rgba(13,138,188,.35),0 6px 18px rgba(13,138,188,.45);
+    }
+    .vbd-panel-avatar.listening::before,
+    .vbd-panel-avatar.listening::after {
+        content:''; position:absolute; inset:-7px;
+        border-radius:20px;
+        border:2px solid rgba(13,138,188,.7);
+        animation:vb-ring 1.5s infinite;
+    }
+    .vbd-panel-avatar.listening::after { inset:-14px; border-color:rgba(13,138,188,.4); animation-delay:.5s; }
+    .vbd-panel-info { flex:1; min-width:0; }
+    .vbd-panel-info h3 { color:white; font-size:14px; font-weight:800; margin:0 0 2px; }
+    .vbd-panel-info small { color:rgba(255,255,255,.4); font-size:11px; }
+    .vbd-close {
+        width:34px; height:34px;
+        background:rgba(255,255,255,.08);
+        border:none; border-radius:10px;
+        color:rgba(255,255,255,.6);
+        display:flex; align-items:center; justify-content:center;
+        font-size:14px; cursor:pointer;
+        transition:background .15s,color .15s;
+        flex-shrink:0;
+    }
+    .vbd-close:hover { background:rgba(255,255,255,.16); color:white; }
+    .vbd-panel-waves {
+        display:none; align-items:center; gap:3px; height:22px; flex-shrink:0;
+    }
+    .vbd-panel-waves.active { display:flex; }
+    .vbd-wave-bar {
+        width:3px; border-radius:3px;
+        background:linear-gradient(to top,#0D8ABC,#00c9a7);
+        animation:vb-wave .75s infinite ease-in-out;
+    }
+    .vbd-wave-bar:nth-child(1){height:5px;animation-delay:.00s}
+    .vbd-wave-bar:nth-child(2){height:13px;animation-delay:.10s}
+    .vbd-wave-bar:nth-child(3){height:20px;animation-delay:.20s}
+    .vbd-wave-bar:nth-child(4){height:13px;animation-delay:.30s}
+    .vbd-wave-bar:nth-child(5){height:5px;animation-delay:.40s}
+    .vbd-status-dot {
+        width:9px; height:9px; border-radius:50%;
+        background:#22c55e; box-shadow:0 0 7px #22c55e; flex-shrink:0;
+    }
+    .vbd-status-dot.listening { background:#f59e0b; box-shadow:0 0 7px #f59e0b; animation:vb-dot-blink .6s infinite alternate; }
+    .vbd-body {
+        flex:1; overflow:hidden;
+        display:flex; flex-direction:column;
+        padding:14px 16px 16px;
+    }
+    .vbd-log {
+        flex:1; overflow-y:auto;
+        display:flex; flex-direction:column; gap:10px;
+        margin-bottom:14px;
+        scrollbar-width:thin;
+        scrollbar-color:rgba(255,255,255,.12) transparent;
+        padding-right:2px;
+    }
+    .vbd-log::-webkit-scrollbar{width:3px}
+    .vbd-log::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:4px}
+    .vbd-input-row {
+        display:flex; align-items:center; gap:8px;
+        background:rgba(255,255,255,.06);
+        border:1px solid rgba(255,255,255,.1);
+        border-radius:14px;
+        padding:5px 5px 5px 13px;
+        transition:border-color .2s;
+        flex-shrink:0;
+    }
+    .vbd-input-row:focus-within { border-color:rgba(13,138,188,.6); }
+    .vbd-hint {
+        text-align:center; font-size:11px;
+        color:rgba(255,255,255,.3);
+        margin-top:10px; line-height:1.5; flex-shrink:0;
+    }
+
+    /* ── Hero voice button ───────────────────────────────────── */
+    .appt-hero-voice-btn {
+        display:inline-flex; align-items:center; gap:9px;
+        padding:10px 20px;
+        border-radius:12px;
+        font-weight:700; font-size:14px;
+        cursor:pointer; border:none;
+        background:linear-gradient(135deg,rgba(13,138,188,.9),rgba(0,201,167,.8));
+        color:white;
+        box-shadow:0 4px 20px rgba(13,138,188,.45);
+        transition:all .2s;
+        position:relative; overflow:hidden;
+    }
+    .appt-hero-voice-btn::before {
+        content:'';
+        position:absolute; inset:0;
+        background:linear-gradient(135deg,rgba(255,255,255,.15),transparent);
+        pointer-events:none;
+    }
+    .appt-hero-voice-btn:hover { transform:translateY(-2px); box-shadow:0 8px 28px rgba(13,138,188,.6); }
+    .appt-hero-voice-btn .vb-pulse {
+        width:8px; height:8px; border-radius:50%;
+        background:#fff;
+        box-shadow:0 0 0 0 rgba(255,255,255,.7);
+        animation:vb-hero-pulse 1.8s infinite;
+        flex-shrink:0;
+    }
+    @keyframes vb-hero-pulse {
+        0%  { box-shadow:0 0 0 0 rgba(255,255,255,.7); }
+        70% { box-shadow:0 0 0 7px rgba(255,255,255,0); }
+        100%{ box-shadow:0 0 0 0 rgba(255,255,255,0); }
+    }
+
+    /* ── VoiceDrawer shortcut in bookingGrid ─────────────────── */
+    .vbd-shortcut {
+        display:inline-flex; align-items:center; gap:8px;
+        padding:9px 16px; border-radius:10px;
+        font-size:13px; font-weight:700;
+        background:linear-gradient(135deg,#0D8ABC,#00c9a7);
+        color:white; border:none; cursor:pointer;
+        box-shadow:0 4px 14px rgba(13,138,188,.35);
+        transition:all .2s; margin-bottom:14px;
+    }
+    .vbd-shortcut:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(13,138,188,.5); }
+    </style>
+{% endblock %}
+
+{% set userRole = app.user ? (app.user.subscriptionType ?? app.user.role) : null %}
+{% set isPatient = app.user and app.user.subscriptionStatus == 'ACTIVE' and userRole == 'ROLE_PATIENT' %}
+{% set isMedecin = app.user and app.user.subscriptionStatus == 'ACTIVE' and userRole == 'ROLE_MEDECIN' %}
+
+{% block body %}
+
+<section class="appointment-page">
+
+    <!-- Enhanced hero header -->
+    <div class="appt-hero">
+        <div class="appt-hero-badge"><i class="fas fa-calendar-check"></i> {{ 'appt.title'|trans }}</div>
+        <h1>{% if isMedecin %}Gérer mes rendez-vous{% else %}Réserver un rendez-vous{% endif %}</h1>
+        <p>{% if isMedecin %}Consultez et gérez les demandes de vos patients en temps réel.{% else %}Choisissez un médecin, une date et un créneau disponible en quelques clics.{% endif %}</p>
+        {% if isPatient %}
+        <div class="appt-hero-actions">
+            <button class="appt-hero-btn appt-hero-btn-ghost" type="button" id="locateBtn">
+                <i class="fas fa-map-marker-alt"></i> Ma position
+            </button>
+            <div class="appt-hero-search">
+                <i class="fas fa-city" style="color:rgba(255,255,255,.7);"></i>
+                <input type="text" id="cityInput" placeholder="Ville (ex: Tunis)">
+                <button class="appt-hero-btn appt-hero-btn-primary" type="button" id="searchCity">
+                    <i class="fas fa-search"></i> Rechercher
+                </button>
+            </div>
+            <button class="appt-hero-voice-btn" type="button" id="heroVoiceBtn">
+                <span class="vb-pulse"></span>
+                <i class="fas fa-microphone-alt"></i>
+                Assistant Vocal
+            </button>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if not isPatient and not isMedecin %}
+        <div class="appointment-card appointment-lock">
+            <h3 style="display:flex;align-items:center;gap:10px;"><i class="fas fa-lock" style="color:#0D8ABC;"></i> {{ 'appt.restricted'|trans }}</h3>
+            <p>{{ 'appt.restricted_msg'|trans }}</p>
+            <p class="appointment-hint">{{ 'appt.restricted_sub'|trans }}</p>
+            <a href="{{ path('app_subscription') }}" class="btn btn-primary">{{ 'appt.choose_plan'|trans }}</a>
+        </div>
+    {% endif %}
+
+    <div class="appointment-sections">
+        {% if isPatient %}
+        <!-- Step 1: Appointments list (shown first) -->
+        <div class="appointment-card">
+            <div class="appointment-card-header">
+                <div>
+                    <div class="appt-step-label"><div class="appt-step-num">1</div> {{ 'appt.my_appointments'|trans }}</div>
+                    <p class="appointment-hint">{{ 'appt.my_appointments_sub'|trans }}</p>
+                </div>
+                <button type="button" id="openBookingBtn" class="btn btn-primary" style="display:flex;align-items:center;gap:8px;white-space:nowrap;">
+                    <i class="fas fa-plus"></i> Réserver un rendez-vous
+                </button>
+            </div>
+            <div class="appointment-filters" id="patientFilters">
+                <select id="patientStatusFilter">
+                    <option value="">{{ 'status.all'|trans }}</option>
+                    <option value="en_attente">{{ 'status.pending'|trans }}</option>
+                    <option value="confirme">{{ 'status.confirmed'|trans }}</option>
+                    <option value="refuse">{{ 'status.refused'|trans }}</option>
+                    <option value="annule">{{ 'status.cancelled'|trans }}</option>
+                </select>
+                <input type="date" id="patientDateFilter">
+                <input type="text" id="patientSearchFilter" placeholder="Médecin...">
+                <button type="button" class="btn btn-secondary btn-xs" id="patientFiltersReset">{{ 'common.reset'|trans }}</button>
+            </div>
+            <div id="myAppointments" class="appointment-list"></div>
+        </div>
+
+        <!-- Booking section (hidden by default) -->
+        <div id="bookingGrid" style="display:none;margin-top:20px;">
+
+            <!-- Raccourci vers le drawer vocal -->
+            <div style="text-align:right;">
+                <button type="button" class="vbd-shortcut" id="bookingVoiceBtn">
+                    <i class="fas fa-microphone-alt"></i> Réserver par commande vocale
+                </button>
+            </div>
+
+            <!-- Carte + Formulaire -->
+            <div class="appointment-grid" style="margin-top:0;">
+                <div class="appointment-card">
+                    <div class="appointment-card-header" style="margin-bottom:12px;">
+                        <div class="appt-step-label"><div class="appt-step-num">2</div> {{ 'appt.find_doctor'|trans }}</div>
+                        <button type="button" id="closeBookingBtn" class="rmd-close" style="position:static;" aria-label="Fermer"><i class="fas fa-times"></i></button>
+                    </div>
+                    <div id="map" class="appointment-map"></div>
+                    <p class="appointment-hint">{{ 'appt.find_doctor_sub'|trans }}</p>
+                </div>
+
+                <div class="appointment-card">
+                    <div class="appt-step-label"><div class="appt-step-num">3</div> {{ 'appt.book_slot'|trans }}</div>
+                    <form id="appointmentForm" class="appointment-form" data-ajax="1">
+                    <label>Médecin</label>
+                    <input type="text" id="doctorSelect" list="doctorOptions" placeholder="Tapez nom, prénom ou spécialité" autocomplete="off" required>
+                    <datalist id="doctorOptions"></datalist>
+                    <input type="hidden" id="doctorIdInput" name="medecin_id" required>
+
+                    <label>Date</label>
+                    <input type="date" id="dateInput" name="date" required>
+
+                    <label>Créneau</label>
+                    <div id="slotsWrap" class="slots-wrap">
+                        <div class="slot-empty">Sélectionnez un médecin et une date.</div>
+                    </div>
+
+                    <label>Motif (optionnel)</label>
+                    <textarea name="motif" id="motifInput" rows="3" placeholder="Votre motif"></textarea>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">{{ 'common.confirm'|trans }}</button>
+                    </div>
+                    <div id="appointmentAlert" class="appointment-alert" hidden></div>
+                </form>
+                </div>{# end form card #}
+            </div>{# end inner appointment-grid #}
+        </div>{# end bookingGrid #}
+
+        {# ── Floating Voice Drawer (always rendered, toggled via JS) ── #}
+        <div class="vbd-overlay" id="vbdOverlay"></div>
+        <div class="vbd-panel" id="vbdPanel" role="dialog" aria-modal="true" aria-label="Assistant vocal">
+            <div class="vbd-panel-header">
+                <div class="vbd-panel-avatar" id="voiceBotAvatar">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="vbd-panel-info">
+                    <h3>Assistant Vocal <span style="font-weight:400;opacity:.5;font-size:11px;">— Arabe Tunisien</span></h3>
+                    <small id="voiceStatusLabel">En ligne · Dites votre commande</small>
+                </div>
+                <div class="vbd-panel-waves" id="voiceWaves">
+                    <div class="vbd-wave-bar"></div>
+                    <div class="vbd-wave-bar"></div>
+                    <div class="vbd-wave-bar"></div>
+                    <div class="vbd-wave-bar"></div>
+                    <div class="vbd-wave-bar"></div>
+                </div>
+                <div class="vbd-status-dot" id="voiceStatusDot"></div>
+                <button class="vbd-close" id="vbdClose" aria-label="Fermer"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="vbd-body">
+                <div id="voiceChatLog" class="vbd-log">
+                    <div class="vb-msg bot">
+                        <div class="vb-avatar"><i class="fas fa-robot"></i></div>
+                        <div class="vb-bubble">مرحبا! قل مثلاً: «خذي رونديفو 24 فيفري افيك دكتور حسام 10:00 صباحا» وأنا نرتب ليك كلش.</div>
+                    </div>
+                </div>
+                <div class="vbd-input-row">
+                    <button type="button" class="voice-mic-btn" id="voiceListenBtn" title="Parler">
+                        <i class="fas fa-microphone" id="voiceMicIcon"></i>
+                    </button>
+                    <input type="text" class="voice-bot-input" id="voiceTranscriptInput"
+                           placeholder="أو اكتب هنا... (Enter للإرسال)" autocomplete="off" dir="auto">
+                    <button type="button" class="voice-send-btn" id="voiceAnalyzeBtn" title="Envoyer">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+                <p class="vbd-hint" id="voiceStatus">🎙️ Appuyez sur le micro et parlez librement</p>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if isMedecin %}
+        <div class="appointment-card">
+            <div class="appointment-card-header">
+                <div>
+                    <h3>{{ 'appt.doctor_appointments'|trans }}</h3>
+                    <p class="appointment-hint">Vos consultations confirmées.</p>
+                </div>
+                <div class="appointment-help-badge">{{ 'appt.read_only'|trans }}</div>
+            </div>
+            <div class="appointment-filters" id="doctorFilters">
+                <select id="doctorStatusFilter">
+                    <option value="">Tous les statuts</option>
+                    <option value="en_attente">{{ 'status.pending'|trans }}</option>
+                    <option value="confirme">{{ 'status.confirmed'|trans }}</option>
+                    <option value="refuse">{{ 'status.refused'|trans }}</option>
+                    <option value="annule">{{ 'status.cancelled'|trans }}</option>
+                </select>
+                <input type="date" id="doctorDateFilter">
+                <input type="text" id="doctorSearchFilter" placeholder="Patient...">
+                <button type="button" class="btn btn-secondary btn-xs" id="doctorFiltersReset">{{ 'common.reset'|trans }}</button>
+            </div>
+            <div id="doctorAppointments" class="appointment-list"></div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Reschedule modal -->
+    <div id="rescheduleModal" role="dialog" aria-modal="true" aria-labelledby="rmdTitle">
+        <div class="rmd-overlay" id="rmdOverlay"></div>
+        <div class="rmd-box">
+            <button class="rmd-close" id="rmdClose" aria-label="Fermer"><i class="fas fa-times"></i></button>
+            <div class="rmd-header">
+                <div class="rmd-icon"><i class="fas fa-calendar-alt"></i></div>
+                <div>
+                    <p class="rmd-title" id="rmdTitle">{{ 'appt.reschedule_title'|trans }}</p>
+                    <p class="rmd-subtitle" id="rmdSubtitle">Choisissez une nouvelle date et heure</p>
+                </div>
+            </div>
+            <div class="rmd-fields">
+                <div class="rmd-field">
+                    <label for="rmdDate"><i class="fas fa-calendar"></i> Date</label>
+                    <input type="date" id="rmdDate">
+                </div>
+                <div class="rmd-field">
+                    <label for="rmdTime"><i class="fas fa-clock"></i> Heure</label>
+                    <input type="time" id="rmdTime">
+                </div>
+            </div>
+            <div class="rmd-actions">
+                <button class="rmd-btn rmd-btn-cancel" id="rmdCancel">{{ 'common.cancel'|trans }}</button>
+                <button class="rmd-btn rmd-btn-confirm" id="rmdConfirm"><i class="fas fa-check"></i> Confirmer</button>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+
+        // ── Translations (Twig-injected) ──────────────────────────
+        const TRANS = {
+            loading:       '{{ "common.loading"|trans|e("js") }}',
+            no_appointments: '{{ "appt.no_appointments"|trans|e("js") }}',
+            no_slots:      '{{ "appt.no_slots"|trans|e("js") }}',
+            select_doctor: '{{ "appt.select_doctor_date"|trans|e("js") }}',
+            select_valid:  '{{ "appt.select_valid"|trans|e("js") }}',
+            reschedule:    '{{ "appt.reschedule"|trans|e("js") }}',
+            confirmed:     '{{ "status.confirmed"|trans|e("js") }}',
+            refused:       '{{ "status.refused"|trans|e("js") }}',
+            cancelled:     '{{ "status.cancelled"|trans|e("js") }}',
+            pending:       '{{ "status.pending"|trans|e("js") }}',
+            confirm_btn:   '{{ "common.confirm"|trans|e("js") }}',
+            refuse_btn:    '{{ "status.refused"|trans|e("js") }}',
+            cancel_btn:    '{{ "common.cancel"|trans|e("js") }}',
+            reschedule_sub: '{{ "appt.reschedule_sub"|trans|e("js") }}',
+            reschedule_approval: '{{ "appt.reschedule_approval"|trans|e("js") }}',
+            appt_rescheduled: '{{ "appt.reschedule_title"|trans|e("js") }}',
+        };
+
+        function __initAppointmentsPage() {
+            const pageRoot = document.querySelector('.appointment-page');
+            if (!pageRoot) {
+                return;
+            }
+            if (pageRoot.dataset.jsInitialized === '1') {
+                return;
+            }
+            pageRoot.dataset.jsInitialized = '1';
+
+            const canBook = {{ isPatient ? 'true' : 'false' }};
+            const canMedecin = {{ isMedecin ? 'true' : 'false' }};
+
+            if (!canBook && !canMedecin) {
+                return;
+            }
+
+            let map = null;
+            if (canBook) {
+                const mapEl = document.getElementById('map');
+                if (mapEl && typeof L !== 'undefined') {
+                    try {
+                        if (mapEl._leaflet_id !== undefined) {
+                            mapEl._leaflet_id = undefined;
+                        }
+                        map = L.map(mapEl).setView([36.8, 10.18], 10);
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            maxZoom: 18
+                        }).addTo(map);
+                    } catch (e) {
+                        console.warn('Leaflet init skipped:', e);
+                        map = null;
+                    }
+                }
+            }
+
+            const doctorSelect = document.getElementById('doctorSelect');
+            const doctorOptions = document.getElementById('doctorOptions');
+            const doctorIdInput = document.getElementById('doctorIdInput');
+            const dateInput = document.getElementById('dateInput');
+            const slotsWrap = document.getElementById('slotsWrap');
+            const alertBox = document.getElementById('appointmentAlert');
+            const myAppointments = document.getElementById('myAppointments');
+            const doctorAppointments = document.getElementById('doctorAppointments');
+            const doctorStatusFilter = document.getElementById('doctorStatusFilter');
+            const doctorDateFilter = document.getElementById('doctorDateFilter');
+            const doctorSearchFilter = document.getElementById('doctorSearchFilter');
+            const doctorFiltersReset = document.getElementById('doctorFiltersReset');
+            const patientStatusFilter = document.getElementById('patientStatusFilter');
+            const patientDateFilter = document.getElementById('patientDateFilter');
+            const patientSearchFilter = document.getElementById('patientSearchFilter');
+            const patientFiltersReset = document.getElementById('patientFiltersReset');
+            const bookingGrid = document.getElementById('bookingGrid');
+            const openBookingBtn = document.getElementById('openBookingBtn');
+            const closeBookingBtn = document.getElementById('closeBookingBtn');
+            const voiceListenBtn = document.getElementById('voiceListenBtn');
+            const voiceAnalyzeBtn = document.getElementById('voiceAnalyzeBtn');
+            const voiceTranscriptInput = document.getElementById('voiceTranscriptInput');
+            const voiceStatus = document.getElementById('voiceStatus');
+            const voiceChatLog = document.getElementById('voiceChatLog');
+            const voiceBotAvatar = document.getElementById('voiceBotAvatar');
+            const voiceWaves = document.getElementById('voiceWaves');
+            const voiceStatusDot = document.getElementById('voiceStatusDot');
+            const voiceStatusLabel = document.getElementById('voiceStatusLabel');
+            const voiceMicIcon = document.getElementById('voiceMicIcon');
+            const vbdPanel   = document.getElementById('vbdPanel');
+            const vbdOverlay = document.getElementById('vbdOverlay');
+            const vbdClose   = document.getElementById('vbdClose');
+            const heroVoiceBtn    = document.getElementById('heroVoiceBtn');
+            const bookingVoiceBtn = document.getElementById('bookingVoiceBtn');
+
+            const openVoiceDrawer = () => {
+                if (!vbdPanel) return;
+                vbdPanel.classList.add('open');
+                vbdOverlay.classList.add('open');
+                document.body.style.overflow = 'hidden';
+                if (voiceTranscriptInput) voiceTranscriptInput.focus();
+            };
+            const closeVoiceDrawer = () => {
+                if (!vbdPanel) return;
+                vbdPanel.classList.remove('open');
+                vbdOverlay.classList.remove('open');
+                document.body.style.overflow = '';
+            };
+
+            if (heroVoiceBtn)    heroVoiceBtn.addEventListener('click', openVoiceDrawer);
+            if (bookingVoiceBtn) bookingVoiceBtn.addEventListener('click', openVoiceDrawer);
+            if (vbdClose)        vbdClose.addEventListener('click', closeVoiceDrawer);
+            if (vbdOverlay)      vbdOverlay.addEventListener('click', closeVoiceDrawer);
+            document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeVoiceDrawer(); });
+
+            let doctors = [];
+            const doctorLabelToId = new Map();
+
+            const buildDoctorLabel = (doc) => `${doc.nom} ${doc.prenom} · ${doc.specialite}`;
+            const normalizeSearch = (value) => (value || '').replace(/·/g, ' ').replace(/\s+/g, ' ').trim();
+
+            const syncSelectedDoctorId = () => {
+                const label = (doctorSelect.value || '').trim();
+                const normalizedLabel = label.replace(/\s+/g, ' ').toLowerCase();
+                let id = doctorLabelToId.get(label) || '';
+
+                if (!id && normalizedLabel) {
+                    const matched = doctors.find((doc) => buildDoctorLabel(doc).replace(/\s+/g, ' ').toLowerCase() === normalizedLabel);
+                    if (matched) {
+                        id = String(matched.id);
+                    }
+                }
+
+                doctorIdInput.value = id;
+                return id;
+            };
+
+            const showLoader = () => {
+                const loader = document.getElementById('globalLoader');
+                if (!loader) return;
+                loader.classList.add('show');
+                loader.setAttribute('aria-hidden', 'false');
+            };
+
+            const hideLoader = () => {
+                const loader = document.getElementById('globalLoader');
+                if (!loader) return;
+                loader.classList.remove('show');
+                loader.setAttribute('aria-hidden', 'true');
+            };
+
+            const showAlert = (message, type = 'success') => {
+                if (!alertBox) return;
+                alertBox.hidden = false;
+                alertBox.className = 'appointment-alert ' + type;
+                alertBox.textContent = message;
+                setTimeout(() => { if (alertBox) alertBox.hidden = true; }, 4000);
+            };
+
+            const closeBookingAndFocusList = (successMessage = '') => {
+                closeVoiceDrawer();
+                if (bookingGrid) {
+                    bookingGrid.style.display = 'none';
+                }
+
+                const target = myAppointments ? myAppointments.closest('.appointment-card') : null;
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+
+                if (successMessage) {
+                    showAlert(successMessage, 'success');
+                }
+            };
+
+            const appendVoiceMessage = (role, text) => {
+                if (!voiceChatLog || !text) return;
+                const row = document.createElement('div');
+                row.className = `vb-msg ${role}`;
+                const avatar = document.createElement('div');
+                avatar.className = 'vb-avatar';
+                avatar.innerHTML = role === 'bot' ? '<i class="fas fa-robot"></i>' : '<i class="fas fa-user"></i>';
+                const bubble = document.createElement('div');
+                bubble.className = 'vb-bubble';
+                bubble.textContent = text;
+                if (role === 'bot') {
+                    row.appendChild(avatar);
+                    row.appendChild(bubble);
+                } else {
+                    row.appendChild(bubble);
+                    row.appendChild(avatar);
+                }
+                voiceChatLog.appendChild(row);
+                voiceChatLog.scrollTop = voiceChatLog.scrollHeight;
+            };
+
+            const setVoiceListening = (on) => {
+                if (voiceListenBtn) voiceListenBtn.classList.toggle('active', on);
+                if (voiceBotAvatar) voiceBotAvatar.classList.toggle('listening', on);
+                if (voiceWaves) voiceWaves.classList.toggle('active', on);
+                if (voiceStatusDot) voiceStatusDot.classList.toggle('listening', on);
+                if (voiceMicIcon) voiceMicIcon.className = on ? 'fas fa-stop' : 'fas fa-microphone';
+                if (voiceStatusLabel) voiceStatusLabel.textContent = on ? '🔴 Écoute en cours...' : 'En ligne · Dites votre commande';
+            };
+
+            const processVoiceCommand = async (text) => {
+                const cleaned = (text || '').trim();
+                if (!cleaned || !canBook) return;
+
+                appendVoiceMessage('user', cleaned);
+                voiceStatus.textContent = 'Analyse de votre commande vocale...';
+                showLoader();
+
+                let data = null;
+                try {
+                    const res = await fetch('/api/appointments/voice-intent', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                        body: JSON.stringify({ text: cleaned })
+                    });
+
+                    const contentType = (res.headers.get('content-type') || '').toLowerCase();
+                    if (contentType.includes('application/json')) {
+                        data = await res.json();
+                    } else {
+                        const rawBody = await res.text();
+                        const snippet = (rawBody || '').replace(/\s+/g, ' ').trim().slice(0, 180);
+                        data = {
+                            success: false,
+                            message: `Réponse serveur invalide (${res.status}). ${snippet || 'Aucun détail.'}`
+                        };
+                    }
+
+                    if (!res.ok && (!data || data.success !== false)) {
+                        data = {
+                            success: false,
+                            message: `Erreur serveur (${res.status}) pendant l'analyse vocale.`
+                        };
+                    }
+                } catch (e) {
+                    const detail = e && e.message ? ` (${e.message})` : '';
+                    data = { success: false, message: `Erreur réseau pendant l'analyse vocale${detail}.` };
+                }
+
+                if (!data.success) {
+                    const detailedMessage = data.debug ? `${data.message || 'Erreur'} (${data.debug})` : (data.message || 'Je n\'ai pas compris la commande.');
+                    appendVoiceMessage('bot', detailedMessage);
+                    voiceStatus.textContent = 'Commande non reconnue.';
+                    showAlert(detailedMessage, 'error');
+                    hideLoader();
+                    return;
+                }
+
+                if (data.doctor_label) {
+                    doctorSelect.value = data.doctor_label;
+                }
+                if (data.doctor_id) {
+                    doctorIdInput.value = String(data.doctor_id);
+                }
+                if (data.date) {
+                    dateInput.value = data.date;
+                }
+
+                await fetchSlots();
+
+                if (data.slot_id) {
+                    const slotBtn = slotsWrap.querySelector(`.slot-btn[data-dispo-id="${data.slot_id}"]`);
+                    if (slotBtn) {
+                        document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('active'));
+                        slotBtn.classList.add('active');
+                        slotsWrap.dataset.selected = String(data.slot_id);
+                    }
+                }
+
+                await loadMyAppointments();
+
+                const successText = data.message || 'Rendez-vous vocal traité.';
+                appendVoiceMessage('bot', `${successText} (${data.date || ''} ${data.slot_label || ''})`);
+                voiceStatus.textContent = 'Commande exécutée avec succès.';
+                closeBookingAndFocusList(successText);
+                hideLoader();
+            };
+
+            const loadDoctors = async (params = '', withLoader = true) => {
+                if (!canBook) return;
+                if (withLoader) showLoader();
+                const selectedId = syncSelectedDoctorId();
+                const search = selectedId ? '' : normalizeSearch(doctorSelect ? doctorSelect.value : '');
+                const separator = params && params.includes('?') ? '&' : '?';
+                const withSearch = search ? `${params}${separator}q=${encodeURIComponent(search)}` : params;
+                const res = await fetch(`/api/appointments/doctors${withSearch}`);
+                const data = await res.json();
+                doctors = data || [];
+                doctorOptions.innerHTML = '';
+                doctorLabelToId.clear();
+                doctors.forEach(doc => {
+                    const label = buildDoctorLabel(doc);
+                    const opt = document.createElement('option');
+                    opt.value = label;
+                    doctorOptions.appendChild(opt);
+                    doctorLabelToId.set(label, String(doc.id));
+
+                    if (map && doc.lat && doc.lng) {
+                        const marker = L.marker([doc.lat, doc.lng]).addTo(map);
+                        marker.bindPopup(`<strong>${doc.nom} ${doc.prenom}</strong><br>${doc.specialite}<br>${doc.ville || ''}`);
+                        marker.on('click', () => {
+                            doctorSelect.value = label;
+                            doctorIdInput.value = String(doc.id);
+                            fetchSlots();
+                        });
+                    }
+                });
+                if (withLoader) hideLoader();
+            };
+
+            const fetchSlots = async () => {
+                if (!canBook) return;
+                showLoader();
+                slotsWrap.innerHTML = '<div class="slot-empty">' + TRANS.loading + '</div>';
+                const medecinId = syncSelectedDoctorId();
+                const date = dateInput.value;
+                if (!medecinId || !date) {
+                    slotsWrap.innerHTML = '<div class="slot-empty">' + TRANS.select_doctor + '</div>';
+                    hideLoader();
+                    return;
+                }
+                const res = await fetch(`/api/appointments/slots?medecin=${medecinId}&date=${date}`);
+                const data = await res.json();
+                slotsWrap.innerHTML = '';
+                if (!data.slots || data.slots.length === 0) {
+                    slotsWrap.innerHTML = '<div class="slot-empty">' + TRANS.no_slots + '</div>';
+                    hideLoader();
+                    return;
+                }
+                data.slots.forEach(slot => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'slot-btn';
+                    btn.textContent = slot.label;
+                    btn.dataset.dispoId = slot.id;
+                    btn.addEventListener('click', () => {
+                        document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        slotsWrap.dataset.selected = slot.id;
+                    });
+                    slotsWrap.appendChild(btn);
+                });
+                hideLoader();
+            };
+
+            const loadMyAppointments = async () => {
+                if (!canBook) return;
+                showLoader();
+                const res = await fetch('/api/appointments/my');
+                const data = await res.json();
+                myAppointments.innerHTML = '';
+                if (!data.items || data.items.length === 0) {
+                    myAppointments.innerHTML = '<div class="slot-empty">' + TRANS.no_appointments + '</div>';
+                    hideLoader();
+                    return;
+                }
+                data.items.forEach(item => {
+                    const status = item.statut || 'en_attente';
+                    const statusLabel = status === 'confirme' ? TRANS.confirmed : (status === 'refuse' ? TRANS.refused : (status === 'annule' ? TRANS.cancelled : TRANS.pending));
+                    const statusClass = status === 'confirme' ? 'status-confirmed' : (status === 'refuse' ? 'status-cancelled' : (status === 'annule' ? 'status-cancelled' : 'status-pending'));
+                    const row = document.createElement('div');
+                    row.className = 'appointment-row';
+                    row.innerHTML = `
+                        <div>
+                            <strong>${item.medecin}</strong><br>
+                            <span>${item.date} · ${item.heure}</span>
+                            <div class="status-line"><span class="status-pill ${statusClass}">${statusLabel}</span></div>
+                        </div>
+                        <div class="appointment-row-actions">
+                            <button class="btn btn-secondary" data-action="reschedule" data-id="${item.id}">{{ 'appt.reschedule'|trans }}</button>
+                            <button class="btn btn-danger" data-action="cancel" data-id="${item.id}">{{ 'common.cancel'|trans }}</button>
+                        </div>
+                    `;
+                    row.dataset.status = status;
+                    row.dataset.date = item.date;
+                    row.dataset.medecin = (item.medecin || '').toLowerCase();
+                    myAppointments.appendChild(row);
+                });
+                hideLoader();
+            };
+
+            const loadDoctorAppointments = async () => {
+                if (!canMedecin || !doctorAppointments) return;
+                showLoader();
+                const res = await fetch('/api/appointments/doctor');
+                const data = await res.json();
+                doctorAppointments.innerHTML = '';
+                if (!data.items || data.items.length === 0) {
+                    doctorAppointments.innerHTML = '<div class="slot-empty">' + TRANS.no_appointments + '</div>';
+                    hideLoader();
+                    return;
+                }
+                data.items.forEach(item => {
+                    const row = document.createElement('div');
+                    row.className = 'appointment-row';
+                    const status = item.statut || 'en_attente';
+                    const statusLabel = status === 'confirme' ? TRANS.confirmed : (status === 'refuse' ? TRANS.refused : (status === 'annule' ? TRANS.cancelled : TRANS.pending));
+                    const statusClass = status === 'confirme' ? 'status-confirmed' : (status === 'refuse' ? 'status-cancelled' : (status === 'annule' ? 'status-cancelled' : 'status-pending'));
+                    const actions = status === 'en_attente'
+                        ? `
+                            <button class="btn btn-primary btn-xs" data-action="confirm" data-id="${item.id}">{{ 'common.confirm'|trans }}</button>
+                            <button class="btn btn-secondary btn-xs" data-action="refuse" data-id="${item.id}">{{ 'status.refused'|trans }}</button>
+                            <button class="btn btn-danger btn-xs" data-action="cancel" data-id="${item.id}">{{ 'common.cancel'|trans }}</button>
+                          `
+                        : `
+                            <button class="btn btn-secondary btn-xs" data-action="reschedule" data-id="${item.id}">{{ 'appt.reschedule'|trans }}</button>
+                            <span class="status-pill ${statusClass}">${statusLabel}</span>
+                          `;
+                    row.innerHTML = `
+                        <div>
+                            <strong>${item.patient}</strong><br>
+                            <span>${item.date} · ${item.heure}</span>
+                            ${item.motif ? `<div class="appointment-note">${item.motif}</div>` : ''}
+                        </div>
+                        <div class="appointment-row-actions">
+                            ${actions}
+                        </div>
+                    `;
+                    row.dataset.status = status;
+                    row.dataset.date = item.date;
+                    row.dataset.patient = (item.patient || '').toLowerCase();
+                doctorAppointments.appendChild(row);
+            });
+            hideLoader();
+        };
+
+        /* ── Reschedule modal helpers ── */
+        const rmdModal   = document.getElementById('rescheduleModal');
+        const rmdDateEl  = document.getElementById('rmdDate');
+        const rmdTimeEl  = document.getElementById('rmdTime');
+        const rmdConfirm = document.getElementById('rmdConfirm');
+        const rmdCancel  = document.getElementById('rmdCancel');
+        const rmdClose   = document.getElementById('rmdClose');
+        const rmdOverlay = document.getElementById('rmdOverlay');
+        let _rmdResolve  = null;
+
+        const rmdSubtitle = document.getElementById('rmdSubtitle');
+
+        const openRescheduleModal = (mode = 'doctor') => new Promise((resolve) => {
+            _rmdResolve = resolve;
+            const today = new Date().toISOString().slice(0, 10);
+            rmdDateEl.value = today;
+            rmdDateEl.min   = today;
+            const hh = String(new Date().getHours()).padStart(2,'0');
+            const mm = String(Math.ceil(new Date().getMinutes() / 15) * 15 % 60).padStart(2,'0');
+            rmdTimeEl.value = `${hh}:${mm}`;
+            if (mode === 'patient') {
+                rmdSubtitle.innerHTML = TRANS.reschedule_sub + (mode === 'patient' ? ' <strong style="color:#f59e0b;">' + TRANS.reschedule_approval + '</strong>' : '');
+            } else {
+                rmdSubtitle.textContent = 'Choisissez une nouvelle date et heure';
+            }
+            rmdModal.classList.add('open');
+            rmdDateEl.focus();
+        });
+
+        const closeRescheduleModal = (result) => {
+            rmdModal.classList.remove('open');
+            if (_rmdResolve) { _rmdResolve(result ?? null); _rmdResolve = null; }
+        };
+
+        rmdConfirm.addEventListener('click', () => {
+            const date = rmdDateEl.value;
+            const time = rmdTimeEl.value;
+            if (!date || !time) {
+                rmdDateEl.style.borderColor = date ? '' : '#ef4444';
+                rmdTimeEl.style.borderColor = time ? '' : '#ef4444';
+                return;
+            }
+            rmdDateEl.style.borderColor = '';
+            rmdTimeEl.style.borderColor = '';
+            closeRescheduleModal({ date, time });
+        });
+        rmdCancel.addEventListener('click',  () => closeRescheduleModal(null));
+        rmdClose.addEventListener('click',   () => closeRescheduleModal(null));
+        rmdOverlay.addEventListener('click', () => closeRescheduleModal(null));
+        rmdModal.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeRescheduleModal(null); });
+
+        const rescheduleDoctor = async (id) => {
+            const result = await openRescheduleModal();
+            if (!result) return;
+            const { date, time } = result;
+            showLoader();
+            const res = await fetch(`/api/appointments/${id}/doctor-reschedule`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                body: JSON.stringify({ date, time })
+            });
+            let data = null;
+            try {
+                data = await res.json();
+            } catch (e) {
+                data = { success: false, message: 'Réponse serveur invalide.' };
+            }
+            if (!data.success) {
+                showAlert(data.message || 'Erreur', 'error');
+                hideLoader();
+                return;
+            }
+            showAlert('Rendez-vous replanifié.', 'success');
+            await loadDoctorAppointments();
+            hideLoader();
+        };
+
+            if (canBook) {
+                document.getElementById('locateBtn').addEventListener('click', () => {
+                    navigator.geolocation.getCurrentPosition((pos) => {
+                        const { latitude, longitude } = pos.coords;
+                        map.setView([latitude, longitude], 12);
+                        loadDoctors(`?lat=${latitude}&lng=${longitude}`);
+                    });
+                });
+            }
+
+            if (canBook) {
+                document.getElementById('searchCity').addEventListener('click', async () => {
+                    const city = document.getElementById('cityInput').value.trim();
+                    if (!city) return;
+                    loadDoctors(`?city=${encodeURIComponent(city)}`);
+                });
+            }
+
+            if (canBook) {
+                let doctorSearchTimeout;
+
+                doctorSelect.addEventListener('change', () => {
+                    clearTimeout(doctorSearchTimeout);
+                    const selectedId = syncSelectedDoctorId();
+                    if (selectedId) {
+                        fetchSlots();
+                    } else {
+                        slotsWrap.innerHTML = '<div class="slot-empty">' + TRANS.select_valid + '</div>';
+                    }
+                });
+                dateInput.addEventListener('change', fetchSlots);
+                doctorSelect.addEventListener('input', () => {
+                    const selectedId = syncSelectedDoctorId();
+                    if (selectedId && dateInput.value) {
+                        fetchSlots();
+                        return;
+                    }
+                    clearTimeout(doctorSearchTimeout);
+                    doctorSearchTimeout = setTimeout(() => {
+                        loadDoctors('', false);
+                    }, 250);
+                });
+            }
+
+            if (canBook && voiceAnalyzeBtn && voiceTranscriptInput) {
+                voiceAnalyzeBtn.addEventListener('click', async () => {
+                    await processVoiceCommand(voiceTranscriptInput.value);
+                });
+            }
+
+            if (canBook && voiceListenBtn && voiceTranscriptInput) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SpeechRecognition) {
+                    voiceListenBtn.disabled = true;
+                    voiceStatus.textContent = 'Reconnaissance vocale non disponible sur ce navigateur.';
+                } else {
+                    const recognition = new SpeechRecognition();
+                    recognition.lang = 'ar-TN';
+                    recognition.interimResults = true;
+                    recognition.continuous = true;
+
+                    let listening = false;
+                    let finalTranscript = '';
+                    let silenceTimer = null;
+                    let maxDurationTimer = null;
+                    let shouldAnalyzeOnEnd = false;
+
+                    const clearVoiceTimers = () => {
+                        if (silenceTimer) {
+                            clearTimeout(silenceTimer);
+                            silenceTimer = null;
+                        }
+                        if (maxDurationTimer) {
+                            clearTimeout(maxDurationTimer);
+                            maxDurationTimer = null;
+                        }
+                    };
+
+                    recognition.onstart = () => {
+                        listening = true;
+                        finalTranscript = '';
+                        shouldAnalyzeOnEnd = false;
+                        voiceTranscriptInput.value = '';
+                        voiceStatus.textContent = '🟡 Écoute en cours — parlez librement...';
+                        setVoiceListening(true);
+
+                        clearVoiceTimers();
+                        maxDurationTimer = setTimeout(() => {
+                            if (!listening) return;
+                            shouldAnalyzeOnEnd = true;
+                            voiceStatus.textContent = '⏱ Temps max atteint. Analyse en cours...';
+                            recognition.stop();
+                        }, 25000);
+                    };
+
+                    recognition.onerror = () => {
+                        listening = false;
+                        clearVoiceTimers();
+                        setVoiceListening(false);
+                        voiceStatus.textContent = '❌ Erreur de reconnaissance vocale.';
+                    };
+
+                    recognition.onend = async () => {
+                        listening = false;
+                        clearVoiceTimers();
+                        setVoiceListening(false);
+
+                        const transcript = (voiceTranscriptInput.value || '').trim();
+                        if (shouldAnalyzeOnEnd && transcript) {
+                            voiceStatus.textContent = '🔄 Analyse en cours...';
+                            await processVoiceCommand(transcript);
+                        } else if (!transcript) {
+                            voiceStatus.textContent = '🎙️ Aucun texte détecté. Réessayez.';
+                        }
+                    };
+
+                    recognition.onresult = (event) => {
+                        let interimTranscript = '';
+                        for (let i = event.resultIndex; i < event.results.length; i += 1) {
+                            const text = event.results[i][0] ? event.results[i][0].transcript : '';
+                            if (!text) continue;
+                            if (event.results[i].isFinal) {
+                                finalTranscript += ` ${text}`;
+                            } else {
+                                interimTranscript += ` ${text}`;
+                            }
+                        }
+
+                        const merged = `${finalTranscript} ${interimTranscript}`.trim();
+                        if (merged) {
+                            voiceTranscriptInput.value = merged;
+                            shouldAnalyzeOnEnd = true;
+                            voiceStatus.textContent = '✍️ Texte détecté... continuez ou stoppez.';
+                        }
+
+                        if (silenceTimer) {
+                            clearTimeout(silenceTimer);
+                        }
+                        silenceTimer = setTimeout(() => {
+                            if (!listening) return;
+                            voiceStatus.textContent = 'Silence détecté. Analyse en cours...';
+                            recognition.stop();
+                        }, 2200);
+                    };
+
+                    voiceListenBtn.addEventListener('click', () => {
+                        if (listening) {
+                            shouldAnalyzeOnEnd = true;
+                            voiceStatus.textContent = '⏹ Arrêt demandé...';
+                            recognition.stop();
+                            return;
+                        }
+                        recognition.start();
+                    });
+
+                    voiceTranscriptInput.addEventListener('keydown', async (event) => {
+                        if (event.key !== 'Enter') return;
+                        event.preventDefault();
+                        await processVoiceCommand(voiceTranscriptInput.value);
+                    });
+                }
+            }
+
+            if (canBook) {
+                document.getElementById('appointmentForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const medecinId = syncSelectedDoctorId();
+                const date = dateInput.value;
+                const dispoId = slotsWrap.dataset.selected;
+                const motif = document.getElementById('motifInput').value;
+                const rescheduleId = slotsWrap.dataset.reschedule;
+                if (!medecinId || !date || !dispoId) {
+                    showAlert('Veuillez sélectionner un créneau.', 'error');
+                    return;
+                }
+                showLoader();
+                const endpoint = rescheduleId ? `/api/appointments/${rescheduleId}/reschedule` : '/api/appointments/book';
+                const res = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                    body: JSON.stringify({ medecin_id: medecinId, date, dispo_id: dispoId, motif })
+                });
+                const data = await res.json();
+                if (!data.success) {
+                    showAlert(data.message || 'Erreur', 'error');
+                    hideLoader();
+                    return;
+                }
+                const successMessage = rescheduleId ? 'Rendez-vous replanifié.' : 'Rendez-vous confirmé.';
+                delete slotsWrap.dataset.reschedule;
+                await fetchSlots();
+                await loadMyAppointments();
+                if (!rescheduleId) {
+                    closeBookingAndFocusList(successMessage);
+                } else {
+                    showAlert(successMessage, 'success');
+                }
+                hideLoader();
+            });
+            }
+
+            if (canBook) {
+                const toDateInput = (frDate) => {
+                    const parts = (frDate || '').split('/');
+                    if (parts.length !== 3) return '';
+                    return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                };
+
+                const applyPatientFilters = () => {
+                    const status = (patientStatusFilter && patientStatusFilter.value) || '';
+                    const date = (patientDateFilter && patientDateFilter.value) || '';
+                    const search = (patientSearchFilter && patientSearchFilter.value || '').trim().toLowerCase();
+                    myAppointments.querySelectorAll('.appointment-row').forEach((row) => {
+                        const matchStatus = !status || row.dataset.status === status;
+                        const matchDate = !date || toDateInput(row.dataset.date || '') === date;
+                        const matchSearch = !search || (row.dataset.medecin || '').includes(search);
+                        row.style.display = matchStatus && matchDate && matchSearch ? '' : 'none';
+                    });
+                };
+
+                if (patientStatusFilter) patientStatusFilter.addEventListener('change', applyPatientFilters);
+                if (patientDateFilter) patientDateFilter.addEventListener('change', applyPatientFilters);
+                if (patientSearchFilter) patientSearchFilter.addEventListener('input', applyPatientFilters);
+                if (patientFiltersReset) {
+                    patientFiltersReset.addEventListener('click', () => {
+                        patientStatusFilter.value = '';
+                        patientDateFilter.value = '';
+                        patientSearchFilter.value = '';
+                        applyPatientFilters();
+                    });
+                }
+
+                myAppointments.addEventListener('click', async (e) => {
+                    const btn = e.target.closest('button');
+                    if (!btn) return;
+                    const id = btn.dataset.id;
+                    if (btn.dataset.action === 'cancel') {
+                        showLoader();
+                        const res = await fetch(`/api/appointments/${id}/cancel`, { method: 'POST' });
+                        const data = await res.json();
+                        showAlert(data.message || 'Annulé', 'success');
+                        await loadMyAppointments();
+                        await fetchSlots();
+                        applyPatientFilters();
+                        hideLoader();
+                    }
+                    if (btn.dataset.action === 'reschedule') {
+                        const result = await openRescheduleModal('patient');
+                        if (!result) return;
+                        showLoader();
+                        const res = await fetch(`/api/appointments/${id}/patient-reschedule`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                            body: JSON.stringify({ date: result.date, time: result.time })
+                        });
+                        let data = null;
+                        try { data = await res.json(); } catch(e) { data = { success: false, message: 'Réponse invalide.' }; }
+                        if (!data.success) {
+                            showAlert(data.message || 'Erreur', 'error');
+                            hideLoader();
+                            return;
+                        }
+                        showAlert('Demande de replanification envoyée. En attente d\'approbation du médecin.', 'success');
+                        await loadMyAppointments();
+                        applyPatientFilters();
+                        hideLoader();
+                    }
+                });
+            }
+
+            if (canMedecin && doctorAppointments) {
+                    const toDateInput = (frDate) => {
+                        const parts = (frDate || '').split('/');
+                        if (parts.length !== 3) return '';
+                        return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                    };
+
+                    const applyDoctorFilters = () => {
+                        const status = (doctorStatusFilter && doctorStatusFilter.value) || '';
+                        const date = (doctorDateFilter && doctorDateFilter.value) || '';
+                        const search = (doctorSearchFilter && doctorSearchFilter.value || '').trim().toLowerCase();
+                        doctorAppointments.querySelectorAll('.appointment-row').forEach((row) => {
+                            const matchStatus = !status || row.dataset.status === status;
+                            const matchDate = !date || toDateInput(row.dataset.date || '') === date;
+                            const matchSearch = !search || (row.dataset.patient || '').includes(search);
+                            row.style.display = matchStatus && matchDate && matchSearch ? '' : 'none';
+                        });
+                    };
+
+                if (doctorStatusFilter) doctorStatusFilter.addEventListener('change', applyDoctorFilters);
+                if (doctorDateFilter) doctorDateFilter.addEventListener('change', applyDoctorFilters);
+                if (doctorSearchFilter) doctorSearchFilter.addEventListener('input', applyDoctorFilters);
+                if (doctorFiltersReset) {
+                    doctorFiltersReset.addEventListener('click', () => {
+                        doctorStatusFilter.value = '';
+                        doctorDateFilter.value = '';
+                        doctorSearchFilter.value = '';
+                        applyDoctorFilters();
+                    });
+                }
+
+                doctorAppointments.addEventListener('click', async (e) => {
+                    const btn = e.target.closest('button');
+                    if (!btn) return;
+                    const id = btn.dataset.id;
+                    const action = btn.dataset.action;
+                    if (!id || !action) return;
+                    if (action === 'reschedule') {
+                        await rescheduleDoctor(id);
+                        return;
+                    }
+                    showLoader();
+                    const status = action === 'confirm' ? 'confirme' : (action === 'refuse' ? 'refuse' : 'annule');
+                    const res = await fetch(`/api/appointments/${id}/doctor-status`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                        body: JSON.stringify({ status })
+                    });
+                    let data = null;
+                    try {
+                        data = await res.json();
+                    } catch (e) {
+                        data = { success: false, message: 'Réponse serveur invalide.' };
+                    }
+                    if (!data.success) {
+                        showAlert(data.message || 'Erreur', 'error');
+                        hideLoader();
+                        return;
+                    }
+                    showAlert('Statut mis à jour.', 'success');
+                    await loadDoctorAppointments();
+                    applyDoctorFilters();
+                    hideLoader();
+                });
+            }
+
+            if (canBook) {
+                openBookingBtn.addEventListener('click', () => {
+                    bookingGrid.style.display = '';
+                    bookingGrid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    if (!map) return;
+                    setTimeout(() => map.invalidateSize(), 150);
+                });
+                closeBookingBtn.addEventListener('click', () => {
+                    bookingGrid.style.display = 'none';
+                });
+                loadDoctors();
+                loadMyAppointments();
+            }
+            loadDoctorAppointments();
+
+            const params = new URLSearchParams(window.location.search);
+            const resId = params.get('doctor_reschedule');
+            if (resId && canMedecin) {
+                showAlert('Veuillez replanifier ce rendez-vous.', 'success');
+                rescheduleDoctor(resId);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', __initAppointmentsPage);
+        document.addEventListener('turbo:load', __initAppointmentsPage);
+        if (document.readyState !== 'loading') {
+            __initAppointmentsPage();
+        }
+    </script>
+{% endblock %}

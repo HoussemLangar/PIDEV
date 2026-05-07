@@ -1,0 +1,44 @@
+version: "3.1"
+
+nlu:
+  - intent: greet
+    examples: |
+      - bonjour
+      - salut
+      - coucou
+      - bonsoir
+      - hey
+
+  - intent: goodbye
+    examples: |
+      - au revoir
+      - a bientot
+      - merci au revoir
+      - bye
+
+  - intent: affirm
+    examples: |
+      - oui
+      - ok
+      - d'accord
+      - bien sur
+
+  - intent: deny
+    examples: |
+      - non
+      - pas vraiment
+      - je ne pense pas
+
+  - intent: symptom_report
+    examples: |
+      - j'ai [mal au ventre](symptom)
+      - j'ai [mal a la gorge](symptom)
+      - j'ai [de la fievre](symptom)
+      - je tousse et j'ai [mal a la tete](symptom)
+      - j'ai [nausee](symptom)
+      - j'ai [vomissements](symptom)
+      - j'ai [diarrhee](symptom)
+      - j'ai [fatigue](symptom)
+      - j'ai [vertiges](symptom)
+      - je ressens une [douleur](symptom)
+

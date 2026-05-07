@@ -64,4 +64,38 @@ class StockPharmacyRepository extends ServiceEntityRepository
     {
         $this->getEntityManager()->flush();
     }
+
+    /**
+     * @return StockPharmacy[]
+     */
+    public function findAvailableByMedicament(int $medicamentId): array
+    {
+        return $this->createQueryBuilder('s')
+            ->leftJoin('s.pharmacie', 'p')
+            ->addSelect('p')
+            ->andWhere('s.medicament = :mid')
+            ->andWhere('s.quantite > 0')
+            ->setParameter('mid', $medicamentId)
+            ->orderBy('s.prixVente', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * @return StockPharmacy[]
+     */
+    public function findAvailableByPharmacy(int $pharmacyId): array
+    {
+        return $this->createQueryBuilder('s')
+            ->leftJoin('s.pharmacie', 'p')
+            ->addSelect('p')
+            ->leftJoin('s.medicament', 'm')
+            ->addSelect('m')
+            ->andWhere('p.id = :pid')
+            ->andWhere('s.quantite > 0')
+            ->setParameter('pid', $pharmacyId)
+            ->orderBy('m.nom', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
 }

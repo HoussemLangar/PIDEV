@@ -25,10 +25,10 @@ class ReponseMedecin
     #[ORM\Column(type: 'text')]
     private string $reponse;
 
-    #[ORM\Column(type: 'datetime', nullable: true)]
+    #[ORM\Column(type: 'datetimetz', nullable: true)]
     private ?\DateTimeInterface $dateReponse = null;
 
-    #[ORM\Column(type: 'datetime', options: ['default' => 'CURRENT_TIMESTAMP'])]
+    #[ORM\Column(type: 'datetimetz', options: ['default' => 'CURRENT_TIMESTAMP'])]
     private \DateTimeInterface $createdAt;
 
     public function __construct()
@@ -44,7 +44,7 @@ class ReponseMedecin
     public function getReponse(): string { return $this->reponse; }
     public function setReponse(string $reponse): void { $this->reponse = $reponse; }
     public function getDateReponse(): ?\DateTimeInterface { return $this->dateReponse; }
-    public function setDateReponse(?\DateTimeInterface $dateReponse): void { $this->dateReponse = $dateReponse; }
+    public function markResponseDate(?\DateTimeInterface $dateReponse): void { $this->dateReponse = $dateReponse; }
     public function getCreatedAt(): \DateTimeInterface { return $this->createdAt; }
-    public function setCreatedAt(\DateTimeInterface $createdAt): void { $this->createdAt = $createdAt; }
+    public function forceCreatedAt(\DateTimeInterface $createdAt): void { $this->createdAt = $createdAt; }
 }

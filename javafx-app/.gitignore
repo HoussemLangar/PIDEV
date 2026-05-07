@@ -1,0 +1,12 @@
+# Ignore JDK
+javafx-app/.jdks/
+.javafx-app/.jdks/
+javafx-app/.jdks/
+.jdks/
+target/
+*.class
+generated-exports/
+logs/*.log
+.env.local
+models
+# Ignore JDK

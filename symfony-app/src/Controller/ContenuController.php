@@ -58,7 +58,7 @@ class ContenuController extends AbstractController
     {
         $data = json_decode($request->getContent(), true);
 
-        if (!$data) {
+        if ($data === null && json_last_error() !== JSON_ERROR_NONE) {
             return new JsonResponse(['error' => 'Données JSON invalides'], Response::HTTP_BAD_REQUEST);
         }
 
@@ -85,7 +85,7 @@ class ContenuController extends AbstractController
 
         $data = json_decode($request->getContent(), true);
 
-        if (!$data) {
+        if ($data === null && json_last_error() !== JSON_ERROR_NONE) {
             return new JsonResponse(['error' => 'Données JSON invalides'], Response::HTTP_BAD_REQUEST);
         }
 
@@ -110,7 +110,7 @@ class ContenuController extends AbstractController
 
         $data = json_decode($request->getContent(), true);
 
-        if (!$data) {
+        if ($data === null && json_last_error() !== JSON_ERROR_NONE) {
             return new JsonResponse(['error' => 'Données JSON invalides'], Response::HTTP_BAD_REQUEST);
         }
 
@@ -194,7 +194,7 @@ class ContenuController extends AbstractController
 
                 if ($param) {
                     $type = $param->getType();
-                    $typeName = $type ? $type->getName() : null;
+                    $typeName = $type instanceof \ReflectionNamedType ? $type->getName() : null;
 
                     // Conversion automatique selon le type attendu
                     $converted = match ($typeName) {

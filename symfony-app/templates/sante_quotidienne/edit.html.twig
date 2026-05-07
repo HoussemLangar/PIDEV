@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Éditer - Tracker Santé</title>
+    <link rel="stylesheet" href="{{ asset('assets/css/santet.css') }}">
+</head>
+<body>
+    <main class="health-tracker-page-v2">
+        <div class="container-wide">
+            <div class="page-header-animated">
+                <div class="header-content">
+                    <h1>✏️ Éditer ma journée du {{ sante.date|date('d/m/Y') }}</h1>
+                </div>
+            </div>
+
+            <div class="form-card-beautiful" style="max-width:600px; margin:20px auto;">
+                {{ form_start(form, {
+                    'attr': {
+                        'class': 'form-beautiful',
+                        'novalidate': 'novalidate'
+                    }
+                }) }}
+                    {{ form_widget(form) }}
+                    <button type="submit" class="btn-save-beautiful">
+                        <span>✏️</span>
+                        <span>Mettre à jour</span>
+                    </button>
+                {{ form_end(form) }}
+
+                <a href="{{ path('app_sante_quotidienne_front_new') }}" class="btn-small" style="margin-top:10px; display:inline-block;">Retour au formulaire</a>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

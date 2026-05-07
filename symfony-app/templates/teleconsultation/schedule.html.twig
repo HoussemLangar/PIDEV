@@ -1,0 +1,290 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Planifier une téléconsultation{% endblock %}
+
+{% block content %}
+<div class="content-wrapper" style="padding: 30px 40px; max-width: 900px; margin: 0 auto;">
+    <div class="page-header" style="margin-bottom: 32px;">
+        <div style="display: flex; align-items: center; gap: 16px;">
+            <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-calendar-plus" style="color: white; font-size: 24px;"></i>
+            </div>
+            <div>
+                <h1 style="margin: 0; font-size: 28px; font-weight: 700; color: #1a1a2e;">Planifier une téléconsultation</h1>
+                <p style="margin: 4px 0 0 0; color: #64748b; font-size: 14px;">Programmez un rendez-vous vidéo avec votre médecin</p>
+            </div>
+        </div>
+    </div>
+
+    <div style="background: white; border-radius: 16px; padding: 32px; box-shadow: 0 2px 8px rgba(15,23,42,0.06); border: 1px solid #e2e8f0; margin-bottom: 24px;">
+        {{ form_start(form, {'attr': {'class': 'needs-validation', 'novalidate': true}}) }}
+
+        <div style="margin-bottom: 24px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #1e293b; font-size: 14px;">
+                <i class="fas fa-user-md" style="margin-right: 6px; color: #8b5cf6;"></i>
+                {{ form.recipient.vars.label }}
+            </label>
+
+{# Hidden actual select – submitted with the form. Keep Symfony's own id. #}
+            {{ form_widget(form.recipient, {'attr': {'style': 'display:none;'}}) }}
+
+            {# Custom searchable dropdown #}
+            <div id="recipient-wrapper" style="position: relative;">
+                <div style="position: relative;">
+                    <span style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #8b5cf6; pointer-events: none;">
+                        <i class="fas fa-search" style="font-size: 14px;"></i>
+                    </span>
+                    <input type="text" id="recipient_search"
+                           placeholder="{% if is_patient %}Rechercher un médecin, coach ou nutritionniste…{% else %}Rechercher un patient…{% endif %}"
+                           autocomplete="off"
+                           style="width: 100%; padding: 12px 16px 12px 40px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 15px; transition: all 0.2s; box-sizing: border-box; outline: none; background: white; color: #1e293b;">
+                    <span id="recipient_clear" onclick="clearRecipient()" title="Effacer"
+                          style="display:none; position: absolute; right: 14px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #94a3b8; font-size: 16px;">&#10005;</span>
+                </div>
+
+                {# Dropdown list #}
+                <div id="recipient_dropdown"
+                     style="display:none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: white; border: 2px solid #8b5cf6; border-radius: 10px; box-shadow: 0 8px 24px rgba(139,92,246,0.15); z-index: 1000; max-height: 280px; overflow-y: auto;">
+                    <div id="recipient_list"></div>
+                    <div id="recipient_no_result" style="display:none; padding: 16px; text-align: center; color: #94a3b8; font-size: 14px;">
+                        <i class="fas fa-search" style="margin-right: 6px;"></i>Aucun résultat
+                    </div>
+                </div>
+            </div>
+
+            {# Selected badge #}
+            <div id="recipient_badge" style="display:none; margin-top: 10px; padding: 10px 14px; background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%); border-radius: 10px; border: 1px solid #c4b5fd; display: none; align-items: center; gap: 10px;">
+                <i class="fas fa-user-check" style="color: #7c3aed;"></i>
+                <span id="recipient_badge_text" style="font-weight: 600; color: #5b21b6; font-size: 14px;"></span>
+                <span id="recipient_badge_role" style="margin-left: 4px; padding: 2px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; background: #7c3aed; color: white;"></span>
+            </div>
+
+            {% if form.recipient.vars.errors|length > 0 %}
+                <div style="background: #fee; border-left: 4px solid #ef4444; padding: 12px; border-radius: 8px; margin-top: 8px; color: #991b1b;">
+                    {{ form_errors(form.recipient) }}
+                </div>
+            {% endif %}
+        </div>
+
+        <script>
+        (function () {
+            const select  = document.getElementById('{{ form.recipient.vars.id }}');
+            const search  = document.getElementById('recipient_search');
+            const list    = document.getElementById('recipient_list');
+            const noRes   = document.getElementById('recipient_no_result');
+            const badge   = document.getElementById('recipient_badge');
+            const badgeTxt = document.getElementById('recipient_badge_text');
+            const badgeRole = document.getElementById('recipient_badge_role');
+            const clearBtn = document.getElementById('recipient_clear');
+
+            if (!select) {
+                console.error('Recipient select not found. Expected id: {{ form.recipient.vars.id }}');
+                return;
+            }
+
+            const roleLabel = {
+                'ROLE_MEDECIN': 'Médecin', 'medecin': 'Médecin',
+                'ROLE_COACH': 'Coach Sportif', 'coach': 'Coach Sportif',
+                'ROLE_NUTRITIONNISTE': 'Nutritionniste', 'nutritionniste': 'Nutritionniste',
+                'ROLE_PATIENT': 'Patient', 'patient': 'Patient',
+                'ROLE_PHARMACIEN': 'Pharmacien', 'pharmacien': 'Pharmacien',
+            };
+            const roleColor = {
+                'ROLE_MEDECIN': '#0ea5e9', 'medecin': '#0ea5e9',
+                'ROLE_COACH': '#10b981', 'coach': '#10b981',
+                'ROLE_NUTRITIONNISTE': '#f59e0b', 'nutritionniste': '#f59e0b',
+                'ROLE_PATIENT': '#3b82f6', 'patient': '#3b82f6',
+                'ROLE_PHARMACIEN': '#8b5cf6', 'pharmacien': '#8b5cf6',
+            };
+
+            // Build option data from the hidden select
+            const options = Array.from(select.options).filter(o => o.value !== '').map(o => ({
+                value: o.value,
+                label: o.text,
+                role: o.getAttribute('data-role') || '',
+            }));
+
+            function detectRole(o) {
+                // prefer explicit data-role attribute
+                const r = o.role.toUpperCase();
+                if (r.includes('MEDECIN')) return 'ROLE_MEDECIN';
+                if (r.includes('COACH')) return 'ROLE_COACH';
+                if (r.includes('NUTRITIONNISTE')) return 'ROLE_NUTRITIONNISTE';
+                if (r.includes('PATIENT')) return 'ROLE_PATIENT';
+                if (r.includes('PHARMACIEN')) return 'ROLE_PHARMACIEN';
+                // fallback: sniff from label
+                const l = o.label.toLowerCase();
+                if (l.includes('médecin') || l.includes('medecin')) return 'ROLE_MEDECIN';
+                if (l.includes('coach')) return 'ROLE_COACH';
+                if (l.includes('nutritionniste')) return 'ROLE_NUTRITIONNISTE';
+                if (l.includes('patient')) return 'ROLE_PATIENT';
+                return '';
+            }
+
+            function renderList(filter) {
+                list.innerHTML = '';
+                const q = filter.toLowerCase();
+                const filtered = options.filter(o => o.label.toLowerCase().includes(q));
+                if (filtered.length === 0) {
+                    noRes.style.display = 'block';
+                } else {
+                    noRes.style.display = 'none';
+                    filtered.forEach(o => {
+                        const div = document.createElement('div');
+                        div.style.cssText = 'padding:12px 16px; cursor:pointer; display:flex; align-items:center; gap:10px; border-bottom:1px solid #f1f5f9; transition:background 0.15s;';
+                        div.onmouseover = () => div.style.background = '#faf5ff';
+                        div.onmouseout  = () => div.style.background = 'white';
+
+                        // Avatar
+                        const av = document.createElement('div');
+                        av.style.cssText = 'width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#ede9fe 0%,#ddd6fe 100%);display:flex;align-items:center;justify-content:center;flex-shrink:0;';
+                        av.innerHTML = '<i class="fas fa-user-md" style="color:#7c3aed;font-size:14px;"></i>';
+                        div.appendChild(av);
+
+                        // Name
+                        const nameDiv = document.createElement('div');
+                        nameDiv.style.cssText = 'flex:1;min-width:0;';
+                        const nameTxt = document.createElement('div');
+                        nameTxt.style.cssText = 'font-weight:600;color:#1e293b;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+                        nameTxt.textContent = o.label;
+                        nameDiv.appendChild(nameTxt);
+                        div.appendChild(nameDiv);
+
+                        // Role badge
+                        const detectedRole = detectRole(o);
+                        if (detectedRole) {
+                            const rb = document.createElement('span');
+                            rb.style.cssText = 'padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;color:white;white-space:nowrap;background:' + (roleColor[detectedRole]||'#7c3aed');
+                            rb.textContent = roleLabel[detectedRole] || '';
+                            div.appendChild(rb);
+                        }
+
+                        div.addEventListener('mousedown', (e) => {
+                            e.preventDefault();
+                            selectOption(o, detectedRole);
+                        });
+                        list.appendChild(div);
+                    });
+                }
+            }
+
+            function selectOption(o, detectedRole) {
+                select.value = o.value;
+                search.value = o.label;
+                clearBtn.style.display = 'block';
+
+                // Show badge
+                badge.style.display = 'flex';
+                badgeTxt.textContent = o.label;
+                badgeRole.textContent = roleLabel[detectedRole] || '';
+                badgeRole.style.background = roleColor[detectedRole] || '#7c3aed';
+
+                document.getElementById('recipient_dropdown').style.display = 'none';
+            }
+
+            function clearRecipient() {
+                select.value = '';
+                search.value = '';
+                clearBtn.style.display = 'none';
+                badge.style.display = 'none';
+            }
+            window.clearRecipient = clearRecipient;
+
+            search.addEventListener('input', () => {
+                renderList(search.value);
+                document.getElementById('recipient_dropdown').style.display = 'block';
+                // Clear selection if user edits
+                if (select.value) {
+                    select.value = '';
+                    badge.style.display = 'none';
+                    clearBtn.style.display = search.value ? 'block' : 'none';
+                }
+            });
+
+            search.addEventListener('focus', () => {
+                renderList(search.value);
+                document.getElementById('recipient_dropdown').style.display = 'block';
+                search.style.borderColor = '#8b5cf6';
+                search.style.boxShadow = '0 0 0 3px rgba(139,92,246,0.15)';
+            });
+            search.addEventListener('blur', () => {
+                search.style.borderColor = select.value ? '#8b5cf6' : '#e2e8f0';
+                search.style.boxShadow = 'none';
+                setTimeout(() => { document.getElementById('recipient_dropdown').style.display = 'none'; }, 200);
+            });
+
+            // Initial render
+            renderList('');
+
+            // If a value is already selected (e.g. form error), show it
+            if (select.value) {
+                const found = options.find(o => o.value === select.value);
+                if (found) {
+                    selectOption(found, detectRole(found));
+                }
+            }
+        })();
+        </script>
+
+        <div style="margin-bottom: 24px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #1e293b; font-size: 14px;">
+                <i class="fas fa-clock" style="margin-right: 6px; color: #8b5cf6;"></i>
+                {{ form.scheduledAt.vars.label }}
+            </label>
+            {{ form_widget(form.scheduledAt, {'attr': {'style': 'width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 15px; transition: all 0.2s; background: white; color: #1e293b;'}}) }}
+            <small style="display: block; margin-top: 8px; color: #64748b; font-size: 13px;">
+                <i class="fas fa-info-circle" style="margin-right: 4px;"></i>
+                Vous pouvez rejoindre 5 minutes avant l'heure prévue
+            </small>
+            {% if form.scheduledAt.vars.errors|length > 0 %}
+                <div style="background: #fee; border-left: 4px solid #ef4444; padding: 12px; border-radius: 8px; margin-top: 8px; color: #991b1b;">
+                    {{ form_errors(form.scheduledAt) }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div style="margin-bottom: 24px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #1e293b; font-size: 14px;">
+                <i class="fas fa-tag" style="margin-right: 6px; color: #8b5cf6;"></i>
+                {{ form.type.vars.label }}
+            </label>
+            {{ form_widget(form.type, {'attr': {'style': 'width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 15px; transition: all 0.2s; background: white; color: #1e293b;'}}) }}
+        </div>
+
+        <div style="margin-bottom: 28px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #1e293b; font-size: 14px;">
+                <i class="fas fa-comment-medical" style="margin-right: 6px; color: #8b5cf6;"></i>
+                {{ form.description.vars.label }}
+            </label>
+            {{ form_widget(form.description, {'attr': {'style': 'width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 15px; transition: all 0.2s; min-height: 120px; background: white; color: #1e293b;'}}) }}
+            <small style="display: block; margin-top: 8px; color: #64748b; font-size: 13px;">
+                Décrivez brièvement la raison de cette consultation
+            </small>
+        </div>
+
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+            <button type="submit" style="padding: 12px 28px; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(139,92,246,0.3); display: inline-flex; align-items: center; gap: 8px;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 20px rgba(139,92,246,0.4)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(139,92,246,0.3)';">
+                <i class="fas fa-calendar-check"></i> Planifier la consultation
+            </button>
+            <a href="{{ path('app_teleconsultation_index') }}" style="padding: 12px 28px; background: #f1f5f9; color: #475569; border: none; border-radius: 10px; font-weight: 600; text-decoration: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px;" onmouseover="this.style.background='#e2e8f0';" onmouseout="this.style.background='#f1f5f9';">
+                <i class="fas fa-times"></i> Annuler
+            </a>
+        </div>
+
+        {{ form_end(form) }}
+    </div>
+
+    <div style="background: linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%); border-radius: 16px; padding: 24px; border: 1px solid #bfdbfe;">
+        <h3 style="margin: 0 0 16px 0; font-size: 18px; font-weight: 600; color: #1e40af; display: flex; align-items: center; gap: 10px;">
+            <i class="fas fa-info-circle"></i>
+            Informations importantes
+        </h3>
+        <ul style="margin: 0; padding-left: 24px; color: #1e40af; line-height: 1.8;">
+            <li>Assurez-vous d'avoir une bonne connexion Internet et une webcam/microphone fonctionnels</li>
+            <li>La consultation se fera via Jitsi Meet (aucune installation requise)</li>
+            <li>Vous recevrez une notification quand votre correspondant rejoindra</li>
+            <li>Vous pouvez enregistrer la consultation si c'est autorisé</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

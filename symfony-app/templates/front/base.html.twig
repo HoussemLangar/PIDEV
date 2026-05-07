@@ -1,43 +1,1690 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="{{ app.request.locale }}" dir="{{ app.request.locale == 'ar' ? 'rtl' : 'ltr' }}">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <meta charset="UTF-8">
+
+    <!-- Responsive & Mobile -->
+    <meta name="format-detection" content="telephone=no">
+
+    <!-- SEO -->
     <title>{% block title %}SANTÉA - Healthcare Solutions{% endblock %}</title>
+    <meta name="description" content="SANTÉA est une plateforme de santé moderne reliant médecins, pharmaciens, coachs sportifs, nutritionnistes et patients.">
+    <meta name="keywords" content="santé, médecin, nutrition, pharmacie, coaching sportif, rendez-vous médical, abonnement santé">
+    <meta name="author" content="SANTÉA">
+    <meta name="robots" content="index, follow">
+
+    <!-- Theme & Browser UI -->
+    <meta name="theme-color" content="#0D8ABC">
+    <meta name="color-scheme" content="light dark">
+
+    <!-- Open Graph (Facebook, LinkedIn, WhatsApp…) -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="SANTÉA - Healthcare Solutions">
+    <meta property="og:description" content="Une solution complète pour la gestion de la santé et du bien-être.">
+    <meta property="og:image" content="{{ asset('logo.png') }}">
+    <meta property="og:url" content="{{ app.request.uri }}">
+    <meta property="og:site_name" content="SANTÉA">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="SANTÉA - Healthcare Solutions">
+    <meta name="twitter:description" content="Plateforme santé intelligente et sécurisée.">
+    <meta name="twitter:image" content="{{ asset('logo.png') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     {% block stylesheets %}
-        <link rel="stylesheet" href="{{ asset('style.css') }}">
+        <link rel="stylesheet" href="{{ asset('style.css') }}?v=10002">
+        <link rel="stylesheet" href="{{ asset('css/santea-3d.css') }}?v=1">
+        <link rel="SHORTCUT ICON" type="image/x-icon" href="{{ asset('logo.png') }}">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+        <style>
+        /* ─── Nav Pharmacien submenu ─────────────────────────── */
+        .nav-links .nav-has-sub { position:relative; }
+        .nav-links .nav-has-sub > a .nav-caret {
+            font-size:.6rem;
+            margin-left:3px;
+            opacity:.7;
+            transition:transform .2s;
+            display:inline-block;
+        }
+        .nav-links .nav-has-sub:hover > a .nav-caret,
+        .nav-links .nav-has-sub:focus-within > a .nav-caret { transform:rotate(180deg); }
+        .nav-links .nav-sub {
+            position:absolute;
+            top:calc(100% + 8px);
+            left:50%;
+            transform:translateX(-50%) translateY(-6px);
+            min-width:210px;
+            background:#fff;
+            border:1px solid #e2e8f0;
+            border-radius:14px;
+            box-shadow:0 16px 40px rgba(15,23,42,.14);
+            opacity:0;
+            visibility:hidden;
+            transition:opacity .2s,transform .2s,visibility .2s;
+            z-index:999;
+            overflow:hidden;
+            list-style:none;
+            padding:6px 0;
+            margin:0;
+        }
+        [data-theme="dark"] .nav-links .nav-sub {
+            background:#1e293b;
+            border-color:#334155;
+        }
+        .nav-links .nav-has-sub:hover .nav-sub,
+        .nav-links .nav-has-sub:focus-within .nav-sub {
+            opacity:1;
+            visibility:visible;
+            transform:translateX(-50%) translateY(0);
+        }
+        .nav-links .nav-sub li a {
+            display:flex;
+            align-items:center;
+            gap:9px;
+            padding:9px 16px;
+            font-size:.87rem;
+            font-weight:600;
+            color:#374151;
+            text-decoration:none;
+            transition:background .15s,color .15s;
+            white-space:nowrap;
+        }
+        [data-theme="dark"] .nav-links .nav-sub li a { color:#cbd5e1; }
+        .nav-links .nav-sub li a:hover {
+            background:rgba(13,138,188,.08);
+            color:#0D8ABC;
+        }
+        .nav-links .nav-sub li a i {
+            width:18px;
+            text-align:center;
+            color:#0D8ABC;
+            font-size:.8rem;
+        }
+        .nav-links .nav-sub li a::after { display:none; }
+        .nav-links .nav-sub .nav-sub-divider {
+            height:1px;
+            background:#e2e8f0;
+            margin:4px 0;
+        }
+        [data-theme="dark"] .nav-links .nav-sub .nav-sub-divider { background:#334155; }
+
+        /* ─── Nav Icons ─────────────────────────────────────────── */
+        .nav-icons { display:flex; align-items:center; gap:6px; }
+        .nav-icon-wrap { position:relative; }
+        .nav-icon-btn {
+            position:relative; width:40px; height:40px; border:none; border-radius:12px;
+            background:rgba(13,138,188,.08); cursor:pointer; display:flex; align-items:center;
+            justify-content:center; color:#0D8ABC; font-size:16px;
+            transition:background .2s,color .2s,transform .15s,box-shadow .2s;
+        }
+        .nav-icon-btn:hover { background:rgba(13,138,188,.18); transform:translateY(-1px); box-shadow:0 4px 12px rgba(13,138,188,.2); }
+        .nav-icon-btn:active { transform:translateY(0); }
+        .nav-avatar-btn { background:transparent; border:2px solid #e2e8f0; border-radius:50%; width:38px; height:38px; padding:0; overflow:hidden; }
+        .nav-avatar-btn:hover { border-color:#0D8ABC; box-shadow:0 0 0 3px rgba(13,138,188,.2); transform:none; }
+        .nav-avatar-img { width:100%; height:100%; object-fit:cover; border-radius:50%; display:block; }
+        .nav-badge {
+            position:absolute; top:-4px; right:-4px; min-width:18px; height:18px;
+            background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff; font-size:10px; font-weight:800;
+            border-radius:50px; display:flex; align-items:center; justify-content:center;
+            padding:0 4px; border:2px solid white; line-height:1; pointer-events:none;
+            box-shadow:0 2px 6px rgba(239,68,68,.4);
+        }
+
+        /* ─── Nav Dropdown – shared ──────────────────────────────── */
+        .nav-dropdown {
+            position:absolute; top:calc(100% + 12px); right:0; width:360px;
+            background:#fff; border-radius:18px;
+            box-shadow:0 20px 60px rgba(15,23,42,.18),0 4px 16px rgba(15,23,42,.08);
+            border:1px solid rgba(226,232,240,.8);
+            z-index:1000; opacity:0; visibility:hidden; transform:translateY(-10px) scale(.97);
+            transition:opacity .22s cubic-bezier(.4,0,.2,1),visibility .22s,transform .22s cubic-bezier(.4,0,.2,1);
+            /* overflow is NOT hidden so account submenu can open inline */
+        }
+        [data-theme="dark"] .nav-dropdown { background:#1e293b; border-color:#334155; }
+        .nav-dropdown.show { opacity:1; visibility:visible; transform:translateY(0) scale(1); }
+
+        /* Account dropdown viewport cap */
+        #accountDropdown { max-height:calc(100vh - 100px); }
+
+        .nav-dropdown-header {
+            display:flex; align-items:center; justify-content:space-between;
+            padding:16px 20px 12px; border-bottom:1px solid #f1f5f9;
+        }
+        .nav-dropdown-title { font-weight:800; font-size:15px; color:#1a1a2e; display:flex; align-items:center; gap:8px; }
+        [data-theme="dark"] .nav-dropdown-title { color:#e2e8f0; }
+        [data-theme="dark"] .nav-dropdown-header { border-color:#334155; }
+        .nav-dropdown-action {
+            font-size:12px; color:#0D8ABC; cursor:pointer; background:rgba(13,138,188,.1); border:none;
+            padding:4px 10px; border-radius:20px; font-weight:600; text-decoration:none; transition:all .2s;
+        }
+        .nav-dropdown-action:hover { background:rgba(13,138,188,.2); color:#0a6d96; }
+
+        /* ─── Notification list ──────────────────────────────────── */
+        .notif-list { max-height:360px; overflow-y:auto; }
+        .conv-list  { max-height:360px; overflow-y:auto; }
+        .notif-list::-webkit-scrollbar,.conv-list::-webkit-scrollbar { width:4px; }
+        .notif-list::-webkit-scrollbar-thumb,.conv-list::-webkit-scrollbar-thumb { background:#e2e8f0; border-radius:4px; }
+        .notif-item {
+            display:flex; align-items:flex-start; gap:12px; padding:12px 20px;
+            border-bottom:1px solid #f8fafc; text-decoration:none; color:inherit; transition:background .15s;
+        }
+        .notif-item:last-child { border-bottom:none; }
+        .notif-item:hover { background:#f8fafc; }
+        .notif-item.unread { background:linear-gradient(to right,#eff6ff,#f8faff); border-left:3px solid #3b82f6; padding-left:17px; }
+        [data-theme="dark"] .notif-item:hover { background:#0f172a; }
+        [data-theme="dark"] .notif-item.unread { background:linear-gradient(to right,#1e3a5f,#1e293b); border-color:#3b82f6; }
+        .notif-icon {
+            width:38px; height:38px; border-radius:10px;
+            background:linear-gradient(135deg,#dbeafe,#bfdbfe);
+            display:flex; align-items:center; justify-content:center;
+            flex-shrink:0; color:#3b82f6; font-size:14px;
+        }
+        .notif-body { flex:1; min-width:0; }
+        .notif-title { font-weight:700; font-size:13px; color:#1a1a2e; margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        [data-theme="dark"] .notif-title { color:#e2e8f0; }
+        .notif-msg { font-size:12px; color:#64748b; line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+        .notif-time { font-size:11px; color:#94a3b8; white-space:nowrap; flex-shrink:0; margin-top:2px; background:#f1f5f9; padding:2px 6px; border-radius:50px; }
+        .notif-empty,.conv-empty { padding:36px 20px; text-align:center; color:#94a3b8; font-size:13px; }
+        .notif-empty i,.conv-empty i { font-size:32px; opacity:.3; margin-bottom:10px; display:block; }
+
+        /* ─── Conversation list ──────────────────────────────────── */
+        .conv-item {
+            display:flex; align-items:center; gap:12px; padding:12px 20px;
+            border-bottom:1px solid #f8fafc; cursor:pointer; transition:background .15s;
+        }
+        .conv-item:last-child { border-bottom:none; }
+        .conv-item:hover { background:#f8fafc; }
+        [data-theme="dark"] .conv-item:hover { background:#0f172a; }
+        .conv-avatar { width:42px; height:42px; border-radius:50%; object-fit:cover; flex-shrink:0; border:2px solid #e2e8f0; }
+        .conv-info { flex:1; min-width:0; }
+        .conv-name { font-weight:700; font-size:13px; color:#1a1a2e; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        [data-theme="dark"] .conv-name { color:#e2e8f0; }
+        .conv-time { font-size:11px; color:#94a3b8; margin-top:2px; }
+        .conv-arrow { color:#cbd5e1; font-size:12px; flex-shrink:0; transition:transform .15s; }
+        .conv-item:hover .conv-arrow { transform:translateX(3px); color:#0D8ABC; }
+
+        /* ─── Override submenu to be accordion (fixes overflow:hidden clipping) ── */
+        #accountDropdown .dropdown-section.has-submenu { margin:0; }
+        #accountDropdown .dropdown-submenu {
+            position:static !important;
+            width:100% !important;
+            right:auto !important; top:auto !important;
+            box-shadow:none !important;
+            transform:none !important;
+            max-height:0;
+            overflow:hidden !important;
+            opacity:1 !important;
+            visibility:visible !important;
+            padding:0 0 0 24px !important;
+            margin:0 !important;
+            border-radius:0 0 8px 8px !important;
+            background:rgba(13,138,188,.04) !important;
+            border-left:3px solid rgba(13,138,188,.25) !important;
+            transition:max-height .25s ease, padding .25s ease !important;
+            pointer-events:none;
+        }
+        #accountDropdown .dropdown-section.has-submenu.open > .dropdown-submenu {
+            max-height:300px !important;
+            padding:6px 0 6px 24px !important;
+            pointer-events:auto;
+        }
+        [data-theme="dark"] #accountDropdown .dropdown-submenu { background:rgba(13,138,188,.06) !important; border-color:rgba(13,138,188,.3) !important; }
+
+        /* ══════════════════════════════════════════════════════════
+           ▌ ACCOUNT DROPDOWN — Enhanced Design
+           ══════════════════════════════════════════════════════════ */
+
+        /* ─ Container ─────────────────────────────────────────────── */
+        #accountDropdown {
+            width: 300px;
+            border-radius: 20px;
+            padding: 0;
+            max-height: calc(100vh - 100px);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid rgba(226,232,240,.6);
+        }
+        [data-theme="dark"] #accountDropdown { border-color: rgba(51,65,85,.8); }
+
+        /* ─ Header banner ─────────────────────────────────────────── */
+        #accountDropdown .account-header {
+            background: linear-gradient(135deg, #0D8ABC 0%, #0a6d96 55%, #1e40af 100%);
+            padding: 22px 20px 18px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+        #accountDropdown .account-header::before {
+            content: '';
+            position: absolute; top: -30px; right: -20px;
+            width: 100px; height: 100px;
+            background: rgba(255,255,255,.08);
+            border-radius: 50%;
+        }
+        #accountDropdown .account-header::after {
+            content: '';
+            position: absolute; bottom: -20px; left: 10px;
+            width: 70px; height: 70px;
+            background: rgba(255,255,255,.06);
+            border-radius: 50%;
+        }
+        #accountDropdown .acc-avatar-ring {
+            width: 66px; height: 66px;
+            border-radius: 50%;
+            padding: 3px;
+            background: linear-gradient(135deg, rgba(255,255,255,.9), rgba(255,255,255,.4));
+            box-shadow: 0 4px 18px rgba(0,0,0,.25);
+            flex-shrink: 0;
+            position: relative; z-index:1;
+        }
+        #accountDropdown .acc-avatar-ring img {
+            width: 100%; height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            display: block;
+        }
+        #accountDropdown .acc-name {
+            font-weight: 800; font-size: 15px; color: #fff;
+            text-shadow: 0 1px 4px rgba(0,0,0,.2);
+            position: relative; z-index:1;
+            line-height: 1.2;
+        }
+        #accountDropdown .acc-email {
+            font-size: 11.5px; color: rgba(255,255,255,.75);
+            position: relative; z-index:1;
+        }
+        #accountDropdown .acc-role-badge {
+            display: inline-flex; align-items: center; gap: 5px;
+            background: rgba(255,255,255,.2);
+            border: 1px solid rgba(255,255,255,.35);
+            color: #fff; font-size: 11px; font-weight: 700;
+            padding: 3px 10px; border-radius: 50px;
+            letter-spacing: .4px; text-transform: uppercase;
+            position: relative; z-index:1;
+        }
+        #accountDropdown .acc-role-badge i { font-size: 9px; opacity: .85; }
+        #accountDropdown .acc-score {
+            margin-top: 7px;
+            font-size: 11.5px;
+            color: rgba(255,255,255,.90);
+            position: relative; z-index:1;
+            display: flex; align-items: center; gap: 6px;
+        }
+        #accountDropdown .acc-score strong {
+            font-weight: 800;
+            font-size: 13px;
+            color: #fff;
+        }
+        #accountDropdown .acc-score-bar-wrap {
+            flex: 1; height: 4px; border-radius: 99px;
+            background: rgba(255,255,255,.25); overflow: hidden;
+        }
+        #accountDropdown .acc-score-bar-fill {
+            height: 100%; border-radius: 99px;
+            background: linear-gradient(90deg, #7dd3fc, #38bdf8);
+            transition: width .4s ease;
+        }
+
+        /* ─ Body ───────────────────────────────────────────────────── */
+        #accountDropdown .acc-body {
+            padding: 8px 0 6px;
+            overflow-y: auto;
+            min-height: 0;
+            overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* ─ Items ───────────────────────────────────────────────────── */
+        #accountDropdown .dropdown-item {
+            display: flex; align-items: center; gap: 11px;
+            padding: 10px 18px; margin: 1px 8px;
+            border-radius: 12px;
+            font-size: 13.5px; font-weight: 600;
+            color: #1a1a2e; text-decoration: none;
+            transition: background .15s, color .15s, transform .12s;
+            position: relative;
+        }
+        [data-theme="dark"] #accountDropdown .dropdown-item { color: #cbd5e1; }
+        #accountDropdown .dropdown-item:hover {
+            background: rgba(13,138,188,.09);
+            color: #0D8ABC;
+            transform: translateX(2px);
+        }
+        [data-theme="dark"] #accountDropdown .dropdown-item:hover {
+            background: rgba(13,138,188,.15);
+            color: #38bdf8;
+        }
+        #accountDropdown .dropdown-item i:first-child {
+            width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(13,138,188,.1); color: #0D8ABC;
+            font-size: 12.5px; transition: background .15s;
+        }
+        [data-theme="dark"] #accountDropdown .dropdown-item i:first-child {
+            background: rgba(13,138,188,.2); color: #38bdf8;
+        }
+        #accountDropdown .dropdown-item:hover i:first-child {
+            background: rgba(13,138,188,.18);
+        }
+        /* ── Global Report Modal ── */
+        .global-report-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(8, 18, 40, .55);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 120000;
+            padding: 20px;
+            transition: opacity .2s;
+        }
+        .global-report-modal.show { display: flex; }
+        .global-report-modal-card {
+            width: min(480px, 100%);
+            background: #fff;
+            border-radius: 22px;
+            box-shadow: 0 24px 64px rgba(13,138,188,.22), 0 4px 16px rgba(15,23,42,.14);
+            overflow: hidden;
+            animation: grm-in .25s cubic-bezier(.34,1.4,.64,1) both;
+        }
+        @keyframes grm-in {
+            from { opacity: 0; transform: scale(.92) translateY(12px); }
+            to   { opacity: 1; transform: scale(1)  translateY(0); }
+        }
+        [data-theme="dark"] .global-report-modal-card {
+            background: #1a2744;
+            box-shadow: 0 24px 64px rgba(0,0,0,.55);
+        }
+        .global-report-modal-hero {
+            background: linear-gradient(135deg, #0D8ABC 0%, #0653a0 100%);
+            padding: 28px 24px 46px;
+            position: relative;
+            text-align: center;
+        }
+        .global-report-modal-hero::after {
+            content: '';
+            position: absolute;
+            bottom: -1px; left: 0; right: 0; height: 32px;
+            background: #fff;
+            border-radius: 22px 22px 0 0;
+        }
+        [data-theme="dark"] .global-report-modal-hero::after { background: #1a2744; }
+        .global-report-modal-icon {
+            width: 56px; height: 56px;
+            background: rgba(255,255,255,.18);
+            border-radius: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            color: #fff;
+            margin-bottom: 10px;
+            border: 2px solid rgba(255,255,255,.28);
+        }
+        .global-report-modal-hero h3 {
+            margin: 0;
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: .01em;
+        }
+        .global-report-modal-hero p {
+            margin: 5px 0 0;
+            font-size: .82rem;
+            color: rgba(255,255,255,.78);
+        }
+        .global-report-close {
+            position: absolute;
+            top: 12px; right: 14px;
+            border: none;
+            background: rgba(255,255,255,.18);
+            cursor: pointer;
+            font-size: 13px;
+            color: #fff;
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background .15s;
+        }
+        .global-report-close:hover { background: rgba(255,255,255,.32); }
+        .global-report-modal-body {
+            padding: 22px 24px 24px;
+        }
+        /* Period pill buttons */
+        .grm-period-label {
+            font-size: .78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: #64748b;
+            margin: 0 0 9px;
+        }
+        [data-theme="dark"] .grm-period-label { color: #94a3b8; }
+        .grm-period-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .grm-period-group input[type="radio"] { display: none; }
+        .grm-period-group label {
+            flex: 1;
+            text-align: center;
+            padding: 9px 0;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: .88rem;
+            font-weight: 600;
+            color: #475569;
+            cursor: pointer;
+            transition: all .15s;
+            user-select: none;
+            background: #f8fafc;
+        }
+        [data-theme="dark"] .grm-period-group label {
+            border-color: #334155;
+            color: #94a3b8;
+            background: #0f172a;
+        }
+        .grm-period-group input[type="radio"]:checked + label {
+            border-color: #0D8ABC;
+            background: linear-gradient(135deg, #e0f4fb 0%, #dbeafe 100%);
+            color: #0653a0;
+            box-shadow: 0 2px 8px rgba(13,138,188,.18);
+        }
+        [data-theme="dark"] .grm-period-group input[type="radio"]:checked + label {
+            background: rgba(13,138,188,.18);
+            color: #38bdf8;
+        }
+        .grm-period-group label:hover:not(.checked) { border-color: #0D8ABC; color: #0D8ABC; }
+        /* Features row */
+        .grm-features {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+        }
+        .grm-feature-chip {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: .78rem;
+            color: #475569;
+            background: #f1f5f9;
+            border-radius: 20px;
+            padding: 4px 10px;
+        }
+        [data-theme="dark"] .grm-feature-chip { background: #1e293b; color: #94a3b8; }
+        .grm-feature-chip i { color: #16a34a; font-size: .72rem; }
+        /* Download button */
+        .grm-download-btn {
+            width: 100%;
+            padding: 13px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #0D8ABC 0%, #0653a0 100%);
+            color: #fff;
+            font-size: .95rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            letter-spacing: .01em;
+            transition: opacity .15s, transform .12s;
+            box-shadow: 0 4px 16px rgba(13,138,188,.35);
+        }
+        .grm-download-btn:hover { opacity: .9; transform: translateY(-1px); }
+        .grm-download-btn:active { transform: translateY(0); }
+        .grm-download-btn i { font-size: 1rem; }
+        /* danger item */
+        #accountDropdown .dropdown-item.danger {
+            color: #dc2626;
+            margin-top: 2px;
+        }
+        [data-theme="dark"] #accountDropdown .dropdown-item.danger { color: #f87171; }
+        #accountDropdown .dropdown-item.danger i:first-child {
+            background: rgba(220,38,38,.1); color: #dc2626;
+        }
+        [data-theme="dark"] #accountDropdown .dropdown-item.danger i:first-child {
+            background: rgba(248,113,113,.15); color: #f87171;
+        }
+        #accountDropdown .dropdown-item.danger:hover {
+            background: rgba(220,38,38,.08); color: #b91c1c; transform: translateX(2px);
+        }
+        [data-theme="dark"] #accountDropdown .dropdown-item.danger:hover {
+            background: rgba(248,113,113,.12); color: #fca5a5;
+        }
+
+        /* ─ Submenu toggle button ───────────────────────────────────── */
+        #accountDropdown .dropdown-section-toggle {
+            display: flex; align-items: center; gap: 11px;
+            width: calc(100% - 16px); margin: 1px 8px;
+            padding: 10px 18px 10px 18px;
+            border: none; border-radius: 12px;
+            background: rgba(13,138,188,.06);
+            color: #1a1a2e; font-size: 13.5px; font-weight: 600;
+            cursor: pointer; transition: background .15s, color .15s;
+            box-sizing: border-box;
+        }
+        [data-theme="dark"] #accountDropdown .dropdown-section-toggle {
+            background: rgba(13,138,188,.1); color: #cbd5e1;
+        }
+        #accountDropdown .dropdown-section-toggle:hover {
+            background: rgba(13,138,188,.12); color: #0D8ABC;
+        }
+        [data-theme="dark"] #accountDropdown .dropdown-section-toggle:hover { color: #38bdf8; }
+        #accountDropdown .dropdown-section-toggle i:first-child {
+            width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(13,138,188,.12); color: #0D8ABC; font-size: 12.5px;
+        }
+        [data-theme="dark"] #accountDropdown .dropdown-section-toggle i:first-child {
+            background: rgba(13,138,188,.2); color: #38bdf8;
+        }
+        #accountDropdown .dropdown-section-toggle span { flex: 1; text-align: left; }
+        #accountDropdown .toggle-indicator {
+            font-size: 11px; color: #94a3b8; transition: transform .25s;
+            width: auto !important; height: auto !important;
+            background: none !important;
+        }
+        #accountDropdown .dropdown-section.has-submenu.open .toggle-indicator { transform: rotate(90deg); }
+
+        /* ─ Divider ─────────────────────────────────────────────────── */
+        #accountDropdown .dropdown-divider {
+            height: 1px; background: rgba(226,232,240,.7);
+            margin: 6px 18px;
+        }
+        [data-theme="dark"] #accountDropdown .dropdown-divider { background: rgba(51,65,85,.7); }
+
+        /* ─ Inline rows (theme / lang) ──────────────────────────────── */
+        #accountDropdown .dropdown-inline {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 8px 18px; margin: 1px 8px;
+            color: #64748b; font-size: 12.5px; font-weight: 600;
+            border-radius: 10px;
+            cursor: default;
+        }
+        [data-theme="dark"] #accountDropdown .dropdown-inline { color: #94a3b8; }
+        #accountDropdown .inline-actions { display: flex; gap: 5px; }
+        #accountDropdown .mini-pill {
+            padding: 3px 10px; border-radius: 50px;
+            font-size: 11.5px; font-weight: 700;
+            background: rgba(13,138,188,.08); color: #0D8ABC;
+            border: 1px solid rgba(13,138,188,.2);
+            text-decoration: none; transition: all .15s;
+        }
+        #accountDropdown .mini-pill:hover {
+            background: #0D8ABC; color: #fff;
+            border-color: #0D8ABC;
+        }
+        [data-theme="dark"] #accountDropdown .mini-pill {
+            background: rgba(13,138,188,.15); color: #38bdf8; border-color: rgba(56,189,248,.25);
+        }
+        [data-theme="dark"] #accountDropdown .mini-pill:hover { background: #0D8ABC; color: #fff; }
+
+        /* ─── Messenger popup ────────────────────────────────────── */
+        #messengerContainer {
+            position:fixed; bottom:0; right:24px;
+            display:flex; align-items:flex-end; gap:10px;
+            z-index:2000; pointer-events:none;
+            max-width:calc(100vw - 48px);
+        }
+        #messengerSliderBtn {
+            display:none; position:fixed; bottom:16px; right:0;
+            width:32px; height:54px; background:rgba(13,138,188,.9); color:white;
+            border:none; cursor:pointer; z-index:2001; border-radius:8px 0 0 8px;
+            font-size:14px; pointer-events:all; transition:background .15s;
+        }
+        #messengerSliderBtn:hover { background:#0D8ABC; }
+        .chat-popup {
+            width:360px; background:#fff; border-radius:16px 16px 0 0;
+            box-shadow:0 -4px 40px rgba(15,23,42,.18),0 0 0 1px rgba(15,23,42,.05);
+            display:flex; flex-direction:column; overflow:hidden;
+            height:500px; transition:height .25s cubic-bezier(.4,0,.2,1); pointer-events:all;
+        }
+        [data-theme="dark"] .chat-popup { background:#1e293b; }
+        .chat-popup.minimized { height:52px; }
+        .chat-popup-header {
+            background:linear-gradient(135deg,#0D8ABC 0%,#0862a0 100%);
+            padding:12px 14px; display:flex; align-items:center; gap:10px;
+            cursor:pointer; flex-shrink:0; user-select:none;
+        }
+        .chat-popup-avatar { width:32px; height:32px; border-radius:50%; object-fit:cover; border:2px solid rgba(255,255,255,.4); flex-shrink:0; }
+        .chat-popup-name { flex:1; font-weight:700; font-size:13px; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .chat-popup-status { font-size:11px; color:rgba(255,255,255,.7); display:block; margin-top:1px; }
+        .chat-popup-actions { display:flex; gap:3px; flex-shrink:0; }
+        .chat-popup-btn {
+            width:28px; height:28px; border:none; background:rgba(255,255,255,.15); border-radius:8px;
+            color:#fff; cursor:pointer; font-size:12px; display:flex; align-items:center; justify-content:center;
+            transition:background .15s; text-decoration:none;
+        }
+        .chat-popup-btn:hover { background:rgba(255,255,255,.3); color:#fff; }
+        .chat-popup-messages {
+            flex:1; overflow-y:auto; padding:14px 12px 8px; display:flex; flex-direction:column;
+            gap:8px; background:#f8fafc; min-height:0;
+        }
+        [data-theme="dark"] .chat-popup-messages { background:#0f172a; }
+        .chat-popup-messages::-webkit-scrollbar { width:4px; }
+        .chat-popup-messages::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:4px; }
+        .popup-msg {
+            max-width:78%; padding:9px 13px; border-radius:16px; font-size:13px;
+            line-height:1.45; word-break:break-word;
+        }
+        .popup-msg.own { background:linear-gradient(135deg,#0D8ABC,#0862a0); color:#fff; align-self:flex-end; border-bottom-right-radius:4px; }
+        .popup-msg.other { background:#fff; color:#1a1a2e; align-self:flex-start; border-bottom-left-radius:4px; border:1px solid #e2e8f0; box-shadow:0 1px 4px rgba(15,23,42,.06); }
+        [data-theme="dark"] .popup-msg.other { background:#1e293b; color:#e2e8f0; border-color:#334155; }
+        .popup-msg-time { font-size:10px; opacity:.6; margin-top:3px; display:block; }
+        .popup-date-sep { text-align:center; font-size:11px; color:#94a3b8; padding:4px 0; }
+        .chat-popup-footer {
+            padding:10px 12px; background:#fff; border-top:1px solid #f1f5f9;
+            display:flex; gap:8px; flex-shrink:0; align-items:center;
+        }
+        [data-theme="dark"] .chat-popup-footer { background:#1e293b; border-color:#334155; }
+        .chat-popup-input {
+            flex:1; padding:9px 14px; border:1.5px solid #e2e8f0; border-radius:22px;
+            font-size:13px; outline:none; transition:border-color .2s,background .2s; background:#f8fafc; resize:none;
+        }
+        [data-theme="dark"] .chat-popup-input { background:#0f172a; color:#e2e8f0; border-color:#334155; }
+        .chat-popup-input:focus { border-color:#0D8ABC; background:#fff; }
+        .chat-popup-send {
+            width:36px; height:36px; flex-shrink:0; border:none; border-radius:50%;
+            background:linear-gradient(135deg,#0D8ABC,#0862a0); color:#fff;
+            cursor:pointer; font-size:13px; display:flex; align-items:center; justify-content:center;
+            transition:transform .15s,box-shadow .15s;
+        }
+        .chat-popup-send:hover { transform:scale(1.1); box-shadow:0 4px 14px rgba(13,138,188,.4); }
+        .popup-loading { display:flex; align-items:center; justify-content:center; padding:32px; color:#94a3b8; font-size:13px; gap:8px; }
+        </style>
     {% endblock %}
     
     {% block head_scripts %}{% endblock %}
 </head>
-<body{% block body_class %}{% endblock %}>
+{% set theme = app.user ? app.user.themePreference : (app.session ? app.session.get('theme') : 'light') %}
+<body data-theme="{{ theme ?: 'light' }}" data-turbo="false"{% block body_class %}{% endblock %}>
+
+    <!-- 3D Scroll Progress Bar -->
+    <div id="s3d-scroll-progress" aria-hidden="true"></div>
+
+    <!-- 3D Page Transition Overlay -->
+    <div id="s3d-page-transition" aria-hidden="true"></div>
     
     {% block header %}
         <!-- Header / Navbar -->
         <header>
             <nav class="navbar">
                 <div class="logo">SANTÉA</div>
+
                 <ul class="nav-links">
-                    <li><a href="{{ path('app_home') }}">Accueil</a></li>
-                    <li><a href="#quick-info">À propos</a></li>
-                    <li><a href="#appointment-section">Services</a></li>
-                    <li><a href="#testimonials">Blog</a></li>
-                    <li><a href="#contact-section">Contact</a></li>
+                    <li><a href="{{ path('app_home') }}"><i class="fas fa-home" style="margin-right:5px;color:#0D8ABC;"></i>{{ 'nav.home'|trans }}</a></li>
+                    <li><a href="#quick-info"><i class="fas fa-info-circle" style="margin-right:5px;color:#0D8ABC;"></i>{{ 'nav.about'|trans }}</a></li>
+                    <li><a href="#appointment-section"><i class="fas fa-stethoscope" style="margin-right:5px;color:#0D8ABC;"></i>{{ 'nav.services'|trans }}</a></li>
+                    <li><a href="{{ path('front_content_index') }}"><i class="fas fa-newspaper" style="margin-right:5px;color:#0D8ABC;"></i>{{ 'nav.blog'|trans }}</a></li>
+                    {% if app.user %}
+                        <li><a href="{{ path('app_ai_tools_index') }}"><i class="fas fa-robot" style="margin-right:5px;color:#0D8ABC;"></i>Outils IA</a></li>
+                    {% endif %}
+                    {% if app.user and (app.user.subscriptionType ?? app.user.role) == 'ROLE_PATIENT' %}
+                        <li><a href="{{ path('app_sante_quotidienne_index') }}"><i class="fas fa-book-medical" style="margin-right:5px;color:#0D8ABC;"></i>Mon journal santé</a></li>
+                        <li><a href="{{ path('app_symptomes') }}"><i class="fas fa-diagnoses" style="margin-right:5px;color:#0D8ABC;"></i>Mes symptômes</a></li>
+                        <li><a href="{{ path('front_pharmacy_index') }}"><i class="fas fa-clinic-medical" style="margin-right:5px;color:#0D8ABC;"></i>Pharmacies</a></li>
+                        <li><a href="{{ path('app_appointments') }}"><i class="fas fa-calendar-alt" style="margin-right:5px;color:#0D8ABC;"></i>Rendez-Vous</a></li>
+                    {% endif %}
+                    {% if app.user and (app.user.subscriptionType ?? app.user.role) == 'ROLE_MEDECIN' %}
+                        <li><a href="{{ path('app_medecin_symptomes_dashboard') }}"><i class="fas fa-chart-line" style="margin-right:5px;color:#0D8ABC;"></i>Santé patients</a></li>
+                    {% endif %}
+                    {% if app.user and app.user.subscriptionStatus == 'ACTIVE' and (app.user.subscriptionType ?? app.user.role) == 'ROLE_PHARMACIEN' %}
+                        <li class="nav-has-sub">
+                            <a href="{{ path('front_pharmacien_dashboard') }}"><i class="fas fa-clinic-medical" style="margin-right:4px;color:#0D8ABC;"></i>Ma pharmacie <i class="fas fa-chevron-down nav-caret"></i></a>
+                            <ul class="nav-sub">
+                                <li><a href="{{ path('front_pharmacien_dashboard') }}#dashboard"><i class="fas fa-tachometer-alt"></i> Tableau de bord</a></li>
+                                <li><div class="nav-sub-divider"></div></li>
+                                <li><a href="{{ path('front_pharmacien_dashboard') }}#list-pharmacies"><i class="fas fa-store"></i> Mes pharmacies</a></li>
+                                <li><a href="{{ path('front_pharmacien_dashboard') }}#create-pharmacy"><i class="fas fa-plus-circle"></i> Créer une pharmacie</a></li>
+                                <li><div class="nav-sub-divider"></div></li>
+                                <li><a href="{{ path('front_pharmacien_dashboard') }}#list-medicaments"><i class="fas fa-pills"></i> Mes médicaments</a></li>
+                                <li><a href="{{ path('front_pharmacien_dashboard') }}#create-medicament"><i class="fas fa-capsules"></i> Ajouter médicament</a></li>
+                                <li><div class="nav-sub-divider"></div></li>
+                                <li><a href="{{ path('front_pharmacien_dashboard') }}#list-stocks"><i class="fas fa-warehouse"></i> Mon stock</a></li>
+                                <li><a href="{{ path('front_pharmacien_dashboard') }}#list-reservations"><i class="fas fa-calendar-check"></i> Réservations</a></li>
+                            </ul>
+                        </li>
+                    {% endif %}
+                    <li><a href="#contact-section"><i class="fas fa-envelope" style="margin-right:5px;color:#0D8ABC;"></i>{{ 'nav.contact'|trans }}</a></li>
                 </ul>
+
                 {% if app.user %}
-                    <a href="{{ path('app_home') }}" class="btn-appointment">Mon compte</a>
-                    <a href="{{ path('app_logout') }}" class="btn-danger">Déconnexion</a>
+                {% set _avatarUrl = app.user.avatarDataUri ?: ('https://ui-avatars.com/api/?name=' ~ app.user.nom|url_encode ~ '+' ~ app.user.prenom|url_encode ~ '&background=0D8ABC&color=fff&size=40') %}
+                <div class="nav-icons">
+
+                    <!-- ① Bell — Notifications -->
+                    <div class="nav-icon-wrap">
+                        <button class="nav-icon-btn" id="notifBtn" aria-label="Notifications" aria-expanded="false">
+                            <i class="fas fa-bell"></i>
+                            <span class="nav-badge" id="notifBadge" hidden>0</span>
+                        </button>
+                        <div class="nav-dropdown" id="notifDropdown" role="menu">
+                            <div class="nav-dropdown-header">
+                                <span><i class="fas fa-bell" style="color:#0D8ABC;margin-right:8px;"></i>Notifications</span>
+                                <button id="markAllReadBtn" class="nav-dropdown-action" type="button">Tout lire</button>
+                            </div>
+                            <div id="notifList" class="notif-list">
+                                <div class="notif-empty"><i class="fas fa-bell-slash" style="font-size:22px;display:block;margin-bottom:8px;opacity:.4;"></i>Aucune notification</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ② Messages -->
+                    <div class="nav-icon-wrap">
+                        <button class="nav-icon-btn" id="msgNavBtn" aria-label="Messages" aria-expanded="false">
+                            <i class="fas fa-comment-dots"></i>
+                            <span class="nav-badge" id="msgBadge" hidden>0</span>
+                        </button>
+                        <div class="nav-dropdown" id="msgDropdown" role="menu">
+                            <div class="nav-dropdown-header">
+                                <span><i class="fas fa-comments" style="color:#0D8ABC;margin-right:8px;"></i>Messages</span>
+                                <a href="{{ path('app_message_index') }}" class="nav-dropdown-action">Voir tout</a>
+                            </div>
+                            <div id="convList" class="conv-list">
+                                <div class="conv-empty"><i class="fas fa-comments" style="font-size:22px;display:block;margin-bottom:8px;opacity:.4;"></i>Aucune conversation</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ③ Mon compte (avatar) -->
+                    <div class="nav-icon-wrap account-menu">
+                        <button class="nav-icon-btn nav-avatar-btn" id="accountBtn" aria-label="Mon compte" aria-expanded="false">
+                            <img src="{{ _avatarUrl }}" alt="Avatar" class="nav-avatar-img">
+                        </button>
+
+                        <div class="account-dropdown nav-dropdown" id="accountDropdown">
+                            {# ── header ── #}
+                            {% set _userRole = app.user.subscriptionType ?? app.user.role %}
+                            {% if _userRole == 'ROLE_MEDECIN' %}
+                                {% set _roleLabel = 'Médecin' %} {% set _roleIcon = 'fas fa-user-md' %}
+                            {% elseif _userRole == 'ROLE_PHARMACIEN' %}
+                                {% set _roleLabel = 'Pharmacien' %} {% set _roleIcon = 'fas fa-pills' %}
+                            {% elseif _userRole == 'ROLE_COACH' %}
+                                {% set _roleLabel = 'Coach' %} {% set _roleIcon = 'fas fa-dumbbell' %}
+                            {% elseif _userRole == 'ROLE_NUTRITIONNISTE' %}
+                                {% set _roleLabel = 'Nutritionniste' %} {% set _roleIcon = 'fas fa-apple-alt' %}
+                            {% else %}
+                                {% set _roleLabel = 'Patient' %} {% set _roleIcon = 'fas fa-user' %}
+                            {% endif %}
+                            <div class="account-header">
+                                <div class="acc-avatar-ring">
+                                    <img src="{{ _avatarUrl }}" alt="Avatar">
+                                </div>
+                                <div class="acc-name">{{ app.user.nom }} {{ app.user.prenom }}</div>
+                                <div class="acc-email">{{ app.user.email }}</div>
+                                <span class="acc-role-badge"><i class="{{ _roleIcon }}"></i> {{ _roleLabel }}</span>
+                                {% if app.user %}
+                                {% set _aiScore = user_ai_score(app.user) %}
+                                <div class="acc-score">
+                                    <strong>{{ _aiScore }}/100</strong>
+                                    <span style="opacity:.8;">Score IA</span>
+                                    <div class="acc-score-bar-wrap">
+                                        <div class="acc-score-bar-fill" style="width:{{ _aiScore }}%;"></div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            {# ── body ── #}
+                            <div class="acc-body">
+                                {% set canTeleconsult = is_granted('ROLE_PATIENT') or is_granted('ROLE_MEDECIN') %}
+                                {% set canPlan = is_granted('ROLE_PATIENT') or is_granted('ROLE_MEDECIN') or is_granted('ROLE_COACH') or is_granted('ROLE_NUTRITIONNISTE') %}
+                                {% set isPatient = app.user and (app.user.subscriptionType ?? app.user.role) == 'ROLE_PATIENT' %}
+                                {% set isProfessionalPlanRole = app.user and (app.user.subscriptionType ?? app.user.role) in ['ROLE_MEDECIN', 'ROLE_COACH', 'ROLE_NUTRITIONNISTE'] %}
+                                {% set canAiTools = app.user and (is_granted('ROLE_ADMIN') or (app.user.subscriptionStatus == 'ACTIVE' and (app.user.subscriptionType ?? app.user.role) in ['ROLE_PATIENT', 'ROLE_MEDECIN', 'ROLE_COACH', 'ROLE_NUTRITIONNISTE'])) %}
+
+                                <a href="{{ path('profile_edit') }}" class="dropdown-item">
+                                    <i class="fas fa-user-circle"></i> {{ 'nav.settings'|trans }}
+                                </a>
+                                <a href="{{ path('profile_mfa') }}" class="dropdown-item">
+                                    <i class="fas fa-key"></i> {{ 'nav.mfa'|trans }}
+                                </a>
+                                {% if canAiTools %}
+                                <a href="{{ path('app_ai_tools_index') }}" class="dropdown-item">
+                                    <i class="fas fa-robot"></i> Outils IA
+                                </a>
+                                {% endif %}
+
+                                <div class="dropdown-divider"></div>
+
+                                <div class="dropdown-section has-submenu">
+                                    <button type="button" class="dropdown-section-toggle" data-submenu="accompagnement" aria-controls="submenu-accompagnement" aria-expanded="false">
+                                        <i class="fas fa-hand-holding-heart"></i>
+                                        <span>Accompagnement</span>
+                                        <i class="fas fa-chevron-right toggle-indicator" aria-hidden="true"></i>
+                                    </button>
+                                    <div class="dropdown-submenu" id="submenu-accompagnement" role="menu" aria-hidden="true">
+                                        <a href="{{ path('app_message_index') }}" class="dropdown-item">
+                                            <i class="fas fa-envelope"></i> Messages
+                                        </a>
+                                        <a href="{{ path('app_document_index') }}" class="dropdown-item">
+                                            <i class="fas fa-file-alt"></i> Documents
+                                        </a>
+                                        {% if canTeleconsult %}
+                                        <a href="{{ path('app_teleconsultation_index') }}" class="dropdown-item">
+                                            <i class="fas fa-video"></i> Consultations vidéo
+                                        </a>
+                                        {% endif %}
+                                        {% if canPlan %}
+                                        <a href="{{ isProfessionalPlanRole ? path('app_plan_professional_plans') : path('app_plan_index') }}" class="dropdown-item">
+                                            <i class="fas fa-calendar-check"></i> Mes plans
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                {% if isPatient %}
+                                <div class="dropdown-section has-submenu">
+                                    <button type="button" class="dropdown-section-toggle" data-submenu="sante" aria-controls="submenu-sante" aria-expanded="false">
+                                        <i class="fas fa-heartbeat"></i>
+                                        <span>Santé quotidienne</span>
+                                        <i class="fas fa-chevron-right toggle-indicator" aria-hidden="true"></i>
+                                    </button>
+                                    <div class="dropdown-submenu" id="submenu-sante" role="menu" aria-hidden="true">
+                                        <a href="{{ path('app_sante_quotidienne_index') }}" class="dropdown-item">
+                                            <i class="fas fa-book-medical"></i> Mon journal santé
+                                        </a>
+                                        <a href="{{ path('app_symptomes') }}" class="dropdown-item">
+                                            <i class="fas fa-stethoscope"></i> Mes symptômes
+                                        </a>
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                <a href="{{ path('app_subscription_overview') }}" class="dropdown-item">
+                                    <i class="fas fa-star"></i> {{ 'nav.subscription'|trans }}
+                                </a>
+                                {% if isPatient %}
+                                <a href="{{ path('app_appointments') }}" class="dropdown-item">
+                                    <i class="fas fa-calendar-alt"></i> Rendez-vous
+                                </a>
+                                <a href="#" class="dropdown-item" id="openGlobalReportModal">
+                                    <i class="fas fa-file-medical"></i> Rapport global
+                                </a>
+                                {% endif %}
+                                {% if app.user and (app.user.subscriptionType ?? app.user.role) == 'ROLE_MEDECIN' %}
+                                <a href="{{ path('app_medecin_symptomes_dashboard') }}" class="dropdown-item">
+                                    <i class="fas fa-chart-line"></i> Santé des patients
+                                </a>
+                                <a href="{{ path('app_appointments') }}" class="dropdown-item">
+                                    <i class="fas fa-calendar-alt"></i> Rendez-vous
+                                </a>
+                                {% endif %}
+                                {% if app.user and (app.user.subscriptionType ?? app.user.role) == 'ROLE_PHARMACIEN' %}
+                                <a href="{{ path('front_pharmacien_dashboard') }}" class="dropdown-item">
+                                    <i class="fas fa-clinic-medical"></i> Ma pharmacie
+                                </a>
+                                {% endif %}
+
+                                <div class="dropdown-divider"></div>
+
+                                <div class="dropdown-inline">
+                                    <span>{{ 'nav.theme'|trans }}</span>
+                                    <div class="inline-actions">
+                                        <a href="{{ path('app_theme', {theme: 'light'}) }}" class="mini-pill">{{ 'theme.light'|trans }}</a>
+                                        <a href="{{ path('app_theme', {theme: 'dark'}) }}" class="mini-pill">{{ 'theme.dark'|trans }}</a>
+                                    </div>
+                                </div>
+                                <div class="dropdown-inline">
+                                    <span>{{ 'nav.language'|trans }}</span>
+                                    <div class="inline-actions">
+                                        <a href="{{ path('app_locale', {_locale: 'fr'}) }}" class="mini-pill">FR</a>
+                                        <a href="{{ path('app_locale', {_locale: 'en'}) }}" class="mini-pill">EN</a>
+                                        <a href="{{ path('app_locale', {_locale: 'ar'}) }}" class="mini-pill">AR</a>
+                                    </div>
+                                </div>
+
+                                <div class="dropdown-divider"></div>
+
+                                <a href="{{ path('app_logout') }}" class="dropdown-item danger" style="margin-bottom:6px;">
+                                    <i class="fas fa-sign-out-alt"></i> {{ 'nav.logout'|trans }}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
                 {% else %}
-                    <a href="{{ path('login') }}" class="btn-appointment" id="btn-login">Se connecter</a>
+                    <a href="{{ path('login') }}" class="btn-appointment">{{ 'nav.login'|trans }}</a>
                 {% endif %}
-                <div class="menu-toggle"><i class="fas fa-bars"></i></div>
+
+                <div class="menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </div>
             </nav>
         </header>
+
     {% endblock %}
     
-    {% block body %}{% endblock %}
+    {% block body %}
+        <main class="content-area" style="padding: 20px;">
+            {% for type, messages in app.flashes %}
+                {% if type == 'success' %}
+                    {% set alertClass = 'alert-success' %}
+                {% elseif type == 'error' %}
+                    {% set alertClass = 'alert-danger' %}
+                {% elseif type == 'warning' %}
+                    {% set alertClass = 'alert-warning' %}
+                {% else %}
+                    {% set alertClass = 'alert-info' %}
+                {% endif %}
+                {% for message in messages %}
+                    <div class="alert {{ alertClass }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+            {% block content %}{% endblock %}
+        </main>
+    {% endblock %}
+
+    <div class="global-loader" id="globalLoader" aria-hidden="true">
+        <div class="loader-card">
+            <div class="loader-spinner"></div>
+            <div class="loader-text">Chargement…</div>
+        </div>
+    </div>
+
+    {% if app.user and app.user.subscriptionStatus == 'SKIPPED' %}
+        <div class="subscription-banner">
+            <span>Mode découverte actif. Certaines fonctionnalités nécessitent un abonnement.</span>
+            <a href="{{ path('app_subscription') }}" class="subscription-banner-btn">S'abonner</a>
+        </div>
+    {% endif %}
+
+    {% if app.user and (app.user.subscriptionType ?? app.user.role) == 'ROLE_PATIENT' %}
+    <div class="global-report-modal" id="globalReportModal" aria-hidden="true">
+        <div class="global-report-modal-card" role="dialog" aria-modal="true" aria-labelledby="globalReportTitle">
+
+            <!-- Hero header -->
+            <div class="global-report-modal-hero">
+                <button type="button" class="global-report-close" id="closeGlobalReportModal" aria-label="Fermer">
+                    <i class="fas fa-times"></i>
+                </button>
+                <div class="global-report-modal-icon"><i class="fas fa-file-medical-alt"></i></div>
+                <h3 id="globalReportTitle">Rapport global de santé</h3>
+                <p>Votre bilan de santé personnalisé en un seul fichier PDF</p>
+            </div>
+
+            <!-- Body -->
+            <form method="get" action="{{ path('app_sante_quotidienne_total_report_download') }}" class="global-report-modal-body" id="globalReportDownloadForm" data-download="1">
+
+                <!-- Feature chips -->
+                <div class="grm-features">
+                    <span class="grm-feature-chip"><i class="fas fa-check-circle"></i> Résumé &amp; stats</span>
+                    <span class="grm-feature-chip"><i class="fas fa-check-circle"></i> Risques estimés</span>
+                    <span class="grm-feature-chip"><i class="fas fa-check-circle"></i> Historique complet</span>
+                    <span class="grm-feature-chip"><i class="fas fa-check-circle"></i> Envoi par e-mail</span>
+                </div>
+
+                <!-- Period selection -->
+                <p class="grm-period-label">Période couverte</p>
+                <div class="grm-period-group">
+                    <input type="radio" name="period" id="grp7"  value="7">
+                    <label for="grp7">7 jours</label>
+                    <input type="radio" name="period" id="grp30" value="30" checked>
+                    <label for="grp30">30 jours</label>
+                    <input type="radio" name="period" id="grp90" value="90">
+                    <label for="grp90">90 jours</label>
+                </div>
+
+                <button type="submit" class="grm-download-btn">
+                    <i class="fas fa-file-download"></i>
+                    Générer &amp; Télécharger le PDF
+                </button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if app.user %}
+    <!-- Messenger popup container (Messenger desktop style) -->
+    <div id="messengerContainer"></div>
+    {% endif %}
+
+    {% block javascripts %}
+        <script>
+            (function () {
+                const showToast = (type, message) => {
+                    const container = document.getElementById('toastContainer');
+                    if (!container || !message) return;
+                    const toast = document.createElement('div');
+                    toast.className = `toast toast-${type || 'info'}`;
+                    toast.innerHTML = `<span>${message}</span>`;
+                    container.appendChild(toast);
+                    requestAnimationFrame(() => toast.classList.add('show'));
+                    setTimeout(() => {
+                        toast.classList.remove('show');
+                        setTimeout(() => toast.remove(), 300);
+                    }, 3000);
+                };
+
+                window.showToast = showToast;
+
+                const originalFetch = window.fetch.bind(window);
+                window.fetch = async (...args) => {
+                    const options = args[1] || {};
+                    const method = (options.method || 'GET').toUpperCase();
+                    const skipToast = options.toast === false;
+                    const showLoader = options.loading === true && typeof window.setLoading === 'function';
+                    if (showLoader) window.setLoading(true);
+                    let response;
+                    try {
+                        response = await originalFetch(...args);
+                    } finally {
+                        if (showLoader) window.setLoading(false);
+                    }
+
+                    if (!skipToast && method !== 'GET' && !response.ok) {
+                        const contentType = response.headers.get('content-type') || '';
+                        let payload = null;
+                        if (contentType.includes('application/json')) {
+                            try {
+                                payload = await response.clone().json();
+                            } catch (_) {}
+                        }
+                        const msg = payload?.message || payload?.error || response.statusText || 'Erreur.';
+                        showToast('error', msg);
+                    }
+
+                    return response;
+                };
+            })();
+
+            (function () {
+                const loader = document.getElementById('globalLoader');
+                if (!loader) return;
+                const show = () => {
+                    loader.classList.add('show');
+                    loader.setAttribute('aria-hidden', 'false');
+                };
+                const hide = () => {
+                    loader.classList.remove('show');
+                    loader.setAttribute('aria-hidden', 'true');
+                };
+                window.setLoading = (on) => (on ? show() : hide());
+
+                document.querySelectorAll('form').forEach((form) => {
+                    if (form.dataset.ajax === '1') return;
+                    if (form.dataset.download === '1') return;
+                    form.addEventListener('submit', () => {
+                        show();
+                    });
+                });
+
+                document.querySelectorAll('a[href]').forEach((link) => {
+                    if (link.target === '_blank' || link.hasAttribute('download')) return;
+                    link.addEventListener('click', (e) => {
+                        const href = link.getAttribute('href');
+                        if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
+                        // Skip loader for same-page hash navigation (e.g. /dashboard#panel)
+                        try {
+                            const linkUrl = new URL(link.href, location.href);
+                            if (linkUrl.pathname === location.pathname && linkUrl.hash) return;
+                        } catch (_) {}
+                        show();
+                    });
+                });
+
+                window.addEventListener('pageshow', (e) => {
+                    if (e.persisted) hide();
+                });
+
+                window.addEventListener('load', hide);
+                document.addEventListener('turbo:load', hide);
+            })();
+            function __santea_initNav() {
+
+            // ─── Generic dropdown helpers ─────────────────────────────────────────
+            const allDropdowns = [];
+
+            function closeAllDropdowns(except) {
+                allDropdowns.forEach(({ btn, dropdown }) => {
+                    if (dropdown === except) return;
+                    dropdown.classList.remove('show');
+                    btn.setAttribute('aria-expanded', 'false');
+                });
+            }
+
+            function setupDropdown(btnId, dropdownId, onOpen) {
+                const btn      = document.getElementById(btnId);
+                const dropdown = document.getElementById(dropdownId);
+                if (!btn || !dropdown) return;
+
+                // Remove stale listeners from a previous __santea_initNav call
+                // (happens when DOMContentLoaded + turbo:load both fire, or on re-navigation)
+                if (btn._navClickHandler)      btn.removeEventListener('click', btn._navClickHandler);
+                if (dropdown._navClickHandler) dropdown.removeEventListener('click', dropdown._navClickHandler);
+
+                allDropdowns.push({ btn, dropdown });
+
+                btn._navClickHandler = (e) => {
+                    e.stopPropagation();
+                    const isOpen = dropdown.classList.contains('show');
+                    closeAllDropdowns();
+                    closeAllSubmenus();
+                    if (!isOpen) {
+                        dropdown.classList.add('show');
+                        btn.setAttribute('aria-expanded', 'true');
+                        if (onOpen) onOpen();
+                    }
+                };
+                btn.addEventListener('click', btn._navClickHandler);
+
+                dropdown._navClickHandler = (e) => e.stopPropagation();
+                dropdown.addEventListener('click', dropdown._navClickHandler);
+            }
+
+            // Single persistent document click listener — updated on each Turbo re-init
+            if (!window.__navClickBound) {
+                window.__navClickBound = true;
+                document.addEventListener('click', () => window.__navCloseAll && window.__navCloseAll());
+            }
+            window.__navCloseAll = () => { closeAllDropdowns(); closeAllSubmenus(); };
+
+            // ─── Account dropdown submenus ─────────────────────────────────────
+            const accountDropdown      = document.getElementById('accountDropdown');
+            const sectionsWithSubmenu  = accountDropdown ? accountDropdown.querySelectorAll('.dropdown-section.has-submenu') : [];
+            const submenuToggles       = accountDropdown ? accountDropdown.querySelectorAll('.dropdown-section-toggle') : [];
+            const submenuPanels        = accountDropdown ? accountDropdown.querySelectorAll('.dropdown-submenu') : [];
+
+            function closeAllSubmenus() {
+                sectionsWithSubmenu.forEach(s => s.classList.remove('open'));
+                submenuToggles.forEach(t  => t.setAttribute('aria-expanded', 'false'));
+                submenuPanels.forEach(p   => p.setAttribute('aria-hidden', 'true'));
+            }
+            closeAllSubmenus();
+
+            submenuToggles.forEach((toggle) => {
+                if (toggle._submenuToggleHandler) {
+                    toggle.removeEventListener('click', toggle._submenuToggleHandler);
+                }
+
+                toggle._submenuToggleHandler = (event) => {
+                    event.stopPropagation();
+                    const section  = toggle.closest('.dropdown-section');
+                    const isActive = section.classList.contains('open');
+                    closeAllSubmenus();
+                    if (!isActive) {
+                        section.classList.add('open');
+                        toggle.setAttribute('aria-expanded', 'true');
+                        const panelId = toggle.getAttribute('aria-controls');
+                        const panel   = panelId ? document.getElementById(panelId) : null;
+                        if (panel) panel.setAttribute('aria-hidden', 'false');
+                    }
+                };
+
+                toggle.addEventListener('click', toggle._submenuToggleHandler);
+            });
+            submenuPanels.forEach((panel) => {
+                if (panel._submenuPanelClickHandler) {
+                    panel.removeEventListener('click', panel._submenuPanelClickHandler);
+                }
+                panel._submenuPanelClickHandler = (e) => e.stopPropagation();
+                panel.addEventListener('click', panel._submenuPanelClickHandler);
+            });
+
+            // ─── Utility ──────────────────────────────────────────────────────────
+            function timeAgo(dateStr) {
+                const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
+                if (diff < 60)    return 'À l\'instant';
+                if (diff < 3600)  return Math.floor(diff / 60) + ' min';
+                if (diff < 86400) return Math.floor(diff / 3600) + ' h';
+                return Math.floor(diff / 86400) + ' j';
+            }
+
+            function notifTypeIcon(type) {
+                const map = { message:'fa-envelope', appointment:'fa-calendar-check', document:'fa-file-medical', system:'fa-bell', alert:'fa-exclamation-triangle' };
+                return map[type] || 'fa-bell';
+            }
+
+            // ─── Notifications ─────────────────────────────────────────────────
+            const notifBadge = document.getElementById('notifBadge');
+            const notifList  = document.getElementById('notifList');
+            const markAllBtn = document.getElementById('markAllReadBtn');
+
+            async function loadNotifications() {
+                try {
+                    const res  = await fetch('/api/notification/mine', { toast: false });
+                    const data = await res.json();
+                    const count = data.unread || 0;
+                    if (notifBadge) {
+                        notifBadge.textContent = count > 9 ? '9+' : count;
+                        notifBadge.hidden = count === 0;
+                    }
+                    if (!notifList) return;
+                    if (!data.notifications || data.notifications.length === 0) {
+                        notifList.innerHTML = '<div class="notif-empty"><i class="fas fa-bell-slash" style="font-size:22px;display:block;margin-bottom:8px;opacity:.4;"></i>Aucune notification</div>';
+                        return;
+                    }
+                    notifList.innerHTML = data.notifications.map(n => {
+                        const tag  = n.lien ? `a href="${n.lien}"` : 'div';
+                        const end  = n.lien ? 'a' : 'div';
+                        return `<${tag} class="notif-item ${n.lu ? '' : 'unread'}">
+                            <div class="notif-icon"><i class="fas ${notifTypeIcon(n.type)}"></i></div>
+                            <div class="notif-body">
+                                <div class="notif-title">${n.titre}</div>
+                                <div class="notif-msg">${n.message}</div>
+                            </div>
+                            <div class="notif-time">${timeAgo(n.createdAt)}</div>
+                        </${end}>`;
+                    }).join('');
+                } catch (_) {}
+            }
+
+            if (markAllBtn) {
+                markAllBtn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    try {
+                        await fetch('/api/notification/read-all', { method: 'POST', toast: false });
+                        await loadNotifications();
+                    } catch (_) {}
+                });
+            }
+
+            setupDropdown('notifBtn', 'notifDropdown', loadNotifications);
+            loadNotifications();
+            setInterval(loadNotifications, 60000);
+
+            // ─── Messages ──────────────────────────────────────────────────────
+            const msgBadge = document.getElementById('msgBadge');
+            const convList = document.getElementById('convList');
+
+            async function loadConversations() {
+                try {
+                    const res  = await fetch('/messages/api/conversations', { toast: false });
+                    const data = await res.json();
+                    const count = data.unread || 0;
+                    if (msgBadge) {
+                        msgBadge.textContent = count > 9 ? '9+' : count;
+                        msgBadge.hidden = count === 0;
+                    }
+                    if (!convList) return;
+                    if (!data.conversations || data.conversations.length === 0) {
+                        convList.innerHTML = '<div class="conv-empty"><i class="fas fa-comments" style="font-size:22px;display:block;margin-bottom:8px;opacity:.4;"></i>Aucune conversation</div>';
+                        return;
+                    }
+                    convList.innerHTML = data.conversations.map(c => `
+                        <div class="conv-item" data-conv-id="${c.id}" data-user-id="${c.otherUserId}"
+                             data-user-name="${c.otherUserName.replace(/"/g,'&quot;')}" data-user-avatar="${c.otherUserAvatar}">
+                            <img src="${c.otherUserAvatar}" alt="" class="conv-avatar"
+                                 onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent('User')}&background=0D8ABC&color=fff&size=40'">
+                            <div class="conv-info">
+                                <div class="conv-name">${c.otherUserName}</div>
+                                <div class="conv-time">${c.lastMessageAt ? timeAgo(c.lastMessageAt) : ''}</div>
+                            </div>
+                            <i class="fas fa-chevron-right" style="color:#cbd5e1;font-size:12px;flex-shrink:0;"></i>
+                        </div>
+                    `).join('');
+                    convList.querySelectorAll('.conv-item').forEach(item => {
+                        item.addEventListener('click', () => {
+                            openChatPopup(item.dataset.convId, item.dataset.userId, item.dataset.userName, item.dataset.userAvatar);
+                            closeAllDropdowns();
+                        });
+                    });
+                } catch (_) {}
+            }
+
+            setupDropdown('msgNavBtn', 'msgDropdown', loadConversations);
+            loadConversations();
+            setInterval(loadConversations, 30000);
+
+            // ─── Account button ─────────────────────────────────────────────────
+            setupDropdown('accountBtn', 'accountDropdown');
+
+            // ─── Global Report Modal (patient) ─────────────────────────────────
+            const globalReportModal = document.getElementById('globalReportModal');
+            const openGlobalReportModalBtn = document.getElementById('openGlobalReportModal');
+            const closeGlobalReportModalBtn = document.getElementById('closeGlobalReportModal');
+            const globalReportDownloadForm = document.getElementById('globalReportDownloadForm');
+
+            const closeGlobalReportModal = () => {
+                if (!globalReportModal) return;
+                globalReportModal.classList.remove('show');
+                globalReportModal.setAttribute('aria-hidden', 'true');
+            };
+
+            if (openGlobalReportModalBtn && globalReportModal) {
+                if (openGlobalReportModalBtn._openReportModalHandler) {
+                    openGlobalReportModalBtn.removeEventListener('click', openGlobalReportModalBtn._openReportModalHandler);
+                }
+                openGlobalReportModalBtn._openReportModalHandler = (e) => {
+                    e.preventDefault();
+                    closeAllDropdowns();
+                    closeAllSubmenus();
+                    globalReportModal.classList.add('show');
+                    globalReportModal.setAttribute('aria-hidden', 'false');
+                };
+                openGlobalReportModalBtn.addEventListener('click', openGlobalReportModalBtn._openReportModalHandler);
+
+                if (closeGlobalReportModalBtn) {
+                    if (closeGlobalReportModalBtn._closeReportModalHandler) {
+                        closeGlobalReportModalBtn.removeEventListener('click', closeGlobalReportModalBtn._closeReportModalHandler);
+                    }
+                    closeGlobalReportModalBtn._closeReportModalHandler = (e) => {
+                        e.preventDefault();
+                        closeGlobalReportModal();
+                    };
+                    closeGlobalReportModalBtn.addEventListener('click', closeGlobalReportModalBtn._closeReportModalHandler);
+                }
+
+                if (globalReportDownloadForm) {
+                    if (globalReportDownloadForm._submitCloseHandler) {
+                        globalReportDownloadForm.removeEventListener('submit', globalReportDownloadForm._submitCloseHandler);
+                    }
+                    globalReportDownloadForm._submitCloseHandler = () => {
+                        setTimeout(() => {
+                            closeGlobalReportModal();
+                            if (typeof window.setLoading === 'function') {
+                                window.setLoading(false);
+                            }
+                        }, 150);
+                    };
+                    globalReportDownloadForm.addEventListener('submit', globalReportDownloadForm._submitCloseHandler);
+                }
+
+                if (globalReportModal._overlayCloseHandler) {
+                    globalReportModal.removeEventListener('click', globalReportModal._overlayCloseHandler);
+                }
+                globalReportModal._overlayCloseHandler = (event) => {
+                    if (event.target === globalReportModal) {
+                        closeGlobalReportModal();
+                    }
+                };
+                globalReportModal.addEventListener('click', globalReportModal._overlayCloseHandler);
+
+                if (!window.__globalReportEscBound) {
+                    window.__globalReportEscBound = true;
+                    document.addEventListener('keydown', (event) => {
+                        if (event.key === 'Escape') {
+                            closeGlobalReportModal();
+                        }
+                    });
+                }
+            }
+
+            // ─── Portal Nav Dropdowns to <body> ──────────────────────────────────
+            // backdrop-filter on <header> creates a stacking context that traps
+            // children regardless of z-index. Moving dropdowns to <body> (portal
+            // pattern) keeps them in the root stacking context and above everything.
+            (function portalNavDropdowns() {
+                const pairs = [
+                    { btnId: 'notifBtn',  dropId: 'notifDropdown'  },
+                    { btnId: 'msgNavBtn', dropId: 'msgDropdown'     },
+                    { btnId: 'accountBtn',dropId: 'accountDropdown' },
+                ];
+                pairs.forEach(({ btnId, dropId }) => {
+                    const btn  = document.getElementById(btnId);
+                    const drop = document.getElementById(dropId);
+                    if (!btn || !drop) return;
+
+                    // Detach from header and attach to body
+                    document.body.appendChild(drop);
+
+                    // Override CSS positioning to fixed so it's viewport-relative
+                    Object.assign(drop.style, {
+                        position : 'fixed',
+                        top      : '-9999px',
+                        left     : '-9999px',
+                        right    : 'auto',
+                        bottom   : 'auto',
+                        margin   : '0',
+                        zIndex   : '99999',
+                    });
+
+                    function reposition() {
+                        const r    = btn.getBoundingClientRect();
+                        const dropW = drop.offsetWidth  || 360;
+                        const dropH = drop.scrollHeight || 500;
+                        const vw   = window.innerWidth;
+                        const vh   = window.innerHeight;
+                        const gap  = 8;
+
+                        // Align right edge of dropdown with right edge of button
+                        let left = r.right - dropW;
+                        if (left < gap)              left = gap;
+                        if (left + dropW > vw - gap) left = vw - dropW - gap;
+
+                        // Open downward; flip upward if it would bleed off-screen
+                        const top = (r.bottom + gap + dropH > vh - gap)
+                            ? Math.max(gap, r.top - dropH - gap)
+                            : r.bottom + gap;
+
+                        drop.style.top  = top  + 'px';
+                        drop.style.left = left + 'px';
+                    }
+
+                    // Reposition every time .show is toggled
+                    new MutationObserver(() => {
+                        if (drop.classList.contains('show')) {
+                            reposition();
+                        } else {
+                            drop.style.top  = '-9999px';
+                            drop.style.left = '-9999px';
+                        }
+                    }).observe(drop, { attributes: true, attributeFilter: ['class'] });
+
+                    window.addEventListener('resize', () => {
+                        if (drop.classList.contains('show')) reposition();
+                    }, { passive: true });
+                });
+            })();
+            // ─────────────────────────────────────────────────────────────────────
+
+            // ─── Messenger Popup ────────────────────────────────────────────────
+            const messengerContainer = document.getElementById('messengerContainer');
+            const openPopups = new Map();
+
+            function openChatPopup(convId, recipientId, recipientName, avatarUrl) {
+                if (openPopups.has(convId)) {
+                    const existing = openPopups.get(convId);
+                    existing.classList.remove('minimized');
+                    existing.querySelector('.chat-popup-input')?.focus();
+                    return;
+                }
+                if (!messengerContainer) return;
+
+                const safeAvatar = avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(recipientName)}&background=0D8ABC&color=fff&size=40`;
+
+                const popup = document.createElement('div');
+                popup.className = 'chat-popup';
+                popup.dataset.convId = convId;
+                popup.innerHTML = `
+                    <div class="chat-popup-header">
+                        <img src="${safeAvatar}" alt="" class="chat-popup-avatar"
+                             onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(recipientName)}&background=0D8ABC&color=fff&size=40'">
+                        <span class="chat-popup-name">${recipientName}</span>
+                        <div class="chat-popup-actions">
+                            <button class="chat-popup-btn" title="Minimiser" data-action="minimize"><i class="fas fa-minus"></i></button>
+                            <a href="/messages/conversation/${convId}" class="chat-popup-btn" title="Ouvrir" style="text-decoration:none;"><i class="fas fa-external-link-alt"></i></a>
+                            <button class="chat-popup-btn" title="Fermer" data-action="close"><i class="fas fa-times"></i></button>
+                        </div>
+                    </div>
+                    <div class="chat-popup-messages" id="popupMessages-${convId}">
+                        <div class="popup-loading"><i class="fas fa-spinner fa-spin"></i>&nbsp;Chargement…</div>
+                    </div>
+                    <div class="chat-popup-footer">
+                        <input type="text" class="chat-popup-input" placeholder="Écrire un message…" id="popupInput-${convId}" autocomplete="off">
+                        <button class="chat-popup-send" id="popupSend-${convId}"><i class="fas fa-paper-plane"></i></button>
+                    </div>
+                `;
+                messengerContainer.appendChild(popup);
+                openPopups.set(convId, popup);
+
+                popup.querySelector('.chat-popup-header').addEventListener('click', (e) => {
+                    if (e.target.closest('[data-action]') || e.target.closest('a')) return;
+                    popup.classList.toggle('minimized');
+                });
+                popup.querySelector('[data-action="minimize"]').addEventListener('click', (e) => {
+                    e.stopPropagation(); popup.classList.toggle('minimized');
+                });
+                popup.querySelector('[data-action="close"]').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    clearInterval(pollInterval);
+                    popup.remove();
+                    openPopups.delete(convId);
+                });
+
+                const msgArea = popup.querySelector(`#popupMessages-${convId}`);
+                const input   = popup.querySelector(`#popupInput-${convId}`);
+                const sendBtn = popup.querySelector(`#popupSend-${convId}`);
+
+                function renderMessages(messages) {
+                    if (!messages || messages.length === 0) {
+                        msgArea.innerHTML = '<div class="conv-empty" style="font-size:12px;padding:20px;">Aucun message encore.</div>';
+                    } else {
+                        // Sort oldest → newest so conversation reads top-to-bottom
+                        const sorted = [...messages].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+                        let lastDate = null;
+                        const html = sorted.map(m => {
+                            let dateSep = '';
+                            const d = m.createdAt ? m.createdAt.slice(0, 10) : null;
+                            if (d && d !== lastDate) {
+                                lastDate = d;
+                                dateSep = `<div class="popup-date-sep">${d}</div>`;
+                            }
+                            return dateSep + `<div class="popup-msg ${m.isOwn ? 'own' : 'other'}">
+                                ${m.content.replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+                                <span class="popup-msg-time">${m.createdAt ? m.createdAt.slice(11,16) : ''}</span>
+                            </div>`;
+                        }).join('');
+                        msgArea.innerHTML = html;
+                        msgArea.scrollTop = msgArea.scrollHeight;
+                    }
+                }
+
+                let lastMsgCount = 0;
+                async function fetchHistory() {
+                    try {
+                        const res  = await fetch('/messages/history/' + recipientId + '?page=1', { toast: false });
+                        const data = await res.json();
+                        const msgs = data.messages || [];
+                        if (msgs.length !== lastMsgCount) {
+                            lastMsgCount = msgs.length;
+                            renderMessages(msgs);
+                        }
+                    } catch (_) {}
+                }
+                fetchHistory();
+
+                const pollInterval = setInterval(() => {
+                    if (!openPopups.has(convId)) { clearInterval(pollInterval); return; }
+                    fetchHistory();
+                }, 5000);
+
+                async function sendMessage() {
+                    const content = input.value.trim();
+                    if (!content) return;
+                    input.value = '';
+                    try {
+                        await fetch('/messages/send', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ recipientId: parseInt(recipientId), content }),
+                            toast: false,
+                        });
+                        lastMsgCount = 0; // force re-render
+                        await fetchHistory();
+                    } catch (_) {}
+                }
+
+                sendBtn.addEventListener('click', sendMessage);
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+                });
+                setTimeout(() => input.focus(), 100);
+            }
+
+            window.openChatPopup = openChatPopup;
+
+        } // end __santea_initNav
+
+        document.addEventListener("DOMContentLoaded", __santea_initNav);
+        document.addEventListener("turbo:load", __santea_initNav);
+
+        (function () {
+            const registerForm = document.getElementById('registerForm');
+            if (!registerForm) return;
+            if (registerForm.dataset.bound === '1') return;
+            registerForm.dataset.bound = '1';
+
+            registerForm.addEventListener('submit', async function (e) {
+                e.preventDefault();
+
+                document.querySelectorAll('.error-message').forEach(el => el.innerHTML = '');
+
+                const formData = new FormData(registerForm);
+
+                try {
+                    const response = await fetch(registerForm.action, {
+                        method: 'POST',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        body: formData
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        window.showToast?.('success', data.message || 'Inscription réussie.');
+                        window.location.href = data.redirect || '/';
+                    }
+                } catch (error) {
+                    const response = await error.response?.json?.();
+
+                    if (response && response.errors) {
+                        for (const field in response.errors) {
+                            const div = document.getElementById('error-' + field);
+                            if (div) {
+                                div.innerHTML = response.errors[field].join('<br>');
+                            }
+                        }
+                    }
+
+                    window.showToast?.('error', 'Erreur lors de l’inscription.');
+                }
+            });
+        })();
+        (function () {
+            const disableHtml5Validation = (root = document) => {
+                root.querySelectorAll('form').forEach((formEl) => {
+                    formEl.setAttribute('novalidate', 'novalidate');
+                    formEl.noValidate = true;
+                });
+            };
+            disableHtml5Validation();
+            document.addEventListener('invalid', (e) => e.preventDefault(), true);
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    mutation.addedNodes.forEach((node) => {
+                        if (!(node instanceof HTMLElement)) return;
+                        if (node.tagName === 'FORM') {
+                            node.setAttribute('novalidate', 'novalidate');
+                            node.noValidate = true;
+                        } else {
+                            disableHtml5Validation(node);
+                        }
+                    });
+                });
+            });
+            observer.observe(document.documentElement, { childList: true, subtree: true });
+        })();
+        </script>
+    {% endblock %}
     
     {% block footer %}
         <!-- Footer -->
@@ -47,9 +1694,17 @@
             </div>
         </footer>
     {% endblock %}
-    
-    {% block javascripts %}
-        <script src="{{ asset('js/script.js') }}"></script>
-    {% endblock %}
+
+    {{ importmap('app') }}
+
+    {# ──── SANTÉA 3D Layer ────────────────────────────────────────── #}
+    {# Three.js WebGL background (async, idle-loaded) #}
+    <script type="module" src="{{ asset('js/santea-3d-engine.js') }}?v=1"></script>
+    {# Interactions: scroll reveal, tilt, parallax, counters #}
+    <script defer src="{{ asset('js/santea-3d-interactions.js') }}?v=1"></script>
+
+    {# Toast container — last in DOM so z-index is always above modals #}
+    <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+
 </body>
 </html>

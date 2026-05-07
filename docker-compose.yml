@@ -1,49 +1,160 @@
 version: '3.8'
 
 services:
-  # Service PHP/Apache avec Symfony
+  # =========================
+  # Service PHP / Apache (Symfony)
+  # =========================
   web:
+    container_name: pidev-web
     build:
       context: ./docker/php
       dockerfile: Dockerfile
-    container_name: pidev-web
     ports:
       - "8000:80"
+      - "8443:443"
     volumes:
       - ./symfony-app:/var/www/html
     environment:
-      - APP_ENV=dev
-      - DATABASE_URL=mysql://symfony:symfony@db:3306/pidev?serverVersion=8.0
+      APP_ENV: dev
+      DATABASE_URL: "mysql://symfony:symfony@db-node1:3306/pidev?serverVersion=mariadb-11.4.0&charset=utf8mb4"
+      BLACKFIRE_SERVER_ID: ${BLACKFIRE_SERVER_ID:-}
+      BLACKFIRE_SERVER_TOKEN: ${BLACKFIRE_SERVER_TOKEN:-}
+      BLACKFIRE_AGENT_SOCKET: tcp://blackfire:8307
     depends_on:
       - db
     networks:
       - pidev-network
+    restart: unless-stopped
 
-  # Service MySQL 8.0
+    # 🔥 OBLIGATOIRE — corrige docker-compose exec muet
+    tty: true
+    stdin_open: true
+
+  # =========================
+  # Service Blackfire (profiling)
+  # =========================
+  blackfire:
+    image: blackfire/blackfire:2
+    container_name: pidev-blackfire
+    profiles:
+      - profiling
+    environment:
+      BLACKFIRE_SERVER_ID: ${BLACKFIRE_SERVER_ID:-}
+      BLACKFIRE_SERVER_TOKEN: ${BLACKFIRE_SERVER_TOKEN:-}
+      BLACKFIRE_CLIENT_ID: ${BLACKFIRE_CLIENT_ID:-}
+      BLACKFIRE_CLIENT_TOKEN: ${BLACKFIRE_CLIENT_TOKEN:-}
+    networks:
+      - pidev-network
+    restart: unless-stopped
+
+  # =========================
+  # Cluster Galera (MariaDB) - 3 noeuds
+  # Endpoint unique: service db (ProxySQL RW split)
+  # =========================
+  db-node1:
+    image: bitnamilegacy/mariadb-galera:11.4
+    container_name: pidev-db-node1
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_DATABASE: pidev
+      MARIADB_USER: symfony
+      MARIADB_PASSWORD: symfony
+      MARIADB_GALERA_CLUSTER_NAME: pidev-galera
+      MARIADB_GALERA_CLUSTER_ADDRESS: gcomm://
+      MARIADB_GALERA_NODE_NAME: db-node1
+      MARIADB_GALERA_NODE_ADDRESS: db-node1
+      MARIADB_GALERA_CLUSTER_BOOTSTRAP: "yes"
+      MARIADB_GALERA_FORCE_SAFETOBOOTSTRAP: "yes"
+      MARIADB_GALERA_MARIABACKUP_USER: mariabackup
+      MARIADB_GALERA_MARIABACKUP_PASSWORD: mariabackup
+      MARIADB_REPLICATION_USER: replicator
+      MARIADB_REPLICATION_PASSWORD: replicator
+      ALLOW_EMPTY_PASSWORD: "no"
+    volumes:
+      - db-node1-data:/bitnami/mariadb
+    networks:
+      - pidev-network
+    restart: unless-stopped
+
+  db-node2:
+    image: bitnamilegacy/mariadb-galera:11.4
+    container_name: pidev-db-node2
+    depends_on:
+      - db-node1
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_DATABASE: pidev
+      MARIADB_USER: symfony
+      MARIADB_PASSWORD: symfony
+      MARIADB_GALERA_CLUSTER_NAME: pidev-galera
+      MARIADB_GALERA_CLUSTER_ADDRESS: gcomm://db-node1,db-node2,db-node3
+      MARIADB_GALERA_NODE_NAME: db-node2
+      MARIADB_GALERA_NODE_ADDRESS: db-node2
+      MARIADB_GALERA_CLUSTER_BOOTSTRAP: "no"
+      MARIADB_GALERA_MARIABACKUP_USER: mariabackup
+      MARIADB_GALERA_MARIABACKUP_PASSWORD: mariabackup
+      MARIADB_REPLICATION_USER: replicator
+      MARIADB_REPLICATION_PASSWORD: replicator
+      ALLOW_EMPTY_PASSWORD: "no"
+    volumes:
+      - db-node2-data:/bitnami/mariadb
+    networks:
+      - pidev-network
+    restart: unless-stopped
+
+  db-node3:
+    image: bitnamilegacy/mariadb-galera:11.4
+    container_name: pidev-db-node3
+    depends_on:
+      - db-node1
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_DATABASE: pidev
+      MARIADB_USER: symfony
+      MARIADB_PASSWORD: symfony
+      MARIADB_GALERA_CLUSTER_NAME: pidev-galera
+      MARIADB_GALERA_CLUSTER_ADDRESS: gcomm://db-node1,db-node2,db-node3
+      MARIADB_GALERA_NODE_NAME: db-node3
+      MARIADB_GALERA_NODE_ADDRESS: db-node3
+      MARIADB_GALERA_CLUSTER_BOOTSTRAP: "no"
+      MARIADB_GALERA_MARIABACKUP_USER: mariabackup
+      MARIADB_GALERA_MARIABACKUP_PASSWORD: mariabackup
+      MARIADB_REPLICATION_USER: replicator
+      MARIADB_REPLICATION_PASSWORD: replicator
+      ALLOW_EMPTY_PASSWORD: "no"
+    volumes:
+      - db-node3-data:/bitnami/mariadb
+    networks:
+      - pidev-network
+    restart: unless-stopped
+
   db:
-    image: mysql:8.0
+    image: proxysql/proxysql:2.6.5
     container_name: pidev-db
     ports:
       - "3306:3306"
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: pidev
-      MYSQL_USER: symfony
-      MYSQL_PASSWORD: symfony
+      - "127.0.0.1:6032:6032"
+    depends_on:
+      - db-node1
+      - db-node2
+      - db-node3
     volumes:
-      - db-data:/var/lib/mysql
+      - ./docker/proxysql/proxysql.cnf:/etc/proxysql.cnf:ro
+      - proxysql-data:/var/lib/proxysql
     networks:
       - pidev-network
-    command: --default-authentication-plugin=mysql_native_password
+    restart: unless-stopped
 
+  # =========================
   # Service phpMyAdmin
+  # =========================
   phpmyadmin:
     image: phpmyadmin:latest
     container_name: pidev-phpmyadmin
     ports:
       - "8080:80"
     environment:
-      PMA_HOST: db
+      PMA_HOST: db-node1
       PMA_PORT: 3306
       PMA_USER: root
       PMA_PASSWORD: root
@@ -52,21 +163,279 @@ services:
       - db
     networks:
       - pidev-network
+    restart: unless-stopped
 
-  # Service JavaFX (OpenJDK avec JavaFX)
+  # =========================
+  # Service JavaFX
+  # =========================
   javafx:
-    image: eclipse-temurin:17-jdk
+    build:
+      context: ./docker/javafx
+      dockerfile: Dockerfile
     container_name: pidev-javafx
+    working_dir: /workspace/javafx-app
     volumes:
-      - ./javafx-app:/app
-    working_dir: /app
+      - ./javafx-app:/workspace/javafx-app
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    environment:
+      DISPLAY: ${DISPLAY:-:0}
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: pidev
+      DB_USER: symfony
+      DB_PASSWORD: symfony
     command: tail -f /dev/null
     networks:
       - pidev-network
+    restart: unless-stopped
+    tty: true
+    stdin_open: true
 
+  # =========================
+  # Monitoring - Prometheus/Grafana
+  # =========================
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: pidev-prometheus
+    profiles:
+      - observability
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    depends_on:
+      - node-exporter
+      - cadvisor
+      - apache-exporter
+      - mysql-exporter-node1
+      - mysql-exporter-node2
+      - mysql-exporter-node3
+    networks:
+      - pidev-network
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:11.1.4
+    container_name: pidev-grafana
+    profiles:
+      - observability
+    ports:
+      - "3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /etc/grafana/provisioning/dashboards/pidev-observability.json
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus
+      - elasticsearch
+    networks:
+      - pidev-network
+    restart: unless-stopped
+
+  node-exporter:
+    image: prom/node-exporter:v1.8.2
+    container_name: pidev-node-exporter
+    profiles:
+      - observability
+    command:
+      - '--path.rootfs=/host'
+    volumes:
+      - /:/host:ro,rslave
+    networks:
+      - pidev-network
+    restart: unless-stopped
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    container_name: pidev-cadvisor
+    profiles:
+      - observability
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    networks:
+      - pidev-network
+    restart: unless-stopped
+
+  apache-exporter:
+    image: lusotycoon/apache-exporter:v0.11.0
+    container_name: pidev-apache-exporter
+    profiles:
+      - observability
+    command:
+      - --scrape_uri=http://web/server-status?auto
+    depends_on:
+      - web
+    networks:
+      - pidev-network
+    restart: unless-stopped
+
+  mysql-exporter-node1:
+    image: prom/mysqld-exporter:v0.15.1
+    container_name: pidev-mysql-exporter-node1
+    profiles:
+      - observability
+    environment:
+      MYSQLD_EXPORTER_PASSWORD: exporter
+    command:
+      - --mysqld.address=db-node1:3306
+      - --mysqld.username=exporter
+    depends_on:
+      - db-node1
+    networks:
+      - pidev-network
+    restart: unless-stopped
+
+  mysql-exporter-node2:
+    image: prom/mysqld-exporter:v0.15.1
+    container_name: pidev-mysql-exporter-node2
+    profiles:
+      - observability
+    environment:
+      MYSQLD_EXPORTER_PASSWORD: exporter
+    command:
+      - --mysqld.address=db-node2:3306
+      - --mysqld.username=exporter
+    depends_on:
+      - db-node2
+    networks:
+      - pidev-network
+    restart: unless-stopped
+
+  mysql-exporter-node3:
+    image: prom/mysqld-exporter:v0.15.1
+    container_name: pidev-mysql-exporter-node3
+    profiles:
+      - observability
+    environment:
+      MYSQLD_EXPORTER_PASSWORD: exporter
+    command:
+      - --mysqld.address=db-node3:3306
+      - --mysqld.username=exporter
+    depends_on:
+      - db-node3
+    networks:
+      - pidev-network
+    restart: unless-stopped
+
+  # =========================
+  # Logs - ELK
+  # =========================
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.2
+    container_name: pidev-elasticsearch
+    profiles:
+      - observability
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: -Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    networks:
+      - pidev-network
+    restart: unless-stopped
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.15.2
+    container_name: pidev-logstash
+    profiles:
+      - observability
+    ports:
+      - "5044:5044"
+    volumes:
+      - ./observability/logstash/pipeline/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
+    depends_on:
+      - elasticsearch
+    networks:
+      - pidev-network
+    restart: unless-stopped
+
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:8.15.2
+    container_name: pidev-filebeat
+    profiles:
+      - observability
+    user: root
+    command: ["--strict.perms=false"]
+    volumes:
+      - ./observability/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - ./symfony-app/var/log:/workspace/symfony-logs:ro
+      - ./javafx-app/logs:/workspace/javafx-logs:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - filebeat-data:/usr/share/filebeat/data
+    depends_on:
+      - logstash
+    networks:
+      - pidev-network
+    restart: unless-stopped
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.15.2
+    container_name: pidev-kibana
+    profiles:
+      - observability
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    networks:
+      - pidev-network
+    restart: unless-stopped
+
+  # javafx-xpra:
+  #   build:
+  #     context: ./docker/javafx-xpra
+  #     dockerfile: Dockerfile
+  #   container_name: pidev-javafx-xpra
+  #   working_dir: /workspace/javafx-app
+  #   volumes:
+  #     - ./javafx-app:/workspace/javafx-app
+  #   ports:
+  #     - "127.0.0.1:14500:14500"
+  #   environment:
+  #     XPRA_DISPLAY: ":100"
+  #     XPRA_PORT: "14500"
+  #     APP_COMMAND: "cd /workspace/javafx-app && mvn javafx:run"
+  #     DB_HOST: db
+  #     DB_PORT: 3306
+  #     DB_NAME: pidev
+  #     DB_USER: symfony
+  #     DB_PASSWORD: symfony
+  #   command: bash -lc /usr/local/bin/start-xpra.sh
+  #   networks:
+  #     - pidev-network
+  #   restart: unless-stopped
+  #   tty: true
+  #   stdin_open: true
+
+# =========================
+# Réseaux
+# =========================
 networks:
   pidev-network:
     driver: bridge
 
+# =========================
+# Volumes
+# =========================
 volumes:
-  db-data:
+  db-node1-data:
+  db-node2-data:
+  db-node3-data:
+  proxysql-data:
+  prometheus-data:
+  grafana-data:
+  elasticsearch-data:
+  filebeat-data:

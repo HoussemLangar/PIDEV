@@ -1,0 +1,175 @@
+{% extends 'back/base.html.twig' %}
+
+{% block title %}Abonnements{% endblock %}
+
+{% block admin_content %}
+<div class="admin-page-header">
+    <div class="admin-page-title">
+        <h1>Abonnements</h1>
+        <p>Suivi des abonnements et statuts utilisateurs.</p>
+    </div>
+</div>
+
+<div class="admin-grid cards-4">
+    <div class="admin-card">
+        <div class="admin-badge">Total</div>
+        <h2>{{ stats.total }}</h2>
+    </div>
+    <div class="admin-card">
+        <div class="admin-badge success">Actifs</div>
+        <h2>{{ stats.active }}</h2>
+    </div>
+    <div class="admin-card">
+        <div class="admin-badge danger">Expirés</div>
+        <h2>{{ stats.expired }}</h2>
+    </div>
+    <div class="admin-card">
+        <div class="admin-badge warning">Annulés</div>
+        <h2>{{ stats.cancelled }}</h2>
+    </div>
+</div>
+
+<div class="admin-card">
+    <form method="get" class="admin-form" id="subsFilterForm">
+        <div class="form-row filters-inline filters-modern">
+            <div class="filter-search filter-field">
+                <label class="filter-label">Recherche</label>
+                <i class="fas fa-search"></i>
+                <input type="text" name="q" value="{{ filters.q }}" placeholder="Search">
+            </div>
+            <div class="filter-field">
+                <label>Statut</label>
+                <select name="status">
+                    <option value="">Tous</option>
+                    <option value="actif" {{ filters.status == 'actif' ? 'selected' : '' }}>Actif</option>
+                    <option value="expire" {{ filters.status == 'expire' ? 'selected' : '' }}>Expiré</option>
+                    <option value="annule" {{ filters.status == 'annule' ? 'selected' : '' }}>Annulé</option>
+                </select>
+            </div>
+            <div class="filter-field">
+                <label>Type</label>
+                <select name="type">
+                    <option value="">Tous</option>
+                    {% for value, label in {
+                        'ROLE_MEDECIN':'Médecin',
+                        'ROLE_PHARMACIEN':'Pharmacien',
+                        'ROLE_COACH':'Coach',
+                        'ROLE_NUTRITIONNISTE':'Nutritionniste',
+                        'ROLE_PATIENT':'Patient'
+                    } %}
+                        <option value="{{ value }}" {{ filters.type == value ? 'selected' : '' }}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-field">
+                <label>Du</label>
+                <input type="date" name="from" value="{{ filters.from }}">
+            </div>
+            <div class="filter-field">
+                <label>Au</label>
+                <input type="date" name="to" value="{{ filters.to }}">
+            </div>
+            <div class="filter-actions">
+                <a class="btn btn-secondary" href="{{ path('admin_subscriptions') }}">Réinitialiser</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="admin-card">
+    <div style="overflow-x: auto;">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Utilisateur</th>
+                    <th>Statut</th>
+                    <th>Type</th>
+                    <th>Début</th>
+                    <th>Fin</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for sub in abonnements %}
+                <tr>
+                    <td>
+                        <div style="font-weight: 600;">{{ sub.user ? sub.user.fullName : '-' }}</div>
+                        <div style="color: var(--admin-muted); font-size: 0.9rem;">{{ sub.user ? sub.user.email : '-' }}</div>
+                    </td>
+                    <td>
+                        {% if sub.statut == 'actif' %}
+                            <span class="admin-badge success">Actif</span>
+                        {% elseif sub.statut == 'annule' %}
+                            <span class="admin-badge warning">Annulé</span>
+                        {% else %}
+                            <span class="admin-badge danger">Expiré</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ sub.typeAbonnement }}</td>
+                    <td>{{ sub.dateDebut|date('d/m/Y') }}</td>
+                    <td>{{ sub.dateFin|date('d/m/Y') }}</td>
+                    <td>
+                        <form method="post" action="{{ path('admin_subscriptions_update', {id: sub.id}) }}" class="admin-actions-row">
+                            <input type="hidden" name="_token" value="{{ csrf_token('sub_update_' ~ sub.id) }}">
+                            <select name="type" class="admin-select compact">
+                                {% for value, label in {
+                                    'ROLE_MEDECIN':'Médecin',
+                                    'ROLE_PHARMACIEN':'Pharmacien',
+                                    'ROLE_COACH':'Coach',
+                                    'ROLE_NUTRITIONNISTE':'Nutritionniste',
+                                    'ROLE_PATIENT':'Patient'
+                                } %}
+                                    <option value="{{ value }}" {{ sub.typeAbonnement == value ? 'selected' : '' }}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                            <input type="date" name="date_fin" value="{{ sub.dateFin|date('Y-m-d') }}" class="admin-input compact">
+                            <select name="status" class="admin-select compact">
+                                <option value="actif" {{ sub.statut == 'actif' ? 'selected' : '' }}>Actif</option>
+                                <option value="expire" {{ sub.statut == 'expire' ? 'selected' : '' }}>Expiré</option>
+                                <option value="annule" {{ sub.statut == 'annule' ? 'selected' : '' }}>Annulé</option>
+                            </select>
+                            <button class="btn btn-secondary" type="submit">Mettre à jour</button>
+                            <button class="btn btn-danger" type="submit" form="cancel-sub-{{ sub.id }}">Annuler abonnement</button>
+                        </form>
+
+                        <form id="cancel-sub-{{ sub.id }}" method="post" action="{{ path('admin_subscriptions_cancel', {id: sub.id}) }}" onsubmit="return confirm('Annuler cet abonnement ?');">
+                            <input type="hidden" name="_token" value="{{ csrf_token('sub_cancel_' ~ sub.id) }}">
+                        </form>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="6" style="text-align:center; color: var(--admin-muted);">Aucun abonnement</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if pages > 1 %}
+        <div class="admin-pagination" style="margin-top: 16px;">
+            {% for p in 1..pages %}
+                {% if p == page %}
+                    <span class="active">{{ p }}</span>
+                {% else %}
+                    <a href="{{ path('admin_subscriptions', filters|merge({page: p})) }}">{{ p }}</a>
+                {% endif %}
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        (function () {
+            const form = document.getElementById('subsFilterForm');
+            if (!form) return;
+            const inputs = form.querySelectorAll('select,input[type=\"date\"],input[type=\"text\"]');
+            inputs.forEach((el) => {
+                el.addEventListener('change', () => form.submit());
+            });
+        })();
+    </script>
+{% endblock %}

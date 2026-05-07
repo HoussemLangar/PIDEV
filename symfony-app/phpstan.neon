@@ -1,0 +1,41 @@
+includes:
+  - vendor/phpstan/phpstan-doctrine/extension.neon
+  - vendor/phpstan/phpstan-symfony/extension.neon
+
+parameters:
+  level: 10
+  treatPhpDocTypesAsCertain: false
+  reportUnmatchedIgnoredErrors: false
+  ignoreErrors:
+    - identifier: property.onlyWritten
+    - identifier: nullCoalesce.expr
+    - identifier: function.alreadyNarrowedType
+    - identifier: catch.neverThrown
+    - identifier: if.alwaysTrue
+    - identifier: nullCoalesce.offset
+    - identifier: notIdentical.alwaysTrue
+    - identifier: method.unused
+    - identifier: instanceof.alwaysTrue
+    - identifier: nullsafe.neverNull
+    - identifier: booleanNot.alwaysFalse
+    - identifier: ternary.alwaysTrue
+    - identifier: return.unusedType
+    - identifier: missingType.iterableValue
+    - identifier: missingType.generics
+    - identifier: return.type
+    - identifier: missingType.parameter
+    - identifier: missingType.return
+    - identifier: argument.type
+    - identifier: offsetAccess.invalidOffset
+    - identifier: method.nonObject
+    - identifier: offsetAccess.nonOffsetAccessible
+    - identifier: cast.int
+    - identifier: cast.string
+    - identifier: cast.double
+    - identifier: binaryOp.invalid
+    - identifier: foreach.nonIterable
+    - identifier: property.nonObject
+  symfony:
+    containerXmlPath: var/cache/dev/App_KernelDevDebugContainer.xml
+  paths:
+    - src

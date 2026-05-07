@@ -1,0 +1,336 @@
+{% extends 'back/base.html.twig' %}
+
+{% block title %}Validation contenus{% endblock %}
+
+{% block admin_content %}
+<div class="admin-page-header">
+    <div class="admin-page-title">
+        <h1>Validation des contenus</h1>
+        <p>Validez, rejetez ou supprimez les contenus soumis par les professionnels.</p>
+    </div>
+    <div class="admin-actions-row">
+        <span class="admin-badge warning">Total: {{ stats.total }}</span>
+    </div>
+</div>
+
+<div class="admin-grid cards-4 validation-stats">
+    <div class="admin-card">
+        <div class="admin-badge">En attente</div>
+        <h2>{{ stats.en_attente }}</h2>
+    </div>
+    <div class="admin-card">
+        <div class="admin-badge success">Validés</div>
+        <h2>{{ stats.valide }}</h2>
+    </div>
+    <div class="admin-card">
+        <div class="admin-badge">Publiés</div>
+        <h2>{{ stats.publie }}</h2>
+    </div>
+    <div class="admin-card">
+        <div class="admin-badge danger">Rejetés</div>
+        <h2>{{ stats.rejete }}</h2>
+    </div>
+</div>
+
+<div class="admin-card">
+    <form method="get" class="admin-form" style="margin-bottom: 12px;">
+        <div class="form-row filters-inline filters-modern">
+            <div class="filter-search filter-field">
+                <label>Recherche</label>
+                <i class="fas fa-search"></i>
+                <input type="text" name="q" value="{{ q }}" placeholder="Titre, tags...">
+            </div>
+            <div class="filter-field">
+                <label>Statut</label>
+                <select name="status">
+                    <option value="" {{ status is empty ? 'selected' : '' }}>Tous</option>
+                    <option value="en_attente" {{ status == 'en_attente' ? 'selected' : '' }}>En attente</option>
+                    <option value="valide" {{ status == 'valide' ? 'selected' : '' }}>Validé</option>
+                    <option value="publie" {{ status == 'publie' ? 'selected' : '' }}>Publié</option>
+                    <option value="rejete" {{ status == 'rejete' ? 'selected' : '' }}>Rejeté</option>
+                </select>
+            </div>
+            <div class="filter-field">
+                <label>Type</label>
+                <select name="type">
+                    <option value="" {{ type is empty ? 'selected' : '' }}>Tous</option>
+                    <option value="article" {{ type == 'article' ? 'selected' : '' }}>Article</option>
+                    <option value="video" {{ type == 'video' ? 'selected' : '' }}>Vidéo</option>
+                    <option value="pdf" {{ type == 'pdf' ? 'selected' : '' }}>PDF</option>
+                    <option value="lien" {{ type == 'lien' ? 'selected' : '' }}>Lien</option>
+                </select>
+            </div>
+            <div class="filter-actions">
+                <a class="btn btn-secondary" href="{{ path('admin_content') }}">Réinitialiser</a>
+            </div>
+        </div>
+    </form>
+    <div style="overflow-x:auto;">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Titre</th>
+                    <th>Type</th>
+                    <th>Auteur</th>
+                    <th>Date</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="contentTableBody">
+            {% for contenu in contents %}
+                <tr data-content-id="{{ contenu.id }}">
+                    <td>{{ contenu.titre }}</td>
+                    <td><span class="content-status-badge status-draft">{{ contenu.type|upper }}</span></td>
+                    <td>{{ contenu.auteur ? (contenu.auteur.fullName ?? contenu.auteur.email) : 'Anonyme' }}</td>
+                    <td>{{ contenu.createdAt|date('d/m/Y H:i') }}</td>
+                    <td>
+                        {% set statusLabel = contenu.statut == 'valide' ? 'Validé' : (contenu.statut == 'publie' ? 'Publié' : (contenu.statut == 'rejete' ? 'Rejeté' : 'En attente')) %}
+                        {% set statusClass = contenu.statut == 'valide' or contenu.statut == 'publie' ? 'status-published' : (contenu.statut == 'rejete' ? 'status-archived' : 'status-draft') %}
+                        <span class="content-status-badge {{ statusClass }}" data-status>{{ statusLabel }}</span>
+                    </td>
+                    <td>
+                        <div class="admin-actions-row">
+                            <button class="btn btn-primary btn-xs action-edit-status" data-token="{{ csrf_token('content_action_' ~ contenu.id) }}" data-current-status="{{ contenu.statut }}">
+                                <i class="fas fa-edit"></i> Modifier
+                            </button>
+                            <button class="btn btn-danger btn-xs action-delete" data-token="{{ csrf_token('content_action_' ~ contenu.id) }}">Supprimer</button>
+                        </div>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="6" style="text-align:center; color: var(--admin-muted);">Aucun contenu.</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal pour modifier le statut -->
+<div id="statusModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-header">
+            <h3>Modifier le statut</h3>
+            <button class="modal-close" onclick="document.getElementById('statusModal').style.display='none'">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="statusForm" onsubmit="return false;">
+                <input type="hidden" id="modalContentId" name="contentId">
+                <input type="hidden" id="modalToken" name="token">
+                <div class="form-group">
+                    <label>Nouveau statut</label>
+                    <select id="modalStatus" name="status" class="form-control" required>
+                        <option value="en_attente">En attente</option>
+                        <option value="publie">Publié</option>
+                        <option value="rejete">Rejeté</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('statusModal').style.display='none'">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.modal {
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+}
+.modal-content {
+    background-color: #fefefe;
+    margin: 10% auto;
+    padding: 0;
+    border: 1px solid #888;
+    border-radius: 8px;
+    width: 90%;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+.modal-header {
+    padding: 20px;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.modal-header h3 {
+    margin: 0;
+}
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 28px;
+    cursor: pointer;
+    color: #999;
+}
+.modal-close:hover {
+    color: #333;
+}
+.modal-body {
+    padding: 20px;
+}
+.modal-footer {
+    padding-top: 20px;
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+.form-group {
+    margin-bottom: 15px;
+}
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+.form-control {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+</style>
+
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        (function () {
+            const table = document.getElementById('contentTableBody');
+            if (!table) return;
+
+            const postAction = async (url, token) => {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    body: new URLSearchParams({ _token: token }),
+                });
+                return res.json();
+            };
+
+            // Gérer le clic sur Modifier
+            table.addEventListener('click', async (e) => {
+                const target = e.target.closest('button');
+                if (!target) return;
+                
+                const row = target.closest('tr[data-content-id]');
+                if (!row) return;
+                const id = row.dataset.contentId;
+                const token = target.dataset.token;
+                if (!token) return;
+
+                if (target.classList.contains('action-edit-status')) {
+                    // Ouvrir le modal
+                    const modal = document.getElementById('statusModal');
+                    const currentStatus = target.dataset.currentStatus;
+                    document.getElementById('modalContentId').value = id;
+                    document.getElementById('modalToken').value = token;
+                    document.getElementById('modalStatus').value = currentStatus;
+                    modal.style.display = 'block';
+                }
+                
+                if (target.classList.contains('action-delete')) {
+                    if (!confirm('Supprimer définitivement ce contenu ?')) return;
+                    const data = await postAction(`/admin/content/${id}/delete`, token);
+                    if (data.success) {
+                        row.remove();
+                    }
+                }
+            });
+
+            // Gérer la soumission du formulaire de statut
+            const handleStatusUpdate = async () => {
+                const submitBtn = document.querySelector('#statusForm button[type="submit"]');
+                const originalText = submitBtn.textContent;
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Enregistrement...';
+                
+                const id = document.getElementById('modalContentId').value;
+                const token = document.getElementById('modalToken').value;
+                const status = document.getElementById('modalStatus').value;
+                
+                try {
+                    const res = await fetch(`/admin/content/${id}/update-status`, {
+                        method: 'POST',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        body: new URLSearchParams({ _token: token, status: status }),
+                    });
+                    const data = await res.json();
+                    
+                    if (data.success) {
+                        // Mettre à jour le badge de statut dans le tableau
+                        const row = document.querySelector(`tr[data-content-id="${id}"]`);
+                        if (row) {
+                            const statusBadge = row.querySelector('[data-status]');
+                            statusBadge.textContent = data.statusLabel;
+                            
+                            // Changer la classe CSS selon le statut
+                            let statusClass = 'content-status-badge ';
+                            if (data.status === 'publie' || data.status === 'valide') {
+                                statusClass += 'status-published';
+                            } else if (data.status === 'rejete') {
+                                statusClass += 'status-archived';
+                            } else {
+                                statusClass += 'status-draft';
+                            }
+                            statusBadge.className = statusClass;
+                            
+                            // Mettre à jour le data-current-status du bouton
+                            const editBtn = row.querySelector('.action-edit-status');
+                            if (editBtn) {
+                                editBtn.dataset.currentStatus = data.status;
+                            }
+                        }
+                        
+                        // Fermer le modal
+                        document.getElementById('statusModal').style.display = 'none';
+                    } else {
+                        alert('Erreur: ' + (data.message || 'Impossible de mettre à jour le statut'));
+                    }
+                } catch (error) {
+                    console.error('Erreur:', error);
+                    alert('Erreur lors de la mise à jour du statut');
+                } finally {
+                    // Toujours réinitialiser le bouton
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
+                }
+            };
+            
+            document.getElementById('statusForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleStatusUpdate();
+                return false;
+            });
+            
+            // Aussi attacher au clic du bouton directement
+            document.querySelector('#statusForm button[type="submit"]').addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleStatusUpdate();
+                return false;
+            });
+
+            // Fermer le modal en cliquant en dehors
+            window.onclick = function(event) {
+                const modal = document.getElementById('statusModal');
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                }
+            };
+        })();
+    </script>
+{% endblock %}

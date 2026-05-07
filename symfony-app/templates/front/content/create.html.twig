@@ -1,0 +1,152 @@
+{% extends 'front/base.html.twig' %}
+
+{% block title %}{{ isEdit ? ('content.edit_title'|trans) : ('content.create_title'|trans) }}{% endblock %}
+
+{% block body %}
+<section class="content-page">
+    <div class="page-hero">
+        <i class="fas fa-plus page-hero-cross"></i>
+        <i class="fas fa-plus page-hero-cross"></i>
+        <div class="page-hero-header">
+            <div>
+                <div class="page-hero-badge"><i class="fas fa-pen"></i> {{ isEdit ? ('content.edit_title'|trans) : ('content.create_title'|trans) }}</div>
+                <h1>{{ isEdit ? ('content.edit_title'|trans) : ('content.create_title'|trans) }}</h1>
+                <p>{{ 'content.add_sub'|trans }}</p>
+            </div>
+            <div class="page-hero-actions">
+                <a href="{{ path('front_content_index') }}" class="btn" style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:10px;font-weight:700;font-size:14px;background:rgba(255,255,255,.18);color:white;border:1.5px solid rgba(255,255,255,.3);backdrop-filter:blur(4px);text-decoration:none;">
+                    <i class="fas fa-arrow-left"></i> Retour
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {% for message in app.flashes('error') %}
+        <div class="alert-error" style="margin-bottom: 12px;">{{ message }}</div>
+    {% endfor %}
+    {% for message in app.flashes('success') %}
+        <div class="alert-success" style="margin-bottom: 12px;">{{ message }}</div>
+    {% endfor %}
+
+    <div class="content-section">
+        {{ form_start(form, { attr: { class: 'admin-form', enctype: 'multipart/form-data', novalidate: 'novalidate', 'data-turbo': 'false' } }) }}
+            <div class="form-row">
+                <div class="form-group">
+                    {{ form_label(form.titre) }}
+                    {{ form_widget(form.titre, { attr: { placeholder: 'Titre du contenu' } }) }}
+                    {{ form_errors(form.titre) }}
+                </div>
+                <div class="form-group">
+                    {{ form_label(form.type) }}
+                    {{ form_widget(form.type, { attr: { id: 'contentTypeSelect', onchange: 'toggleContentTypeInline(this.value)' } }) }}
+                    {{ form_errors(form.type) }}
+                </div>
+            </div>
+            <script>
+                function toggleContentTypeInline(value) {
+                    const panels = document.querySelectorAll('.content-type-panel');
+                    panels.forEach((panel) => {
+                        panel.style.display = panel.dataset.type === value ? 'block' : 'none';
+                    });
+                }
+                setTimeout(() => {
+                    const select = document.getElementById('contentTypeSelect');
+                    if (select) toggleContentTypeInline(select.value);
+                }, 0);
+            </script>
+
+            <div class="form-group">
+                {{ form_label(form.description) }}
+                {{ form_widget(form.description, { attr: { placeholder: 'Résumé court (optionnel)' } }) }}
+                {{ form_errors(form.description) }}
+            </div>
+
+            {{ form_widget(form.contenu, { attr: { id: 'contenuHidden', style: 'display:none;' } }) }}
+
+            <div class="form-group content-type-panel" data-type="article">
+                {{ form_label(form.articleText) }}
+                {{ form_widget(form.articleText, { attr: { placeholder: 'Rédigez votre article' } }) }}
+                {{ form_errors(form.articleText) }}
+            </div>
+
+            <div class="form-group content-type-panel" data-type="lien" style="display:none;">
+                {{ form_label(form.linkUrl) }}
+                {{ form_widget(form.linkUrl, { attr: { placeholder: 'https://...' } }) }}
+                {{ form_errors(form.linkUrl) }}
+            </div>
+
+            <div class="form-group content-type-panel" data-type="video" style="display:none;">
+                {{ form_label(form.videoFile) }}
+                {{ form_widget(form.videoFile) }}
+                {{ form_errors(form.videoFile) }}
+            </div>
+
+            <div class="form-group content-type-panel" data-type="pdf" style="display:none;">
+                {{ form_label(form.pdfFile) }}
+                {{ form_widget(form.pdfFile) }}
+                {{ form_errors(form.pdfFile) }}
+            </div>
+
+            {{ form_errors(form.contenu) }}
+            <div id="contentClientError" class="form-error" style="margin-top:6px;"></div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    {{ form_label(form.categorie) }}
+                    {{ form_widget(form.categorie, { attr: { placeholder: 'Ex: Nutrition, Cardio' } }) }}
+                </div>
+                <div class="form-group">
+                    {{ form_label(form.tags) }}
+                    {{ form_widget(form.tags, { attr: { placeholder: 'Ex: santé, prévention' } }) }}
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">{{ isEdit ? 'Mettre à jour' : 'Soumettre' }}</button>
+            </div>
+        {{ form_end(form) }}
+    </div>
+</section>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        (function () {
+            const typeSelect = document.getElementById('contentTypeSelect');
+            const formEl = document.querySelector('form.admin-form');
+            const errorBox = document.getElementById('contentClientError');
+            const videoInput = document.getElementById('{{ form.videoFile.vars.id }}');
+            const pdfInput = document.getElementById('{{ form.pdfFile.vars.id }}');
+            const articleInput = document.getElementById('{{ form.articleText.vars.id }}');
+            const linkInput = document.getElementById('{{ form.linkUrl.vars.id }}');
+            if (!typeSelect) return;
+
+            if (formEl) {
+                formEl.addEventListener('submit', (e) => {
+                    if (errorBox) errorBox.textContent = '';
+                    const type = typeSelect.value;
+                    if (type === 'article' && (!articleInput || articleInput.value.trim() === '')) {
+                        e.preventDefault();
+                        if (errorBox) errorBox.textContent = 'Veuillez saisir votre article.';
+                        return;
+                    }
+                    if (type === 'lien' && (!linkInput || linkInput.value.trim() === '')) {
+                        e.preventDefault();
+                        if (errorBox) errorBox.textContent = 'Veuillez saisir un lien valide.';
+                        return;
+                    }
+                    if (type === 'video' && (!videoInput || videoInput.files.length === 0)) {
+                        e.preventDefault();
+                        if (errorBox) errorBox.textContent = 'Veuillez sélectionner une vidéo.';
+                        return;
+                    }
+                    if (type === 'pdf' && (!pdfInput || pdfInput.files.length === 0)) {
+                        e.preventDefault();
+                        if (errorBox) errorBox.textContent = 'Veuillez sélectionner un PDF.';
+                    }
+                });
+            }
+        })();
+    </script>
+{% endblock %}

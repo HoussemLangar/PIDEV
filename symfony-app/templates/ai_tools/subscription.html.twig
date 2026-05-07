@@ -1,0 +1,337 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Abonnement IA - SANTÉA{% endblock %}
+
+{% block content %}
+<style>
+.ai-sub-wrap {
+    max-width: 780px;
+    margin: 40px auto;
+    padding: 0 18px 60px;
+}
+
+/* Hero */
+.ai-sub-hero {
+    background: linear-gradient(135deg, #0D8ABC 0%, #0653a0 100%);
+    border-radius: 22px;
+    padding: 44px 36px 38px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 28px;
+    box-shadow: 0 12px 40px rgba(13,138,188,.3);
+}
+.ai-sub-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+.ai-sub-hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,255,255,.18);
+    border: 1px solid rgba(255,255,255,.28);
+    border-radius: 20px;
+    padding: 5px 14px;
+    font-size: .78rem;
+    font-weight: 700;
+    color: rgba(255,255,255,.92);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    margin-bottom: 16px;
+}
+.ai-sub-hero-icon {
+    width: 78px; height: 78px;
+    background: rgba(255,255,255,.15);
+    border: 2px solid rgba(255,255,255,.3);
+    border-radius: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    color: #fff;
+    margin-bottom: 16px;
+    position: relative;
+    z-index: 1;
+}
+.ai-sub-hero h1 {
+    margin: 0 0 10px;
+    font-size: 1.6rem;
+    font-weight: 900;
+    color: #fff;
+    position: relative;
+    z-index: 1;
+}
+.ai-sub-hero p {
+    margin: 0 auto;
+    max-width: 500px;
+    color: rgba(255,255,255,.82);
+    font-size: .95rem;
+    line-height: 1.6;
+    position: relative;
+    z-index: 1;
+}
+.ai-sub-price-badge {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 4px;
+    background: rgba(255,255,255,.22);
+    border: 1.5px solid rgba(255,255,255,.36);
+    border-radius: 14px;
+    padding: 8px 20px;
+    margin-top: 18px;
+    position: relative;
+    z-index: 1;
+}
+.ai-sub-price-badge .amount {
+    font-size: 1.7rem;
+    font-weight: 900;
+    color: #fff;
+}
+.ai-sub-price-badge .unit {
+    font-size: .85rem;
+    color: rgba(255,255,255,.78);
+    font-weight: 600;
+}
+
+/* Feature grid */
+.ai-sub-features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+    margin-bottom: 28px;
+}
+.ai-sub-feature-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 18px 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    transition: box-shadow .15s, transform .15s;
+}
+.ai-sub-feature-card:hover {
+    box-shadow: 0 6px 24px rgba(13,138,188,.12);
+    transform: translateY(-2px);
+}
+.ai-sub-feature-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    flex-shrink: 0;
+}
+.ai-sub-feature-icon.blue   { background: #e0f4fb; color: #0D8ABC; }
+.ai-sub-feature-icon.green  { background: #dcfce7; color: #16a34a; }
+.ai-sub-feature-icon.purple { background: #ede9fe; color: #7c3aed; }
+.ai-sub-feature-icon.orange { background: #fff7ed; color: #ea580c; }
+.ai-sub-feature-card h4 {
+    margin: 0 0 3px;
+    font-size: .9rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+.ai-sub-feature-card p {
+    margin: 0;
+    font-size: .8rem;
+    color: #64748b;
+    line-height: 1.45;
+}
+
+/* Active subscription card */
+.ai-sub-active-card {
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    border: 1.5px solid #86efac;
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+}
+.ai-sub-active-icon {
+    width: 52px; height: 52px;
+    background: linear-gradient(135deg, #16a34a, #15803d);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    color: #fff;
+    flex-shrink: 0;
+    box-shadow: 0 4px 14px rgba(22,163,74,.3);
+}
+.ai-sub-active-info { flex: 1; }
+.ai-sub-active-info h3 {
+    margin: 0 0 4px;
+    color: #14532d;
+    font-size: 1rem;
+    font-weight: 800;
+}
+.ai-sub-active-info p {
+    margin: 0;
+    color: #166534;
+    font-size: .87rem;
+}
+.ai-sub-active-info strong { color: #15803d; }
+
+/* CTA card */
+.ai-sub-cta-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    padding: 28px 28px 26px;
+    box-shadow: 0 6px 24px rgba(15,23,42,.07);
+}
+.ai-sub-cta-card h3 {
+    margin: 0 0 6px;
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #0f172a;
+}
+.ai-sub-cta-card .ai-sub-cta-desc {
+    margin: 0 0 20px;
+    color: #64748b;
+    font-size: .9rem;
+}
+.ai-sub-checklist {
+    list-style: none;
+    padding: 0; margin: 0 0 22px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+.ai-sub-checklist li {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: .88rem;
+    color: #334155;
+}
+.ai-sub-checklist li i {
+    color: #16a34a;
+    margin-top: 2px;
+    font-size: .82rem;
+    flex-shrink: 0;
+}
+.ai-sub-submit-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 32px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #0D8ABC 0%, #0653a0 100%);
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    width: 100%;
+    justify-content: center;
+    letter-spacing: .01em;
+    box-shadow: 0 4px 20px rgba(13,138,188,.35);
+    transition: opacity .15s, transform .12s;
+}
+.ai-sub-submit-btn:hover { opacity: .9; transform: translateY(-1px); }
+.ai-sub-submit-btn:active { transform: none; }
+.ai-sub-secure-note {
+    text-align: center;
+    margin-top: 10px;
+    font-size: .78rem;
+    color: #94a3b8;
+}
+.ai-sub-secure-note i { color: #16a34a; }
+</style>
+
+<div class="ai-sub-wrap">
+
+    <!-- Hero -->
+    <div class="ai-sub-hero">
+        <div class="ai-sub-hero-badge"><i class="fas fa-sparkles"></i> Intelligence Artificielle</div>
+        <div class="ai-sub-hero-icon"><i class="fas fa-robot"></i></div>
+        <h1>Outils IA SANTÉA</h1>
+        <p>Diagnostic intelligent, analyse de symptômes et suivi médical alimentés par l'IA — tout en un seul abonnement.</p>
+        <div class="ai-sub-price-badge">
+            <span class="amount">{{ price|number_format(2, ',', ' ') }} DT</span>
+            <span class="unit">/ mois</span>
+        </div>
+    </div>
+
+    <!-- Features grid -->
+    <div class="ai-sub-features">
+        <div class="ai-sub-feature-card">
+            <div class="ai-sub-feature-icon blue"><i class="fas fa-stethoscope"></i></div>
+            <div>
+                <h4>Pré-diagnostic IA</h4>
+                <p>Évaluation de vos symptômes par un moteur IA avancé.</p>
+            </div>
+        </div>
+        <div class="ai-sub-feature-card">
+            <div class="ai-sub-feature-icon green"><i class="fas fa-brain"></i></div>
+            <div>
+                <h4>Analyse intelligente</h4>
+                <p>Recommandations personnalisées basées sur votre profil.</p>
+            </div>
+        </div>
+        <div class="ai-sub-feature-card">
+            <div class="ai-sub-feature-icon purple"><i class="fas fa-chart-line"></i></div>
+            <div>
+                <h4>Suivi des tendances</h4>
+                <p>Détection proactive de risques santé sur le long terme.</p>
+            </div>
+        </div>
+        <div class="ai-sub-feature-card">
+            <div class="ai-sub-feature-icon orange"><i class="fas fa-shield-alt"></i></div>
+            <div>
+                <h4>Données sécurisées</h4>
+                <p>Vos données médicales restent privées et chiffrées.</p>
+            </div>
+        </div>
+    </div>
+
+    {% if activeSubscription %}
+        <!-- Active state -->
+        <div class="ai-sub-active-card">
+            <div class="ai-sub-active-icon"><i class="fas fa-check"></i></div>
+            <div class="ai-sub-active-info">
+                <h3>Abonnement IA actif</h3>
+                <p>Valide jusqu'au <strong>{{ activeSubscription.dateFin|date('d/m/Y') }}</strong> — Accédez à tous les outils sans restriction.</p>
+            </div>
+            <a href="{{ path('app_ai_tools_index') }}" class="btn btn-primary" style="flex-shrink:0;">
+                <i class="fas fa-rocket"></i>&nbsp;Accéder aux outils IA
+            </a>
+        </div>
+
+    {% else %}
+        <!-- CTA card  -->
+        <div class="ai-sub-cta-card">
+            <h3>Prêt à activer l'IA ?</h3>
+            <p class="ai-sub-cta-desc">Débloquez l'accès complet à tous les outils IA SANTÉA en un seul paiement mensuel sécurisé.</p>
+
+            <ul class="ai-sub-checklist">
+                <li><i class="fas fa-check-circle"></i> Accès complet à tous les outils IA</li>
+                <li><i class="fas fa-check-circle"></i> Renouvellement mensuel flexible</li>
+                <li><i class="fas fa-check-circle"></i> Prix fixe : {{ price|number_format(2, ',', ' ') }} DT / mois</li>
+                <li><i class="fas fa-check-circle"></i> Paiement sécurisé via Stripe</li>
+                <li><i class="fas fa-check-circle"></i> Facture PDF envoyée par e-mail</li>
+                <li><i class="fas fa-check-circle"></i> Annulable à tout moment</li>
+            </ul>
+
+            <form method="post" action="{{ path('app_subscription_checkout') }}">
+                <input type="hidden" name="subscription_type" value="AI_TOOLS">
+                <button type="submit" class="ai-sub-submit-btn">
+                    <i class="fas fa-lock"></i>
+                    S'abonner pour {{ price|number_format(2, ',', ' ') }} DT / mois
+                </button>
+            </form>
+            <p class="ai-sub-secure-note"><i class="fas fa-shield-alt"></i> Paiement traité en toute sécurité par Stripe &mdash; nous ne stockons pas vos données bancaires.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

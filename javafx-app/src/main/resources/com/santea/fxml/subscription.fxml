@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.web.WebView?>
+
+<StackPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="com.santea.controller.SubscriptionViewController" styleClass="sub-page-root">
+
+    <ScrollPane fitToWidth="true" pannable="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" styleClass="home-scroll">
+        <content>
+            <VBox fx:id="root" spacing="22" alignment="TOP_CENTER" styleClass="sub-root profile-content-shell sub-root-premium" maxWidth="1500">
+                <padding>
+                    <Insets top="34" right="24" bottom="36" left="24"/>
+                </padding>
+
+                <HBox alignment="CENTER_LEFT" spacing="12.0" maxWidth="1360">
+                    <Label styleClass="sub-chip" text="♛ Abonnement Premium"/>
+                </HBox>
+
+                <VBox spacing="9" alignment="CENTER" styleClass="sub-hero-wrap sub-hero-premium">
+                    <Label styleClass="sub-title" text="Accedez a tout SANTEA"/>
+                    <Label styleClass="sub-subtitle" text="Un seul abonnement · toutes les fonctionnalites · acces immediat."/>
+                    <Label styleClass="sub-subtitle" text="Si vous n'etes pas satisfait, resiliez a tout moment."/>
+                </VBox>
+
+                <HBox alignment="CENTER" spacing="18.0" styleClass="sub-kpi-box">
+                    <VBox spacing="2.0" alignment="CENTER" styleClass="sub-kpi-item">
+                        <Label styleClass="sub-kpi-value" text="10 DT"/>
+                        <Label styleClass="sub-kpi-label" text="par mois"/>
+                    </VBox>
+                    <VBox spacing="2.0" alignment="CENTER" styleClass="sub-kpi-item">
+                        <Label styleClass="sub-kpi-value" text="1"/>
+                        <Label styleClass="sub-kpi-label" text="mois renouvelable"/>
+                    </VBox>
+                    <VBox spacing="2.0" alignment="CENTER" styleClass="sub-kpi-item sub-kpi-item-last">
+                        <Label styleClass="sub-kpi-value" text="∞"/>
+                        <Label styleClass="sub-kpi-label" text="fonctionnalites"/>
+                    </VBox>
+                </HBox>
+
+                <VBox fx:id="bannerBox" spacing="6.0" styleClass="sub-banner" visible="false" managed="false">
+                    <Label fx:id="bannerStatus" styleClass="sub-banner-label" text="Aucun abonnement actif"/>
+                    <Label fx:id="statusText" styleClass="sub-banner-text" text="Choisissez une formule pour debloquer toutes les fonctionnalites."/>
+                </VBox>
+
+                <FlowPane fx:id="plansContainer" hgap="18" vgap="18" prefWrapLength="1520" alignment="CENTER" styleClass="sub-plans-grid"/>
+
+                <VBox fx:id="paymentSection" managed="false" visible="false" spacing="12" maxWidth="1360" styleClass="sub-checkout-shell">
+                    <HBox spacing="20" alignment="TOP_LEFT" styleClass="sub-checkout-card">
+                        <VBox spacing="10" HBox.hgrow="ALWAYS">
+                            <Label styleClass="sub-chip" text="Paiement securise"/>
+                            <Label styleClass="sub-checkout-title" text="Finalisez votre abonnement"/>
+                            <Label fx:id="chosenPlanLabel" styleClass="sub-checkout-subtitle" text="Abonnement selectionne : -"/>
+                            <HBox spacing="10" alignment="CENTER_LEFT" style="-fx-padding: 8 0 0 0;">
+                                <Button fx:id="payBtn" mnemonicParsing="false" onAction="#payNow" styleClass="sub-primary-button" text="Payer"/>
+                                <Button mnemonicParsing="false" onAction="#backToChoice" styleClass="sub-outline-button" text="Retour"/>
+                            </HBox>
+                            <Label text="Vous serez redirige vers la page securisee du fournisseur de paiement." styleClass="sub-checkout-help"/>
+                            <Label fx:id="paymentModalFeedback" styleClass="sub-feedback" text="" wrapText="true"/>
+                        </VBox>
+
+                        <VBox spacing="10" minWidth="290" maxWidth="290" styleClass="sub-checkout-summary">
+                            <Label text="Resume" styleClass="sub-checkout-summary-title"/>
+                            <HBox><Label text="Plan" HBox.hgrow="ALWAYS"/><Label fx:id="checkoutPlanValue" text="-" styleClass="sub-strong-text"/></HBox>
+                            <HBox><Label text="Duree" HBox.hgrow="ALWAYS"/><Label text="1 mois" styleClass="sub-strong-text"/></HBox>
+                            <HBox><Label text="Renouvellement" HBox.hgrow="ALWAYS"/><Label text="Mensuel" styleClass="sub-strong-text"/></HBox>
+                            <HBox style="-fx-padding: 6 0 0 0;"><Label text="Total" HBox.hgrow="ALWAYS"/><Label fx:id="chosenPriceLabel" text="-" styleClass="sub-checkout-total"/></HBox>
+                        </VBox>
+                    </HBox>
+
+                    <VBox spacing="8" styleClass="sub-checkout-bullets" maxWidth="290">
+                        <Label text="🔒 Paiement securise" styleClass="sub-checkout-bullet"/>
+                        <Label text="✅ Annulation possible" styleClass="sub-checkout-bullet"/>
+                        <Label text="⚡ Activation immediate" styleClass="sub-checkout-bullet"/>
+                    </VBox>
+                </VBox>
+
+                <VBox fx:id="stripeWebSection" managed="false" visible="false" spacing="8" maxWidth="1360">
+                    <HBox alignment="CENTER_LEFT" spacing="10">
+                        <Button text="Retour abonnement" styleClass="sub-outline-button" onAction="#handleCloseStripeWebView"/>
+                        <Label text="Paiement Stripe" styleClass="sub-chip"/>
+                    </HBox>
+                    <WebView fx:id="stripeWebView" prefHeight="760" VBox.vgrow="ALWAYS"/>
+                </VBox>
+
+                <VBox fx:id="overviewSection" managed="false" spacing="10.0" visible="false">
+                    <Label styleClass="sub-section-title" text="Mon abonnement"/>
+                    <HBox spacing="16.0">
+                        <VBox spacing="6.0" styleClass="sub-overview-card">
+                            <Label text="Nom"/>
+                            <Label fx:id="ovPlan" styleClass="sub-strong-text" text="-"/>
+                            <Label text="Type"/>
+                            <Label fx:id="ovType" styleClass="sub-strong-text" text="-"/>
+                        </VBox>
+                        <VBox spacing="6.0" styleClass="sub-overview-card">
+                            <Label text="Prix"/>
+                            <Label fx:id="ovPrice" styleClass="sub-strong-text" text="-"/>
+                            <Label text="Debut"/>
+                            <Label fx:id="ovStart" styleClass="sub-strong-text" text="-"/>
+                        </VBox>
+                        <VBox spacing="6.0" styleClass="sub-overview-card">
+                            <Label text="Fin"/>
+                            <Label fx:id="ovEnd" styleClass="sub-strong-text" text="-"/>
+                            <Label text="Statut"/>
+                            <Label fx:id="ovStatus" styleClass="sub-strong-text" text="-"/>
+                        </VBox>
+                    </HBox>
+                    <HBox spacing="10.0">
+                        <Button mnemonicParsing="false" onAction="#cancelSubscription" styleClass="sub-danger-button" text="Annuler abonnement"/>
+                        <Button mnemonicParsing="false" onAction="#goHome" styleClass="sub-outline-button" text="Retour accueil"/>
+                    </HBox>
+                </VBox>
+
+                <Label fx:id="paymentFeedback" styleClass="sub-feedback" text=""/>
+            </VBox>
+        </content>
+    </ScrollPane>
+
+</StackPane>

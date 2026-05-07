@@ -1,0 +1,108 @@
+{% extends 'back/base.html.twig' %}
+
+{% block title %}{{ mode == 'edit' ? 'Modifier utilisateur' : 'Nouvel utilisateur' }}{% endblock %}
+
+{% block admin_content %}
+<div class="admin-page-header">
+    <div class="admin-page-title">
+        <h1>{{ mode == 'edit' ? 'Modifier utilisateur' : 'Créer un utilisateur' }}</h1>
+        <p>Gestion avancée des comptes et informations personnelles.</p>
+    </div>
+    <div class="admin-actions-row">
+        <a class="btn btn-secondary" href="{{ path('admin_users') }}">Retour</a>
+    </div>
+</div>
+
+<div class="admin-card">
+    {{ form_start(form, {attr: {class: 'admin-form'}}) }}
+        <div class="form-row">
+            <div>
+                {{ form_label(form.username) }}
+                {{ form_widget(form.username) }}
+                {{ form_errors(form.username) }}
+            </div>
+            <div>
+                {{ form_label(form.email) }}
+                {{ form_widget(form.email) }}
+                {{ form_errors(form.email) }}
+            </div>
+        </div>
+        <div class="form-row">
+            <div>
+                {{ form_label(form.nom) }}
+                {{ form_widget(form.nom) }}
+                {{ form_errors(form.nom) }}
+            </div>
+            <div>
+                {{ form_label(form.prenom) }}
+                {{ form_widget(form.prenom) }}
+                {{ form_errors(form.prenom) }}
+            </div>
+        </div>
+        <div class="form-row">
+            <div>
+                {{ form_label(form.dateNaissance) }}
+                {{ form_widget(form.dateNaissance) }}
+                {{ form_errors(form.dateNaissance) }}
+            </div>
+            <div>
+                {{ form_label(form.telephone) }}
+                {{ form_widget(form.telephone) }}
+                {{ form_errors(form.telephone) }}
+            </div>
+        </div>
+        <div class="form-row">
+            <div>
+                {{ form_label(form.adresse) }}
+                {{ form_widget(form.adresse) }}
+                {{ form_errors(form.adresse) }}
+            </div>
+            <div>
+                {{ form_label(form.role) }}
+                {{ form_widget(form.role) }}
+                {{ form_errors(form.role) }}
+            </div>
+        </div>
+        <div class="form-row">
+            <div>
+                {{ form_label(form.plainPassword) }}
+                {{ form_widget(form.plainPassword) }}
+                {{ form_errors(form.plainPassword) }}
+            </div>
+        </div>
+
+        <div class="admin-actions-row">
+            <button class="btn btn-primary" type="submit">Enregistrer</button>
+        </div>
+    {{ form_end(form) }}
+</div>
+
+{% if mode == 'edit' %}
+<div class="admin-card" style="border-left: 4px solid var(--admin-warning);">
+    <h3 style="margin-bottom: 12px;">Bannissement</h3>
+    <form method="post" action="{{ path('admin_users_ban', {id: user.id}) }}" class="admin-form">
+        <input type="hidden" name="_token" value="{{ csrf_token('ban_user_' ~ user.id) }}">
+        <div class="form-row">
+            <div>
+                <label>Statut</label>
+                <select name="is_banned">
+                    <option value="0" {{ user.isBannedEffective ? '' : 'selected' }}>Actif</option>
+                    <option value="1" {{ user.isBannedEffective ? 'selected' : '' }}>Banni</option>
+                </select>
+            </div>
+            <div>
+                <label>Raison</label>
+                <input type="text" name="ban_reason" value="{{ user.banReason }}" placeholder="Raison du bannissement">
+            </div>
+            <div>
+                <label>Jusqu'au (optionnel)</label>
+                <input type="datetime-local" name="ban_until" value="{{ user.banUntil ? user.banUntil|date('Y-m-d\TH:i') : '' }}">
+            </div>
+        </div>
+        <div class="admin-actions-row">
+            <button class="btn btn-danger" type="submit">Appliquer</button>
+        </div>
+    </form>
+</div>
+{% endif %}
+{% endblock %}

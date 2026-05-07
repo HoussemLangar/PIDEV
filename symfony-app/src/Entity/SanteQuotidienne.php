@@ -1,0 +1,293 @@
+<?php
+
+namespace App\Entity;
+
+use App\Enum\Alimentation;
+use App\Enum\NiveauActivite;
+use App\Enum\Humeur;
+use App\Enum\SanteDataSource;
+use App\Entity\User;
+use App\Repository\SanteQuotidienneRepository;
+use Doctrine\DBAL\Types\Types;
+use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\Context\ExecutionContextInterface;
+
+#[ORM\Entity(repositoryClass: SanteQuotidienneRepository::class)]
+#[ORM\Table(name: 'sante_quotidienne')]
+class SanteQuotidienne
+{
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column]
+    private ?int $id = null;
+
+    #[ORM\ManyToOne(inversedBy: 'santeQuotidiennes')]
+    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
+    private ?User $user = null;
+
+    #[ORM\Column(type: Types::FLOAT, nullable: true)]
+    #[Assert\NotBlank(message: "Le poids est obligatoire")]
+    #[Assert\Range(
+        min: 0.1,
+        max: 300,
+        notInRangeMessage: "Le poids doit être compris entre 0.1 et 300 kg"
+    )]
+    private ?float $poids = null;
+
+    #[ORM\Column(type: Types::FLOAT, nullable: true)]
+    #[Assert\NotBlank(message: "La taille est obligatoire")]
+    #[Assert\Range(
+        min: 0.1,
+        max: 250,
+        notInRangeMessage: "La taille doit être comprise entre 0.1 et 250 cm"
+    )]
+    private ?float $taille = null;
+
+    #[ORM\Column(type: Types::FLOAT, nullable: true)]
+    #[Assert\Range(
+        min: 0.1,
+        max: 100,
+        notInRangeMessage: "L'IMC doit être compris entre 0.1 et 100"
+    )]
+    private ?float $imc = null;
+
+    #[ORM\Column(type: Types::FLOAT, nullable: true)]
+    #[Assert\Range(
+        min: 0,
+        max: 300,
+        notInRangeMessage: "La tension artérielle doit être comprise entre 0 et 300"
+    )]
+    private ?float $tensionArterielle = null;
+
+    #[ORM\Column(type: Types::FLOAT, nullable: true)]
+    #[Assert\Range(
+        min: 0,
+        max: 24,
+        notInRangeMessage: "Le sommeil doit être compris entre 0 et 24 heures"
+    )]
+    private ?float $sommeil = null;
+
+    #[ORM\Column(type: Types::STRING, length: 20, nullable: true)]
+    private ?string $activitePhysique = null;
+
+    #[ORM\Column(type: Types::JSON)]
+    #[Assert\Count(
+        min: 1,
+        minMessage: "Veuillez choisir au moins une humeur"
+    )]
+    private array $humeur = [];
+
+    #[ORM\Column(type: Types::STRING, length: 20, nullable: true)]
+    private ?string $alimentation = null;
+
+    #[ORM\Column(type: Types::FLOAT, nullable: true)]
+    #[Assert\Range(
+        min: 0,
+        max: 5,
+        notInRangeMessage: "La quantité d'eau bue doit être comprise entre 0 et 5 litres"
+    )]
+    private ?float $eauBue = null;
+
+    #[ORM\Column(type: Types::INTEGER, nullable: true)]
+    private ?int $pas = null;
+
+    #[ORM\Column(type: Types::INTEGER, nullable: true)]
+    private ?int $calories = null;
+
+    #[ORM\Column(type: Types::INTEGER, nullable: true)]
+    private ?int $dureeActiviteMinutes = null;
+
+    #[ORM\Column(type: 'sante_data_source', length: 20)]
+    private SanteDataSource $sourceDonnees = SanteDataSource::MANUEL;
+
+    #[ORM\Column(type: Types::DATETIMETZ_MUTABLE, nullable: true)]
+    #[Assert\NotBlank(message: "La date est obligatoire")]
+    private ?\DateTimeInterface $date = null;
+
+    public function __construct()
+    {
+        $this->date = new \DateTime('now', new \DateTimeZone('Africa/Tunis')); // Date du jour par défaut
+        $this->humeur = []; // Tableau vide par défaut
+    }
+
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+
+    public function getUser(): ?User
+    {
+        return $this->user;
+    }
+
+    public function setUser(?User $user): static
+    {
+        $this->user = $user;
+        return $this;
+    }
+
+    public function getPoids(): ?float
+    {
+        return $this->poids;
+    }
+
+    public function setPoids(?float $poids): static
+    {
+        $this->poids = $poids;
+        $this->calculateImc();
+        return $this;
+    }
+
+    public function getTaille(): ?float
+    {
+        return $this->taille;
+    }
+
+    public function setTaille(?float $taille): static
+    {
+        $this->taille = $taille;
+        $this->calculateImc();
+        return $this;
+    }
+
+    public function getImc(): ?float
+    {
+        return $this->imc;
+    }
+
+    public function setImc(?float $imc): static
+    {
+        $this->imc = $imc;
+        return $this;
+    }
+
+    public function getTensionArterielle(): ?float
+    {
+        return $this->tensionArterielle;
+    }
+
+    public function setTensionArterielle(?float $tensionArterielle): static
+    {
+        $this->tensionArterielle = $tensionArterielle;
+        return $this;
+    }
+
+    public function getSommeil(): ?float
+    {
+        return $this->sommeil;
+    }
+
+    public function setSommeil(?float $sommeil): static
+    {
+        $this->sommeil = $sommeil;
+        return $this;
+    }
+
+    public function getActivitePhysique(): ?NiveauActivite
+    {
+        return $this->activitePhysique !== null ? NiveauActivite::tryFrom($this->activitePhysique) : null;
+    }
+
+    public function setActivitePhysique(?NiveauActivite $activitePhysique): static
+    {
+        $this->activitePhysique = $activitePhysique?->value;
+        return $this;
+    }
+
+    /**
+     * @return Humeur[]
+     */
+    public function getHumeur(): array
+    {
+        return $this->humeur;
+    }
+
+    public function setHumeur(array $humeur): static
+    {
+        $this->humeur = $humeur;
+        return $this;
+    }
+
+    public function getAlimentation(): ?Alimentation
+    {
+        return $this->alimentation !== null ? Alimentation::tryFrom($this->alimentation) : null;
+    }
+
+    public function setAlimentation(?Alimentation $alimentation): static
+    {
+        $this->alimentation = $alimentation?->value;
+        return $this;
+    }
+
+    public function getEauBue(): ?float
+    {
+        return $this->eauBue;
+    }
+
+    public function setEauBue(?float $eauBue): static
+    {
+        $this->eauBue = $eauBue;
+        return $this;
+    }
+
+    public function getPas(): ?int { return $this->pas; }
+    public function setPas(?int $pas): static { $this->pas = $pas; return $this; }
+
+    public function getCalories(): ?int { return $this->calories; }
+    public function setCalories(?int $calories): static { $this->calories = $calories; return $this; }
+
+    public function getDureeActiviteMinutes(): ?int { return $this->dureeActiviteMinutes; }
+    public function setDureeActiviteMinutes(?int $dureeActiviteMinutes): static { $this->dureeActiviteMinutes = $dureeActiviteMinutes; return $this; }
+
+    public function getSourceDonnees(): SanteDataSource { return $this->sourceDonnees; }
+    public function setSourceDonnees(SanteDataSource $sourceDonnees): static { $this->sourceDonnees = $sourceDonnees; return $this; }
+
+    public function getDate(): ?\DateTimeInterface
+    {
+        return $this->date;
+    }
+
+    public function setDate(?\DateTimeInterface $date): static
+    {
+        $this->date = $date;
+        return $this;
+    }
+
+    public function recordDate(\DateTimeInterface $date): static
+    {
+        return $this->setDate($date);
+    }
+
+    /**
+     * Calcule automatiquement l'IMC (poids / taille²) avec arrondi à 2 décimales
+     */
+    private function calculateImc(): void
+    {
+        if ($this->poids > 0 && $this->taille > 0) {
+            $tailleEnMetres = $this->taille / 100;
+            $this->imc = round($this->poids / ($tailleEnMetres * $tailleEnMetres), 2);
+        } else {
+            $this->imc = null;
+        }
+    }
+
+    #[Assert\Callback]
+    public function validateDateNotInFuture(ExecutionContextInterface $context): void
+    {
+        if (!$this->date instanceof \DateTimeInterface) {
+            return;
+        }
+
+        $tz = new \DateTimeZone('Africa/Tunis');
+        $entryDay = (new \DateTimeImmutable($this->date->format('Y-m-d'), $tz))->setTime(0, 0, 0);
+        $today = (new \DateTimeImmutable('today', $tz))->setTime(0, 0, 0);
+
+        if ($entryDay > $today) {
+            $context
+                ->buildViolation('Veuillez choisir une date valide (aujourd\'hui ou avant).')
+                ->atPath('date')
+                ->addViolation();
+        }
+    }
+}

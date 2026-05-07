@@ -1,0 +1,170 @@
+{% extends 'front/base.html.twig' %}
+
+{% block title %}{{ contenu.titre }} — SANTÉA{% endblock %}
+
+{% block body %}
+<section class="content-page">
+
+    <!-- Hero -->
+    <div class="page-hero">
+        <i class="fas fa-plus page-hero-cross"></i>
+        <i class="fas fa-plus page-hero-cross"></i>
+        <div class="page-hero-header">
+            <div>
+                <div class="page-hero-badge">
+                    <i class="fas fa-{% if contenu.type == 'article' %}newspaper{% elseif contenu.type == 'video' %}video{% elseif contenu.type == 'pdf' %}file-pdf{% else %}link{% endif %}"></i>
+                    {{ contenu.type|upper }}
+                </div>
+                <h1>{{ contenu.titre }}</h1>
+                <p>{{ contenu.description ?? '' }}</p>
+            </div>
+            <div class="page-hero-actions">
+                <a href="{{ path('front_content_index') }}" class="btn" style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:10px;font-weight:700;font-size:14px;background:rgba(255,255,255,.18);color:white;border:1.5px solid rgba(255,255,255,.3);backdrop-filter:blur(4px);text-decoration:none;">
+                    <i class="fas fa-arrow-left"></i> Retour
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content card -->
+    <div class="content-section content-card" data-content-id="{{ contenu.id }}">
+        <div class="content-meta" style="margin-bottom:16px;">
+            <span class="content-pill">{{ contenu.type|upper }}</span>
+            <span><i class="fas fa-calendar" style="margin-right:3px;"></i>{{ (contenu.datePublication ?? contenu.createdAt)|date('d/m/Y') }}</span>
+            <span><i class="fas fa-user-md" style="margin-right:3px;"></i>{{ contenu.auteur ? (contenu.auteur.fullName ?? contenu.auteur.email) : 'Anonyme' }}</span>
+        </div>
+
+        <div style="margin-top:16px;line-height:1.7;">
+            {% set isLocal = contenu.contenu starts with '/media/' %}
+            {% if contenu.type == 'article' %}
+                <div style="font-size:15px;color:var(--text,#1a1a2e);">{{ contenu.contenu|e|nl2br }}</div>
+            {% elseif contenu.type == 'pdf' %}
+                <a class="btn btn-primary" href="{{ contenu.contenu }}" target="_blank" style="display:inline-flex;align-items:center;gap:8px;">
+                    <i class="fas fa-file-pdf"></i> Télécharger le PDF
+                </a>
+            {% elseif contenu.type == 'video' and isLocal %}
+                <video controls style="width:100%;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.15);">
+                    <source src="{{ contenu.contenu }}" type="video/mp4">
+                    Votre navigateur ne supporte pas la vidéo.
+                </video>
+            {% else %}
+                <a class="btn btn-primary" href="{{ contenu.contenu }}" target="_blank" style="display:inline-flex;align-items:center;gap:8px;">
+                    <i class="fas fa-external-link-alt"></i> Accéder au lien
+                </a>
+            {% endif %}
+        </div>
+
+        <div class="content-actions" style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border,#e2e8f0);">
+            <button class="like-btn" data-liked="0">
+                <i class="fas fa-heart"></i>
+                <span class="like-count">{{ contenu.likes|length }}</span>
+            </button>
+            <button class="btn btn-secondary btn-xs comment-toggle">
+                <i class="fas fa-comment" style="margin-right:4px;"></i>{{ 'content.comments'|trans }} (<span class="comment-count">{{ contenu.commentaires|length }}</span>)
+            </button>
+            {% if isOwner %}
+                <a class="btn btn-secondary btn-xs" href="{{ path('front_content_edit', {id: contenu.id}) }}"><i class="fas fa-edit" style="margin-right:4px;"></i>{{ 'common.edit'|trans }}</a>
+                <form method="post" action="{{ path('front_content_delete', {id: contenu.id}) }}" style="display:inline;" onsubmit="return confirm('Supprimer ce contenu ?');">
+                    <input type="hidden" name="_token" value="{{ csrf_token('content_delete_' ~ contenu.id) }}">
+                    <button class="btn btn-danger btn-xs" type="submit"><i class="fas fa-trash" style="margin-right:4px;"></i>{{ 'common.delete'|trans }}</button>
+                </form>
+            {% endif %}
+        </div>
+
+        <div class="comment-panel" hidden>
+            <div class="comment-list"></div>
+            <form class="comment-form" data-ajax="1">
+                <textarea rows="3" placeholder="{{ 'content.comment_placeholder'|trans }}"></textarea>
+                <div class="content-actions">
+                    <button type="submit" class="btn btn-primary btn-xs"><i class="fas fa-paper-plane" style="margin-right:4px;"></i>Publier</button>
+                    <div class="form-error" data-comment-error></div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</section>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        (function () {
+            const card = document.querySelector('.content-card');
+            if (!card) return;
+            const csrfToken = '{{ csrf_token('content_action') }}';
+            const currentUserId = {{ app.user ? app.user.id : 'null' }};
+            const contentId = card.dataset.contentId;
+            const likeBtn = card.querySelector('.like-btn');
+            const likeCount = card.querySelector('.like-count');
+            const commentToggle = card.querySelector('.comment-toggle');
+            const commentPanel = card.querySelector('.comment-panel');
+            const commentList = card.querySelector('.comment-list');
+            const commentForm = card.querySelector('.comment-form');
+            const commentCount = card.querySelector('.comment-count');
+            const errorEl = card.querySelector('[data-comment-error]');
+            const formatSignedScore = (value) => {
+                const numeric = Number(value ?? 0);
+                if (!Number.isFinite(numeric)) {
+                    return '0.000';
+                }
+
+                return numeric.toFixed(3);
+            };
+
+            const fetchComments = async () => {
+                const res = await fetch(`{{ path('api_content_list') }}/${contentId}/comments`);
+                const data = await res.json();
+                commentList.innerHTML = '';
+                (data.items || []).forEach((c) => {
+                    const canDelete = currentUserId && c.user_id === currentUserId;
+                    const deleteBtn = canDelete
+                        ? `<button class="btn btn-secondary btn-xs comment-delete" data-comment-id="${c.id}" style="margin-top:6px;">{{ 'common.delete'|trans }}</button>`
+                        : '';
+                    commentList.insertAdjacentHTML('beforeend', `
+                        <div class="comment-item" data-comment-id="${c.id}">
+                            <div class="comment-meta">${c.user} • ${c.date} • Score: ${formatSignedScore(c.score)} (${c.sentiment ?? 'N/A'})</div>
+                            <div>${c.message}</div>
+                            ${deleteBtn}
+                        </div>
+                    `);
+                });
+            };
+
+            commentToggle.addEventListener('click', async () => {
+                commentPanel.hidden = !commentPanel.hidden;
+                if (!commentPanel.hidden) await fetchComments();
+            });
+
+            likeBtn.addEventListener('click', async () => {
+                const res = await fetch(`{{ path('api_content_list') }}/${contentId}/like`, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': csrfToken } });
+                const data = await res.json();
+                if (data.success) { likeBtn.classList.toggle('active', data.liked); likeBtn.dataset.liked = data.liked ? '1' : '0'; likeCount.textContent = data.count; }
+            });
+
+            commentList.addEventListener('click', async (e) => {
+                const btn = e.target.closest('.comment-delete');
+                if (!btn) return;
+                if (!confirm('Supprimer ce commentaire ?')) return;
+                const itemEl = btn.closest('.comment-item');
+                const res = await fetch(`{{ path('api_content_list') }}/comments/${btn.dataset.commentId}/delete`, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': csrfToken } });
+                const data = await res.json();
+                if (data.success) { itemEl.remove(); if (data.count !== undefined) commentCount.textContent = data.count; }
+            });
+
+            commentForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const message = commentForm.querySelector('textarea').value.trim();
+                errorEl.textContent = '';
+                if (!message) { errorEl.textContent = 'Le commentaire est obligatoire.'; return; }
+                const res = await fetch(`{{ path('api_content_list') }}/${contentId}/comment`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': csrfToken }, body: JSON.stringify({ message }) });
+                const data = await res.json();
+                if (!data.success) { errorEl.textContent = data.message || (data.errors ? data.errors.join(', ') : 'Erreur.'); return; }
+                commentForm.querySelector('textarea').value = '';
+                const c = data.comment;
+                commentList.insertAdjacentHTML('afterbegin', `<div class="comment-item" data-comment-id="${c.id}"><div class="comment-meta">${c.user} · ${c.date}</div><div>${c.message}</div><button class="btn btn-secondary btn-xs comment-delete" data-comment-id="${c.id}" style="margin-top:6px;">{{ 'common.delete'|trans }}</button></div>`);
+                commentCount.textContent = data.count;
+            });
+        })();
+    </script>
+{% endblock %}

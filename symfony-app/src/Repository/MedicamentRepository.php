@@ -64,4 +64,23 @@ class MedicamentRepository extends ServiceEntityRepository
     {
         $this->getEntityManager()->flush();
     }
+
+    /**
+     * @return Medicament[]
+     */
+    public function search(string $q, ?string $codeBarre = null): array
+    {
+        $qb = $this->createQueryBuilder('m')
+            ->orderBy('m.nom', 'ASC');
+
+        if ($q !== '') {
+            $qb->andWhere('m.nom LIKE :q OR m.description LIKE :q')
+                ->setParameter('q', '%' . $q . '%');
+        }
+        if ($codeBarre) {
+            $qb->andWhere('m.codeBarre = :cb')->setParameter('cb', $codeBarre);
+        }
+
+        return $qb->getQuery()->getResult();
+    }
 }

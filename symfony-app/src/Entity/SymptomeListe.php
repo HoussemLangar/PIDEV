@@ -6,9 +6,15 @@ use App\Repository\SymptomeListeRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: SymptomeListeRepository::class)]
 #[ORM\Table(name: 'symptomes_liste')]
+#[UniqueEntity(
+    fields: ['nom'],
+    message: 'Ce symptôme existe déjà dans la liste.'
+)]
 class SymptomeListe
 {
     #[ORM\Id]
@@ -17,34 +23,90 @@ class SymptomeListe
     private ?int $id = null;
 
     #[ORM\Column(type: 'string', length: 100, unique: true)]
+    #[Assert\NotBlank(message: 'Le nom du symptôme est obligatoire.')]
+    #[Assert\Length(
+        min: 4,
+        minMessage: 'Le nom du symptôme doit contenir au moins {{ limit }} caractères.',
+        max: 100,
+        maxMessage: 'Le nom ne doit pas dépasser {{ limit }} caractères.'
+    )]
+    #[Assert\Regex(
+        pattern: '/^[^\d]+$/u',
+        message: 'Le nom ne doit pas contenir de chiffres.'
+    )]
     private string $nom;
 
-    #[ORM\Column(type: 'string', length: 50, nullable: true)]
-    private ?string $categorie = null;
+    #[ORM\Column(type: 'string', length: 100, nullable: false)]
+    #[Assert\NotBlank(message: 'Veuillez choisir une catégorie.')]
+    #[Assert\Length(
+        max: 100,
+        maxMessage: 'La catégorie ne doit pas dépasser {{ limit }} caractères.'
+    )]
+    #[Assert\Regex(
+        pattern: '/^[^\d]+$/u',
+        message: 'La catégorie ne doit pas contenir de chiffres.',
+        match: true,
+    )]
+    private string $categorie;
 
-    #[ORM\Column(type: 'text', nullable: true)]
-    private ?string $description = null;
-
-    #[ORM\Column(type: 'datetime', options: ['default' => 'CURRENT_TIMESTAMP'])]
+    #[ORM\Column(type: 'datetimetz', options: ['default' => 'CURRENT_TIMESTAMP'])]
+    #[Assert\NotNull]
     private \DateTimeInterface $createdAt;
 
-    #[ORM\OneToMany(mappedBy: 'symptome', targetEntity: SymptomeQuotidien::class, cascade: ['persist', 'remove'])]
+    #[ORM\OneToMany(mappedBy: 'symptome', targetEntity: SymptomeQuotidien::class, cascade: ['persist'], orphanRemoval: true)]
     private Collection $symptomesQuotidiens;
 
     public function __construct()
     {
-        $this->createdAt = new \DateTimeImmutable();
+        $this->createdAt = new \DateTime();
         $this->symptomesQuotidiens = new ArrayCollection();
     }
 
-    public function getId(): ?int { return $this->id; }
-    public function getNom(): string { return $this->nom; }
-    public function setNom(string $nom): void { $this->nom = $nom; }
-    public function getCategorie(): ?string { return $this->categorie; }
-    public function setCategorie(?string $categorie): void { $this->categorie = $categorie; }
-    public function getDescription(): ?string { return $this->description; }
-    public function setDescription(?string $description): void { $this->description = $description; }
-    public function getCreatedAt(): \DateTimeInterface { return $this->createdAt; }
-    public function setCreatedAt(\DateTimeInterface $createdAt): void { $this->createdAt = $createdAt; }
-    public function getSymptomesQuotidiens(): Collection { return $this->symptomesQuotidiens; }
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+
+    public function getNom(): string
+    {
+        return $this->nom;
+    }
+
+    public function setNom(string $nom): self
+    {
+        $this->nom = trim($nom);
+        return $this;
+    }
+
+    public function getCategorie(): string
+    {
+        return $this->categorie;
+    }
+
+    public function setCategorie(?string $categorie): self
+    {
+        $this->categorie = $categorie ? trim($categorie) : '';
+        return $this;
+    }
+
+    public function getCreatedAt(): \DateTimeInterface
+    {
+        return $this->createdAt;
+    }
+
+    /**
+     * On empêche la modification manuelle de createdAt
+     */
+    public function forceCreatedAt(\DateTimeInterface $createdAt): never
+    {
+        throw new \LogicException('La date de création ne peut pas être modifiée manuellement.');
+    }
+
+    /**
+     * @return Collection<int, SymptomeQuotidien>
+     */
+    public function getSymptomesQuotidiens(): Collection
+    {
+        return $this->symptomesQuotidiens;
+    }
 }

@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<StackPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="com.santea.controller.ProfileSettingsController"
+           styleClass="profile-page-root">
+
+    <ScrollPane fitToWidth="true" pannable="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED"
+                styleClass="home-scroll" StackPane.alignment="CENTER">
+        <content>
+            <VBox spacing="18" alignment="TOP_CENTER" styleClass="profile-content-shell">
+                <padding>
+                    <Insets top="26" right="18" bottom="36" left="18"/>
+                </padding>
+
+                <!-- ═══ Badge + Titre ═══ -->
+                <HBox alignment="CENTER_LEFT" spacing="10" maxWidth="940">
+                    <Label text="Mon profil" styleClass="profile-chip"/>
+                </HBox>
+
+                <!-- ═══ Hero card ═══ -->
+                <HBox spacing="18" styleClass="profile-hero-shell" maxWidth="940">
+                    <VBox spacing="8" HBox.hgrow="ALWAYS">
+                        <Label text="Votre compte, maîtrisé" styleClass="profile-title"/>
+                        <Label text="Gérez vos informations, votre sécurité, vos préférences et vos avantages IA."
+                               styleClass="profile-subtitle" wrapText="true"/>
+                    </VBox>
+                    <VBox spacing="3" styleClass="profile-hero-card" minWidth="280">
+                        <Label text="COMPTE VÉRIFIÉ" styleClass="profile-hero-label"/>
+                        <Label fx:id="heroNameLabel" text="-" styleClass="profile-hero-name"/>
+                        <Label fx:id="heroEmailLabel" text="-" styleClass="profile-hero-email"/>
+                        <Label text="RÔLE" styleClass="profile-hero-label" style="-fx-padding: 8 0 0 0;"/>
+                        <Label fx:id="heroRoleLabel" text="-" styleClass="profile-hero-role"/>
+                    </VBox>
+                </HBox>
+
+                <!-- ═══ Navigation tabs ═══ -->
+                <HBox spacing="8" styleClass="profile-nav-tabs" maxWidth="940">
+                    <Button text="Informations"    styleClass="profile-nav-btn active"/>
+                    <Button text="Confidentialité" styleClass="profile-nav-btn" onAction="#handleOpenConfidentialite"/>
+                    <Button text="2FA"             styleClass="profile-nav-btn" onAction="#handleOpenMfaPage"/>
+                    <Button text="Abonnement"      styleClass="profile-nav-btn" onAction="#handleOpenSubscriptionPage"/>
+                </HBox>
+
+                <!-- ═══ Feedback ═══ -->
+                <Label fx:id="feedbackLabel" text="" visible="false" managed="false"
+                       wrapText="true" styleClass="alert" maxWidth="940"/>
+
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <!--                  SCORE IA UTILISATEUR                      -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <VBox spacing="12" styleClass="profile-card" maxWidth="940">
+
+                    <!-- En-tête section -->
+                    <HBox alignment="CENTER_LEFT" spacing="8">
+                        <Label text="🧠" style="-fx-font-size:18;"/>
+                        <Label text="Score IA Utilisateur" styleClass="profile-section-title"/>
+                    </HBox>
+
+                    <!-- Panel principal score -->
+                    <VBox spacing="10" styleClass="profile-ai-panel">
+
+                        <!-- Ligne score global + chip support -->
+                        <HBox alignment="CENTER_LEFT" spacing="10">
+                            <VBox spacing="2" HBox.hgrow="ALWAYS">
+                                <Label text="SCORE GLOBAL" styleClass="profile-ai-caption"/>
+                                <Label fx:id="scoreValueLabel" text="0/100" styleClass="profile-ai-value"/>
+                            </VBox>
+                            <Label fx:id="scoreSupportLabel" text="Support Standard"
+                                   styleClass="profile-ai-chip"/>
+                        </HBox>
+
+                        <!-- Barre de progression -->
+                        <ProgressBar fx:id="scoreProgressBar" progress="0.0"
+                                     maxWidth="1.7976931348623157E308"
+                                     styleClass="profile-ai-progress"/>
+
+                        <!-- Breakdown 2×2 -->
+                        <GridPane hgap="10" vgap="8" styleClass="profile-ai-meta-grid">
+                            <columnConstraints>
+                                <ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
+                                <ColumnConstraints hgrow="ALWAYS" percentWidth="50"/>
+                            </columnConstraints>
+
+                            <!-- Ligne 1 -->
+                            <HBox styleClass="profile-ai-meta-cell" spacing="6"
+                                  GridPane.columnIndex="0" GridPane.rowIndex="0">
+                                <Label text="⚡ Activité" styleClass="profile-ai-meta-key"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Label fx:id="scoreActivityLabel" text="0/35"
+                                       styleClass="profile-ai-meta-val"/>
+                            </HBox>
+                            <HBox styleClass="profile-ai-meta-cell" spacing="6"
+                                  GridPane.columnIndex="1" GridPane.rowIndex="0">
+                                <Label text="📅 Ancienneté" styleClass="profile-ai-meta-key"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Label fx:id="scoreSeniorityLabel" text="0/25"
+                                       styleClass="profile-ai-meta-val"/>
+                            </HBox>
+
+                            <!-- Ligne 2 -->
+                            <HBox styleClass="profile-ai-meta-cell" spacing="6"
+                                  GridPane.columnIndex="0" GridPane.rowIndex="1">
+                                <Label text="✅ Respect règles" styleClass="profile-ai-meta-key"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Label fx:id="scoreRuleLabel" text="0/25"
+                                       styleClass="profile-ai-meta-val"/>
+                            </HBox>
+                            <HBox styleClass="profile-ai-meta-cell" spacing="6"
+                                  GridPane.columnIndex="1" GridPane.rowIndex="1">
+                                <Label text="🛡 Sanctions" styleClass="profile-ai-meta-key"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Label fx:id="scoreSanctionsLabel" text="0/15"
+                                       styleClass="profile-ai-meta-val"/>
+                            </HBox>
+                        </GridPane>
+
+                        <!-- Éligibilité -->
+                        <Label fx:id="scoreEligibilityLabel" text="-"
+                               wrapText="true"
+                               styleClass="profile-ai-eligibility"/>
+
+                        <!-- Message bénéfices -->
+                        <Label fx:id="scoreBenefitLabel" text="-"
+                               wrapText="true" styleClass="profile-ai-benefit"/>
+
+                        <!-- Historique scoring -->
+                        <VBox spacing="0" styleClass="profile-ai-benefit">
+                            <Label text="Historique de scoring"
+                                   style="-fx-font-size:13; -fx-font-weight:700; -fx-text-fill:#0f172a;"/>
+                            <VBox fx:id="scoreHistoryBox" spacing="2"
+                                  style="-fx-padding: 8 0 0 0;">
+                                <!-- Rempli dynamiquement -->
+                            </VBox>
+                        </VBox>
+                    </VBox>
+                </VBox>
+                <!-- ════════════════════════════════════════════════════════════ -->
+
+                <!-- ═══ Formulaire profil ═══ -->
+                <VBox spacing="12" styleClass="profile-card" maxWidth="940">
+
+                    <!-- Avatar -->
+                    <Label text="Photo de profil" styleClass="profile-section-title"/>
+                    <HBox spacing="14" styleClass="profile-avatar-row" alignment="CENTER_LEFT">
+                        <Label fx:id="heroNameLabel" text="?" styleClass="profile-avatar-preview"/>
+                        <VBox spacing="6">
+                            <Label text="Photo de profil" styleClass="field-label"/>
+                            <Button text="Choisir un fichier" styleClass="sub-outline-button" disable="true"/>
+                        </VBox>
+                    </HBox>
+
+                    <!-- Informations personnelles -->
+                    <Label text="Informations personnelles" styleClass="profile-section-title"
+                           style="-fx-padding: 8 0 0 0;"/>
+
+                    <HBox spacing="12">
+                        <VBox spacing="6" HBox.hgrow="ALWAYS">
+                            <Label text="Nom" styleClass="field-label"/>
+                            <TextField fx:id="nomField" styleClass="form-control"/>
+                        </VBox>
+                        <VBox spacing="6" HBox.hgrow="ALWAYS">
+                            <Label text="Prénom" styleClass="field-label"/>
+                            <TextField fx:id="prenomField" styleClass="form-control"/>
+                        </VBox>
+                    </HBox>
+
+                    <HBox spacing="12">
+                        <VBox spacing="6" HBox.hgrow="ALWAYS">
+                            <Label text="Email" styleClass="field-label"/>
+                            <TextField fx:id="emailField" styleClass="form-control" editable="false"/>
+                        </VBox>
+                        <VBox spacing="6" HBox.hgrow="ALWAYS">
+                            <Label text="Téléphone" styleClass="field-label"/>
+                            <TextField fx:id="telephoneField" styleClass="form-control"/>
+                        </VBox>
+                    </HBox>
+
+                    <HBox spacing="12">
+                        <VBox spacing="6" HBox.hgrow="ALWAYS">
+                            <Label text="Adresse" styleClass="field-label"/>
+                            <TextField fx:id="adresseField" styleClass="form-control"/>
+                        </VBox>
+                        <VBox spacing="6" HBox.hgrow="ALWAYS">
+                            <Label text="Date de naissance" styleClass="field-label"/>
+                            <TextField fx:id="dateNaissanceField" styleClass="form-control" editable="false"/>
+                        </VBox>
+                    </HBox>
+
+                    <HBox spacing="12">
+                        <VBox spacing="6" HBox.hgrow="ALWAYS">
+                            <Label text="Thème" styleClass="field-label"/>
+                            <ComboBox fx:id="themeCombo" maxWidth="1.7976931348623157E308"/>
+                        </VBox>
+                        <VBox spacing="6" HBox.hgrow="ALWAYS">
+                            <Label text="Langue" styleClass="field-label"/>
+                            <ComboBox fx:id="localeCombo" maxWidth="1.7976931348623157E308"/>
+                        </VBox>
+                    </HBox>
+
+                    <CheckBox fx:id="reminderCheck" text="Rappels de rendez-vous" styleClass="remember-me"/>
+
+                    <HBox spacing="10" alignment="CENTER_RIGHT" styleClass="profile-actions-row">
+                        <Button text="Modifier mot de passe" styleClass="sub-outline-button" onAction="#handleOpenPasswordModal"/>
+                        <Button text="Enregistrer"           styleClass="sub-primary-button"  onAction="#handleSaveProfile"/>
+                    </HBox>
+                </VBox>
+
+                <!-- ═══ Zone dangereuse ═══ -->
+                <VBox spacing="8" styleClass="profile-danger-zone" maxWidth="940">
+                    <Label text="Zone dangereuse"  styleClass="profile-danger-title"/>
+                    <Label text="La suppression de votre compte est définitive et irréversible."
+                           styleClass="profile-danger-text" wrapText="true"/>
+                    <Button text="Supprimer mon compte" styleClass="sub-danger-button"
+                            onAction="#handleDeleteAccount"/>
+                </VBox>
+
+            </VBox>
+        </content>
+    </ScrollPane>
+</StackPane>

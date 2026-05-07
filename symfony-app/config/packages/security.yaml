@@ -2,8 +2,6 @@ security:
     # Configuration du hashage de mot de passe
     password_hashers:
         Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
-        App\Entity\User:
-            algorithm: auto
 
     # Providers - comment Symfony trouve les utilisateurs
     providers:
@@ -20,6 +18,12 @@ security:
         main:
             lazy: true
             provider: app_user_provider
+            login_throttling:
+                max_attempts: 5
+                interval: '15 minutes'
+            
+            # ✅ CORRECTION : Définir le point d'entrée
+            entry_point: form_login
             
             # Configuration du formulaire de login
             form_login:
@@ -29,6 +33,18 @@ security:
                 default_target_path: app_home
                 username_parameter: _username  # correspond au champ email
                 password_parameter: _password
+                success_handler: App\Security\LoginSuccessHandler
+
+            two_factor:
+                auth_form_path: scheb_two_factor_form
+                check_path: scheb_two_factor_check
+                always_use_default_target_path: true
+                default_target_path: /
+
+            # Authentification OAuth
+            custom_authenticators:
+                - App\Security\GoogleAuthenticator
+                - App\Security\FacebookAuthenticator
             
             # Configuration du logout
             logout:
@@ -44,14 +60,39 @@ security:
 
     # Contrôle d'accès
     access_control:
+        # Routes publiques (accessibles sans connexion)
+        - { path: ^/login, roles: PUBLIC_ACCESS }
+        - { path: ^/login/validate, roles: PUBLIC_ACCESS }
+        - { path: ^/register, roles: PUBLIC_ACCESS }
+        - { path: ^/connect, roles: PUBLIC_ACCESS }
+        - { path: ^/theme, roles: PUBLIC_ACCESS }
+        - { path: ^/locale, roles: PUBLIC_ACCESS }
+        - { path: ^/2fa, roles: IS_AUTHENTICATED_2FA_IN_PROGRESS }
+        # Live Component AJAX endpoint — allow remembered sessions too
+        - { path: ^/_components, roles: IS_AUTHENTICATED_REMEMBERED }
+        - { path: ^/api/appointments/intent, roles: PUBLIC_ACCESS }
+        - { path: ^/api/voice/transcribe, roles: PUBLIC_ACCESS }
+        - { path: ^/appointments, roles: ROLE_USER }
+        - { path: ^/rendez-vous, roles: ROLE_USER }
+        - { path: ^/api/appointments, roles: ROLE_USER }
+        - { path: ^/contenus, roles: ROLE_USER }
+        - { path: ^/api/content, roles: ROLE_USER }
+        - { path: ^/admin/content, roles: ROLE_ADMIN }
+        - { path: ^/admin/moderation, roles: ROLE_ADMIN }
+        - { path: ^/pharmacies, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/pharmacies, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/pharmacien, roles: ROLE_PHARMACIEN }
+        - { path: ^/api/pharmacien, roles: ROLE_PHARMACIEN }
+        
+        # Routes protégées (décommentez selon vos besoins)
         # - { path: ^/admin, roles: ROLE_ADMIN }
         # - { path: ^/profile, roles: ROLE_USER }
 
-    # Configuration des rôles hiérarchiques (optionnel)
+    # Configuration des rôles hiérarchiques
     role_hierarchy:
-        ROLE_ADMIN: ROLE_USER
-        ROLE_MEDECIN: ROLE_USER
-        ROLE_PATIENT: ROLE_USER
-        ROLE_PHARMACIEN: ROLE_USER
-        ROLE_COACH: ROLE_USER
-        ROLE_NUTRITIONNISTE: ROLE_USER
+        ROLE_ADMIN: [ROLE_USER]
+        ROLE_MEDECIN: [ROLE_USER]
+        ROLE_PATIENT: [ROLE_USER]
+        ROLE_PHARMACIEN: [ROLE_USER]
+        ROLE_COACH: [ROLE_USER]
+        ROLE_NUTRITIONNISTE: [ROLE_USER]

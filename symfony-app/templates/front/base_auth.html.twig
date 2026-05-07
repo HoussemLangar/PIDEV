@@ -7,13 +7,77 @@
     
     {% block stylesheets %}
         <link rel="stylesheet" href="{{ asset('style.css') }}">
+        <link rel="stylesheet" href="{{ asset('css/santea-3d.css') }}?v=1">
+        <link rel="SHORTCUT ICON" type="image/x-icon" href="{{ asset('logo.png') }}">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+        <style>
+        /* ── Auth 3D Enhancements ────────────────────────────── */
+        .auth-left {
+            background: linear-gradient(135deg, #0862a0 0%, #0D8ABC 50%, #00c9a7 100%) !important;
+            position: relative;
+            overflow: hidden;
+        }
+        .auth-left::before {
+            content: '';
+            position: absolute;
+            top: -40%; left: -20%;
+            width: 140%; height: 140%;
+            background: radial-gradient(ellipse, rgba(255,255,255,.08) 0%, transparent 65%);
+            animation: s3d-pulse 8s ease-in-out infinite;
+            pointer-events: none;
+        }
+        .auth-left::after {
+            content: '';
+            position: absolute;
+            bottom: -30%; right: -20%;
+            width: 80%; height: 80%;
+            background: radial-gradient(ellipse, rgba(0,201,167,.2) 0%, transparent 60%);
+            animation: s3d-pulse 6s ease-in-out infinite reverse;
+            pointer-events: none;
+        }
+        .auth-right {
+            background: rgba(255,255,255,.95) !important;
+            backdrop-filter: blur(20px) !important;
+        }
+        [data-theme="dark"] .auth-right {
+            background: rgba(15,23,42,.95) !important;
+        }
+        .auth-float-icon {
+            animation: s3d-float-icon 4s ease-in-out infinite !important;
+            filter: drop-shadow(0 4px 12px rgba(255,255,255,.25)) !important;
+        }
+        .auth-float-icon.icon-1 { animation-delay:  0.0s !important; }
+        .auth-float-icon.icon-2 { animation-delay: -0.8s !important; }
+        .auth-float-icon.icon-3 { animation-delay: -1.6s !important; }
+        .auth-float-icon.icon-4 { animation-delay: -2.4s !important; }
+        .auth-float-icon.icon-5 { animation-delay: -3.2s !important; }
+        .auth-float-icon.icon-6 { animation-delay: -4.0s !important; }
+        .auth-logo i {
+            animation: s3d-badge-pulse 3s ease-in-out infinite !important;
+            filter: drop-shadow(0 0 20px rgba(255,255,255,.5)) !important;
+        }
+        .auth-text h2 {
+            text-shadow: 0 2px 20px rgba(0,0,0,.2) !important;
+        }
+        /* DNA cross decor */
+        .auth-left-cross {
+            position: absolute;
+            font-size: 120px;
+            color: rgba(255,255,255,.04);
+            animation: s3d-cross-spin 15s linear infinite;
+            pointer-events: none;
+            user-select: none;
+        }
+        </style>
     {% endblock %}
 </head>
-<body>
+<body data-turbo="false">
     <div class="auth-container">
         <!-- Left Side - Info Panel -->
         <div class="auth-left">
+            <!-- 3D Decorative crosses -->
+            <i class="fas fa-plus auth-left-cross" style="top:10%;left:5%;" aria-hidden="true"></i>
+            <i class="fas fa-plus auth-left-cross" style="bottom:15%;right:8%;font-size:80px;animation-delay:-5s;" aria-hidden="true"></i>
             <!-- Animated Medical Icons -->
             <div class="auth-floating-icons">
                 <i class="fas fa-heartbeat auth-float-icon icon-1"></i>
@@ -64,6 +128,76 @@
                 }
             }
         </script>
+        <script>
+            (function () {
+                const loader = document.getElementById('globalLoader');
+                if (!loader) return;
+                const show = () => {
+                    loader.classList.add('show');
+                    loader.setAttribute('aria-hidden', 'false');
+                };
+                const hide = () => {
+                    loader.classList.remove('show');
+                    loader.setAttribute('aria-hidden', 'true');
+                };
+
+                document.querySelectorAll('form').forEach((form) => {
+                    if (form.dataset.ajax === '1') return;
+                    form.addEventListener('submit', () => {
+                        show();
+                    });
+                });
+
+                document.querySelectorAll('a[href]').forEach((link) => {
+                    if (link.target === '_blank' || link.hasAttribute('download')) return;
+                    link.addEventListener('click', () => {
+                        const href = link.getAttribute('href');
+                        if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
+                        show();
+                    });
+                });
+
+                window.addEventListener('pageshow', (e) => {
+                    if (e.persisted) hide();
+                });
+
+                window.addEventListener('load', hide);
+            })();
+        </script>
+        <script>
+            (function () {
+                const disableHtml5Validation = (root = document) => {
+                    root.querySelectorAll('form').forEach((formEl) => {
+                        formEl.setAttribute('novalidate', 'novalidate');
+                        formEl.noValidate = true;
+                    });
+                };
+                disableHtml5Validation();
+                document.addEventListener('invalid', (e) => e.preventDefault(), true);
+                const observer = new MutationObserver((mutations) => {
+                    mutations.forEach((mutation) => {
+                        mutation.addedNodes.forEach((node) => {
+                            if (!(node instanceof HTMLElement)) return;
+                            if (node.tagName === 'FORM') {
+                                node.setAttribute('novalidate', 'novalidate');
+                                node.noValidate = true;
+                            } else {
+                                disableHtml5Validation(node);
+                            }
+                        });
+                    });
+                });
+                observer.observe(document.documentElement, { childList: true, subtree: true });
+            })();
+        </script>
     {% endblock %}
+
+    <div class="global-loader" id="globalLoader" aria-hidden="true">
+        <div class="loader-card">
+            <div class="loader-spinner"></div>
+            <div class="loader-text">Chargement…</div>
+        </div>
+    </div>
+    
 </body>
 </html>

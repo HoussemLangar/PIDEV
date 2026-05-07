@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Priority?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<HBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.santea.controller.AuthBaseViewController"
+      styleClass="auth-container" alignment="CENTER_LEFT">
+
+    <StackPane styleClass="auth-left" minWidth="595" prefWidth="595" HBox.hgrow="NEVER">
+        <children>
+            <AnchorPane styleClass="auth-floating-icons" mouseTransparent="true">
+                <children>
+                    <Label text="❤" styleClass="auth-float-icon" AnchorPane.topAnchor="56.0" AnchorPane.leftAnchor="68.0" />
+                    <Label text="✚" styleClass="auth-float-icon" AnchorPane.topAnchor="128.0" AnchorPane.leftAnchor="58.0" />
+                    <Label text="⚕" styleClass="auth-float-icon" AnchorPane.topAnchor="250.0" AnchorPane.leftAnchor="42.0" />
+                    <Label text="✚" styleClass="auth-float-icon" AnchorPane.bottomAnchor="108.0" AnchorPane.rightAnchor="66.0" />
+                    <Label text="✚" styleClass="auth-float-icon" AnchorPane.topAnchor="190.0" AnchorPane.rightAnchor="152.0" />
+                    <Label text="⚕" styleClass="auth-float-icon" AnchorPane.bottomAnchor="198.0" AnchorPane.rightAnchor="130.0" />
+                </children>
+            </AnchorPane>
+
+            <VBox alignment="CENTER" spacing="20.0" styleClass="auth-left-content" maxWidth="500.0">
+                <children>
+                    <Label text="🩺" styleClass="auth-logo" />
+                    <Label text="Chez SANTÉA, nous sommes toujours entièrement concentrés sur votre santé"
+                           wrapText="true" styleClass="auth-left-title" />
+                    <Label text="Votre bien-être est notre priorité" styleClass="auth-left-subtitle" />
+                </children>
+            </VBox>
+        </children>
+    </StackPane>
+
+    <VBox styleClass="auth-right" HBox.hgrow="ALWAYS" maxWidth="1.7976931348623157E308">
+        <children>
+            <BorderPane maxWidth="1.7976931348623157E308">
+                <right>
+                    <HBox alignment="TOP_RIGHT" styleClass="language-selector" maxWidth="1.7976931348623157E308">
+                        <children>
+                            <ComboBox fx:id="languageSelect" styleClass="language-select" prefWidth="140.0" />
+                        </children>
+                    </HBox>
+                </right>
+            </BorderPane>
+
+            <ScrollPane fitToWidth="true"
+                        hbarPolicy="NEVER"
+                        vbarPolicy="AS_NEEDED"
+                        pannable="true"
+                        VBox.vgrow="ALWAYS"
+                        styleClass="auth-content-scroll">
+                <content>
+                    <StackPane fx:id="contentContainer"
+                               alignment="TOP_CENTER"
+                               maxWidth="1.7976931348623157E308"
+                               maxHeight="1.7976931348623157E308" />
+                </content>
+            </ScrollPane>
+        </children>
+        <padding>
+            <Insets top="24.0" right="36.0" bottom="24.0" left="36.0" />
+        </padding>
+    </VBox>
+</HBox>

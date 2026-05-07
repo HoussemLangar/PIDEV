@@ -9,6 +9,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
 
 #[Route('/api/user', name: 'user_')]
@@ -17,6 +18,7 @@ class UserController extends AbstractController
     public function __construct(
         private readonly UserRepository $repository,
         private readonly EntityManagerInterface $entityManager,
+        private readonly UserPasswordHasherInterface $passwordHasher,
     ) {}
 
     /**
@@ -58,8 +60,12 @@ class UserController extends AbstractController
     {
         $data = json_decode($request->getContent(), true);
 
-        if (!$data) {
+        if ($data === null && json_last_error() !== JSON_ERROR_NONE) {
             return new JsonResponse(['error' => 'Données JSON invalides'], Response::HTTP_BAD_REQUEST);
+        }
+
+        if (!is_array($data)) {
+            return new JsonResponse(['error' => 'Le corps de requête doit être un objet JSON'], Response::HTTP_BAD_REQUEST);
         }
 
         $entity = new User();
@@ -85,8 +91,12 @@ class UserController extends AbstractController
 
         $data = json_decode($request->getContent(), true);
 
-        if (!$data) {
+        if ($data === null && json_last_error() !== JSON_ERROR_NONE) {
             return new JsonResponse(['error' => 'Données JSON invalides'], Response::HTTP_BAD_REQUEST);
+        }
+
+        if (!is_array($data)) {
+            return new JsonResponse(['error' => 'Le corps de requête doit être un objet JSON'], Response::HTTP_BAD_REQUEST);
         }
 
         $this->hydrateEntity($entity, $data);
@@ -110,8 +120,12 @@ class UserController extends AbstractController
 
         $data = json_decode($request->getContent(), true);
 
-        if (!$data) {
+        if ($data === null && json_last_error() !== JSON_ERROR_NONE) {
             return new JsonResponse(['error' => 'Données JSON invalides'], Response::HTTP_BAD_REQUEST);
+        }
+
+        if (!is_array($data)) {
+            return new JsonResponse(['error' => 'Le corps de requête doit être un objet JSON'], Response::HTTP_BAD_REQUEST);
         }
 
         $this->hydrateEntity($entity, $data, partiel: true);
@@ -152,6 +166,10 @@ class UserController extends AbstractController
         foreach ($reflection->getMethods(\ReflectionMethod::IS_PUBLIC) as $method) {
             $name = $method->getName();
             if (str_starts_with($name, 'get') && $method->getNumberOfRequiredParameters() === 0) {
+                if ($name === 'getPassword') {
+                    continue;
+                }
+
                 $key = lcfirst(substr($name, 3));
                 $value = $entity->{$name}();
 
@@ -189,12 +207,21 @@ class UserController extends AbstractController
             $setterName = 'set' . ucfirst($camelKey);
 
             if ($reflection->hasMethod($setterName)) {
+                if ($setterName === 'setPassword') {
+                    if ($value !== null && $value !== '') {
+                        $entity->setPassword(
+                            $this->passwordHasher->hashPassword($entity, (string) $value)
+                        );
+                    }
+                    continue;
+                }
+
                 $method = $reflection->getMethod($setterName);
                 $param = $method->getParameters()[0] ?? null;
 
                 if ($param) {
                     $type = $param->getType();
-                    $typeName = $type ? $type->getName() : null;
+                    $typeName = $type instanceof \ReflectionNamedType ? $type->getName() : null;
 
                     // Conversion automatique selon le type attendu
                     $converted = match ($typeName) {

@@ -1,0 +1,241 @@
+{% extends 'back/base.html.twig' %}
+
+{% block title %}Pharmacies{% endblock %}
+
+{% block admin_content %}
+<div class="admin-page-header">
+    <div class="admin-page-title">
+        <h1>Pharmacies</h1>
+        <p>Gestion complète des pharmacies.</p>
+    </div>
+</div>
+
+<div class="admin-grid cards-3">
+    <div class="admin-card">
+        <div class="admin-badge">Total</div>
+        <h2>{{ stats.pharmacies_total }}</h2>
+    </div>
+    <div class="admin-card">
+        <div class="admin-badge success">Actives</div>
+        <h2>{{ stats.pharmacies_active }}</h2>
+    </div>
+    <div class="admin-card">
+        <div class="admin-badge warning">Réservations en attente</div>
+        <h2>{{ stats.reservations_pending }}</h2>
+    </div>
+</div>
+
+<div class="admin-card" id="pharmacies">
+    <div class="admin-page-title" style="margin-bottom:12px;">
+        <h2>Gestion des pharmacies</h2>
+        <p>Créer, modifier, supprimer.</p>
+    </div>
+    <div class="admin-actions-row" style="margin-bottom:12px;">
+        <button class="btn btn-primary btn-sm admin-panel-toggle" data-target="pharmacy-add">Ajouter</button>
+        <button class="btn btn-secondary btn-sm admin-panel-toggle" data-target="pharmacy-list">Liste</button>
+    </div>
+    <div class="admin-form form-row filters-inline filters-modern" style="margin-bottom: 10px;">
+        <div class="filter-search filter-field">
+            <label>Recherche</label>
+            <i class="fas fa-search"></i>
+            <input type="text" id="pharmacyFilterName" placeholder="Nom ou adresse">
+        </div>
+        <div class="filter-field">
+            <label>Statut</label>
+            <select id="pharmacyFilterStatus">
+                <option value="">Tous</option>
+                <option value="active">Actives</option>
+                <option value="inactive">Inactives</option>
+            </select>
+        </div>
+    </div>
+    <div class="admin-panel is-active" id="pharmacy-add">
+        <div class="admin-panel-title">Ajouter une pharmacie</div>
+        <div class="admin-form form-row">
+            <input type="text" id="adminPharmacyName" placeholder="Nom">
+            <input type="text" id="adminPharmacyAddress" placeholder="Adresse">
+            <input type="text" id="adminPharmacyPhone" placeholder="Téléphone">
+            <input type="email" id="adminPharmacyEmail" placeholder="Email">
+            <input type="text" id="adminPharmacyHours" placeholder="Horaires">
+            <input type="text" id="adminPharmacyLat" placeholder="Latitude">
+            <input type="text" id="adminPharmacyLng" placeholder="Longitude">
+            <select id="adminPharmacyActive">
+                <option value="1">Active</option>
+                <option value="0">Inactive</option>
+            </select>
+            <button class="btn btn-primary btn-sm" id="adminCreatePharmacy" type="button">Créer</button>
+        </div>
+    </div>
+    <div class="admin-panel" id="pharmacy-edit">
+        <div class="admin-panel-title">Mettre à jour une pharmacie</div>
+        <div class="admin-form form-row">
+            <input type="hidden" id="adminPharmacyEditId">
+            <input type="text" id="adminPharmacyEditName" placeholder="Nom">
+            <input type="text" id="adminPharmacyEditAddress" placeholder="Adresse">
+            <input type="text" id="adminPharmacyEditPhone" placeholder="Téléphone">
+            <input type="email" id="adminPharmacyEditEmail" placeholder="Email">
+            <input type="text" id="adminPharmacyEditHours" placeholder="Horaires">
+            <input type="text" id="adminPharmacyEditLat" placeholder="Latitude">
+            <input type="text" id="adminPharmacyEditLng" placeholder="Longitude">
+            <select id="adminPharmacyEditActive">
+                <option value="1">Active</option>
+                <option value="0">Inactive</option>
+            </select>
+            <button class="btn btn-secondary btn-sm" id="adminUpdatePharmacy" type="button">Enregistrer</button>
+        </div>
+    </div>
+    <div class="admin-panel" id="pharmacy-list">
+        <div class="admin-panel-title">Liste des pharmacies</div>
+        <div style="overflow-x:auto;">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Nom</th>
+                        <th>Adresse</th>
+                        <th>Contact</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="pharmacyTable">
+                {% for p in pharmacies %}
+                    <tr class="pharmacy-row" data-name="{{ p.nom|lower }}" data-address="{{ p.adresse|lower }}" data-status="{{ p.isActive ? 'active' : 'inactive' }}" data-id="{{ p.id }}">
+                        <td><input type="text" class="admin-input" data-field="nom" value="{{ p.nom }}"></td>
+                        <td><input type="text" class="admin-input" data-field="adresse" value="{{ p.adresse }}"></td>
+                        <td>
+                            <input type="text" class="admin-input" data-field="telephone" value="{{ p.telephone }}">
+                            <input type="email" class="admin-input" data-field="email" value="{{ p.email }}">
+                            <input type="text" class="admin-input" data-field="horaires" value="{{ p.horaires }}" placeholder="Horaires">
+                            <input type="text" class="admin-input" data-field="latitude" value="{{ p.latitude }}" placeholder="Latitude">
+                            <input type="text" class="admin-input" data-field="longitude" value="{{ p.longitude }}" placeholder="Longitude">
+                        </td>
+                        <td>
+                            <select class="admin-input" data-field="is_active">
+                                <option value="1" {{ p.isActive ? 'selected' : '' }}>Active</option>
+                                <option value="0" {{ p.isActive ? '' : 'selected' }}>Inactive</option>
+                            </select>
+                        </td>
+                        <td>
+                            <div class="admin-actions-row">
+                                <button class="btn btn-secondary btn-xs admin-pharmacy-edit" type="button">Modifier</button>
+                                <button class="btn btn-danger btn-xs admin-pharmacy-delete" type="button">Supprimer</button>
+                            </div>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="5" style="text-align:center;">Aucune pharmacie.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        (function () {
+            const csrf = '{{ csrf_token('admin_pharmacy') }}';
+            const loader = document.getElementById('globalLoader');
+            const show = () => loader?.classList.add('show');
+            const hide = () => loader?.classList.remove('show');
+            const api = async (url, payload) => {
+                show();
+                try {
+                    const res = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf },
+                        body: JSON.stringify(payload || {}),
+                    });
+                    return res;
+                } finally {
+                    hide();
+                }
+            };
+
+            const panels = document.querySelectorAll('.admin-panel');
+            const panelToggles = document.querySelectorAll('.admin-panel-toggle');
+            const openPanel = (id) => {
+                panels.forEach((p) => p.classList.toggle('is-active', p.id === id));
+                const target = document.getElementById(id);
+                if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            };
+            panelToggles.forEach((btn) => btn.addEventListener('click', () => openPanel(btn.dataset.target)));
+
+            const filterRows = (rows, predicate) => {
+                rows.forEach((row) => row.style.display = predicate(row) ? '' : 'none');
+            };
+
+            const pharmacyRows = Array.from(document.querySelectorAll('.pharmacy-row'));
+            const pharmacyFilterName = document.getElementById('pharmacyFilterName');
+            const pharmacyFilterStatus = document.getElementById('pharmacyFilterStatus');
+            const applyPharmacyFilter = () => {
+                const q = (pharmacyFilterName.value || '').toLowerCase();
+                const status = (pharmacyFilterStatus.value || '').toLowerCase();
+                filterRows(pharmacyRows, (row) => {
+                    const matchQ = !q || row.dataset.name.includes(q) || row.dataset.address.includes(q);
+                    const matchStatus = !status || row.dataset.status === status;
+                    return matchQ && matchStatus;
+                });
+            };
+            pharmacyFilterName.addEventListener('input', applyPharmacyFilter);
+            pharmacyFilterStatus.addEventListener('change', applyPharmacyFilter);
+
+            document.getElementById('adminCreatePharmacy')?.addEventListener('click', async () => {
+                const payload = {
+                    nom: document.getElementById('adminPharmacyName').value,
+                    adresse: document.getElementById('adminPharmacyAddress').value,
+                    telephone: document.getElementById('adminPharmacyPhone').value,
+                    email: document.getElementById('adminPharmacyEmail').value,
+                    horaires: document.getElementById('adminPharmacyHours').value,
+                    latitude: document.getElementById('adminPharmacyLat').value,
+                    longitude: document.getElementById('adminPharmacyLng').value,
+                    is_active: document.getElementById('adminPharmacyActive').value === '1',
+                };
+                await api('/admin/pharmacy/pharmacies', payload);
+                location.reload();
+            });
+
+            document.getElementById('adminUpdatePharmacy')?.addEventListener('click', async () => {
+                const id = document.getElementById('adminPharmacyEditId').value;
+                if (!id) return;
+                const payload = {
+                    nom: document.getElementById('adminPharmacyEditName').value,
+                    adresse: document.getElementById('adminPharmacyEditAddress').value,
+                    telephone: document.getElementById('adminPharmacyEditPhone').value,
+                    email: document.getElementById('adminPharmacyEditEmail').value,
+                    horaires: document.getElementById('adminPharmacyEditHours').value,
+                    latitude: document.getElementById('adminPharmacyEditLat').value,
+                    longitude: document.getElementById('adminPharmacyEditLng').value,
+                    is_active: document.getElementById('adminPharmacyEditActive').value === '1',
+                };
+                await api(`/admin/pharmacy/pharmacies/${id}`, payload);
+                location.reload();
+            });
+
+            document.addEventListener('click', async (e) => {
+                const row = e.target.closest('tr');
+                if (!row) return;
+
+                if (e.target.classList.contains('admin-pharmacy-edit')) {
+                    document.getElementById('adminPharmacyEditId').value = row.dataset.id;
+                    document.getElementById('adminPharmacyEditName').value = row.querySelector('[data-field="nom"]').value;
+                    document.getElementById('adminPharmacyEditAddress').value = row.querySelector('[data-field="adresse"]').value;
+                    document.getElementById('adminPharmacyEditPhone').value = row.querySelector('[data-field="telephone"]').value;
+                    document.getElementById('adminPharmacyEditEmail').value = row.querySelector('[data-field="email"]').value;
+                    document.getElementById('adminPharmacyEditHours').value = row.querySelector('[data-field="horaires"]').value;
+                    document.getElementById('adminPharmacyEditLat').value = row.querySelector('[data-field="latitude"]').value;
+                    document.getElementById('adminPharmacyEditLng').value = row.querySelector('[data-field="longitude"]').value;
+                    document.getElementById('adminPharmacyEditActive').value = row.querySelector('[data-field="is_active"]').value;
+                    openPanel('pharmacy-edit');
+                }
+                if (e.target.classList.contains('admin-pharmacy-delete')) {
+                    if (!confirm('Supprimer cette pharmacie ?')) return;
+                    await api(`/admin/pharmacy/pharmacies/${row.dataset.id}/delete`);
+                    location.reload();
+                }
+            });
+        })();
+    </script>
+{% endblock %}

@@ -1,0 +1,459 @@
+{% extends 'front/base.html.twig' %}
+
+{% block title %}{{ 'profile.title'|trans }} - SANTÉA{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+    /* ── Profile section tabs ─────────────────────────────────── */
+    .profile-nav-tabs {
+        display:flex; gap:6px; background:#f1f5f9; padding:6px; border-radius:16px;
+        margin-bottom:32px; flex-wrap:wrap;
+        box-shadow:inset 0 1px 3px rgba(15,23,42,.08);
+    }
+    .profile-nav-tab {
+        display:flex; align-items:center; gap:9px; padding:11px 20px;
+        border-radius:12px; font-size:13.5px; font-weight:600; color:#64748b;
+        text-decoration:none; transition:all .22s;
+    }
+    .profile-nav-tab:hover { background:white; color:#0D8ABC; box-shadow:0 2px 8px rgba(15,23,42,.07); }
+    .profile-nav-tab.active {
+        background:white; color:#0D8ABC;
+        box-shadow:0 4px 16px rgba(13,138,188,.18);
+    }
+    .profile-nav-tab i { font-size:15px; }
+
+    /* ── Section titles ───────────────────────────────────────── */
+    .profile-section-title {
+        display:flex; align-items:center; gap:10px;
+        font-size:16px; font-weight:800; color:#1a1a2e; letter-spacing:-.2px;
+        margin:0 0 20px; padding:14px 18px; border-radius:12px;
+        background:linear-gradient(to right, rgba(13,138,188,.07), transparent);
+        border-left:4px solid #0D8ABC;
+    }
+    .profile-section-title i { color:#0D8ABC; font-size:18px; }
+    .profile-section-title + .profile-section-title { margin-top:28px; }
+
+    /* ── Avatar section ──────────────────────────────────────── */
+    .profile-avatar-row {
+        display:flex; align-items:center; gap:20px; padding:18px 18px 22px;
+        background:#f8fafc; border-radius:14px; border:1.5px dashed #cbd5e1;
+        margin-bottom:4px;
+    }
+    .profile-avatar-preview img {
+        width:80px; height:80px; object-fit:cover; border-radius:50%;
+        border:3px solid #0D8ABC; box-shadow:0 4px 16px rgba(13,138,188,.25);
+    }
+    .profile-avatar-upload label {
+        font-weight:700; color:#1a1a2e; font-size:14px; display:block; margin-bottom:6px;
+    }
+    .profile-avatar-upload input[type=file] {
+        font-size:13px; color:#64748b;
+        padding:7px 12px; background:white; border:1.5px solid #e2e8f0; border-radius:10px;
+        cursor:pointer; transition:border-color .2s;
+    }
+    .profile-avatar-upload input[type=file]:hover { border-color:#0D8ABC; }
+
+    /* ── Form grid ───────────────────────────────────────────── */
+    .profile-grid {
+        display:grid; grid-template-columns:1fr 1fr; gap:16px 20px;
+        padding:0 4px;
+    }
+    .profile-grid .full { grid-column:1 / -1; }
+    .profile-grid > div label {
+        font-size:13px; font-weight:700; color:#374151; display:block; margin-bottom:6px;
+    }
+    .profile-grid > div input,
+    .profile-grid > div select,
+    .profile-grid > div textarea {
+        width:100%; padding:10px 14px; border:1.5px solid #e2e8f0; border-radius:10px;
+        font-size:14px; background:#fff; color:#1a1a2e;
+        transition:border-color .2s, box-shadow .2s;
+        outline:none;
+    }
+    .profile-grid > div input:focus,
+    .profile-grid > div select:focus,
+    .profile-grid > div textarea:focus {
+        border-color:#0D8ABC; box-shadow:0 0 0 3px rgba(13,138,188,.12);
+    }
+    .profile-grid .reminder-toggle {
+        display:flex; align-items:center; gap:10px; flex-direction:row; padding-top:24px;
+    }
+    .profile-grid .reminder-toggle label { margin-bottom:0; }
+
+    /* ── Profile actions bar ─────────────────────────────────── */
+    .profile-actions {
+        display:flex; gap:12px; justify-content:flex-end; margin-top:28px; padding-top:20px;
+        border-top:1px solid #f1f5f9; flex-wrap:wrap;
+    }
+    .profile-actions .btn-primary {
+        background:linear-gradient(135deg,#0D8ABC,#0862a0); color:#fff; border:none;
+        padding:11px 28px; border-radius:12px; font-size:14px; font-weight:700;
+        cursor:pointer; display:flex; align-items:center; gap:8px;
+        box-shadow:0 4px 16px rgba(13,138,188,.3); transition:all .2s;
+    }
+    .profile-actions .btn-primary:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(13,138,188,.4); }
+    .profile-actions .btn-secondary {
+        background:#f1f5f9; color:#475569; border:1.5px solid #e2e8f0;
+        padding:11px 22px; border-radius:12px; font-size:14px; font-weight:700;
+        cursor:pointer; display:flex; align-items:center; gap:8px; transition:all .2s;
+    }
+    .profile-actions .btn-secondary:hover { background:#e2e8f0; color:#1a1a2e; }
+
+    /* ── Danger zone card ────────────────────────────────────── */
+    .danger-zone {
+        border:1.5px solid #fecaca !important;
+        background:linear-gradient(to right, #fff5f5, #fff) !important;
+    }
+    .danger-zone h3 { margin:0 0 10px; font-size:16px; }
+    .danger-zone p { color:#6b7280; font-size:14px; margin:0 0 16px; }
+    .btn-danger {
+        background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff; border:none;
+        padding:10px 22px; border-radius:12px; font-size:14px; font-weight:700;
+        cursor:pointer; display:inline-flex; align-items:center; gap:8px; transition:all .2s;
+        box-shadow:0 4px 14px rgba(239,68,68,.25);
+    }
+    .btn-danger:hover { box-shadow:0 6px 18px rgba(239,68,68,.4); transform:translateY(-1px); }
+
+    .ai-score-panel {
+        background:linear-gradient(135deg,#f0f9ff,#f8fafc);
+        border:1px solid #bae6fd;
+        border-radius:14px;
+        padding:16px;
+    }
+    .ai-score-head {
+        display:flex;
+        align-items:flex-end;
+        justify-content:space-between;
+        gap:12px;
+        margin-bottom:12px;
+    }
+    .ai-score-value {
+        font-size:28px;
+        font-weight:800;
+        color:#0c4a6e;
+        line-height:1;
+    }
+    .ai-score-label {
+        font-size:12px;
+        text-transform:uppercase;
+        letter-spacing:.5px;
+        color:#0369a1;
+        font-weight:700;
+    }
+    .ai-score-chip {
+        font-size:12px;
+        font-weight:700;
+        color:#0c4a6e;
+        padding:6px 10px;
+        border-radius:999px;
+        background:#e0f2fe;
+        border:1px solid #bae6fd;
+    }
+    .ai-score-meta {
+        display:grid;
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:8px 12px;
+        margin:12px 0;
+    }
+    .ai-score-meta div {
+        font-size:12px;
+        color:#334155;
+        display:flex;
+        justify-content:space-between;
+        gap:8px;
+    }
+    .ai-score-benefit {
+        margin-top:10px;
+        font-size:13px;
+        color:#0f172a;
+        line-height:1.45;
+        background:#fff;
+        border:1px solid #e2e8f0;
+        border-radius:10px;
+        padding:10px 12px;
+    }
+    </style>
+{% endblock %}
+
+{% block body %}
+{% set ai = aiScore ?? {
+    score: 0,
+    supportPriorityLabel: 'Standard',
+    premiumEligible: false,
+    benefitsMessage: 'Score indisponible.',
+    breakdown: {activity: 0, seniority: 0, ruleCompliance: 0, sanctionsHistory: 0}
+} %}
+<section class="profile-page">
+    <div class="profile-shell">
+        <div class="profile-hero">
+            <div>
+                <div class="profile-badge"><i class="fas fa-user-cog"></i> {{ 'profile.title'|trans }}</div>
+                <h1>Votre compte, maîtrisé</h1>
+                <p>Gérez vos informations, votre sécurité, vos préférences et vos avantages IA en un seul endroit.</p>
+            </div>
+            <div class="profile-hero-card">
+                <div class="profile-hero-label">Compte vérifié</div>
+                <div class="profile-hero-name">{{ app.user.fullName ?? app.user.email }}</div>
+                <div class="profile-hero-meta"><i class="fas fa-envelope" style="margin-right:6px;opacity:.75;"></i>{{ app.user.email }}</div>
+                <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.25);display:flex;gap:16px;">
+                    <div>
+                        <div style="font-size:11px;opacity:.75;text-transform:uppercase;letter-spacing:.5px;">Rôle</div>
+                        <div style="font-weight:700;font-size:13px;">{{ (app.user.subscriptionType ?? app.user.role)|replace({'ROLE_': '', '_': ' '})|capitalize }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick nav tabs -->
+        <nav class="profile-nav-tabs" aria-label="Sections du profil">
+            <a href="{{ path('profile_edit') }}" class="profile-nav-tab active">
+                <i class="fas fa-user-edit"></i> Informations
+            </a>
+            <a href="{{ path('profile_notifications') }}" class="profile-nav-tab">
+                <i class="fas fa-shield-alt"></i> Confidentialité
+            </a>
+            <a href="{{ path('profile_mfa') }}" class="profile-nav-tab">
+                <i class="fas fa-key"></i> 2FA
+            </a>
+            <a href="{{ path('app_subscription_overview') }}" class="profile-nav-tab">
+                <i class="fas fa-crown" style="color:#f59e0b;"></i> Abonnement
+            </a>
+        </nav>
+
+        <div class="profile-card">
+            <div class="profile-section-title">
+                <i class="fas fa-brain"></i> Score IA Utilisateur
+            </div>
+            <div class="ai-score-panel">
+                <div class="ai-score-head">
+                    <div>
+                        <div class="ai-score-label">Score global</div>
+                        <div class="ai-score-value">{{ ai.score }}/100</div>
+                    </div>
+                    <div class="ai-score-chip">Support {{ ai.supportPriorityLabel }}</div>
+                </div>
+
+                <div class="ai-score-meta">
+                    <div><span>Activité</span><strong>{{ ai.breakdown.activity }}/35</strong></div>
+                    <div><span>Ancienneté</span><strong>{{ ai.breakdown.seniority }}/25</strong></div>
+                    <div><span>Respect des règles</span><strong>{{ ai.breakdown.ruleCompliance }}/25</strong></div>
+                    <div><span>Historique sanctions</span><strong>{{ ai.breakdown.sanctionsHistory }}/15</strong></div>
+                </div>
+
+                <div class="ai-score-benefit">
+                    {% if ai.aiOfferActive %}
+                        <strong>Offre active :</strong> vous bénéficiez d'un accès premium IA grâce à votre score.
+                    {% else %}
+                            <strong>Offre non activée :</strong> atteignez 80/100 ce mois-ci pour être éligible puis activez votre abonnement IA pour bénéficier de l'accès premium.
+                    {% endif %}
+                    <div style="margin-top:6px;">{{ ai.benefitsMessage }}</div>
+                </div>
+
+                <div class="ai-score-benefit" style="margin-top:12px;">
+                    <strong>Historique de scoring</strong>
+                    <div style="margin-top:8px;display:grid;gap:6px;">
+                        {% for item in scoreHistory|default([]) %}
+                            <div style="display:flex;justify-content:space-between;gap:10px;font-size:12px;color:#334155;">
+                                <span>{{ item.createdAt|date('d/m/Y H:i') }}</span>
+                                <span style="font-weight:700;color:#0f172a;">{{ item.score }}/100</span>
+                            </div>
+                        {% else %}
+                            <div style="font-size:12px;color:#64748b;">Aucun historique disponible pour le moment.</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="profile-card">
+            {{ form_start(form, { attr: { class: 'profile-form', id: 'profileForm' } }) }}
+
+                <div class="profile-section-title">
+                    <i class="fas fa-camera"></i> {{ 'profile.avatar'|trans }}
+                </div>
+                <div class="profile-avatar-row">
+                    <div class="profile-avatar-preview">
+                        <img src="{{ app.user.avatarDataUri ?: ('https://ui-avatars.com/api/?name=' ~ app.user.nom|url_encode ~ '+' ~ app.user.prenom|url_encode ~ '&background=0D8ABC&color=fff&size=80') }}" alt="Avatar">
+                    </div>
+                    <div class="profile-avatar-upload">
+                        {{ form_label(form.avatarFile) }}
+                        {{ form_widget(form.avatarFile) }}
+                        {{ form_errors(form.avatarFile) }}
+                    </div>
+                </div>
+
+                <div class="profile-section-title" style="margin-top:24px;">
+                    <i class="fas fa-id-card"></i> Informations personnelles
+                </div>
+                <div class="profile-grid">
+                    <div>
+                        {{ form_label(form.nom) }}
+                        {{ form_widget(form.nom) }}
+                        {{ form_errors(form.nom) }}
+                    </div>
+                    <div>
+                        {{ form_label(form.prenom) }}
+                        {{ form_widget(form.prenom) }}
+                        {{ form_errors(form.prenom) }}
+                    </div>
+                    <div>
+                        {{ form_label(form.email) }}
+                        {{ form_widget(form.email) }}
+                        {{ form_errors(form.email) }}
+                    </div>
+                    <div>
+                        {{ form_label(form.telephone) }}
+                        {{ form_widget(form.telephone) }}
+                        {{ form_errors(form.telephone) }}
+                    </div>
+                    <div>
+                        {{ form_label(form.adresse) }}
+                        {{ form_widget(form.adresse) }}
+                        {{ form_errors(form.adresse) }}
+                    </div>
+                    <div>
+                        {{ form_label(form.dateNaissance) }}
+                        {{ form_widget(form.dateNaissance) }}
+                        {{ form_errors(form.dateNaissance) }}
+                    </div>
+                    <div class="reminder-toggle">
+                        {{ form_label(form.reminderEnabled) }}
+                        {{ form_widget(form.reminderEnabled) }}
+                        {{ form_errors(form.reminderEnabled) }}
+                    </div>
+                </div>
+
+                <div class="profile-actions">
+                    <button type="button" class="btn btn-secondary" data-modal-open="passwordModal">
+                        <i class="fas fa-lock" style="margin-right:6px;"></i>Modifier mot de passe
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save" style="margin-right:6px;"></i>Enregistrer
+                    </button>
+                </div>
+
+                <div class="profile-modal" id="passwordModal" aria-hidden="true">
+                    <div class="modal-card">
+                        <div class="modal-header">
+                            <h3><i class="fas fa-lock" style="color:#0D8ABC;margin-right:8px;"></i>{{ 'profile.password_section'|trans }}</h3>
+                            <button type="button" class="modal-close" data-modal-close>×</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="profile-grid">
+                                <div class="full">
+                                    {{ form_label(form.plainPassword.first) }}
+                                    <div class="password-field">
+                                        {{ form_widget(form.plainPassword.first) }}
+                                        <button type="button" class="toggle-visibility" data-toggle-password="{{ form.plainPassword.first.vars.id }}">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                    {{ form_errors(form.plainPassword.first) }}
+                                </div>
+                                <div class="full">
+                                    {{ form_label(form.plainPassword.second) }}
+                                    <div class="password-field">
+                                        {{ form_widget(form.plainPassword.second) }}
+                                        <button type="button" class="toggle-visibility" data-toggle-password="{{ form.plainPassword.second.vars.id }}">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                    {{ form_errors(form.plainPassword.second) }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-actions">
+                            <button type="button" class="btn btn-secondary" data-modal-close>Annuler</button>
+                            <button type="submit" class="btn btn-primary">Mettre à jour</button>
+                        </div>
+                    </div>
+                </div>
+            {{ form_end(form) }}
+        </div>
+
+        <div class="profile-card danger-zone">
+            <h3 style="display:flex;align-items:center;gap:10px;"><i class="fas fa-exclamation-triangle" style="color:#ef4444;"></i> Zone dangereuse</h3>
+            <p>La suppression de votre compte est définitive et irréversible. Toutes vos données seront effacées.</p>
+            <button type="button" class="btn btn-danger" data-modal-open="deleteModal">
+                <i class="fas fa-trash-alt" style="margin-right:6px;"></i>Supprimer mon compte
+            </button>
+        </div>
+
+    </div>
+
+    <div class="profile-modal" id="deleteModal" aria-hidden="true">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3><i class="fas fa-exclamation-triangle" style="color:#ef4444;margin-right:8px;"></i>Confirmer la suppression</h3>
+                <button type="button" class="modal-close" data-modal-close>×</button>
+            </div>
+            <div class="modal-body">
+                <div style="background:#fee2e2;border-radius:10px;padding:16px;margin-bottom:16px;border-left:4px solid #ef4444;">
+                    <strong style="color:#991b1b;">Cette action est irréversible.</strong>
+                    <p style="margin:6px 0 0;color:#b91c1c;font-size:13px;">Toutes vos données (messages, documents, rendez-vous) seront définitivement supprimées.</p>
+                </div>
+                <p>Souhaitez-vous continuer ?</p>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" data-modal-close>Annuler</button>
+                <form action="{{ path('profile_delete') }}" method="POST">
+                    <input type="hidden" name="_token" value="{{ csrf_token('delete-account') }}">
+                    <button type="submit" class="btn btn-danger"><i class="fas fa-trash-alt" style="margin-right:6px;"></i>Oui, supprimer</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        (function () {
+            const openers = document.querySelectorAll('[data-modal-open]');
+            const closers = document.querySelectorAll('[data-modal-close]');
+            const toggles = document.querySelectorAll('[data-toggle-password]');
+
+            openers.forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    const id = btn.getAttribute('data-modal-open');
+                    const modal = document.getElementById(id);
+                    if (modal) {
+                        modal.classList.add('open');
+                        modal.setAttribute('aria-hidden', 'false');
+                    }
+                });
+            });
+
+            closers.forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    const modal = btn.closest('.profile-modal');
+                    if (modal) {
+                        modal.classList.remove('open');
+                        modal.setAttribute('aria-hidden', 'true');
+                    }
+                });
+            });
+
+            document.addEventListener('click', (e) => {
+                const modal = e.target.classList.contains('profile-modal') ? e.target : null;
+                if (modal) {
+                    modal.classList.remove('open');
+                    modal.setAttribute('aria-hidden', 'true');
+                }
+            });
+
+            toggles.forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    const targetId = btn.getAttribute('data-toggle-password');
+                    const input = document.getElementById(targetId);
+                    if (!input) return;
+                    const isPassword = input.type === 'password';
+                    input.type = isPassword ? 'text' : 'password';
+                    btn.innerHTML = isPassword ? '<i class="fas fa-eye-slash"></i>' : '<i class="fas fa-eye"></i>';
+                });
+            });
+        })();
+    </script>
+{% endblock %}

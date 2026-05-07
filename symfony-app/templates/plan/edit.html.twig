@@ -1,0 +1,667 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier le plan – {{ form.vars.data.title }}{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<style>
+/* ── Page layout ── */
+.plan-create-page {
+    padding: 32px 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+    animation: fadeInUp .45s ease-out;
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Hero header ── */
+.plan-hero {
+    background: linear-gradient(135deg, #1c0a00 0%, #7c2d12 60%, #ea580c 100%);
+    border-radius: 20px;
+    padding: 32px 36px;
+    margin-bottom: 28px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+.plan-hero::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 240px; height: 240px;
+    background: radial-gradient(circle, rgba(255,255,255,.06) 0%, transparent 70%);
+    border-radius: 50%;
+}
+.plan-hero-icon {
+    width: 64px; height: 64px;
+    background: rgba(255,255,255,.15);
+    border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    backdrop-filter: blur(8px);
+    flex-shrink: 0;
+    border: 1px solid rgba(255,255,255,.2);
+}
+.plan-hero-icon i { color: #fff; font-size: 28px; }
+.plan-hero-text h1 { margin: 0; font-size: 26px; font-weight: 800; color: #fff; }
+.plan-hero-text p  { margin: 6px 0 0; font-size: 14px; color: rgba(255,255,255,.7); }
+
+/* ── Patient info card ── */
+.patient-card {
+    background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+    border: 1px solid #fed7aa;
+    border-radius: 16px;
+    padding: 20px 24px;
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+.patient-avatar {
+    width: 56px; height: 56px;
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 700; font-size: 20px;
+    flex-shrink: 0;
+}
+.patient-name  { font-weight: 700; font-size: 17px; color: #1e293b; margin-bottom: 4px; }
+.patient-meta  { display: flex; gap: 20px; color: #64748b; font-size: 13px; flex-wrap: wrap; }
+.patient-meta i { color: #94a3b8; margin-right: 4px; }
+
+/* ── Two-column layout ── */
+.plan-layout {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 24px;
+    align-items: start;
+}
+
+/* ── Form card ── */
+.form-card {
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 4px 24px rgba(15,23,42,.07);
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+}
+.form-section {
+    padding: 28px 32px;
+    border-bottom: 1px solid #f1f5f9;
+}
+.form-section:last-child { border-bottom: none; }
+.form-section-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 20px;
+}
+.form-section-icon {
+    width: 34px; height: 34px;
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}
+.form-section-icon i { color: #fff; font-size: 15px; }
+
+/* ── Field ── */
+.pf-field { margin-bottom: 18px; }
+.pf-field:last-child { margin-bottom: 0; }
+.pf-label {
+    display: block;
+    font-weight: 600;
+    color: #334155;
+    font-size: 13px;
+    margin-bottom: 7px;
+}
+.pf-label i { color: #94a3b8; margin-right: 5px; }
+.pf-hint { color: #94a3b8; font-size: 11px; margin-top: 4px; display: block; }
+.pf-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+/* ── Inputs ── */
+.plan-create-page .form-control,
+.plan-create-page .form-select {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 14px;
+    color: #1e293b;
+    background: #fff;
+    transition: border-color .2s, box-shadow .2s;
+    outline: none;
+}
+.plan-create-page .form-control:focus,
+.plan-create-page .form-select:focus {
+    border-color: #f59e0b;
+    box-shadow: 0 0 0 3px rgba(245,158,11,.14);
+}
+.plan-create-page textarea.form-control { resize: vertical; }
+
+/* ── Error ── */
+.plan-create-page .invalid-feedback,
+.plan-create-page .form-error-message { color: #dc2626; font-size: 12px; margin-top: 4px; display: block; }
+
+/* ── Action bar ── */
+.form-action-bar {
+    padding: 20px 32px;
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    gap: 12px;
+}
+.btn-create {
+    flex: 1;
+    padding: 13px 20px;
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: #fff !important;
+    border: none;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: transform .2s, box-shadow .2s;
+    text-decoration: none;
+    box-shadow: 0 4px 14px rgba(245,158,11,.30);
+}
+.btn-create:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(245,158,11,.42); }
+.btn-cancel {
+    padding: 13px 20px;
+    background: #f1f5f9;
+    color: #475569 !important;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background .2s;
+    text-decoration: none;
+    white-space: nowrap;
+}
+.btn-cancel:hover { background: #e2e8f0; }
+
+/* ── Sidebar ── */
+.plan-sidebar { display: flex; flex-direction: column; gap: 18px; position: sticky; top: 90px; }
+.sidebar-card {
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 12px rgba(15,23,42,.05);
+    overflow: hidden;
+}
+.sidebar-card-header {
+    padding: 14px 18px;
+    font-weight: 700;
+    font-size: 14px;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid #f1f5f9;
+}
+.sidebar-card-body { padding: 16px 18px; }
+
+/* ── Tip card ── */
+.tip-item { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
+.tip-item:last-child { margin-bottom: 0; }
+.tip-icon { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.tip-text  { font-size: 13px; color: #475569; line-height: 1.5; padding-top: 5px; }
+
+/* ── Error alert ── */
+.plan-alert-error {
+    background: #fee2e2;
+    border: 1px solid #fca5a5;
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-bottom: 24px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+}
+.plan-alert-error i { color: #dc2626; font-size: 18px; flex-shrink: 0; margin-top: 2px; }
+.plan-alert-error strong { color: #991b1b; font-size: 14px; }
+
+/* ── Status badge ── */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+    .plan-layout { grid-template-columns: 1fr; }
+    .plan-sidebar { position: static; }
+}
+@media (max-width: 768px) {
+    .plan-create-page { padding: 16px 20px; }
+    .plan-hero { padding: 20px; }
+    .plan-hero-text h1 { font-size: 20px; }
+    .form-section { padding: 20px; }
+    .form-action-bar { padding: 16px 20px; flex-direction: column; }
+    .btn-cancel { text-align: center; }
+    .pf-row-2 { grid-template-columns: 1fr; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+{% set plan = form.vars.data %}
+<div class="plan-create-page">
+
+    <!-- Hero -->
+    <div class="plan-hero">
+        <div class="plan-hero-icon"><i class="fas fa-edit"></i></div>
+        <div class="plan-hero-text">
+            <h1>Modifier le plan d'accompagnement</h1>
+            <p>Mise à jour de <strong style="color:#fcd34d;">{{ plan.title }}</strong></p>
+        </div>
+    </div>
+
+    <!-- Plan info card -->
+    <div class="patient-card">
+        <div class="patient-avatar"><i class="fas fa-calendar-check" style="font-size:22px;"></i></div>
+        <div style="flex:1;">
+            <div class="patient-name"><i class="fas fa-clipboard-list" style="color:#f59e0b;"></i> {{ plan.title }}</div>
+            <div class="patient-meta">
+                <span><i class="fas fa-user"></i>{{ plan.patient.user.nom }} {{ plan.patient.user.prenom }}</span>
+                <span><i class="fas fa-calendar-week"></i>{{ plan.durationWeeks }} semaines</span>
+                <span>
+                    {% if plan.status == 'active' %}
+                        <span class="status-badge" style="background:#dcfce7;color:#166534;"><i class="fas fa-circle" style="font-size:7px;"></i> Actif</span>
+                    {% elseif plan.status == 'completed' %}
+                        <span class="status-badge" style="background:#dbeafe;color:#1e40af;"><i class="fas fa-check-circle"></i> Terminé</span>
+                    {% else %}
+                        <span class="status-badge" style="background:#fef3c7;color:#92400e;"><i class="fas fa-pause-circle"></i> {{ plan.status }}</span>
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+        <a href="{{ path('app_plan_show', {id: plan.id}) }}" style="padding:8px 16px;background:#fff7ed;color:#c2410c;border:1.5px solid #fed7aa;border-radius:10px;font-size:13px;font-weight:600;text-decoration:none;display:flex;align-items:center;gap:6px;white-space:nowrap;">
+            <i class="fas fa-eye"></i> Voir le plan
+        </a>
+    </div>
+
+    <!-- Layout -->
+    <div class="plan-layout">
+
+        <!-- ── FORM ── -->
+        <div class="form-card">
+
+            <!-- Section IA -->
+            <div class="form-section">
+                <div class="form-section-title">
+                    <div class="form-section-icon" style="background: linear-gradient(135deg,#8b5cf6,#7c3aed);">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    Assistant IA
+                </div>
+                {{ component('AccompanimentAiAssistant', {
+                    goal: plan.objectives,
+                    constraints: plan.description ?? ''
+                }) }}
+            </div>
+
+            {{ form_start(form, { attr: { novalidate: 'novalidate', id: 'planEditForm' } }) }}
+
+            {# Hidden div for AI inject targets #}
+            <div id="plan-ai-targets" hidden
+                 data-obj-id="{{ form.objectives.vars.id }}"
+                 data-desc-id="{{ form.description.vars.id }}"
+                 data-title-id="{{ form.title.vars.id }}"></div>
+
+            {% if form.vars.errors|length > 0 %}
+                <div class="plan-alert-error" style="margin: 24px 32px 0;">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <div><strong>Erreurs de validation</strong>{{ form_errors(form) }}</div>
+                </div>
+            {% endif %}
+
+            <!-- Section 1 : Informations générales -->
+            <div class="form-section">
+                <div class="form-section-title">
+                    <div class="form-section-icon" style="background: linear-gradient(135deg,#667eea,#764ba2);">
+                        <i class="fas fa-info-circle"></i>
+                    </div>
+                    Informations générales
+                </div>
+
+                <div class="pf-field">
+                    <label class="pf-label" for="{{ form.title.vars.id }}">
+                        <i class="fas fa-heading"></i>{{ form.title.vars.label }}
+                    </label>
+                    {{ form_widget(form.title, {attr: {class:'form-control', placeholder:'ex: Plan de remise en forme – 12 semaines'}}) }}
+                    {{ form_errors(form.title) }}
+                </div>
+
+                <div class="pf-field">
+                    <label class="pf-label" for="{{ form.objectives.vars.id }}">
+                        <i class="fas fa-bullseye"></i>{{ form.objectives.vars.label }}
+                    </label>
+                    {{ form_widget(form.objectives, {attr: {class:'form-control', rows:'4', placeholder:'Décrivez les objectifs principaux (perte de poids, rééducation, force…)'}}) }}
+                    {{ form_errors(form.objectives) }}
+                    <span class="pf-hint">Définissez des objectifs SMART — mesurables et atteignables</span>
+                </div>
+
+                <div class="pf-field">
+                    <label class="pf-label" for="{{ form.description.vars.id }}">
+                        <i class="fas fa-file-medical-alt"></i>{{ form.description.vars.label }}
+                    </label>
+                    {{ form_widget(form.description, {attr: {class:'form-control', rows:'3', placeholder:'Contexte médical, antécédents, notes importantes…'}}) }}
+                    {{ form_errors(form.description) }}
+                </div>
+            </div>
+
+            <!-- Section 2 : Configuration -->
+            <div class="form-section">
+                <div class="form-section-title">
+                    <div class="form-section-icon" style="background: linear-gradient(135deg,#3b82f6,#2563eb);">
+                        <i class="fas fa-sliders-h"></i>
+                    </div>
+                    Configuration du plan
+                </div>
+
+                <div class="pf-row-2">
+                    <div class="pf-field">
+                        <label class="pf-label" for="{{ form.durationWeeks.vars.id }}">
+                            <i class="fas fa-calendar-week"></i>{{ form.durationWeeks.vars.label }}
+                        </label>
+                        {{ form_widget(form.durationWeeks, {attr: {class:'form-control'}}) }}
+                        {{ form_errors(form.durationWeeks) }}
+                        <span class="pf-hint">Entre 1 et 52 semaines</span>
+                    </div>
+                    <div class="pf-field">
+                        <label class="pf-label" for="{{ form.status.vars.id }}">
+                            <i class="fas fa-flag"></i>{{ form.status.vars.label }}
+                        </label>
+                        {{ form_widget(form.status, {attr: {class:'form-select'}}) }}
+                        {{ form_errors(form.status) }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action bar -->
+            <div class="form-action-bar">
+                <button type="submit" class="btn-create">
+                    <i class="fas fa-save"></i> Enregistrer les modifications
+                </button>
+                <a href="{{ path('app_plan_show', {id: plan.id}) }}" class="btn-cancel">
+                    <i class="fas fa-arrow-left"></i> Annuler
+                </a>
+            </div>
+
+            {{ form_end(form) }}
+
+            {# Toast container #}
+            <div id="plan-toast-container" style="
+                position:fixed; bottom:28px; right:28px; z-index:9999;
+                display:flex; flex-direction:column; gap:10px; pointer-events:none;
+            "></div>
+
+        </div>{# /form-card #}
+
+        <!-- ── SIDEBAR ── -->
+        <div class="plan-sidebar">
+
+            <!-- Infos plan actuel -->
+            <div class="sidebar-card">
+                <div class="sidebar-card-header">
+                    <i class="fas fa-clipboard-list" style="color:#f59e0b;"></i> Plan actuel
+                </div>
+                <div class="sidebar-card-body" style="font-size:13px; color:#475569; line-height:1.8;">
+                    <div style="margin-bottom:10px;">
+                        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#94a3b8;margin-bottom:3px;">Titre</div>
+                        <div style="font-weight:600;color:#1e293b;">{{ plan.title }}</div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-top:10px;border-top:1px solid #f1f5f9;">
+                        <div>
+                            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#94a3b8;margin-bottom:3px;">Durée</div>
+                            <div style="font-size:16px;font-weight:700;color:#1e293b;">{{ plan.durationWeeks }} <span style="font-size:11px;color:#94a3b8;">sem.</span></div>
+                        </div>
+                        <div>
+                            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#94a3b8;margin-bottom:3px;">Statut</div>
+                            {% if plan.status == 'active' %}
+                                <span class="status-badge" style="background:#dcfce7;color:#166534;font-size:11px;"><i class="fas fa-circle" style="font-size:7px;"></i> Actif</span>
+                            {% elseif plan.status == 'completed' %}
+                                <span class="status-badge" style="background:#dbeafe;color:#1e40af;font-size:11px;"><i class="fas fa-check-circle"></i> Terminé</span>
+                            {% else %}
+                                <span class="status-badge" style="background:#fef3c7;color:#92400e;font-size:11px;"><i class="fas fa-pause-circle"></i> {{ plan.status }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% if plan.startDate %}
+                    <div style="padding-top:10px;border-top:1px solid #f1f5f9;margin-top:10px;">
+                        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#94a3b8;margin-bottom:3px;">Démarré le</div>
+                        <div style="font-weight:600;color:#1e293b;">{{ plan.startDate|date('d/m/Y') }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Patient -->
+            <div class="sidebar-card">
+                <div class="sidebar-card-header">
+                    <i class="fas fa-id-card" style="color:#06b6d4;"></i> Patient
+                </div>
+                <div class="sidebar-card-body" style="font-size:13px; color:#475569; line-height:1.7;">
+                    <div><i class="fas fa-user" style="color:#94a3b8; margin-right:6px; width:14px;"></i>{{ plan.patient.user.prenom }} {{ plan.patient.user.nom }}</div>
+                    <div><i class="fas fa-envelope" style="color:#94a3b8; margin-right:6px; width:14px;"></i>{{ plan.patient.user.email }}</div>
+                    {% if plan.patient.user.telephone is defined and plan.patient.user.telephone %}
+                    <div><i class="fas fa-phone" style="color:#94a3b8; margin-right:6px; width:14px;"></i>{{ plan.patient.user.telephone }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Conseils édition -->
+            <div class="sidebar-card">
+                <div class="sidebar-card-header">
+                    <i class="fas fa-lightbulb" style="color:#f59e0b;"></i> Conseils
+                </div>
+                <div class="sidebar-card-body">
+                    <div class="tip-item">
+                        <div class="tip-icon" style="background:#fff7ed;"><i class="fas fa-robot" style="color:#f59e0b; font-size:12px;"></i></div>
+                        <div class="tip-text">Utilisez l'<strong>Assistant IA</strong> pour régénérer les objectifs ou la description.</div>
+                    </div>
+                    <div class="tip-item">
+                        <div class="tip-icon" style="background:#dcfce7;"><i class="fas fa-save" style="color:#10b981; font-size:12px;"></i></div>
+                        <div class="tip-text">Sauvegardez régulièrement pour ne pas perdre vos modifications.</div>
+                    </div>
+                    <div class="tip-item">
+                        <div class="tip-icon" style="background:#dbeafe;"><i class="fas fa-flag" style="color:#3b82f6; font-size:12px;"></i></div>
+                        <div class="tip-text">Mettez le statut à <strong>Terminé</strong> une fois tous les objectifs atteints.</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>{# /sidebar #}
+    </div>{# /layout #}
+</div>
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+(function () {
+'use strict';
+
+/* ═══════════════════════════════════════════
+   TOAST SYSTEM
+═══════════════════════════════════════════ */
+const container = document.getElementById('plan-toast-container');
+
+window.planToast = function (msg, type) {
+    const colors = {
+        success: { bg:'#052e16', border:'#16a34a', icon:'✓', ic_c:'#4ade80' },
+        error:   { bg:'#3b0a0a', border:'#dc2626', icon:'✕', ic_c:'#f87171' },
+        info:    { bg:'#0c1a4b', border:'#3b82f6', icon:'ℹ', ic_c:'#93c5fd' },
+    };
+    const c = colors[type] || colors.info;
+    const t = document.createElement('div');
+    t.style.cssText = `
+        background:${c.bg}; border:1.5px solid ${c.border}; color:#f1f5f9;
+        border-radius:12px; padding:13px 18px; font-size:13.5px; font-weight:600;
+        display:flex; align-items:center; gap:10px; pointer-events:all;
+        box-shadow:0 8px 24px rgba(0,0,0,.45); min-width:240px; max-width:340px;
+        animation:toastIn .3s ease-out;
+    `;
+    t.innerHTML = `<span style="width:22px;height:22px;border-radius:50%;background:${c.border};
+        display:flex;align-items:center;justify-content:center;color:${c.ic_c};
+        font-size:12px;flex-shrink:0;">${c.icon}</span><span>${msg}</span>`;
+    container.appendChild(t);
+    setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity .4s'; }, 3200);
+    setTimeout(() => t.remove(), 3650);
+};
+
+if (!document.getElementById('plan-toast-kf')) {
+    const s = document.createElement('style');
+    s.id = 'plan-toast-kf';
+    s.textContent = `@keyframes toastIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}`;
+    document.head.appendChild(s);
+}
+
+/* ═══════════════════════════════════════════
+   AI INJECT
+═══════════════════════════════════════════ */
+window.planAiInject = function (field, text) {
+    const targets = document.getElementById('plan-ai-targets');
+    if (!targets) return;
+
+    let el;
+    if (field === 'title')       el = document.getElementById(targets.dataset.titleId);
+    if (field === 'objectives')  el = document.getElementById(targets.dataset.objId);
+    if (field === 'description') el = document.getElementById(targets.dataset.descId);
+    if (!el) return;
+
+    el.value = text;
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+
+    const orig = el.style.transition;
+    el.style.transition = 'box-shadow .15s, border-color .15s';
+    el.style.borderColor = '#f59e0b';
+    el.style.boxShadow   = '0 0 0 3px rgba(245,158,11,.2)';
+    el.scrollIntoView({ behavior:'smooth', block:'center' });
+    el.focus();
+    setTimeout(() => {
+        el.style.borderColor = '';
+        el.style.boxShadow   = '';
+        el.style.transition  = orig;
+    }, 1800);
+
+    const labels = {
+        title: '✅ Titre injecté dans le formulaire !',
+        objectives: '✅ Objectifs injectés dans le formulaire !',
+        description: '✅ Description injectée dans le formulaire !',
+    };
+    planToast(labels[field] || '✅ Recommandation injectée !', 'success');
+};
+
+/* ═══════════════════════════════════════════
+   REAL-TIME FIELD VALIDATION
+═══════════════════════════════════════════ */
+const aiTargets = document.getElementById('plan-ai-targets');
+const requiredIds = aiTargets
+    ? [aiTargets.dataset.titleId, aiTargets.dataset.objId]
+    : [];
+
+requiredIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+
+    const mark = function () {
+        const empty = el.value.trim() === '';
+        el.style.borderColor = empty ? '' : '#f59e0b';
+        el.style.boxShadow   = empty ? '' : '0 0 0 3px rgba(245,158,11,.14)';
+
+        const label = document.querySelector(`label[for="${id}"]`);
+        if (!label) return;
+        let badge = label.querySelector('.pf-valid-badge');
+        if (!badge) {
+            badge = document.createElement('span');
+            badge.className = 'pf-valid-badge';
+            badge.style.cssText = 'margin-left:6px;font-size:12px;transition:opacity .2s;';
+            label.appendChild(badge);
+        }
+        badge.textContent = empty ? '' : '✓';
+        badge.style.color = '#f59e0b';
+    };
+
+    el.addEventListener('input', mark);
+    el.addEventListener('blur', mark);
+    mark(); /* initial state for pre-filled values */
+});
+
+/* ═══════════════════════════════════════════
+   SUBMIT GUARD
+═══════════════════════════════════════════ */
+const planForm = document.getElementById('planEditForm');
+if (planForm) {
+    planForm.addEventListener('submit', function (e) {
+        const missing = [];
+
+        requiredIds.forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            if (el.value.trim() === '') {
+                missing.push(el);
+                el.style.borderColor = '#ef4444';
+                el.style.boxShadow   = '0 0 0 3px rgba(239,68,68,.18)';
+                el.addEventListener('input', function fix() {
+                    el.style.borderColor = '';
+                    el.style.boxShadow   = '';
+                    el.removeEventListener('input', fix);
+                });
+            }
+        });
+
+        if (missing.length > 0) {
+            e.preventDefault();
+            missing[0].scrollIntoView({ behavior:'smooth', block:'center' });
+            missing[0].focus();
+            planToast('⚠️ Veuillez remplir tous les champs obligatoires.', 'error');
+
+            missing.forEach(el => {
+                el.style.animation = 'none';
+                el.offsetHeight;
+                el.style.animation = 'planShake .4s ease';
+            });
+        }
+    });
+
+    if (!document.getElementById('plan-shake-kf')) {
+        const s = document.createElement('style');
+        s.id = 'plan-shake-kf';
+        s.textContent = `@keyframes planShake{
+            0%,100%{transform:translateX(0)}
+            20%{transform:translateX(-6px)}
+            40%{transform:translateX(6px)}
+            60%{transform:translateX(-4px)}
+            80%{transform:translateX(4px)}}`;
+        document.head.appendChild(s);
+    }
+}
+
+})();
+</script>
+{% endblock %}
+{% endblock %}
