@@ -8,9 +8,9 @@ module com.santea.javafxapp {
     requires java.desktop;
     requires java.net.http;
     requires jdk.httpserver;
-    requires jdk.jsobject;
     requires jakarta.mail;
     requires spring.security.crypto;
+    requires org.apache.pdfbox;
     requires webcam.capture;
     requires org.bytedeco.javacv;
     requires vosk;

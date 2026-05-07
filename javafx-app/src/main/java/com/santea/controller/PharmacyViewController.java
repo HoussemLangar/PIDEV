@@ -27,7 +27,6 @@ import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.util.Duration;
 import javafx.concurrent.Worker;
-import netscape.javascript.JSObject;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -1742,12 +1741,23 @@ public class PharmacyViewController implements Initializable {
 			if (newState != Worker.State.SUCCEEDED) {
 				return;
 			}
-			JSObject window = (JSObject) engine.executeScript("window");
-			window.setMember("javaPharmacyBridge", new PharmacyMapBridge());
+			Object window = engine.executeScript("window");
+			setJsMember(window, "javaPharmacyBridge", new PharmacyMapBridge());
 			engine.executeScript("if (window.initPharmacyMapBridge) { window.initPharmacyMapBridge(); }");
 			pharmacyMapLoaded = true;
 		});
 		engine.loadContent(buildPharmacyMapHtml());
+	}
+
+	private void setJsMember(Object window, String name, Object value) {
+		if (window == null) {
+			return;
+		}
+		try {
+			// Reflection keeps WebView JS bridge optional without requiring JSObject at compile time.
+			window.getClass().getMethod("setMember", String.class, Object.class).invoke(window, name, value);
+		} catch (ReflectiveOperationException | RuntimeException ignored) {
+		}
 	}
 
 	private void moveMapMarkerIfReady(String latitude, String longitude, String label) {

@@ -113,9 +113,10 @@
 
                             <Label fx:id="detailBodyLabel" text="" wrapText="true" styleClass="blog-detail-body"/>
 
-                            <HBox spacing="8" alignment="CENTER_LEFT">
+                            <HBox spacing="8" alignment="CENTER_LEFT" styleClass="blog-detail-actions">
                                 <Button fx:id="detailLikeButton" text="❤ 0" styleClass="blog-meta-btn" onAction="#handleToggleLike"/>
                                 <Label fx:id="detailCommentsCountLabel" text="Commentaires ( 0 )" styleClass="blog-meta-btn"/>
+                                <Button fx:id="detailReportButton" text="Signaler" styleClass="blog-filter-btn" onAction="#handleReportSelected"/>
                                 <Region HBox.hgrow="ALWAYS"/>
                                 <Button fx:id="detailEditButton" text="Modifier" styleClass="blog-filter-btn" onAction="#handleEditSelected"/>
                                 <Button fx:id="detailDeleteButton" text="Supprimer" styleClass="blog-danger-btn" onAction="#handleDeleteSelected"/>

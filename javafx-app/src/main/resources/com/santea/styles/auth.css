@@ -4611,6 +4611,25 @@
     -fx-text-fill: #ffffff;
 }
 
+.blog-detail-actions {
+    -fx-background-color: #eaf2f9;
+    -fx-background-radius: 10;
+    -fx-border-color: #d3e1ee;
+    -fx-border-radius: 10;
+    -fx-border-width: 1;
+    -fx-padding: 6 8 6 8;
+}
+
+.blog-detail-actions .blog-meta-btn,
+.blog-detail-actions .blog-filter-btn,
+.blog-detail-actions .blog-view-btn,
+.blog-detail-actions .blog-ghost-btn,
+.blog-detail-actions .blog-back-btn {
+    -fx-background-color: #ffffff;
+    -fx-text-fill: #1f2b3a;
+    -fx-border-color: #cfdbe7;
+}
+
 .blog-content-panel {
     -fx-background-color: #f7fafc;
     -fx-background-radius: 14;

@@ -42,12 +42,16 @@ public class DocumentClassificationClient {
     }
 
     public ClassificationResult classify(String filename, String description) {
+        return classify(filename, description, "");
+    }
+
+    public ClassificationResult classify(String filename, String description, String content) {
         if (!isAvailable()) {
             return new ClassificationResult(null, 0.0, null, "Service unavailable", false);
         }
 
         try {
-            String payload = buildJsonPayload(filename, description);
+            String payload = buildJsonPayload(filename, description, content);
             
             HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(ML_SERVICE_URL + "/classify"))
@@ -70,10 +74,24 @@ public class DocumentClassificationClient {
         }
     }
 
-    private String buildJsonPayload(String filename, String description) {
-        String fn = filename == null ? "" : filename.replace("\"", "\\\"");
-        String desc = description == null ? "" : description.replace("\"", "\\\"");
-        return "{\"filename\":\"" + fn + "\",\"description\":\"" + desc + "\"}";
+    private String buildJsonPayload(String filename, String description, String content) {
+        String fn = escapeJson(filename);
+        String desc = escapeJson(description);
+        String body = escapeJson(content);
+        return "{\"filename\":\"" + fn
+            + "\",\"description\":\"" + desc
+            + "\",\"content\":\"" + body + "\"}";
+    }
+
+    private String escapeJson(String value) {
+        if (value == null) {
+            return "";
+        }
+        return value
+            .replace("\\", "\\\\")
+            .replace("\"", "\\\"")
+            .replace("\n", " ")
+            .replace("\r", " ");
     }
 
     private ClassificationResult parseResponse(String json) {

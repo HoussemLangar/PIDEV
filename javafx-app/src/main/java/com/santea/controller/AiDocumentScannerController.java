@@ -13,7 +13,7 @@ import javafx.stage.FileChooser;
 
 import java.io.File;
 
-public class AiDocumentScannerController extends AppBaseViewController {
+public class AiDocumentScannerController extends AiToolBaseController {
     private final AiToolsService aiToolsService = new AiToolsService();
 
     @FXML
@@ -57,6 +57,9 @@ public class AiDocumentScannerController extends AppBaseViewController {
     @Override
     public void initialize(java.net.URL location, java.util.ResourceBundle resources) {
         super.initialize(location, resources);
+        if (!guardAiToolsAccess()) {
+            return;
+        }
         setVisibleManaged(resultsBox, false);
         setVisibleManaged(warningBox, false);
     }

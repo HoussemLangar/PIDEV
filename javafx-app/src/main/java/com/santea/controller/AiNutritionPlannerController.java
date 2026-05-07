@@ -12,7 +12,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.TilePane;
 import javafx.scene.layout.VBox;
 
-public class AiNutritionPlannerController extends AppBaseViewController {
+public class AiNutritionPlannerController extends AiToolBaseController {
     private final AiToolsService aiToolsService = new AiToolsService();
 
     @FXML
@@ -42,6 +42,9 @@ public class AiNutritionPlannerController extends AppBaseViewController {
     @Override
     public void initialize(java.net.URL location, java.util.ResourceBundle resources) {
         super.initialize(location, resources);
+        if (!guardAiToolsAccess()) {
+            return;
+        }
         dietStyleCombo.setItems(FXCollections.observableArrayList(
                 "standard",
                 "vegetarien",

@@ -25,12 +25,15 @@ public class ContentCommunityService {
             "ROLE_COACH",
             "ROLE_NUTRITIONNISTE"
     );
+    private static final int MODERATION_SAMPLE_LIMIT = 1500;
+    private static final double DEFAULT_REPORT_PENALTY = 0.10;
 
     private final DatabaseService databaseService;
     private final AuthorizationPolicyService authorizationPolicyService;
     private final ForbiddenWordsFilterService forbiddenWordsFilterService;
     private final CommentModerationService commentModerationService;
     private final CommentSentimentScoringService commentSentimentScoringService;
+    private final double reportPenaltyPerSignal;
 
     public ContentCommunityService() {
         this.databaseService = new DatabaseService(DatabaseConfig.fromEnvironment());
@@ -38,6 +41,7 @@ public class ContentCommunityService {
         this.forbiddenWordsFilterService = new ForbiddenWordsFilterService(loadForbiddenWords());
         this.commentModerationService = new CommentModerationService(forbiddenWordsFilterService);
         this.commentSentimentScoringService = new CommentSentimentScoringService();
+        this.reportPenaltyPerSignal = parsePenalty(System.getenv("ARTICLE_REPORT_PENALTY"), DEFAULT_REPORT_PENALTY);
         ensureTables();
     }
 
@@ -143,8 +147,11 @@ public class ContentCommunityService {
             return ActionResult.failure(validation.message());
         }
 
+        boolean blocked = isDraftInappropriate(draft);
+        String status = blocked ? "rejete" : "en_attente";
+
         String sql = "INSERT INTO contenu (auteur_id, titre, type, description, contenu, categorie, tags, statut, date_publication, created_at, updated_at) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, 'en_attente', NULL, ?, ?)";
+            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?)";
 
         try (Connection connection = databaseService.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -156,8 +163,9 @@ public class ContentCommunityService {
             statement.setString(5, normalize(draft.contenu()));
             statement.setString(6, nullIfBlank(draft.categorie()));
             statement.setString(7, nullIfBlank(draft.tags()));
-            statement.setTimestamp(8, now);
+            statement.setString(8, status);
             statement.setTimestamp(9, now);
+            statement.setTimestamp(10, now);
             statement.executeUpdate();
 
             int createdId = 0;
@@ -169,6 +177,9 @@ public class ContentCommunityService {
 
             if (createdId > 0) {
                 updateArticleScore(createdId, false);
+            }
+            if (blocked) {
+                return new ActionResult(false, "Contenu rejete automatiquement (propos inappropries).", createdId);
             }
             return ActionResult.success("Contenu cree et place en attente de validation.", createdId);
         } catch (SQLException exception) {
@@ -195,7 +206,10 @@ public class ContentCommunityService {
             return ActionResult.failure(validation.message());
         }
 
-        String sql = "UPDATE contenu SET titre=?, type=?, description=?, contenu=?, categorie=?, tags=?, statut='en_attente', date_publication=NULL, updated_at=? WHERE id=?";
+        boolean blocked = isDraftInappropriate(draft);
+        String status = blocked ? "rejete" : "en_attente";
+
+        String sql = "UPDATE contenu SET titre=?, type=?, description=?, contenu=?, categorie=?, tags=?, statut=?, date_publication=NULL, updated_at=? WHERE id=?";
 
         try (Connection connection = databaseService.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -205,10 +219,14 @@ public class ContentCommunityService {
             statement.setString(4, normalize(draft.contenu()));
             statement.setString(5, nullIfBlank(draft.categorie()));
             statement.setString(6, nullIfBlank(draft.tags()));
-            statement.setTimestamp(7, Timestamp.valueOf(LocalDateTime.now()));
-            statement.setInt(8, contentId);
+            statement.setString(7, status);
+            statement.setTimestamp(8, Timestamp.valueOf(LocalDateTime.now()));
+            statement.setInt(9, contentId);
             statement.executeUpdate();
             updateArticleScore(contentId, false);
+            if (blocked) {
+                return new ActionResult(false, "Contenu mis a jour mais rejete automatiquement.", contentId);
+            }
             return ActionResult.success("Contenu mis a jour et repasse en attente.", contentId);
         } catch (SQLException exception) {
             return ActionResult.failure("Mise a jour impossible: " + safe(exception.getMessage()));
@@ -344,6 +362,52 @@ public class ContentCommunityService {
             return ActionResult.success("Commentaire ajoute.", createdId);
         } catch (SQLException exception) {
             return ActionResult.failure("Ajout commentaire impossible: " + safe(exception.getMessage()));
+        }
+    }
+
+    public ActionResult reportContent(User user, int contentId, String reason) {
+        if (user == null || user.getId() == null || contentId <= 0) {
+            return ActionResult.failure("Requete invalide.");
+        }
+
+        if (!canInteract(user)) {
+            return ActionResult.failure("Acces interaction refuse.");
+        }
+
+        ContentSummary summary = findContentSummaryById(contentId);
+        if (summary == null || !canSeeContent(user, summary)) {
+            return ActionResult.failure("Contenu indisponible.");
+        }
+
+        if (isOwner(user, summary)) {
+            return ActionResult.failure("Vous ne pouvez pas signaler votre propre contenu.");
+        }
+
+        String checkSql = "SELECT id FROM article_reports WHERE contenu_id = ? AND user_id = ? LIMIT 1";
+        String insertSql = "INSERT INTO article_reports (contenu_id, user_id, reason, created_at) VALUES (?, ?, ?, ?)";
+
+        try (Connection connection = databaseService.getConnection();
+             PreparedStatement check = connection.prepareStatement(checkSql)) {
+            check.setInt(1, contentId);
+            check.setInt(2, user.getId());
+            try (ResultSet rs = check.executeQuery()) {
+                if (rs.next()) {
+                    return ActionResult.failure("Contenu deja signale.");
+                }
+            }
+
+            try (PreparedStatement insert = connection.prepareStatement(insertSql)) {
+                insert.setInt(1, contentId);
+                insert.setInt(2, user.getId());
+                insert.setString(3, nullIfBlank(limitText(reason, 255)));
+                insert.setTimestamp(4, Timestamp.valueOf(LocalDateTime.now()));
+                insert.executeUpdate();
+            }
+
+            updateArticleScore(contentId, false);
+            return ActionResult.success("Signalement enregistre. Le score est mis a jour.", contentId);
+        } catch (SQLException exception) {
+            return ActionResult.failure("Signalement impossible: " + safe(exception.getMessage()));
         }
     }
 
@@ -882,20 +946,47 @@ public class ContentCommunityService {
         return ValidationResult.ok();
     }
 
+    private boolean isDraftInappropriate(ContentDraft draft) {
+        String sample = buildModerationSample(draft);
+        if (sample.isBlank()) {
+            return false;
+        }
+        return commentModerationService.isInappropriate(sample);
+    }
+
+    private String buildModerationSample(ContentDraft draft) {
+        if (draft == null) {
+            return "";
+        }
+        String combined = String.join(" ",
+                normalize(draft.titre()),
+                normalize(draft.description()),
+                normalize(draft.contenu()),
+                normalize(draft.tags())
+        ).trim();
+        if (combined.length() <= MODERATION_SAMPLE_LIMIT) {
+            return combined;
+        }
+        return combined.substring(0, MODERATION_SAMPLE_LIMIT);
+    }
+
     private void updateArticleScore(int contentId, boolean flushIgnored) {
         if (contentId <= 0) {
             return;
         }
 
         String commentsSql = "SELECT note FROM commentaires WHERE contenu_id = ? AND statut = 'publie' ORDER BY created_at ASC";
+        String reportsSql = "SELECT COUNT(*) AS total FROM article_reports WHERE contenu_id = ?";
         String upsertSql = "INSERT INTO article_scores (contenu_id, score_article, nb_commentaires, updated_at) "
                 + "VALUES (?, ?, ?, ?) "
                 + "ON DUPLICATE KEY UPDATE score_article = VALUES(score_article), nb_commentaires = VALUES(nb_commentaires), updated_at = VALUES(updated_at)";
 
         try (Connection connection = databaseService.getConnection();
              PreparedStatement commentsStatement = connection.prepareStatement(commentsSql);
+             PreparedStatement reportsStatement = connection.prepareStatement(reportsSql);
              PreparedStatement upsertStatement = connection.prepareStatement(upsertSql)) {
             commentsStatement.setInt(1, contentId);
+            reportsStatement.setInt(1, contentId);
 
             double sum = 0.0;
             int count = 0;
@@ -913,7 +1004,16 @@ public class ContentCommunityService {
                 }
             }
 
+            int reportsCount = 0;
+            try (ResultSet rs = reportsStatement.executeQuery()) {
+                if (rs.next()) {
+                    reportsCount = rs.getInt("total");
+                }
+            }
+
             double score = count > 0 ? (sum / count) : 0.0;
+            double penalty = reportsCount * reportPenaltyPerSignal;
+            score = clampScore(score - penalty);
 
             Timestamp now = Timestamp.valueOf(LocalDateTime.now());
             upsertStatement.setInt(1, contentId);
@@ -992,7 +1092,15 @@ public class ContentCommunityService {
                         + "score_article DOUBLE NOT NULL DEFAULT 0,"
                         + "nb_commentaires INT NOT NULL DEFAULT 0,"
                         + "updated_at DATETIME NULL"
-                        + ")"
+                    + ")",
+                "CREATE TABLE IF NOT EXISTS article_reports ("
+                    + "id INT AUTO_INCREMENT PRIMARY KEY,"
+                    + "contenu_id INT NOT NULL,"
+                    + "user_id INT NOT NULL,"
+                    + "reason VARCHAR(255) NULL,"
+                    + "created_at DATETIME NULL,"
+                    + "UNIQUE KEY uq_report_contenu_user (contenu_id, user_id)"
+                    + ")"
         };
 
         for (String sql : ddl) {
@@ -1024,7 +1132,7 @@ public class ContentCommunityService {
     private List<String> loadForbiddenWords() {
         String raw = safe(System.getenv("CONTENT_FORBIDDEN_WORDS"));
         if (raw.isBlank()) {
-            raw = "spam,arnaque,haine,violence,insulte";
+            raw = "spam,arnaque,haine,violence,insulte,fuck,merde,putain";
         }
 
         return java.util.Arrays.stream(raw.split(","))
@@ -1080,6 +1188,30 @@ public class ContentCommunityService {
             return text;
         }
         return text.substring(0, Math.max(0, max - 1)) + "...";
+    }
+
+    private String limitText(String value, int max) {
+        String text = safe(value);
+        if (text.length() <= max) {
+            return text;
+        }
+        return text.substring(0, Math.max(0, max));
+    }
+
+    private double clampScore(double value) {
+        return Math.max(-1.0, Math.min(1.0, value));
+    }
+
+    private static double parsePenalty(String raw, double defaultValue) {
+        if (raw == null || raw.isBlank()) {
+            return defaultValue;
+        }
+        try {
+            double value = Double.parseDouble(raw.trim());
+            return Math.max(0.0, Math.min(1.0, value));
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
     }
 
     private boolean blank(String value) {

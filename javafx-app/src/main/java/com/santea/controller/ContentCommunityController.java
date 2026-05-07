@@ -152,6 +152,9 @@ public class ContentCommunityController implements Initializable {
     private Label detailCommentsCountLabel;
 
     @FXML
+    private Button detailReportButton;
+
+    @FXML
     private Button detailEditButton;
 
     @FXML
@@ -294,7 +297,8 @@ public class ContentCommunityController implements Initializable {
         }
 
         showFeedback(result.message(), result.success());
-        if (!result.success()) {
+        boolean proceed = result.success() || result.numericValue() > 0;
+        if (!proceed) {
             return;
         }
 
@@ -316,6 +320,20 @@ public class ContentCommunityController implements Initializable {
         }
 
         ContentCommunityService.ActionResult result = contentService.toggleLike(currentUser, selectedContent.id());
+        showFeedback(result.message(), result.success());
+        if (result.success()) {
+            refreshAll();
+            openDetail(selectedContent.id());
+        }
+    }
+
+    @FXML
+    private void handleReportSelected() {
+        if (selectedContent == null) {
+            return;
+        }
+
+        ContentCommunityService.ActionResult result = contentService.reportContent(currentUser, selectedContent.id(), "");
         showFeedback(result.message(), result.success());
         if (result.success()) {
             refreshAll();
@@ -595,6 +613,10 @@ public class ContentCommunityController implements Initializable {
 
         detailLikeButton.setText((detail.likedByCurrentUser() ? "❤ " : "♡ ") + content.likesCount());
         detailCommentsCountLabel.setText("Commentaires ( " + content.commentsCount() + " )");
+
+        boolean canReport = !isOwnerOrAdmin(content);
+        detailReportButton.setVisible(canReport);
+        detailReportButton.setManaged(canReport);
 
         boolean canOwnerActions = isOwnerOrAdmin(content);
         detailEditButton.setVisible(canOwnerActions);

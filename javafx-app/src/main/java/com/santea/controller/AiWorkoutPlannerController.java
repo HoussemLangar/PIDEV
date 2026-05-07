@@ -11,7 +11,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
-public class AiWorkoutPlannerController extends AppBaseViewController {
+public class AiWorkoutPlannerController extends AiToolBaseController {
     private final AiToolsService aiToolsService = new AiToolsService();
 
     @FXML
@@ -44,6 +44,9 @@ public class AiWorkoutPlannerController extends AppBaseViewController {
     @Override
     public void initialize(java.net.URL location, java.util.ResourceBundle resources) {
         super.initialize(location, resources);
+        if (!guardAiToolsAccess()) {
+            return;
+        }
         levelCombo.setItems(FXCollections.observableArrayList("debutant", "intermediaire", "avance"));
         levelCombo.getSelectionModel().select("debutant");
         daysSpinner.setValueFactory(new javafx.scene.control.SpinnerValueFactory.IntegerSpinnerValueFactory(1, 7, 3));

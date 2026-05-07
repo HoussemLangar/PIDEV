@@ -14,13 +14,28 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.stage.FileChooser;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.Locale;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 public class DocumentUploadController extends AppBaseViewController {
     private static final long MAX_FILE_SIZE_BYTES = 50L * 1024L * 1024L;
+    private static final int MAX_CLASSIFIER_CHARS = 4000;
+    private static final int MAX_CLASSIFIER_BYTES = 200_000;
+    private static final Pattern PDF_TEXT_PATTERN = Pattern.compile("\\(([^\\)]{2,})\\)\\s*Tj", Pattern.DOTALL);
     private static final Set<String> ALLOWED_EXTENSIONS = Set.of(
         "pdf", "jpg", "jpeg", "png", "doc", "docx", "xls", "xlsx"
     );
@@ -68,24 +83,167 @@ public class DocumentUploadController extends AppBaseViewController {
             }
             // Try ML classification
             String description = descriptionArea.getText() != null ? descriptionArea.getText().trim() : "";
-            classifyDocument(selectedFile.getName(), description);
+            classifyDocument(selectedFile, description);
         } else {
             selectedFileLabel.setText("Aucun fichier sélectionné");
         }
     }
 
-    private void classifyDocument(String filename, String description) {
+    private void classifyDocument(File file, String description) {
         if (!classifier.isAvailable()) {
             return; // ML service unavailable, user selects manually
         }
         
         // Run classification in background to avoid UI blocking
         Thread classificationThread = new Thread(() -> {
-            DocumentClassificationClient.ClassificationResult result = classifier.classify(filename, description);
+            String filename = file == null ? "" : file.getName();
+            String content = extractTextForClassification(file);
+            DocumentClassificationClient.ClassificationResult result = classifier.classify(filename, description, content);
             javafx.application.Platform.runLater(() -> updateClassificationSummary(result));
         });
         classificationThread.setDaemon(true);
         classificationThread.start();
+    }
+
+    private String extractTextForClassification(File file) {
+        if (file == null || !file.exists() || !file.isFile()) {
+            return "";
+        }
+
+        String name = file.getName() == null ? "" : file.getName();
+        String ext = extensionOf(name);
+
+        if ("pdf".equals(ext)) {
+            return extractTextFromPdf(file);
+        }
+        if ("docx".equals(ext)) {
+            return extractTextFromZipEntry(file, "word/document.xml");
+        }
+        if ("xlsx".equals(ext)) {
+            return extractTextFromZipEntry(file, "xl/sharedStrings.xml");
+        }
+        if (Set.of("txt", "csv", "log", "md").contains(ext)) {
+            return readTextFile(file);
+        }
+
+        return "";
+    }
+
+    private String readTextFile(File file) {
+        try {
+            return normalizeExtractedText(Files.readString(file.toPath(), StandardCharsets.UTF_8));
+        } catch (IOException ignored) {
+            return "";
+        }
+    }
+
+    private String extractTextFromPdf(File file) {
+        String pdfBoxText = extractTextFromPdfWithPdfBox(file);
+        if (!pdfBoxText.isBlank()) {
+            return pdfBoxText;
+        }
+        return extractTextFromPdfRaw(file);
+    }
+
+    private String extractTextFromPdfWithPdfBox(File file) {
+        try (PDDocument document = PDDocument.load(file)) {
+            if (document.isEncrypted()) {
+                try {
+                    document.setAllSecurityToBeRemoved(true);
+                } catch (RuntimeException ignored) {
+                    return "";
+                }
+            }
+            PDFTextStripper stripper = new PDFTextStripper();
+            stripper.setSortByPosition(true);
+            stripper.setEndPage(2);
+            String text = stripper.getText(document);
+            return normalizeExtractedText(text);
+        } catch (IOException ignored) {
+            return "";
+        }
+    }
+
+    private String extractTextFromPdfRaw(File file) {
+        try {
+            byte[] bytes = Files.readAllBytes(file.toPath());
+            String raw = new String(bytes, StandardCharsets.ISO_8859_1);
+            Matcher matcher = PDF_TEXT_PATTERN.matcher(raw);
+            StringBuilder out = new StringBuilder();
+            while (matcher.find() && out.length() < MAX_CLASSIFIER_CHARS * 2) {
+                String chunk = matcher.group(1);
+                if (chunk != null && chunk.length() > 1) {
+                    out.append(chunk.replace("\\\\n", " ").replace("\\\\r", " ")).append(' ');
+                }
+            }
+            return normalizeExtractedText(out.toString());
+        } catch (IOException ignored) {
+            return "";
+        }
+    }
+
+    private String extractTextFromZipEntry(File file, String entryName) {
+        try (ZipInputStream zis = new ZipInputStream(new FileInputStream(file), StandardCharsets.UTF_8)) {
+            ZipEntry entry;
+            while ((entry = zis.getNextEntry()) != null) {
+                if (entryName.equals(entry.getName())) {
+                    String xml = readStreamToString(zis, MAX_CLASSIFIER_BYTES);
+                    return extractTextFromXml(xml);
+                }
+            }
+        } catch (IOException ignored) {
+            return "";
+        }
+        return "";
+    }
+
+    private String extractTextFromXml(String xml) {
+        if (xml == null || xml.isBlank()) {
+            return "";
+        }
+        String withoutTags = xml.replaceAll("<[^>]+>", " ");
+        return normalizeExtractedText(withoutTags);
+    }
+
+    private String readStreamToString(InputStream input, int maxBytes) throws IOException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        byte[] buffer = new byte[4096];
+        int total = 0;
+        int read;
+        while ((read = input.read(buffer)) != -1) {
+            int remaining = maxBytes - total;
+            if (remaining <= 0) {
+                break;
+            }
+            int toWrite = Math.min(read, remaining);
+            out.write(buffer, 0, toWrite);
+            total += toWrite;
+        }
+        return out.toString(StandardCharsets.UTF_8);
+    }
+
+    private String normalizeExtractedText(String text) {
+        if (text == null) {
+            return "";
+        }
+        String cleaned = text.replace('\u0000', ' ');
+        cleaned = cleaned.replaceAll("\\s+", " ").trim();
+        return limitLength(cleaned, MAX_CLASSIFIER_CHARS);
+    }
+
+    private String limitLength(String text, int maxChars) {
+        if (text == null || text.length() <= maxChars) {
+            return text == null ? "" : text;
+        }
+        return text.substring(0, maxChars);
+    }
+
+    private String extensionOf(String fileName) {
+        int dot = fileName.lastIndexOf('.');
+        if (dot < 0 || dot == fileName.length() - 1) {
+            return "";
+        }
+        return fileName.substring(dot + 1).toLowerCase(Locale.ROOT);
     }
 
     private void updateClassificationSummary(DocumentClassificationClient.ClassificationResult result) {

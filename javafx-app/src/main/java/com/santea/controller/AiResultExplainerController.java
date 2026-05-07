@@ -8,7 +8,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
-public class AiResultExplainerController extends AppBaseViewController {
+public class AiResultExplainerController extends AiToolBaseController {
     private final AiToolsService aiToolsService = new AiToolsService();
 
     @FXML
@@ -41,6 +41,9 @@ public class AiResultExplainerController extends AppBaseViewController {
     @Override
     public void initialize(java.net.URL location, java.util.ResourceBundle resources) {
         super.initialize(location, resources);
+        if (!guardAiToolsAccess()) {
+            return;
+        }
         setVisibleManaged(resultsBox, false);
     }
 

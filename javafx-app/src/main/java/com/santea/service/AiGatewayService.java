@@ -25,6 +25,7 @@ import javax.net.ssl.X509TrustManager;
 
 public class AiGatewayService {
     private static final int TIMEOUT_SECONDS = 6;
+    private static final int CHAT_TIMEOUT_SECONDS = 8;
     private static final Map<String, String> DOTENV_VALUES = loadDotEnv();
 
     private final HttpClient httpClient;
@@ -77,6 +78,44 @@ public class AiGatewayService {
         return parseBoolean(getenv("AI_APPOINTMENT_INTENT_STRICT"));
     }
 
+    public Optional<Map<String, Object>> askForJson(String systemPrompt, String userPrompt) {
+        String endpoint = resolveChatEndpoint();
+        String apiKey = getenv("AI_API_KEY");
+        String model = resolveModel();
+        if (endpoint.isBlank() || apiKey.isBlank() || model.isBlank()) {
+            return Optional.empty();
+        }
+
+        try {
+            String payload = buildChatPayload(model, systemPrompt, userPrompt);
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(endpoint))
+                .timeout(Duration.ofSeconds(CHAT_TIMEOUT_SECONDS))
+                .header("Content-Type", "application/json")
+                .header("Authorization", "Bearer " + apiKey)
+                .POST(HttpRequest.BodyPublishers.ofString(payload, StandardCharsets.UTF_8))
+                .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+            if (response.statusCode() < 200 || response.statusCode() >= 300) {
+                return Optional.empty();
+            }
+
+            String content = extractChatContent(response.body());
+            if (content.isBlank()) {
+                return Optional.empty();
+            }
+
+            Map<String, Object> decoded = decodeJsonFromText(content);
+            if (decoded.isEmpty()) {
+                return Optional.empty();
+            }
+            return Optional.of(decoded);
+        } catch (Exception ignored) {
+            return Optional.empty();
+        }
+    }
+
     private String resolveEndpoint() {
         String direct = getenv("AI_APPOINTMENT_INTENT_URL");
         if (!direct.isBlank()) {
@@ -90,6 +129,26 @@ public class AiGatewayService {
             return base + "appointments/intent";
         }
         return base + "/appointments/intent";
+    }
+
+    private String resolveChatEndpoint() {
+        String base = getenv("AI_API_BASE_URL");
+        if (base.isBlank()) {
+            return "";
+        }
+        String trimmed = base.trim();
+        if (trimmed.endsWith("/chat/completions")) {
+            return trimmed;
+        }
+        if (trimmed.endsWith("/")) {
+            return trimmed + "chat/completions";
+        }
+        return trimmed + "/chat/completions";
+    }
+
+    private String resolveModel() {
+        String model = getenv("AI_MODEL");
+        return model == null ? "" : model.trim();
     }
 
     private HttpClient buildHttpClient() {
@@ -203,8 +262,21 @@ public class AiGatewayService {
 
     private static Map<String, String> loadDotEnv() {
         Map<String, String> values = new HashMap<>();
-        loadDotEnvFile(values, Path.of(".env"));
-        loadDotEnvFile(values, Path.of(".env.local"));
+        List<Path> candidates = List.of(
+            Path.of(".env"),
+            Path.of(".env.local"),
+            Path.of("symfony-app/.env"),
+            Path.of("symfony-app/.env.local"),
+            Path.of("javafx-app/.env"),
+            Path.of("javafx-app/.env.local"),
+            Path.of("../.env"),
+            Path.of("../.env.local"),
+            Path.of("../symfony-app/.env"),
+            Path.of("../symfony-app/.env.local")
+        );
+        for (Path path : candidates) {
+            loadDotEnvFile(values, path);
+        }
         return values;
     }
 
@@ -247,6 +319,46 @@ public class AiGatewayService {
             .replace("\"", "\\\"")
             .replace("\n", " ")
             .replace("\r", " ");
+    }
+
+    private String buildChatPayload(String model, String systemPrompt, String userPrompt) {
+        String safeSystem = escapeJson(systemPrompt);
+        String safeUser = escapeJson(userPrompt);
+        return "{"
+            + "\"model\":\"" + escapeJson(model) + "\"," 
+            + "\"temperature\":0.2," 
+            + "\"messages\":["
+            + "{\"role\":\"system\",\"content\":\"" + safeSystem + "\"},"
+            + "{\"role\":\"user\",\"content\":\"" + safeUser + "\"}"
+            + "]}";
+    }
+
+    private String extractChatContent(String json) {
+        Map<String, Object> root = JsonLite.asMap(JsonLite.parse(json));
+        List<Object> choices = JsonLite.asList(root.get("choices"));
+        if (choices.isEmpty()) {
+            return "";
+        }
+        Map<String, Object> choice = JsonLite.asMap(choices.get(0));
+        Map<String, Object> message = JsonLite.asMap(choice.get("message"));
+        String content = JsonLite.asString(message.get("content"));
+        return content == null ? "" : content.trim();
+    }
+
+    private Map<String, Object> decodeJsonFromText(String text) {
+        Map<String, Object> decoded = JsonLite.asMap(JsonLite.parse(text));
+        if (!decoded.isEmpty()) {
+            return decoded;
+        }
+
+        int start = text.indexOf('{');
+        int end = text.lastIndexOf('}');
+        if (start < 0 || end <= start) {
+            return Map.of();
+        }
+
+        String candidate = text.substring(start, end + 1);
+        return JsonLite.asMap(JsonLite.parse(candidate));
     }
 
     public record AppointmentIntent(

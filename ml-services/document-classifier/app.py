@@ -8,6 +8,7 @@ import json
 import logging
 import os
 import re
+import unicodedata
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 logging.basicConfig(level=logging.INFO)
@@ -24,26 +25,126 @@ DOCUMENT_TYPES = [
 ]
 
 KEYWORDS = {
-    "medical analysis": ["analysis", "exam", "assessment", "screening"],
-    "lab results": ["lab", "laboratory", "blood", "urine", "test", "result", "results"],
-    "imaging scan": ["xray", "x-ray", "ct", "mri", "scan", "imaging", "ultrasound", "radiology"],
-    "prescription": ["prescription", "rx", "medication", "meds", "tablet", "dose", "dosage", "drug"],
-    "medical report": ["report", "summary", "medical report", "discharge", "consultation", "note"],
-    "appointment notes": ["appointment", "visit", "follow up", "follow-up", "notes", "agenda"],
+    "medical analysis": [
+        "analysis",
+        "exam",
+        "assessment",
+        "screening",
+        "evaluation",
+        "depistage",
+        "bilan",
+        "analyse",
+    ],
+    "lab results": [
+        "lab",
+        "laboratory",
+        "blood",
+        "urine",
+        "test",
+        "result",
+        "results",
+        "biologie",
+        "laboratoire",
+        "resultat",
+        "resultats",
+        "bilan sanguin",
+        "glycemie",
+        "hemoglobine",
+        "cholesterol",
+        "triglycerides",
+        "creatinine",
+        "crp",
+    ],
+    "imaging scan": [
+        "xray",
+        "x-ray",
+        "ct",
+        "mri",
+        "scan",
+        "imaging",
+        "ultrasound",
+        "radiology",
+        "radiographie",
+        "radio",
+        "echographie",
+        "irm",
+        "scanner",
+        "tomodensitometrie",
+        "mammographie",
+        "imagerie",
+    ],
+    "prescription": [
+        "prescription",
+        "rx",
+        "medication",
+        "meds",
+        "tablet",
+        "dose",
+        "dosage",
+        "drug",
+        "ordonnance",
+        "posologie",
+        "traitement",
+        "medicament",
+    ],
+    "medical report": [
+        "report",
+        "summary",
+        "medical report",
+        "discharge",
+        "consultation",
+        "note",
+        "compte rendu",
+        "compte-rendu",
+        "rapport",
+        "synthese",
+        "diagnostic",
+        "hospitalisation",
+        "sortie",
+        "lettre",
+    ],
+    "appointment notes": [
+        "appointment",
+        "visit",
+        "follow up",
+        "follow-up",
+        "notes",
+        "agenda",
+        "rendez vous",
+        "rendez-vous",
+        "rdv",
+        "suivi",
+    ],
 }
 
 
 def normalize_text(value):
-    return re.sub(r"[^a-z0-9\s\-]+", " ", (value or "").lower()).strip()
+    raw = value or ""
+    normalized = unicodedata.normalize("NFKD", raw).encode("ascii", "ignore").decode("ascii")
+    return re.sub(r"[^a-z0-9\s\-]+", " ", normalized.lower()).strip()
+
+
+def tokenize(text):
+    return {token for token in text.split() if token}
+
+
+def keyword_matches(normalized, tokens, keyword):
+    candidate = normalize_text(keyword)
+    if not candidate:
+        return False
+    if " " in candidate:
+        return candidate in normalized
+    return candidate in tokens
 
 
 def score_document(text):
     normalized = normalize_text(text)
-    scores = {document_type: 0.05 for document_type in DOCUMENT_TYPES}
+    tokens = tokenize(normalized)
+    scores = {document_type: 0.02 for document_type in DOCUMENT_TYPES}
     for document_type, keywords in KEYWORDS.items():
         for keyword in keywords:
-            if keyword in normalized:
-                scores[document_type] += 0.18
+            if keyword_matches(normalized, tokens, keyword):
+                scores[document_type] += 0.22
 
     if not normalized:
         scores["other"] = 1.0
@@ -88,9 +189,10 @@ class DocumentClassifierHandler(BaseHTTPRequestHandler):
         if self.path == "/classify":
             filename = data.get("filename", "")
             description = data.get("description", "")
-            combined = f"{filename} {description}".strip()
+            content = data.get("content", "")
+            combined = f"{filename} {description} {content}".strip()
             if not combined:
-                self._send_json(400, {"error": "filename or description required"})
+                self._send_json(400, {"error": "filename, description or content required"})
                 return
 
             predicted_type, confidence, candidates = score_document(combined)
@@ -111,9 +213,10 @@ class DocumentClassifierHandler(BaseHTTPRequestHandler):
             for document in documents:
                 filename = document.get("filename", "")
                 description = document.get("description", "")
-                combined = f"{filename} {description}".strip()
+                content = document.get("content", "")
+                combined = f"{filename} {description} {content}".strip()
                 if not combined:
-                    results.append({"filename": document.get("filename"), "error": "filename or description required"})
+                    results.append({"filename": document.get("filename"), "error": "filename, description or content required"})
                     continue
                 predicted_type, confidence, _ = score_document(combined)
                 results.append({
